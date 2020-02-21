@@ -65,14 +65,14 @@ class StochDynamics:
     @staticmethod
     def fermi(beta, fitness_diff):
         """
-        The fermi function determines the probability that the first type imitates the second
+        The fermi function determines the probability that the first type imitates the second.
 
-        :param beta : intensity of selection
+        :param beta: intensity of selection
         :param fitness_diff: f_a - f_b
-        :return the imitation probability
+        :return: the imitation probability
         :rtype: float
         """
-        return np.clip(1. / (1. + np.exp(beta * fitness_diff, dtype=np.float64)), 0., 1.)[0]
+        return np.clip(1. / (1. + np.exp(beta * fitness_diff, dtype=np.float64)), 0., 1.)
 
     def prob_increase_decrease(self, k, invader, resident, beta):
         """
@@ -94,7 +94,7 @@ class StochDynamics:
 
     def prob_increase_decrease_with_mutation(self, k, invader, resident, beta):
         """
-        This function calculates for a given number of invaders the probability 
+        This function calculates for a given number of invaders the probability
         that the number increases or decreases with taking into account a mutation rate.
 
         :param k: number of invaders in the population
@@ -197,7 +197,8 @@ class StochDynamics:
 
     def calculate_stationary_distribution(self, beta):
         """
-        Calculates the stationary distribution of the monomorphic states
+        Calculates the stationary distribution of the monomorphic states is mu = 0 (SML).
+        Otherwise, it calculates the stationary distribution including all possible population states.
 
         :param beta: intensity of selection
         :return stationary distribution
