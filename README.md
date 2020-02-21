@@ -1,29 +1,34 @@
-# Assignment 1 of Computational Game Theory Course
+# Toolbox for Evolutionary Game Theory
 
-This repository contains the files required to complete the first assigment of the the Computational Game Theory (CGT) course.
+The aim of this repository is to provide a centralized repository with analytical 
+and numerical methods to study/model game theoretical problems under the Evolutionary
+Game Theory (EGT) framework.
+
+This library is implemented both in Python and C++ (with Python bindings) in order to
+provide optimized computational methods that can run in parallel in a reasonable time.
 
 To install all required packages, go to the CGT-course directory and run:
 
 ```bash
-python -m venv cgtenv
-source cgtenv/bin/activate
+python -m venv egtenv
+source egtenv/bin/activate
 pip install -r requirements.txt
 ```
 
 Or with anaconda:
 
 ```bash
-conda create --name cgtenv
-conda activate cgtenv
+conda create --name egtenv
+conda activate egtenv
 pip install -r requirements.txt
 ```
 
-Finally, to make your virual environment visible to jupyter:
+Finally, to make your virtual environment visible to jupyter:
 
 ```bash
-python -m ipykernel install --user --name=cgtenv
+python -m ipykernel install --user --name=egtenv
 ```
 
-The [EGTtools](EGT/EGTtools.py) module contains classes and functions that you may use to investigate the evolutionary dynamics in 2-player games.
+The [EGTtools](egttools/analytical/sed_analytical.py) module contains classes and functions that you may use to investigate the evolutionary dynamics in 2-player games.
 
-The [CGT-Exercise](CGT-Exercise.ipynb) is a jupyter notebook that contains all the information required to complete your assignment.
+The [Example](Example.ipynb) is a jupyter notebook the analysis of the evolutionary dynamics in a Hawk-Dove game.
