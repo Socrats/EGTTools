@@ -7,7 +7,7 @@ Game Theory (EGT) framework.
 This library is implemented both in Python and C++ (with Python bindings) in order to
 provide optimized computational methods that can run in parallel in a reasonable time.
 
-To install all required packages, go to the CGT-course directory and run:
+To install all required packages run:
 
 ```bash
 python -m venv egtenv
