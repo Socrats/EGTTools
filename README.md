@@ -34,3 +34,19 @@ python -m ipykernel install --user --name=egtenv
 The [EGTtools](egttools/analytical/sed_analytical.py) module contains classes and functions that you may use to investigate the evolutionary dynamics in 2-player games.
 
 The [Example](Example.ipynb) is a jupyter notebook the analysis of the evolutionary dynamics in a Hawk-Dove game.
+
+## Citing
+
+You may cite this repository in the following way:
+
+```latex
+@misc{Fernandez2020,
+  author = {Fernández Domingos, Elias},
+  title = {EGTTools: Toolbox for Evolutionary Game Theory},
+  year = {2020},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/Socrats/EGTTools}},
+  doi = {10.5281/zenodo.3687125}
+}
+```
