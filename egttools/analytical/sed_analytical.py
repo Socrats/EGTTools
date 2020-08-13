@@ -86,10 +86,9 @@ class StochDynamics:
         :return tuple(probability of increasing the number of invaders, probability of decreasing)
         :rtype: tuple[float, float]
         """
-        tmp = ((self.Z - k) / float(self.Z)) * (k / float(self.Z))
         fitness_diff = self.fitness(k, invader, resident)
-        increase = tmp * StochDynamics.fermi(-beta, fitness_diff)
-        decrease = tmp * StochDynamics.fermi(beta, fitness_diff)
+        increase = (((self.Z-k)/float(self.Z))*(k/float(self.Z-1))) * StochDynamics.fermi(-beta, fitness_diff)
+        decrease = ((k/float(self.Z)) * ((self.Z-k)/float(self.Z-1))) * StochDynamics.fermi(beta, fitness_diff)
         return increase, decrease
 
     def prob_increase_decrease_with_mutation(self, k, invader, resident, beta):

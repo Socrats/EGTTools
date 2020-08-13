@@ -15,7 +15,7 @@ def find_saddle_type_and_gradient_direction(gradient, saddle_points_idx, offset=
     gradient among stable and unstable points.
     :param gradient : array containing the gradient of selection for all states of the population
     :param saddle_points_idx : array containing the saddle points indices
-    :param offset : offset for the gradient_directions, so that arrows don't overlapp with point
+    :param offset : offset for the gradient_directions, so that arrows don't overlap with point
     :return tuple containing an array that indicates the type of saddle points and another array indicating
             the direction of the gradient between unstable and stable points
     """
@@ -25,13 +25,20 @@ def find_saddle_type_and_gradient_direction(gradient, saddle_points_idx, offset=
     real_offset = offset * (nb_points - 1)
     for i, point in enumerate(saddle_points_idx):
         if point < nb_points - 1:
-            if gradient[point + 1] > 0:
-                saddle_type.append(False)
-                gradient_direction.append((point, saddle_points_idx[i + 1] - real_offset))
-            elif point > 0:
-                if gradient[point - 1] < 0:
+            if point > 0:
+                if gradient[point + 1] > 0:
+                    saddle_type.append(False)
+                    gradient_direction.append((point, saddle_points_idx[i + 1] - real_offset))
+                elif gradient[point - 1] < 0:
                     saddle_type.append(False)
                     gradient_direction.append((point, saddle_points_idx[i - 1] + real_offset))
+                else:
+                    gradient_direction.append((point + 1, 0 + real_offset))
+                    saddle_type.append(True)
+            else:
+                if gradient[point + 1] > 0:
+                    saddle_type.append(False)
+                    gradient_direction.append((point, saddle_points_idx[i + 1] - real_offset))
                 else:
                     saddle_type.append(True)
         else:
