@@ -12,11 +12,17 @@ def find_saddle_type_and_gradient_direction(gradient, saddle_points_idx, offset=
     """
     Finds whether a saddle point is stable or not. And defines the direction of the
     gradient among stable and unstable points.
-    :param gradient : array containing the gradient of selection for all states of the population
-    :param saddle_points_idx : array containing the saddle points indices
-    :param offset : offset for the gradient_directions, so that arrows don't overlap with point
-    :return tuple containing an array that indicates the type of saddle points and another array indicating
-            the direction of the gradient between unstable and stable points
+
+    Parameters
+    ----------
+    gradient : array containing the gradient of selection for all states of the population
+    saddle_points_idx : array containing the saddle points indices
+    offset : offset for the gradient_directions, so that arrows don't overlap with point
+
+    Returns
+    -------
+     tuple containing an array that indicates the type of saddle points and another array indicating
+     the direction of the gradient between unstable and stable points
     """
     saddle_type = []
     gradient_direction = []
