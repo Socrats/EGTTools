@@ -1,6 +1,7 @@
 # Toolbox for Evolutionary Game Theory
 
 [![DOI](https://zenodo.org/badge/242180332.svg)](https://zenodo.org/badge/latestdoi/242180332)
+[![Documentation Status](https://readthedocs.org/projects/egttools/badge/?version=latest)](https://egttools.readthedocs.io/en/latest/?badge=latest)
 
 The aim of this repository is to provide a centralized repository with analytical 
 and numerical methods to study/model game theoretical problems under the Evolutionary
