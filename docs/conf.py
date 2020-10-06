@@ -17,7 +17,6 @@
 # sys.path.insert(0, os.path.abspath('.'))
 
 import os
-import subprocess
 import sys
 
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
@@ -89,26 +88,6 @@ pygments_style = 'sphinx'
 
 # Autodoc configuration
 autodoc_member_order = 'groupwise'
-
-if on_rtd:
-    branch_or_tag = branch or 'v{}'.format(release)
-else:
-    rev_parse_name = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).decode('ascii').strip()
-    branch_or_tag = rev_parse_name if rev_parse_name != 'HEAD' else 'v{}'.format(release)
-
-rst_epilog = """
-.. |binder_badge_examples| image:: https://mybinder.org/badge_logo.svg
-    :target: https://mybinder.org/v2/gh/YannickJadoul/Parselmouth/{branch_or_tag}?urlpath=lab/tree/docs/examples
-""".format(branch_or_tag=branch_or_tag)
-
-nbsphinx_prolog = """
-{{% set docname = env.doc2path(env.docname, base='docs') %}}
-.. only:: html
-    .. note::
-        An online, interactive version of this example is available at Binder: |binder|
-.. |binder| image:: https://mybinder.org/badge_logo.svg
-    :target: https://mybinder.org/v2/gh/YannickJadoul/Parselmouth/{branch_or_tag}?urlpath=lab/tree/{{{{ docname }}}}
-""".format(branch_or_tag=branch_or_tag)
 
 # -- Options for HTML output -------------------------------------------------
 
