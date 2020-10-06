@@ -16,6 +16,12 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+import os
+import subprocess
+import sys
+
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
+
 
 # -- Project information -----------------------------------------------------
 
@@ -37,6 +43,7 @@ release = '0.1.0'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
+sys.path.insert(1, os.path.abspath(os.path.dirname(__file__)))
 extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
@@ -75,10 +82,33 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '**.ipynb_checkpoints']
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = None
+pygments_style = 'sphinx'
+
+# Autodoc configuration
+autodoc_member_order = 'groupwise'
+
+if on_rtd:
+    branch_or_tag = branch or 'v{}'.format(release)
+else:
+    rev_parse_name = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).decode('ascii').strip()
+    branch_or_tag = rev_parse_name if rev_parse_name != 'HEAD' else 'v{}'.format(release)
+
+rst_epilog = """
+.. |binder_badge_examples| image:: https://mybinder.org/badge_logo.svg
+    :target: https://mybinder.org/v2/gh/YannickJadoul/Parselmouth/{branch_or_tag}?urlpath=lab/tree/docs/examples
+""".format(branch_or_tag=branch_or_tag)
+
+nbsphinx_prolog = """
+{{% set docname = env.doc2path(env.docname, base='docs') %}}
+.. only:: html
+    .. note::
+        An online, interactive version of this example is available at Binder: |binder|
+.. |binder| image:: https://mybinder.org/badge_logo.svg
+    :target: https://mybinder.org/v2/gh/YannickJadoul/Parselmouth/{branch_or_tag}?urlpath=lab/tree/{{{{ docname }}}}
+""".format(branch_or_tag=branch_or_tag)
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -184,7 +214,9 @@ epub_exclude_files = ['search.html']
 # -- Options for intersphinx extension ---------------------------------------
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
+                       'numpy': ('https://docs.scipy.org/doc/numpy', None),
+                       'tgt': ('https://textgridtools.readthedocs.io/en/stable', None)}
 
 # -- Options for todo extension ----------------------------------------------
 
