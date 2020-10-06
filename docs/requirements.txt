@@ -1,1 +1,3 @@
 Sphinx==3.2.1
+nbsphinx
+recommonmark
