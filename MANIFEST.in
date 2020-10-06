@@ -1,0 +1,11 @@
+include *.md
+include LICENSE
+
+include requirements.txt
+
+graft tests
+
+graft docs
+prune docs/_build
+
+global-exclude *.py[co]
