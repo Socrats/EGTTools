@@ -1,9 +1,11 @@
+![EGTtools](docs/images/logo-full.png)
+
 # Toolbox for Evolutionary Game Theory
 
 [![DOI](https://zenodo.org/badge/242180332.svg)](https://zenodo.org/badge/latestdoi/242180332)
 [![Documentation Status](https://readthedocs.org/projects/egttools/badge/?version=latest)](https://egttools.readthedocs.io/en/latest/?badge=latest)
 
-The aim of this repository is to provide a centralized repository with analytical 
+**EGTtools** provides a centralized repository with analytical 
 and numerical methods to study/model game theoretical problems under the Evolutionary
 Game Theory (EGT) framework.
 
@@ -34,7 +36,7 @@ python -m ipykernel install --user --name=egtenv
 
 The [EGTtools](egttools/analytical/sed_analytical.py) module contains classes and functions that you may use to investigate the evolutionary dynamics in 2-player games.
 
-The [Example](docs/examples/Example.ipynb) is a jupyter notebook the analysis of the evolutionary dynamics in a Hawk-Dove game.
+The [Example](docs/examples/hawk_dove_dynamics.ipynb) is a jupyter notebook the analysis of the evolutionary dynamics in a Hawk-Dove game.
 
 ## Citing
 
