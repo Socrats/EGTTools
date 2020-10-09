@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xl="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" xmlns:dc="http://purl.org/dc/elements/1.1/" version="1.1" viewBox="1218 -951.9147 174.1164 61.1706" width="174.1164" height="61.1706">
+  <defs>
+    <filter id="Shadow" filterUnits="userSpaceOnUse" x="1200.5884" y="-958.0318">
+      <feGaussianBlur in="SourceAlpha" result="blur" stdDeviation="1.308"/>
+      <feOffset in="blur" result="offset" dx="0" dy="2"/>
+      <feFlood flood-color="black" flood-opacity=".5" result="flood"/>
+      <feComposite in="flood" in2="offset" operator="in"/>
+    </filter>
+    <font-face font-family="Helvetica Neue" font-size="29" panose-1="2 0 8 3 0 0 0 9 0 4" units-per-em="1000" underline-position="-100" underline-thickness="50" slope="0" x-height="517" cap-height="714" ascent="975.0061" descent="-216.99524" font-weight="700">
+      <font-face-src>
+        <font-face-name name="HelveticaNeue-Bold"/>
+      </font-face-src>
+    </font-face>
+    <font-face font-family="Helvetica Neue" font-size="29" panose-1="2 0 4 3 0 0 0 2 0 4" units-per-em="1000" underline-position="-100" underline-thickness="50" slope="0" x-height="523" cap-height="721" ascent="966.9952" descent="-212.99744" font-weight="300">
+      <font-face-src>
+        <font-face-name name="HelveticaNeue-Light"/>
+      </font-face-src>
+    </font-face>
+    <filter id="Shadow_2" filterUnits="userSpaceOnUse" x="1200.5884" y="-958.0318">
+      <feGaussianBlur in="SourceAlpha" result="blur" stdDeviation="1.308"/>
+      <feOffset in="blur" result="offset" dx="0" dy="2"/>
+      <feFlood flood-color="black" flood-opacity=".5" result="flood"/>
+      <feComposite in="flood" in2="offset" operator="in" result="color"/>
+      <feMerge>
+        <feMergeNode in="color"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-3 -2 4 4" markerWidth="4" markerHeight="4" color="black">
+      <g>
+        <path d="M -1.44 0 L 0 .54 L 0 -.54 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker_2" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -2 4 4" markerWidth="4" markerHeight="4" color="black">
+      <g>
+        <path d="M 1.44 0 L 0 -.54 L 0 .54 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+  </defs>
+  <metadata> Produced by OmniGraffle 7.17.5\n2020-10-09 09:52:22 +0000</metadata>
+  <g id="Canvas_1" stroke="none" stroke-opacity="1" fill="none" fill-opacity="1" stroke-dasharray="none">
+    <title>Canvas 1</title>
+    <g id="Canvas_1_Layer_1">
+      <title>Layer 1</title>
+      <g id="Graphic_275_shadow" filter="url(#Shadow)">
+        <path d="M 1297.896 -895.7441 L 1259.448 -895.7441 C 1240.224 -895.7441 1221 -902.6404 1221 -923.3294 C 1221 -944.0184 1240.224 -950.9147 1259.448 -950.9147 L 1297.896 -950.9147 Z" fill="black"/>
+      </g>
+      <g id="Graphic_276_shadow" filter="url(#Shadow)">
+        <path d="M 1298 -895.7441 L 1342.3 -895.7441 C 1364.45 -895.7441 1386.6 -902.6404 1386.6 -923.3294 C 1386.6 -944.0184 1364.45 -950.9147 1342.3 -950.9147 L 1298 -950.9147 Z" fill="white"/>
+      </g>
+      <g id="Group_259">
+        <g id="Graphic_276">
+          <path d="M 1298 -895.7441 L 1342.3 -895.7441 C 1364.45 -895.7441 1386.6 -902.6404 1386.6 -923.3294 C 1386.6 -944.0184 1364.45 -950.9147 1342.3 -950.9147 L 1298 -950.9147 Z" fill="white"/>
+        </g>
+        <g id="Group_260">
+          <g id="Graphic_275">
+            <path d="M 1297.896 -895.7441 L 1259.448 -895.7441 C 1240.224 -895.7441 1221 -902.6404 1221 -923.3294 C 1221 -944.0184 1240.224 -950.9147 1259.448 -950.9147 L 1297.896 -950.9147 Z" fill="black"/>
+            <text transform="translate(1226 -940.75)" fill="white">
+              <tspan font-family="Helvetica Neue" font-size="29" font-weight="700" fill="white" x=".15600186" y="28"> EGT</tspan>
+            </text>
+          </g>
+          <g id="Group_261">
+            <g id="Graphic_274">
+              <text transform="translate(1302.896 -943.4206)" fill="black">
+                <tspan font-family="Helvetica Neue" font-size="29" font-weight="300" fill="black" x="0" y="28">t</tspan>
+              </text>
+            </g>
+            <g id="Group_263">
+              <g id="Line_273" filter="url(#Shadow_2)">
+                <line x1="1345.172" y1="-911.2355" x2="1354.097" y2="-921.7123" marker-start="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+              </g>
+              <g id="Graphic_272" filter="url(#Shadow_2)">
+                <ellipse cx="1318.7879" cy="-923.951" rx="3.89189811075338" ry="3.97790690878104" fill="white"/>
+                <ellipse cx="1318.7879" cy="-923.951" rx="3.89189811075338" ry="3.97790690878104" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+              </g>
+              <g id="Graphic_271" filter="url(#Shadow_2)">
+                <ellipse cx="1337.5176" cy="-904.8073" rx="3.8918981107535" ry="3.97790690878101" fill="#0097cd"/>
+                <ellipse cx="1337.5176" cy="-904.8073" rx="3.8918981107535" ry="3.97790690878101" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+              </g>
+              <g id="Graphic_270" filter="url(#Shadow_2)">
+                <ellipse cx="1337.5176" cy="-941.8515" rx="3.8918981107535" ry="3.97790690878095" fill="#ea9f00"/>
+                <ellipse cx="1337.5176" cy="-941.8515" rx="3.8918981107535" ry="3.97790690878095" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+              </g>
+              <g id="Graphic_269" filter="url(#Shadow_2)">
+                <ellipse cx="1356.0041" cy="-923.951" rx="3.8918981107535" ry="3.97790690878104" fill="black"/>
+                <ellipse cx="1356.0041" cy="-923.951" rx="3.8918981107535" ry="3.97790690878104" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+              </g>
+              <g id="Line_268" filter="url(#Shadow_2)">
+                <line x1="1323.6798" y1="-923.951" x2="1344.9322" y2="-923.951" marker-end="url(#FilledArrow_Marker_2)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+              </g>
+              <g id="Line_267" filter="url(#Shadow_2)">
+                <line x1="1337.5176" y1="-909.7852" x2="1337.5176" y2="-930.6936" marker-end="url(#FilledArrow_Marker_2)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+              </g>
+              <g id="Line_266" filter="url(#Shadow_2)">
+                <line x1="1334.0662" y1="-908.335" x2="1326.5612" y2="-916.0058" marker-end="url(#FilledArrow_Marker_2)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+              </g>
+              <g id="Line_265" filter="url(#Shadow_2)">
+                <line x1="1348.0205" y1="-931.6815" x2="1341.0615" y2="-938.4199" marker-start="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+              </g>
+              <g id="Line_264" filter="url(#Shadow_2)">
+                <line x1="1321.95" y1="-926.6858" x2="1330.9902" y2="-935.4926" marker-end="url(#FilledArrow_Marker_2)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+              </g>
+            </g>
+            <g id="Graphic_262">
+              <text transform="translate(1360.1755 -943.4206)" fill="black">
+                <tspan font-family="Helvetica Neue" font-size="29" font-weight="300" fill="black" x="3.8134514" y="28">ls</tspan>
+              </text>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>
+

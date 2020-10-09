@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xl="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" xmlns:dc="http://purl.org/dc/elements/1.1/" version="1.1" viewBox="934.5 -384.5 99 99" width="99" height="99">
+  <defs>
+    <filter id="Shadow" filterUnits="userSpaceOnUse" x="924.6" y="-394.4">
+      <feGaussianBlur in="SourceAlpha" result="blur" stdDeviation="1.308"/>
+      <feOffset in="blur" result="offset" dx="0" dy="2"/>
+      <feFlood flood-color="black" flood-opacity=".5" result="flood"/>
+      <feComposite in="flood" in2="offset" operator="in" result="color"/>
+      <feMerge>
+        <feMergeNode in="color"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-3 -2 4 4" markerWidth="4" markerHeight="4" color="black">
+      <g>
+        <path d="M -1.12 0 L 0 .42 L 0 -.42 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker_2" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -2 4 4" markerWidth="4" markerHeight="4" color="black">
+      <g>
+        <path d="M 1.12 0 L 0 -.42 L 0 .42 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+  </defs>
+  <metadata> Produced by OmniGraffle 7.17.5\n2020-10-09 09:52:22 +0000</metadata>
+  <g id="Canvas_1" stroke="none" stroke-opacity="1" fill="none" fill-opacity="1" stroke-dasharray="none">
+    <title>Canvas 1</title>
+    <g id="Canvas_1_Layer_1">
+      <title>Layer 1</title>
+      <g id="Group_136">
+        <g id="Line_146" filter="url(#Shadow)">
+          <line x1="996.7635" y1="-309.53896" x2="1017.0777" y2="-333.38503" marker-start="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+        </g>
+        <g id="Graphic_145" filter="url(#Shadow)">
+          <ellipse cx="946.7838" cy="-338.2431" rx="7.78379622150664" ry="7.9558138175621" fill="white"/>
+          <ellipse cx="946.7838" cy="-338.2431" rx="7.78379622150664" ry="7.9558138175621" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+        </g>
+        <g id="Graphic_144" filter="url(#Shadow)">
+          <ellipse cx="984.2432" cy="-299.9558" rx="7.7837962215067" ry="7.9558138175621" fill="#0097cd"/>
+          <ellipse cx="984.2432" cy="-299.9558" rx="7.7837962215067" ry="7.9558138175621" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+        </g>
+        <g id="Graphic_143" filter="url(#Shadow)">
+          <ellipse cx="984.2432" cy="-374.0442" rx="7.7837962215067" ry="7.9558138175621" fill="#ea9f00"/>
+          <ellipse cx="984.2432" cy="-374.0442" rx="7.7837962215067" ry="7.9558138175621" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+        </g>
+        <g id="Graphic_142" filter="url(#Shadow)">
+          <ellipse cx="1021.2162" cy="-338.2431" rx="7.78379622150661" ry="7.9558138175621" fill="black"/>
+          <ellipse cx="1021.2162" cy="-338.2431" rx="7.78379622150661" ry="7.9558138175621" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+        </g>
+        <g id="Line_141" filter="url(#Shadow)">
+          <line x1="956.0676" y1="-338.2431" x2="1003.8724" y2="-338.2431" marker-end="url(#FilledArrow_Marker_2)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+        </g>
+        <g id="Line_140" filter="url(#Shadow)">
+          <line x1="984.2432" y1="-309.4116" x2="984.2432" y2="-356.5284" marker-end="url(#FilledArrow_Marker_2)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+        </g>
+        <g id="Line_139" filter="url(#Shadow)">
+          <line x1="977.6901" y1="-306.6538" x2="958.9736" y2="-325.78387" marker-end="url(#FilledArrow_Marker_2)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+        </g>
+        <g id="Line_138" filter="url(#Shadow)">
+          <line x1="1008.6974" y1="-350.3651" x2="990.9717" y2="-367.52896" marker-start="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+        </g>
+        <g id="Line_137" filter="url(#Shadow)">
+          <line x1="953.1081" y1="-343.7127" x2="973.9102" y2="-363.9779" marker-end="url(#FilledArrow_Marker_2)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>
+
