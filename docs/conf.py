@@ -95,6 +95,7 @@ autodoc_member_order = 'groupwise'
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
+html_logo = "images/logo.png"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -170,6 +171,8 @@ texinfo_documents = [
      author, 'EGTtools', 'One line description of project.',
      'Miscellaneous'),
 ]
+
+latex_logo = "images/logo-full.pdf"
 
 # -- Options for Epub output -------------------------------------------------
 

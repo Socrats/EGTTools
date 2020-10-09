@@ -38,6 +38,8 @@ The [EGTtools](egttools/analytical/sed_analytical.py) module contains classes an
 
 The [Example](docs/examples/hawk_dove_dynamics.ipynb) is a jupyter notebook the analysis of the evolutionary dynamics in a Hawk-Dove game.
 
+You can find more information in the [documentation](https://egttools.readthedocs.io/en/latest/).
+
 ## Citing
 
 You may cite this repository in the following way:
