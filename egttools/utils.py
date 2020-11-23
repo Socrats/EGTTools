@@ -53,7 +53,6 @@ def find_saddle_type_and_gradient_direction(gradient, saddle_points_idx, offset=
                     saddle_type.append(False)
                     gradient_direction.append((point, saddle_points_idx[i - 1] + real_offset))
                 else:
-                    gradient_direction.append((point + 1, 0 + real_offset))
                     saddle_type.append(True)
             else:
                 if gradient[point + 1] > 0:
