@@ -4,13 +4,17 @@
 
 [![DOI](https://zenodo.org/badge/242180332.svg)](https://zenodo.org/badge/latestdoi/242180332)
 [![Documentation Status](https://readthedocs.org/projects/egttools/badge/?version=latest)](https://egttools.readthedocs.io/en/latest/?badge=latest)
+![build](https://github.com/Socrats/EGTTools/workflows/build/badge.svg)
 
 **EGTtools** provides a centralized repository with analytical 
 and numerical methods to study/model game theoretical problems under the Evolutionary
 Game Theory (EGT) framework.
 
-This library is implemented both in Python and C++ (with Python bindings) in order to
-provide optimized computational methods that can run in parallel in a reasonable time.
+This library is composed of two parts:
+ - a set of analytical methods implemented in Python 3
+ - a set of computational methods implemented in C++ with (Python 3 bindings)
+ 
+The second typed is used in cases where the state space is two big to solve analytically, and thus require estimating the model parameters through monte-carlo simulations. The C++ implementation provides optimized computational methods that can run in parallel in a reasonable time, while Python bindings make the methods easily accecible to a larger range of researchers.
 
 To install all required packages run:
 
