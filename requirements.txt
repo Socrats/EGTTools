@@ -1,4 +1,6 @@
-numpy
-scipy
-matplotlib
+numpy>=1.15
+scipy>=1.5
+matplotlib>=3.3
 networkx
+pybind11
+pytest

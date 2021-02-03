@@ -115,3 +115,6 @@ venv.bak/
 
 # idea stuff
 /.idea
+
+# skbuild stuff
+_skbuild
