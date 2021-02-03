@@ -15,6 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
+"""
+The code used in here has been adapted from https://github.com/YannickJadoul/Parselmouth/blob/master/setup.py
+"""
+
 import io
 import os
 import re
