@@ -6,6 +6,7 @@
 #define EGTTOOLS_FINITEPOPULATIONS_GAMES_ABSTRACTGAME_HPP
 
 #include <egttools/Utils.h>
+
 #include <egttools/finite_populations/Utils.hpp>
 
 namespace egttools::FinitePopulations {
@@ -96,6 +97,6 @@ namespace egttools::FinitePopulations {
          */
         virtual void save_payoffs(std::string file_name) const = 0;
     };
-}
+}// namespace egttools::FinitePopulations
 
-#endif //EGTTOOLS_ABSTRACTGAME_HPP
+#endif//EGTTOOLS_ABSTRACTGAME_HPP

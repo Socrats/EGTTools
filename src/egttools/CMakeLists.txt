@@ -18,5 +18,6 @@
 target_sources(numerical PRIVATE
         SeedGenerator.cpp
         Distributions.cpp
+        Data.cpp
         )
 add_subdirectory(finite_populations)

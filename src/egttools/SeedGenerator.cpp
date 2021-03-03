@@ -31,3 +31,9 @@ void SeedGenerator::setMainSeed(unsigned long seed) {
   _rng_seed = seed;
   _rng_engine.seed(_rng_seed);
 }
+
+std::mt19937_64 * egttools::Random::thread_local_generator() {
+        static thread_local std::mt19937_64 *generator = nullptr;
+        if (!generator) generator = new std::mt19937_64(SeedGenerator::getInstance().getSeed());
+        return generator;
+}

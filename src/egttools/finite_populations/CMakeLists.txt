@@ -18,4 +18,5 @@
 target_sources(numerical PRIVATE
         Utils.cpp
         games/NormalFormGame.cpp
+        behaviors/NFGStrategies.cpp
         )
