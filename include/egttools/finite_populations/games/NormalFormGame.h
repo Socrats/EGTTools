@@ -16,7 +16,7 @@
 namespace egttools::FinitePopulations {
     using PayoffVector = std::vector<double>;
     using AbstractNFGStrategy = egttools::FinitePopulations::behaviors::AbstractNFGStrategy;
-    using StrategyVector = std::vector<std::shared_ptr<AbstractNFGStrategy>>;
+    using StrategyVector = std::vector<AbstractNFGStrategy *>;
 
     class NormalFormGame final : public egttools::FinitePopulations::AbstractGame {
     public:

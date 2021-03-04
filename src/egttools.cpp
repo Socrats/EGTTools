@@ -18,6 +18,25 @@ namespace py = pybind11;
 using namespace egttools;
 using PairwiseComparison = egttools::FinitePopulations::PairwiseMoran<egttools::Utils::LRUCache<std::string, double>>;
 
+std::string call_get_action(const py::list &strategies) {
+    std::stringstream result;
+    result << "(";
+    for (py::handle strategy : strategies) {
+        result << py::cast<egttools::FinitePopulations::behaviors::AbstractNFGStrategy *>(strategy)->get_action(0, 1) << ", ";
+    }
+    result << ")";
+    return result.str();
+}
+
+std::unique_ptr<egttools::FinitePopulations::NormalFormGame> init_normal_form_game_from_python_list(size_t nb_rounds,
+                                                                                   const Eigen::Ref<const Matrix2D> &payoff_matrix, const py::list &strategies) {
+    egttools::FinitePopulations::StrategyVector strategies_cpp;
+    for (py::handle strategy : strategies) {
+        strategies_cpp.push_back(py::cast<egttools::FinitePopulations::behaviors::AbstractNFGStrategy *>(strategy));
+    }
+    return std::make_unique<egttools::FinitePopulations::NormalFormGame>(nb_rounds, payoff_matrix, strategies_cpp);
+}
+
 PYBIND11_MODULE(numerical, m) {
     m.doc() = R"pbdoc(
         EGTtools: Efficient Evolutionary Game Theory models and methods.
@@ -70,8 +89,8 @@ PYBIND11_MODULE(numerical, m) {
     // Now we define a submodule
     auto mGames = m.def_submodule("games");
     auto mBehaviors = m.def_submodule("behaviors");
-    auto mNF = m.def_submodule("NormalForm");
-    auto mNFTwoActions = m.def_submodule("TwoActions");
+    auto mNF = mBehaviors.def_submodule("NormalForm");
+    auto mNFTwoActions = mNF.def_submodule("TwoActions");
     auto mData = m.def_submodule("DataStructures");
 
     py::class_<egttools::FinitePopulations::AbstractGame>(mGames, "AbstractGame")
@@ -108,9 +127,9 @@ PYBIND11_MODULE(numerical, m) {
                  "Normal Form Game. This constructor assumes that there are only two possible strategies and two possible actions.",
                  py::arg("nb_rounds"),
                  py::arg("payoff_matrix"))
-            .def(py::init<size_t, const Eigen::Ref<const Matrix2D> &, const egttools::FinitePopulations::StrategyVector &>(),
+            .def(py::init(&init_normal_form_game_from_python_list),
                  "Normal Form Game", py::arg("nb_rounds"),
-                 py::arg("payoff_matrix"), py::arg("strategies"))
+                 py::arg("payoff_matrix"), py::arg("strategies"), py::return_value_policy::reference_internal)
             .def("play", &egttools::FinitePopulations::NormalFormGame::play)
             .def("calculate_payoffs", &egttools::FinitePopulations::NormalFormGame::calculate_payoffs,
                  "updates the internal payoff and coop_level matrices by calculating the payoff of each strategy "
@@ -137,38 +156,50 @@ PYBIND11_MODULE(numerical, m) {
             .def("save_payoffs", &egttools::FinitePopulations::NormalFormGame::save_payoffs);
 
     py::class_<egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNF, "AbstractNFGStrategy")
-            .def("get_action", &egttools::FinitePopulations::behaviors::AbstractNFGStrategy::get_action)
-            .def("type", &egttools::FinitePopulations::behaviors::AbstractNFGStrategy::type);
+            .def("get_action", &egttools::FinitePopulations::behaviors::AbstractNFGStrategy::get_action,
+                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 py::arg("time_step"), py::arg("action_prev"))
+            .def("type", &egttools::FinitePopulations::behaviors::AbstractNFGStrategy::type, "Returns a string indicating the Strategy Type.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::Cooperator,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "Cooperator")
             .def(py::init<>(), "This strategy always cooperates.")
-            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::Cooperator::get_action)
-            .def("type", &egttools::FinitePopulations::behaviors::twoActions::Cooperator::type);
+            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::Cooperator::get_action,
+                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 py::arg("time_step"), py::arg("action_prev"))
+            .def("type", &egttools::FinitePopulations::behaviors::twoActions::Cooperator::type, "Returns a string indicating the Strategy Type.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::Defector,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "Defector")
             .def(py::init<>(), "This strategy always defects.")
-            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::Defector::get_action)
-            .def("type", &egttools::FinitePopulations::behaviors::twoActions::Defector::type);
+            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::Defector::get_action,
+                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 py::arg("time_step"), py::arg("action_prev"))
+            .def("type", &egttools::FinitePopulations::behaviors::twoActions::Defector::type, "Returns a string indicating the Strategy Type.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::RandomPlayer,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "Random")
             .def(py::init<>(), "This players chooses cooperation with uniform random probability.")
-            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::RandomPlayer::get_action)
-            .def("type", &egttools::FinitePopulations::behaviors::twoActions::RandomPlayer::type);
+            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::RandomPlayer::get_action,
+                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 py::arg("time_step"), py::arg("action_prev"))
+            .def("type", &egttools::FinitePopulations::behaviors::twoActions::RandomPlayer::type, "Returns a string indicating the Strategy Type.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::TitForTat,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "TFT")
             .def(py::init<>(), "Tit for Tat: Cooperates in the first round and imitates the opponent's move thereafter.")
-            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::TitForTat::get_action)
-            .def("type", &egttools::FinitePopulations::behaviors::twoActions::TitForTat::type);
+            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::TitForTat::get_action,
+                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 py::arg("time_step"), py::arg("action_prev"))
+            .def("type", &egttools::FinitePopulations::behaviors::twoActions::TitForTat::type, "Returns a string indicating the Strategy Type.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::SuspiciousTFT,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "SuspiciousTFT")
             .def(py::init<>(), "Defects on the first round and imitates its opponent's previous move thereafter.")
-            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::SuspiciousTFT::get_action)
-            .def("type", &egttools::FinitePopulations::behaviors::twoActions::SuspiciousTFT::type);
+            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::SuspiciousTFT::get_action,
+                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 py::arg("time_step"), py::arg("action_prev"))
+            .def("type", &egttools::FinitePopulations::behaviors::twoActions::SuspiciousTFT::type, "Returns a string indicating the Strategy Type.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::GenerousTFT,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "GenerousTFT")
@@ -180,8 +211,10 @@ PYBIND11_MODULE(numerical, m) {
                  "suckers payoffs.",
                  py::arg("R"), py::arg("P"),
                  py::arg("T"), py::arg("S"))
-            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::GenerousTFT::get_action)
-            .def("type", &egttools::FinitePopulations::behaviors::twoActions::GenerousTFT::type);
+            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::GenerousTFT::get_action,
+                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 py::arg("time_step"), py::arg("action_prev"))
+            .def("type", &egttools::FinitePopulations::behaviors::twoActions::GenerousTFT::type, "Returns a string indicating the Strategy Type.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::GradualTFT,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "GradualTFT")
@@ -191,8 +224,10 @@ PYBIND11_MODULE(numerical, m) {
                  "with each additional defection by its opponent\n"
                  "(2) it apologizes for each string of defections"
                  "by cooperating in the subsequent two rounds.")
-            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::GradualTFT::get_action)
-            .def("type", &egttools::FinitePopulations::behaviors::twoActions::GradualTFT::type);
+            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::GradualTFT::get_action,
+                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 py::arg("time_step"), py::arg("action_prev"))
+            .def("type", &egttools::FinitePopulations::behaviors::twoActions::GradualTFT::type, "Returns a string indicating the Strategy Type.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::ImperfectTFT,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "ImperfectTFT")
@@ -200,36 +235,46 @@ PYBIND11_MODULE(numerical, m) {
                  "Imitates opponent as in TFT, but makes mistakes "
                  "with :param error_probability.",
                  py::arg("error_probability"))
-            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::ImperfectTFT::get_action)
-            .def("type", &egttools::FinitePopulations::behaviors::twoActions::ImperfectTFT::type);
+            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::ImperfectTFT::get_action,
+                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 py::arg("time_step"), py::arg("action_prev"))
+            .def("type", &egttools::FinitePopulations::behaviors::twoActions::ImperfectTFT::type, "Returns a string indicating the Strategy Type.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::TFTT,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "TFTT")
             .def(py::init<>(), "Tit for 2 tats: Defects if defected twice.")
-            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::TFTT::get_action)
-            .def("type", &egttools::FinitePopulations::behaviors::twoActions::TFTT::type);
+            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::TFTT::get_action,
+                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 py::arg("time_step"), py::arg("action_prev"))
+            .def("type", &egttools::FinitePopulations::behaviors::twoActions::TFTT::type, "Returns a string indicating the Strategy Type.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::TTFT,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "TTFT")
             .def(py::init<>(), "2 Tits for tat: Defects twice if defected.")
-            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::TTFT::get_action)
-            .def("type", &egttools::FinitePopulations::behaviors::twoActions::TTFT::type);
+            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::TTFT::get_action,
+                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 py::arg("time_step"), py::arg("action_prev"))
+            .def("type", &egttools::FinitePopulations::behaviors::twoActions::TTFT::type, "Returns a string indicating the Strategy Type.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::GRIM,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "GRIM")
             .def(py::init<>(),
                  "Grim (Trigger): Cooperates until its opponent has defected once, "
                  "and then defects for the rest of the game.")
-            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::GRIM::get_action)
-            .def("type", &egttools::FinitePopulations::behaviors::twoActions::GRIM::type);
+            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::GRIM::get_action,
+                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 py::arg("time_step"), py::arg("action_prev"))
+            .def("type", &egttools::FinitePopulations::behaviors::twoActions::GRIM::type, "Returns a string indicating the Strategy Type.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::Pavlov,
-            egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "Pavlov")
+               egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "Pavlov")
             .def(py::init<>(),
                  "Win-stay loose-shift: Cooperates if it and its opponent moved alike in"
                  "previous move and defects if they moved differently.")
-            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::Pavlov::get_action)
-            .def("type", &egttools::FinitePopulations::behaviors::twoActions::Pavlov::type);
+            .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::Pavlov::get_action,
+                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 py::arg("time_step"), py::arg("action_prev"))
+            .def("type", &egttools::FinitePopulations::behaviors::twoActions::Pavlov::type, "Returns a string indicating the Strategy Type.");
 
     py::class_<PairwiseComparison>(m, "PairwiseMoran")
             .def(py::init<size_t, egttools::FinitePopulations::AbstractGame &, size_t>(),
@@ -285,4 +330,6 @@ PYBIND11_MODULE(numerical, m) {
                            py::return_value_policy::reference_internal)
             .def_readwrite("column_types", &egttools::DataStructures::DataTable::column_types,
                            py::return_value_policy::reference_internal);
+
+    m.def("call_get_action", &call_get_action);
 }

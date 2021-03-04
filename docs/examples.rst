@@ -7,6 +7,7 @@ The following examples give an idea of how to use EGTtools to model social dynam
     :maxdepth: 2
 
     examples/hawk_dove_dynamics
+    examples/normal_form_game_mc_simulations
 
 
 Projects using EGTtools

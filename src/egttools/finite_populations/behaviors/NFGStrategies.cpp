@@ -74,6 +74,8 @@ std::string egttools::FinitePopulations::behaviors::twoActions::GenerousTFT::typ
 }
 size_t egttools::FinitePopulations::behaviors::twoActions::GradualTFT::get_action(size_t time_step, size_t action_prev) {
     if (time_step == 0) {
+        defection_string_ = 0;
+        cooperation_string_ = 0;
         return COOPERATE;
     } else {
         if (cooperation_string_ > 0) {
@@ -115,6 +117,7 @@ std::string egttools::FinitePopulations::behaviors::twoActions::ImperfectTFT::ty
 size_t egttools::FinitePopulations::behaviors::twoActions::TFTT::get_action(size_t time_step, size_t action_prev) {
     size_t action = COOPERATE;
     if (time_step == 0) {
+        action_memory_ = 1;
         return COOPERATE;
     } else if ((action_prev == DEFECT) && (action_memory_ == DEFECT)) {
         action = DEFECT;
@@ -127,6 +130,7 @@ std::string egttools::FinitePopulations::behaviors::twoActions::TFTT::type() {
 }
 size_t egttools::FinitePopulations::behaviors::twoActions::TTFT::get_action(size_t time_step, size_t action_prev) {
     if (time_step == 0) {
+        defection_counter_ = 0;
         return COOPERATE;
     } else if (action_prev == DEFECT) {
         ++defection_counter_;
@@ -142,6 +146,7 @@ std::string egttools::FinitePopulations::behaviors::twoActions::TTFT::type() {
 }
 size_t egttools::FinitePopulations::behaviors::twoActions::GRIM::get_action(size_t time_step, size_t action_prev) {
     if (time_step == 0) {
+        action_ = COOPERATE;
         return COOPERATE;
     } else if (action_prev == DEFECT) {
         action_ = DEFECT;
@@ -153,6 +158,7 @@ std::string egttools::FinitePopulations::behaviors::twoActions::GRIM::type() {
 }
 size_t egttools::FinitePopulations::behaviors::twoActions::Pavlov::get_action(size_t time_step, size_t action_prev) {
     if (time_step == 0) {
+        action_memory_ = 1;
         return COOPERATE;
     } else if (action_prev == action_memory_) {
         action_memory_ = COOPERATE;
