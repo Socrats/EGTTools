@@ -59,3 +59,8 @@ You may cite this repository in the following way:
   doi = {10.5281/zenodo.3687125}
 }
 ```
+
+## Licence
+
+* EGTtools is released under the GNU General Public License, version 3 or later. See the [LICENCE](LICENSE) file for details.
+* [pybind11](https://github.com/pybind/pybind11) is released under [a BSD-style license](pybind11/LICENSE).
