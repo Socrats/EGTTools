@@ -62,5 +62,5 @@ You may cite this repository in the following way:
 
 ## Licence
 
-* EGTtools is released under the GNU General Public License, version 3 or later. See the [LICENCE](LICENSE) file for details.
+* EGTtools is released under the [GNU General Public Licence](LICENSE), version 3 or later.
 * [pybind11](https://github.com/pybind/pybind11) is released under [a BSD-style license](pybind11/LICENSE).
