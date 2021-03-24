@@ -9,11 +9,14 @@
 #include <egttools/Types.h>
 
 #include <egttools/LruCache.hpp>
-#include <egttools/OpenMPUtils.hpp>
 #include <egttools/finite_populations/Utils.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 
-namespace egttools::FinitePopulations {
+#if defined(_OPENMP)
+#include <egttools/OpenMPUtils.hpp>
+#endif
+
+namespace egttools { namespace FinitePopulations {
     /**
  * This class caches the results according to the specified class in the template
  * parameter.
@@ -110,13 +113,26 @@ namespace egttools::FinitePopulations {
         MatrixXui2D run(size_t nb_generations, double beta, const Eigen::Ref<const VectorXui> &init_state);
 
         /**
-         * Calculates the gradient of selection between 2 strategies without mutation
+         * @brieff Estimates the gradient of selection between 2 strategies.
+         *
+         * This estimation does not take into account mutation. In fact we are simply
+         * estimaitng T+ - T-, where T+ is the probability that the number of individuals
+         * with a particular strategy at a given state will increase, and T- it is the probability
+         * that it will decrease. The difference between both gives you the gradient of selection,
+         * i.e., the direction and intensity of the change in the population at a given state.
+         * For example, if T+ > T- then the frequency of the strategy is more likely to increase
+         * than decrease. If T+ = T- we have a critical point, where the population is not changing
+         * (and change can only happen with mutation).
+         *
          * @param invader : index of the invading strategy
          * @param resident : index of the resident strategy
          * @param runs : number of independent runs to average
          * @return a vector that contains the gradient of selection for each state of the population
+         * @throws invalid_argument exception
          */
-        Vector gradientOfSelection(size_t invader, size_t resident, size_t runs);
+        Vector gradientOfSelection(size_t runs, size_t invader, size_t resident);
+
+        Vector gradientOfSelection(size_t runs);
 
         /**
          * @brief Estimates the fixation probability of the invading strategy over the resident strategy.
@@ -137,7 +153,7 @@ namespace egttools::FinitePopulations {
         /**
          * @brief Estimates the stationary distribution of the population of strategies in the game.
          *
-         * The estimation of the stationary distribution is done by calculating averaging the fraction of
+         * The estimation of the stationary distribution is done by averaging the fraction of
          * the population of each strategy at the end of each trial over all trials.
          *
          * @param nb_runs : number of trials used to estimate the stationary distribution
@@ -148,6 +164,18 @@ namespace egttools::FinitePopulations {
          * @return the stationary distribution
          */
         Vector stationaryDistribution(size_t nb_runs, size_t nb_generations, size_t transitory, double beta, double mu);
+
+        /**
+         * @brief Estimates the full transition matrix that rules the Markov Chain.
+         *
+         * This estimation is done by
+         *
+         * @param nb_runs
+         * @param nb_generations
+         * @param beta
+         * @return
+         */
+        Matrix2D transition_matrix(size_t nb_runs, size_t nb_generations, double beta);
 
         // Getters
         [[nodiscard]] size_t nb_strategies() const;
@@ -643,6 +671,38 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
+    Vector PairwiseMoran<Cache>::gradientOfSelection(size_t runs, size_t invader, size_t resident) {
+        if (invader > _nb_strategies || resident > _nb_strategies)
+            throw std::invalid_argument(
+                    "you must specify a valid index for invader and resident [0, " + std::to_string(_nb_strategies) +
+                    ")");
+        // 1-D gradient between the two strategies
+        VectorXi t_plus = VectorXi::Zero(_pop_size + 1);
+        VectorXi t_minus = VectorXi::Zero(_pop_size + 1);
+
+        // This loop can be done in parallel
+        #pragma omp parallel for reduction(+ : t_plus, t_minus) default(none) shared(invader, resident, runs,  \
+        _pop_size, _nb_strategies)
+        for (size_t run = 0; run < runs; ++run) {
+            for (size_t k = 1; k < _pop_size; ++k) {// Loops over all population configurations
+                // Random generators - each thread should have its own generator
+                std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
+                // Setup the population state
+                VectorXui strategies = VectorXui::Zero(_nb_strategies);
+                strategies(resident) = _pop_size - k;
+                strategies(invader) = k;
+
+                // Creates a cache for the fitness data
+                Cache cache(_cache_size);
+
+                _update_step();
+            }
+        }
+        // calculate gradient
+        return (t_plus - t_minus).cast<double>() / runs;
+    }
+
+    template<class Cache>
     Vector
     PairwiseMoran<Cache>::stationaryDistribution(size_t nb_runs, size_t nb_generations, size_t transitory, double beta,
                                                  double mu) {
@@ -747,7 +807,7 @@ namespace egttools::FinitePopulations {
         auto fitness_p1 = _calculate_fitness(s1, strategies, cache);
         auto fitness_p2 = _calculate_fitness(s2, strategies, cache);
 
-        // Then we apply the moran process with mutation
+        // Then we apply the moran process without mutation
         if (_real_rand(generator) < egttools::FinitePopulations::fermi(beta, fitness_p1, fitness_p2)) {
             // player 1 copies player 2
             die = s1;
@@ -1013,6 +1073,6 @@ namespace egttools::FinitePopulations {
     void PairwiseMoran<Cache>::change_game(egttools::FinitePopulations::AbstractGame &game) {
         _game = game;
     }
-}// namespace egttools::FinitePopulations
+} }// namespace egttools::FinitePopulations
 
 #endif//EGTTOOLS_PAIRWISEMORAN_HPP

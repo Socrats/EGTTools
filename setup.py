@@ -73,7 +73,7 @@ setup(
     packages=['egttools', 'egttools.analytical', 'egttools.plotting'],
     package_dir={'egttools': "egttools", 'egttools.analytical': "egttools/analytical",
                  'egttools.plotting': "egttools/plotting"},
-    py_modules={'utils'},
+    # py_modules={'utils'},
     cmake_args=shlex.split(os.environ.get('EGTTOOLS_EXTRA_CMAKE_ARGS', '')),
     cmake_install_dir="egttools",
 )

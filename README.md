@@ -6,15 +6,18 @@
 [![Documentation Status](https://readthedocs.org/projects/egttools/badge/?version=latest)](https://egttools.readthedocs.io/en/latest/?badge=latest)
 ![build](https://github.com/Socrats/EGTTools/workflows/build/badge.svg)
 
-**EGTtools** provides a centralized repository with analytical 
-and numerical methods to study/model game theoretical problems under the Evolutionary
-Game Theory (EGT) framework.
+**EGTtools** provides a centralized repository with analytical and numerical methods to study/model game theoretical
+problems under the Evolutionary Game Theory (EGT) framework.
 
 This library is composed of two parts:
- - a set of analytical methods implemented in Python 3
- - a set of computational methods implemented in C++ with (Python 3 bindings)
- 
-The second typed is used in cases where the state space is two big to solve analytically, and thus require estimating the model parameters through monte-carlo simulations. The C++ implementation provides optimized computational methods that can run in parallel in a reasonable time, while Python bindings make the methods easily accecible to a larger range of researchers.
+
+- a set of analytical methods implemented in Python 3
+- a set of computational methods implemented in C++ with (Python 3 bindings)
+
+The second typed is used in cases where the state space is too big to solve analytically, and thus require estimating
+the model parameters through monte-carlo simulations. The C++ implementation provides optimized computational methods
+that can run in parallel in a reasonable time, while Python bindings make the methods easily accecible to a larger range
+of researchers.
 
 To install all required packages run:
 
@@ -38,9 +41,11 @@ Finally, to make your virtual environment visible to jupyter:
 python -m ipykernel install --user --name=egtenv
 ```
 
-The [EGTtools](egttools/analytical/sed_analytical.py) module contains classes and functions that you may use to investigate the evolutionary dynamics in 2-player games.
+The [EGTtools](egttools/analytical/sed_analytical.py) module contains classes and functions that you may use to
+investigate the evolutionary dynamics in 2-player games.
 
-The [Example](docs/examples/hawk_dove_dynamics.ipynb) is a jupyter notebook the analysis of the evolutionary dynamics in a Hawk-Dove game.
+The [Example](docs/examples/hawk_dove_dynamics.ipynb) is a jupyter notebook the analysis of the evolutionary dynamics in
+a Hawk-Dove game.
 
 You can find more information in the [documentation](https://egttools.readthedocs.io/en/latest/).
 

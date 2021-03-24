@@ -118,8 +118,6 @@ class StochDynamics:
             index of the strategy that will die
         population_state : array_like
                            vector containing the counts of each strategy in the population
-        args : {None, List}, optional
-               extra arguments for the payoff matrix
 
         Returns
         -------
@@ -186,7 +184,6 @@ class StochDynamics:
             index of the strategy that will die
         population_state : array_like
                            vector containing the counts of each strategy in the population
-        args : {None, List}, optional
 
         Returns
         -------
@@ -262,7 +259,7 @@ class StochDynamics:
         p_less = ((1 - self.mu) * p_less) + (self.mu * (k / self.Z))
         return p_plus, p_less
 
-    def full_prob_increase_decrease_with_mutation(self, population_state, beta, *args):
+    def full_prob_increase_decrease_with_mutation(self, population_state, beta):
         """
 
         Parameters
@@ -272,8 +269,6 @@ class StochDynamics:
                            counts of each strategy in the population
         beta : float
                intensity of selection
-        args : {None, List}, optional
-               additional parameters necessary to compute the fitness
 
         Returns
         -------
@@ -320,19 +315,18 @@ class StochDynamics:
         population_state : array_like structure of unsigned integers containing the
                            counts of each strategy in the population
         beta : intensity of selection
-        args : {None, List}, optional
-               additional parameters necessary to compute the fitness
 
-        Returns an ndarray matrix indicating the likelihood of change in the population given an starting point.
+        Returns
         -------
-
+        array_like
+        Matrix indicating the likelihood of change in the population given an starting point.
         """
         probability_selecting_strategy_first = population_state / self.Z
         probability_selecting_strategy_second = population_state / (self.Z - 1)
         probabilities = np.outer(probability_selecting_strategy_first, probability_selecting_strategy_second)
         fitness = np.asarray([[self.full_fitness(i, j, population_state) for i in
                                range(len(population_state))] for j in range(len(population_state))])
-        return probabilities * np.tanh(beta / 2) * fitness
+        return (probabilities * np.tanh((beta / 2) * fitness)).sum(axis=0)
 
     def fixation_probability(self, invader, resident, beta, *args):
         """
