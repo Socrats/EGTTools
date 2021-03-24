@@ -106,7 +106,7 @@ size_t egttools::FinitePopulations::behaviors::twoActions::ImperfectTFT::get_act
         return COOPERATE;
     } else {
         if (rand_double_(*egttools::Random::thread_local_generator()) < error_probability_) {
-            return action_prev + 1 % nb_actions;
+            return (action_prev + 1) % egttools::FinitePopulations::behaviors::twoActions::nb_actions;
         }
         return action_prev;
     }
@@ -157,12 +157,9 @@ std::string egttools::FinitePopulations::behaviors::twoActions::GRIM::type() {
     return "NFGStrategies::GRIM";
 }
 size_t egttools::FinitePopulations::behaviors::twoActions::Pavlov::get_action(size_t time_step, size_t action_prev) {
-    if (time_step == 0) {
-        action_memory_ = 1;
-        return COOPERATE;
-    } else if (action_prev == action_memory_) {
+    if ((time_step == 0) || (action_prev == action_memory_)) {
         action_memory_ = COOPERATE;
-    } else {
+    }  else {
         action_memory_ = DEFECT;
     }
     return action_memory_;

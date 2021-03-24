@@ -14,6 +14,9 @@
 #pragma omp declare reduction (+: egttools::VectorXui: omp_out=omp_out+omp_in)\
      initializer(omp_priv=egttools::VectorXui::Zero(omp_orig.size()))
 
+#pragma omp declare reduction (+: egttools::VectorXi: omp_out=omp_out+omp_in)\
+     initializer(omp_priv=egttools::VectorXi::Zero(omp_orig.size()))
+
 #pragma omp declare reduction (+: egttools::Vector3d: omp_out=omp_out+omp_in)\
      initializer(omp_priv=egttools::Vector3d::Zero())
 
