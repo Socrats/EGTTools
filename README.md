@@ -52,7 +52,7 @@ python -m pip install <path>
 ```
 
 Where ```<path>``` represents the path to the EGTtools folder. If you are running this while inside the EGTtools folder,
-then ```<path>``` is simply ```\.```.
+then ```<path>``` is simply ```./```.
 
 If you wish, you may also install EGTtools in **development** mode, this will allow the installation to update with new
 modifications to the package:
