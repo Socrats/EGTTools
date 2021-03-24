@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.17)
 project(egttools LANGUAGES CXX)
 
 # For additional Find library scripts
@@ -45,6 +45,28 @@ if (MSVC)
     endif ()
 endif ()
 
+# Necessary for certain MacOX versions to find homebrew OpenMP
+if(APPLE)
+#    set(CMAKE_C_COMPILER /usr/bin/clang)
+#    set(CMAKE_CXX_COMPILER /usr/bin/clang++)
+#    set (CMAKE_FIND_FRAMEWORK NEVER)
+    execute_process(COMMAND brew --prefix libomp OUTPUT_VARIABLE LIBOMP_DIR)
+    string(STRIP ${LIBOMP_DIR} LIBOMP_DIR)
+
+    if(CMAKE_C_COMPILER_ID MATCHES "Clang\$")
+        set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${LIBOMP_DIR}/include")
+        set(OpenMP_C_LIB_NAMES "omp")
+        set(OpenMP_omp_LIBRARY ${LIBOMP_DIR}/lib/libomp.a)
+    endif()
+
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang\$")
+        set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${LIBOMP_DIR}/include")
+        set(OpenMP_CXX_LIB_NAMES "omp")
+        set(OpenMP_omp_LIBRARY ${LIBOMP_DIR}/lib/libomp.a)
+    endif()
+
+endif()
+
 if (NOT WIN32)
     add_definitions(
             -Wall
@@ -60,12 +82,17 @@ set(EIGEN_VERSION_REQUIRED 3.3)
 #set(PYTHON_VERSION 3)
 #set(PYBIND11_CPP_STANDARD -std=c++1z) # Experimental C++17 support
 
-find_package(Eigen3 ${EIGEN_VERSION_REQUIRED} REQUIRED)
+find_package(Eigen3 ${EIGEN_VERSION_REQUIRED} QUIET CONFIG)
+if (NOT EIGEN3_FOUND)
+    find_package(Eigen3 ${EIGEN_VERSION_REQUIRED} REQUIRED)
+    if (NOT EIGEN3_FOUND)
+        message(FATAL_ERROR "Please point the environment variable EIGEN3_INCLUDE_DIR to the include directory of your Eigen3 installation.")
+    endif()
+endif()
+
 if (EIGEN3_FOUND)
     include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
     message(STATUS "Eigen found")
-else ()
-    message(FATAL_ERROR "Please point the environment variable EIGEN3_INCLUDE_DIR to the include directory of your Eigen3 installation.")
 endif ()
 
 include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
@@ -88,7 +115,10 @@ if(SKBUILD)
 endif()
 
 set(Python_FIND_IMPLEMENTATIONS CPython PyPy)
-find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
+find_package(Python3 COMPONENTS Interpreter Development.Module REQUIRED)
+if (PYTHON3_FOUND)
+    message("-- Using Python version ${PYTHON_VERSION_STRING}")
+endif ()
 add_subdirectory(pybind11)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)

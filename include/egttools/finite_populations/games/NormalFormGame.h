@@ -8,12 +8,15 @@
 #include <egttools/Distributions.h>
 
 #include <cassert>
-#include <egttools/OpenMPUtils.hpp>
 #include <egttools/finite_populations/behaviors/AbstractNFGStrategy.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <fstream>
 
-namespace egttools::FinitePopulations {
+#if defined(_OPENMP)
+#include <egttools/OpenMPUtils.hpp>
+#endif
+
+namespace egttools { namespace FinitePopulations {
     using PayoffVector = std::vector<double>;
     using AbstractNFGStrategy = egttools::FinitePopulations::behaviors::AbstractNFGStrategy;
     using StrategyVector = std::vector<AbstractNFGStrategy *>;
@@ -43,9 +46,9 @@ namespace egttools::FinitePopulations {
         */
         NormalFormGame(size_t nb_rounds, const Eigen::Ref<const Matrix2D> &payoff_matrix);
 
-        NormalFormGame(size_t nb_rounds, const Eigen::Ref<const Matrix2D> &payoff_matrix, const StrategyVector& strategies);
+        NormalFormGame(size_t nb_rounds, const Eigen::Ref<const Matrix2D> &payoff_matrix, const StrategyVector &strategies);
 
-//        NormalFormGame(size_t nb_rounds, const Eigen::Ref<const Matrix2D> &payoff_matrix, const std::vector<std::string> strategies);
+        //        NormalFormGame(size_t nb_rounds, const Eigen::Ref<const Matrix2D> &payoff_matrix, const std::vector<std::string> strategies);
 
         void play(const egttools::FinitePopulations::StrategyCounts &group_composition,
                   PayoffVector &game_payoffs) override;
@@ -109,6 +112,6 @@ namespace egttools::FinitePopulations {
         void _update_cooperation_and_payoffs(size_t s1, size_t s2);
     };
 
-}// namespace egttools::FinitePopulations
+} }// namespace egttools::FinitePopulations
 
 #endif//DYRWIN_INCLUDE_DYRWIN_FINITEPOPULATIONS_GAMES_NORMALFORMGAME_H_

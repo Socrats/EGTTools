@@ -19,10 +19,14 @@ the model parameters through monte-carlo simulations. The C++ implementation pro
 that can run in parallel in a reasonable time, while Python bindings make the methods easily accecible to a larger range
 of researchers.
 
-To install all required packages run:
+---
+
+## Installation from source
+
+To **install all required packages** run:
 
 ```bash
-python -m venv egtenv
+python -m venv egttools-env
 source egtenv/bin/activate
 pip install -r requirements.txt
 ```
@@ -30,16 +34,34 @@ pip install -r requirements.txt
 Or with anaconda:
 
 ```bash
-conda create --name egtenv
-conda activate egtenv
-pip install -r requirements.txt
+conda env create -f environment.yml
+conda activate egttools-env
 ```
 
-Finally, to make your virtual environment visible to jupyter:
+Also, to make your virtual environment visible to jupyter:
 
 ```bash
-python -m ipykernel install --user --name=egtenv
+conda install ipykernel # or pip install ipykernel
+python -m ipykernel install --user --name=egttools-env
 ```
+
+Finally, you can **install EGTtools** in your virtual environment by running:
+
+```bash
+python -m pip install <path>
+```
+
+Where ```<path>``` represents the path to the EGTtools folder. If you are running this while inside the EGTtools folder,
+then ```<path>``` is simply ```\.```.
+
+If you wish, you may also install EGTtools in **development** mode, this will allow the installation to update with new
+modifications to the package:
+
+```bash
+python -m pip install -e <path>
+```
+
+---
 
 The [EGTtools](egttools/analytical/sed_analytical.py) module contains classes and functions that you may use to
 investigate the evolutionary dynamics in 2-player games.
@@ -48,6 +70,24 @@ The [Example](docs/examples/hawk_dove_dynamics.ipynb) is a jupyter notebook the 
 a Hawk-Dove game.
 
 You can find more information in the [documentation](https://egttools.readthedocs.io/en/latest/).
+
+---
+
+### Caveats
+
+1. On Apple M1 (arm64) you should install (for the moment) [miniforge](https://github.com/conda-forge/miniforge), create
+   a conda environment using it, and install EGTtools from the conda environment.
+
+2. In MacOSX it is assumed that you have Homebrew installed.
+3. You should install libomp with homebrew ``brew install libomp`` if you want to have support for parallel operations (
+   there is a big difference in computation time).
+
+4. You **must** have Eigen 3.3.* installed.
+
+5. You **do not** need any of the above if you install EGTtools through ```pip install egttools```. This will soon be an
+   option.
+
+---
 
 ## Citing
 

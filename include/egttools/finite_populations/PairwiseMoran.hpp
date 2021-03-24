@@ -9,11 +9,14 @@
 #include <egttools/Types.h>
 
 #include <egttools/LruCache.hpp>
-#include <egttools/OpenMPUtils.hpp>
 #include <egttools/finite_populations/Utils.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 
-namespace egttools::FinitePopulations {
+#if defined(_OPENMP)
+#include <egttools/OpenMPUtils.hpp>
+#endif
+
+namespace egttools { namespace FinitePopulations {
     /**
  * This class caches the results according to the specified class in the template
  * parameter.
@@ -678,7 +681,7 @@ namespace egttools::FinitePopulations {
         VectorXi t_minus = VectorXi::Zero(_pop_size + 1);
 
         // This loop can be done in parallel
-        #pragma omp parallel for reduction(+ : t_plus, t_minus) default(none) shared(gradient, invader, resident, runs,  \
+        #pragma omp parallel for reduction(+ : t_plus, t_minus) default(none) shared(invader, resident, runs,  \
         _pop_size, _nb_strategies)
         for (size_t run = 0; run < runs; ++run) {
             for (size_t k = 1; k < _pop_size; ++k) {// Loops over all population configurations
@@ -692,7 +695,7 @@ namespace egttools::FinitePopulations {
                 // Creates a cache for the fitness data
                 Cache cache(_cache_size);
 
-                _update_step()
+                _update_step();
             }
         }
         // calculate gradient
@@ -1070,6 +1073,6 @@ namespace egttools::FinitePopulations {
     void PairwiseMoran<Cache>::change_game(egttools::FinitePopulations::AbstractGame &game) {
         _game = game;
     }
-}// namespace egttools::FinitePopulations
+} }// namespace egttools::FinitePopulations
 
 #endif//EGTTOOLS_PAIRWISEMORAN_HPP
