@@ -22,7 +22,7 @@ populations on 2-player games.
 """
 
 import numpy as np
-from scipy.sparse import csr_matrix
+from scipy.sparse import lil_matrix
 from scipy.stats import hypergeom, multivariate_hypergeom
 
 try:
@@ -357,7 +357,7 @@ class StochDynamics:
         :param beta: intensity of selection
         :return full transition matrix between the two strategies
         """
-        transitions = csr_matrix((self.Z + 1, self.Z + 1), dtype=np.float64)
+        transitions = lil_matrix((self.Z + 1, self.Z + 1), dtype=np.float64)
         # Case of 0:
         transitions[0, 1] = self.mu
         transitions[0, 0] = 1. - self.mu

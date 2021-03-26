@@ -47,9 +47,6 @@ endif ()
 
 # Necessary for certain MacOX versions to find homebrew OpenMP
 if(APPLE)
-#    set(CMAKE_C_COMPILER /usr/bin/clang)
-#    set(CMAKE_CXX_COMPILER /usr/bin/clang++)
-#    set (CMAKE_FIND_FRAMEWORK NEVER)
     execute_process(COMMAND brew --prefix libomp OUTPUT_VARIABLE LIBOMP_DIR)
     string(STRIP ${LIBOMP_DIR} LIBOMP_DIR)
 
