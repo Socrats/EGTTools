@@ -120,7 +120,7 @@ add_subdirectory(pybind11)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src)
-#add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
+add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
 #add_subdirectory(${PROJECT_SOURCE_DIR}/docs)
 
 if(SKBUILD)

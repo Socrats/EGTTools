@@ -317,78 +317,32 @@ namespace egttools { namespace FinitePopulations {
     VectorXui
     PairwiseMoran<Cache>::evolve(size_t nb_generations, double beta, double mu,
                                  const Eigen::Ref<const VectorXui> &init_state) {
-        size_t die, birth;
-        std::vector<size_t> population(_pop_size, 0);
         VectorXui strategies(_nb_strategies);
         // Initialise strategies from init_state
         strategies.array() = init_state;
 
         // Avg. number of rounds for a mutation to happen
-        std::geometric_distribution<size_t> geometric(1 - mu);
+        std::geometric_distribution<size_t> geometric(mu);
         auto [homogeneous, idx_homo] = _is_homogeneous(strategies);
 
         // Creates a cache for the fitness data
         Cache cache(_cache_size);
+        // Initialize helper parameters
+        size_t die = 0, birth = 0, strategy_p1 = 0, strategy_p2 = 0, k = 0;
 
-        // initialise population
-        _initialise_population(strategies, population);
+        // Imitation process
+        for (size_t j = 0; j < nb_generations; ++j) {
+            _sample_players(strategy_p1, strategy_p2, strategies, _mt);
 
-        // Now we start the imitation process
-        for (size_t i = 0; i < nb_generations; ++i) {
-            // First we pick 2 players randomly
-            auto [player1, player2] = _sample_players();
+            // Update with mutation and return how many steps should be added to the current
+            // generation if the only change in the population could have been a mutation
+            k = _update_multi_step(strategy_p1, strategy_p2, beta, mu,
+                                   birth, die, homogeneous, idx_homo,
+                                   strategies, cache,
+                                   geometric, _mt);
 
-            if (homogeneous) {
-                if (mu > 0) {
-                    i += geometric(_mt);
-                    // mutate
-                    birth = _strategy_sampler(_mt);
-                    // If population still homogeneous we wait for another mutation
-                    while (birth == idx_homo) {
-                        i += geometric(_mt);
-                        birth = _strategy_sampler(_mt);
-                    }
-                    if (i < nb_generations) {
-                        population[player1] = birth;
-                        strategies(birth) += 1;
-                        strategies(idx_homo) -= 1;
-                        homogeneous = false;
-                    }
-                    continue;
-                } else
-                    break;
-            }
-
-            // Check if player mutates
-            if (_real_rand(_mt) < mu) {
-                die = population[player1];
-                birth = _strategy_sampler(_mt);
-                population[player1] = birth;
-            } else {// If no mutation, player imitates
-                // Then we let them play to calculate their payoffs
-                auto fitness_p1 = _calculate_fitness(population[player1], strategies, cache);
-                auto fitness_p2 = _calculate_fitness(population[player2], strategies, cache);
-
-                // Then we apply the moran process with mutation
-                if (_real_rand(_mt) < egttools::FinitePopulations::fermi(beta, fitness_p1, fitness_p2)) {
-                    // player 1 copies player 2
-                    die = population[player1];
-                    birth = population[player2];
-                    population[player1] = birth;
-                } else {
-                    // player 2 copies player 1
-                    die = population[player2];
-                    birth = population[player1];
-                    population[player2] = birth;
-                }
-            }
-            strategies(birth) += 1;
-            strategies(die) -= 1;
-            // Check if population is homogeneous
-            if (strategies(birth) == _pop_size) {
-                homogeneous = true;
-                idx_homo = birth;
-            }
+            // Update state count by k steps
+            j += k;
         }
 
         return strategies;
@@ -506,12 +460,12 @@ namespace egttools { namespace FinitePopulations {
     template<class Cache>
     MatrixXui2D PairwiseMoran<Cache>::run(size_t nb_generations, double beta, double mu,
                                           const Eigen::Ref<const egttools::VectorXui> &init_state) {
-        size_t die, birth, strategy_p1 = 0, strategy_p2 = 0, current_generation = 1;
-        MatrixXui2D states = MatrixXui2D::Zero(nb_generations, _nb_strategies);
+        size_t die, birth, strategy_p1 = 0, strategy_p2 = 0;
+        MatrixXui2D states = MatrixXui2D::Zero(nb_generations + 1, _nb_strategies);
         VectorXui strategies(_nb_strategies);
         // initialise initial state
-        states.row(0) = init_state;
-        strategies = init_state;
+        states.row(0).array() = init_state;
+        strategies.array() = init_state;
 
         // Distribution number of generations for a mutation to happen
         std::geometric_distribution<size_t> geometric(mu);
@@ -519,46 +473,24 @@ namespace egttools { namespace FinitePopulations {
         // Check if state is homogeneous
         auto [homogeneous, idx_homo] = _is_homogeneous(strategies);
 
-        // If it is we add a random mutant
-        if (homogeneous) {
-            current_generation += geometric(_mt);
-            // mutate
-            die = idx_homo;
-            birth = _strategy_sampler(_mt);
-            // If population still homogeneous we wait for another mutation
-            while (birth == die) {
-                birth = _strategy_sampler(_mt);
-            }
-            if (current_generation < nb_generations) {
-                strategies(birth) += 1;
-                strategies(die) -= 1;
-                homogeneous = false;
-                for (size_t z = 1; z <= current_generation; ++z)
-                    states.row(z) = strategies;
-            } else {
-                for (size_t z = 1; z < nb_generations; ++z)
-                    states.row(z) = strategies;
-            }
-            current_generation += 1;
-        }
-
         // Creates a cache for the fitness data
         Cache cache(_cache_size);
         size_t k = 0;
 
-        for (size_t j = current_generation; j < nb_generations; ++j) {
+        // Imitation process
+        for (size_t j = 1; j < nb_generations + 1; ++j) {
             // Update with mutation and return how many steps should be added to the current
             // generation if the only change in the population could have been a mutation
             if (homogeneous) {
                 k = geometric(_mt);
                 // Update states matrix
                 if (k == 0) states.row(j) = strategies;
-                else if ((j + k) < nb_generations) {
+                else if ((j + k) <= nb_generations) {
                     for (size_t z = j; z <= j + k; ++z)
-                        states.row(z) = strategies;
+                        states.row(z).array() = strategies;
                 } else {
-                    for (size_t z = j; z < nb_generations; ++z)
-                        states.row(z) = strategies;
+                    for (size_t z = j; z <= nb_generations; ++z)
+                        states.row(z).array() = strategies;
                 }
 
                 // mutate
@@ -570,7 +502,10 @@ namespace egttools { namespace FinitePopulations {
                 homogeneous = false;
 
                 // Update state count by k steps
-                j += k;
+                j += k + 1;
+                // Update state after mutation
+                if (j <= nb_generations)
+                    states.row(j).array() = strategies;
             } else {
                 // First we pick 2 players randomly
                 _sample_players(strategy_p1, strategy_p2, strategies, _mt);
@@ -579,8 +514,7 @@ namespace egttools { namespace FinitePopulations {
                              birth, die, homogeneous, idx_homo,
                              strategies, cache, _mt);
 
-                // update all states until k + 1]
-                states.row(j) = strategies;
+                states.row(j).array() = strategies;
             }
         }
         return states;
@@ -590,25 +524,26 @@ namespace egttools { namespace FinitePopulations {
     MatrixXui2D PairwiseMoran<Cache>::run(size_t nb_generations, double beta,
                                           const Eigen::Ref<const egttools::VectorXui> &init_state) {
         size_t die, birth, strategy_p1 = 0, strategy_p2 = 0, current_generation = 1;
-        MatrixXui2D states = MatrixXui2D::Zero(nb_generations, _nb_strategies);
+        MatrixXui2D states = MatrixXui2D::Zero(nb_generations + 1, _nb_strategies);
         VectorXui strategies(_nb_strategies);
         // initialise initial state
-        states.row(0) = init_state;
-        strategies = init_state;
+        states.row(0).array() = init_state;
+        strategies.array() = init_state;
 
         // Check if state is homogeneous
         auto [homogeneous, idx_homo] = _is_homogeneous(strategies);
 
         // If homogeneous we return a matrix where the population never changes
         if (homogeneous) {
-            states.colwise() = strategies;
+            for (size_t j = 1; j <= nb_generations; ++j)
+                states.row(j).array() = strategies;
             return states;
         }
 
         // Creates a cache for the fitness data
         Cache cache(_cache_size);
 
-        for (size_t j = current_generation; j < nb_generations; ++j) {
+        for (size_t j = current_generation; j <= nb_generations; ++j) {
             // Update with mutation and return how many steps should be added to the current
             // generation if the only change in the population could have been a mutation
             if (!homogeneous) {
@@ -619,12 +554,11 @@ namespace egttools { namespace FinitePopulations {
                              birth, die, strategies, cache, _mt);
 
                 // update state for the current generation
-                states.row(j) = strategies;
+                states.row(j).array() = strategies;
             } else {
-                // Update states matrix
-                states.row(j) = strategies;
-                // If here, j < nb_generations, then we fill the rest of the matrix
-                states.block(nb_generations - j - 1, 0, nb_generations - j, init_state.size()).colwise() = strategies;
+                // We fill the rest of the matrix
+                for (size_t z = j; z <= nb_generations; ++z)
+                    states.row(j).array() = strategies;
                 break;
             }
         }
@@ -723,16 +657,16 @@ namespace egttools { namespace FinitePopulations {
             auto current_state = _state_sampler(generator);
             egttools::FinitePopulations::sample_simplex(current_state, _pop_size, _nb_strategies, strategies);
 
-            size_t die = 0, birth = 0, strategy_p1 = 0, strategy_p2 = 0, current_generation = 0;
+            size_t die = 0, birth = 0, strategy_p1 = 0, strategy_p2 = 0;
             // Check if state is homogeneous
             auto [homogeneous, idx_homo] = _is_homogeneous(strategies);
 
             // If it is we add a random mutant
             if (homogeneous) {
                 // mutate
-                birth = _strategy_sampler(_mt);
+                birth = _strategy_sampler(generator);
                 // If population still homogeneous we wait for another mutation
-                while (birth == idx_homo) birth = _strategy_sampler(_mt);
+                while (birth == idx_homo) birth = _strategy_sampler(generator);
                 strategies(birth) += 1;
                 strategies(idx_homo) -= 1;
                 homogeneous = false;
@@ -740,10 +674,10 @@ namespace egttools { namespace FinitePopulations {
 
             // Creates a cache for the fitness data
             Cache cache(_cache_size);
-            size_t k = 0;
+            size_t k = 0, j;
 
             // First we run the simulations for a @param transitory number of generations
-            for (size_t j = current_generation; j < transitory; ++j) {
+            for (j = 0; j < transitory; ++j) {
                 _sample_players(strategy_p1, strategy_p2, strategies, generator);
 
                 // Update with mutation and return how many steps should be added to the current
@@ -755,26 +689,29 @@ namespace egttools { namespace FinitePopulations {
 
                 // Update state count by k steps
                 j += k;
-                current_generation += k;
             }
 
+            // Update current state
+            current_state = egttools::FinitePopulations::calculate_state(_pop_size, strategies);
+
             // Then we start counting
-            for (size_t j = current_generation; j < nb_generations; ++j) {
+            for (;j < nb_generations; ++j) {
                 // First we pick 2 players randomly
                 // If the strategies are the same, there will be no change in the population
                 if (homogeneous) {
-                    k = geometric(_mt);
+                    k = geometric(generator);
                     // Update state count by k steps
-                    current_state = egttools::FinitePopulations::calculate_state(_pop_size, strategies);
                     sdist(current_state) += k + 1;
 
                     // mutate
-                    birth = _strategy_sampler(_mt);
-                    // If population still homogeneous we wait for another mutation
-                    while (birth == idx_homo) birth = _strategy_sampler(_mt);
+                    birth = _strategy_sampler(generator);
+                    // We assume mutations imply changing strategy
+                    while (birth == idx_homo) birth = _strategy_sampler(generator);
+
                     strategies(birth) += 1;
                     strategies(idx_homo) -= 1;
-                    // Update state count by k steps
+
+                    // Update state count by 1 step
                     current_state = egttools::FinitePopulations::calculate_state(_pop_size, strategies);
                     // and now update distribution after mutation
                     ++sdist(current_state);
@@ -784,7 +721,7 @@ namespace egttools { namespace FinitePopulations {
                     j += k;
                 } else {
                     // First we pick 2 players randomly
-                    _sample_players(strategy_p1, strategy_p2, strategies, _mt);
+                    _sample_players(strategy_p1, strategy_p2, strategies, generator);
 
                     _update_step(strategy_p1, strategy_p2, beta, mu,
                                  birth, die, homogeneous, idx_homo,
@@ -812,14 +749,10 @@ namespace egttools { namespace FinitePopulations {
             // player 1 copies player 2
             die = s1;
             birth = s2;
-        } else {
-            // player 2 copies player 1
-            die = s2;
-            birth = s1;
-        }
 
-        strategies(birth) += 1;
-        strategies(die) -= 1;
+            strategies(birth) += 1;
+            strategies(die) -= 1;
+        }
     }
 
     template<class Cache>
@@ -828,12 +761,15 @@ namespace egttools { namespace FinitePopulations {
                                             VectorXui &strategies,
                                             Cache &cache,
                                             std::mt19937_64 &generator) {
+        die = s1;
+
         if (s1 == s2) {// if the strategies are the same, the only change is with mutation
             // Check if player mutates
             if (_real_rand(generator) < mu) {
                 birth = _strategy_sampler(generator);
+                // Makes sure that a mutation happens to a different strategy
                 while (birth == die) birth = _strategy_sampler(generator);
-                strategies(s1) -= 1;
+                strategies(die) -= 1;
                 strategies(birth) += 1;
                 // Check if population is homogeneous
                 if (strategies(birth) == _pop_size) {
@@ -845,9 +781,16 @@ namespace egttools { namespace FinitePopulations {
         } else {
             // Check if player mutates
             if (_real_rand(generator) < mu) {
-                die = s1;
                 birth = _strategy_sampler(generator);
                 while (birth == die) birth = _strategy_sampler(generator);
+                strategies(birth) += 1;
+                strategies(die) -= 1;
+
+                // Check if population is homogeneous
+                if (strategies(birth) == _pop_size) {
+                    homogeneous = true;
+                    idx_homo = birth;
+                }
             } else {// If no mutation, player imitates
 
                 // Then we let them play to calculate their payoffs
@@ -857,21 +800,17 @@ namespace egttools { namespace FinitePopulations {
                 // Then we apply the moran process with mutation
                 if (_real_rand(generator) < egttools::FinitePopulations::fermi(beta, fitness_p1, fitness_p2)) {
                     // player 1 copies player 2
-                    die = s1;
                     birth = s2;
-                } else {
-                    // player 2 copies player 1
-                    die = s2;
-                    birth = s1;
-                }
-            }
-            strategies(birth) += 1;
-            strategies(die) -= 1;
 
-            // Check if population is homogeneous
-            if (strategies(birth) == _pop_size) {
-                homogeneous = true;
-                idx_homo = birth;
+                    strategies(birth) += 1;
+                    strategies(die) -= 1;
+
+                    // Check if population is homogeneous
+                    if (strategies(birth) == _pop_size) {
+                        homogeneous = true;
+                        idx_homo = birth;
+                    }
+                }
             }
         }
     }
@@ -887,13 +826,14 @@ namespace egttools { namespace FinitePopulations {
                                              std::mt19937_64 &generator) {
 
         size_t k = 0;
+        die = s1, birth = s1;
 
         if (homogeneous) {
             k += geometric(generator);
             // mutate
             die = idx_homo;
             birth = _strategy_sampler(generator);
-            // If population still homogeneous we wait for another mutation
+            // Assumes that a mutation is always to a different strategy
             while (birth == die) birth = _strategy_sampler(generator);
             strategies(birth) += 1;
             strategies(die) -= 1;
@@ -904,7 +844,7 @@ namespace egttools { namespace FinitePopulations {
                 birth = _strategy_sampler(generator);
                 // Assumes that a mutation is always to a different strategy
                 while (birth == die) birth = _strategy_sampler(generator);
-                strategies(s1) -= 1;
+                strategies(die) -= 1;
                 strategies(birth) += 1;
                 // Check if population is homogeneous
                 if (strategies(birth) == _pop_size) {
@@ -915,10 +855,17 @@ namespace egttools { namespace FinitePopulations {
         } else {
             // Check if player mutates
             if (_real_rand(generator) < mu) {
-                die = s1;
                 birth = _strategy_sampler(generator);
                 // Assumes that a mutation is always to a different strategy
                 while (birth == die) birth = _strategy_sampler(generator);
+                strategies(birth) += 1;
+                strategies(die) -= 1;
+
+                // Check if population is homogeneous
+                if (strategies(birth) == _pop_size) {
+                    homogeneous = true;
+                    idx_homo = birth;
+                }
             } else {// If no mutation, player imitates
 
                 // Then we let them play to calculate their payoffs
@@ -928,21 +875,17 @@ namespace egttools { namespace FinitePopulations {
                 // Then we check if player imitates
                 if (_real_rand(generator) < egttools::FinitePopulations::fermi(beta, fitness_p1, fitness_p2)) {
                     // player 1 copies player 2
-                    die = s1;
                     birth = s2;
-                } else {
-                    // player 2 copies player 1
-                    die = s2;
-                    birth = s1;
-                }
-            }
-            strategies(birth) += 1;
-            strategies(die) -= 1;
 
-            // Check if population is homogeneous
-            if (strategies(birth) == _pop_size) {
-                homogeneous = true;
-                idx_homo = birth;
+                    strategies(birth) += 1;
+                    strategies(die) -= 1;
+
+                    // Check if population is homogeneous
+                    if (strategies(birth) == _pop_size) {
+                        homogeneous = true;
+                        idx_homo = birth;
+                    }
+                }
             }
         }
         return k;

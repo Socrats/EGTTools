@@ -20,3 +20,33 @@ add_custom_target(pytest
         DEPENDS numerical
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 add_custom_target(tests DEPENDS pytest)
+
+add_library(egttoolsNumerical
+        ../src/egttools/SeedGenerator.cpp
+        ../src/egttools/Distributions.cpp
+        ../src/egttools/Data.cpp
+        ../src/egttools/finite_populations/Utils.cpp
+        ../src/egttools/finite_populations/games/NormalFormGame.cpp
+        ../src/egttools/finite_populations/behaviors/NFGStrategies.cpp
+        )
+
+set_target_properties(egttoolsNumerical PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED TRUE
+        CXX_EXTENSIONS FALSE
+#        INTERPROCEDURAL_OPTIMIZATION ${LTO_SUPPORTED}
+#        POSITION_INDEPENDENT_CODE TRUE
+        # Fixing "ld: warning: direct access in function '...' from file '...' to global weak symbol '...' from file '...' means the weak symbol cannot
+        # be overridden at runtime. This was likely caused by different translation units being compiled with different visibility settings."
+        C_VISIBILITY_PRESET hidden
+#        CXX_VISIBILITY_PRESET hidden
+        )
+
+if (OPENMP_FOUND)
+    target_link_libraries(egttoolsNumerical OpenMP::OpenMP_CXX)
+endif ()
+target_link_libraries(egttoolsNumerical)
+
+add_executable(testPM test_PairwiseMoran.cpp)
+#set_target_properties(testPM PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${LTO_SUPPORTED})
+target_link_libraries(testPM egttoolsNumerical)
