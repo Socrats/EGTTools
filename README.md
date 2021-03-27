@@ -19,7 +19,6 @@ the model parameters through monte-carlo simulations. The C++ implementation pro
 that can run in parallel in a reasonable time, while Python bindings make the methods easily accecible to a larger range
 of researchers.
 
----
 ## Table of Contents
 
 1. [Requirements](#requirements)
