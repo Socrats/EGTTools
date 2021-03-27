@@ -134,13 +134,8 @@ saddle_type, gradient_direction = find_saddle_type_and_gradient_direction(gradie
 
 strategy_i = np.linspace(0, 1, num=Z + 1, dtype=np.float64)
 
-ax = plot_gradient(strategy_i,
-                   gradients,
-                   saddle_points,
-                   saddle_type,
-                   gradient_direction,
-                   'Hawk-Dove game on Finite populations',
-                   xlabel='$k/Z$')
+ax = plot_gradient(strategy_i, gradients, saddle_points, saddle_type,
+                   gradient_direction, 'Hawk-Dove game on Finite populations', xlabel='$k/Z$')
 plt.show()
 ```
 
@@ -211,7 +206,7 @@ plt.show()
 ```
 ![Comparison numerical analytical](docs/images/hawk_dove_comparison.png)
 
-Finally, you may also visualize the result of indendent simulations:
+Finally, you may also visualize the result of independent simulations:
 
 ```python
 init_states = np.random.randint(0, Z+1, size=10, dtype=np.uint64)
