@@ -1,9 +1,9 @@
 import numpy as np
 import pytest
-
-from egttools.numerical.games import NormalFormGame
 from egttools.numerical import PairwiseMoran
 from egttools.numerical import Random
+from egttools.numerical.games import NormalFormGame
+
 
 @pytest.fixture
 def setup_hawk_dove_parameters() -> np.ndarray:
@@ -57,3 +57,32 @@ def test_pairwise_moran_run(setup_hawk_dove_parameters) -> None:
     result = evolver.run(nb_generations, beta, mu, initial_state)
 
     assert result.shape == (nb_generations + 1, game.nb_strategies)
+
+
+def test_pairwise_moran_stationary_distribution(setup_hawk_dove_parameters) -> None:
+    """
+    This test checks that the stationary_distribution method of PairwiseMoran executes.
+    """
+    payoffs = setup_hawk_dove_parameters
+
+    Random.init()
+    Random.seed(3610063510)
+
+    assert Random.seed_ == 3610063510
+
+    game = NormalFormGame(1, payoffs)
+
+    pop_size = 100
+    cache_size = 1000000
+    nb_generations = int(1e6)
+    transitory = int(1e3)
+    beta = 1
+    mu = 1e-3
+    runs = 10
+
+    nb_states = pop_size + 1
+
+    evolver = PairwiseMoran(pop_size, game, cache_size)
+    dist = evolver.stationary_distribution(runs, nb_generations, transitory, beta, mu)
+
+    assert dist.shape == (nb_states,)
