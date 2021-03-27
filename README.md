@@ -101,10 +101,12 @@ through numerical simulations the evolutionary dynamics in a (2-person, 2-action
 
 For example, assuming the following payoff matrix:
 
-\begin{math} A = \begin{matrix} -0.5 & 2 \\ 0 & 0 \end{matrix} \end{math}
+![A=\begin{pmatrix} -0.5 & 2 \\ 0 & 0 \end{pmatrix}](https://latex.codecogs.com/gif.latex?A=\begin{pmatrix}&space;-0.5&space;&&space;2&space;\\\\&space;0&space;&&space;0&space;\end{pmatrix})
+
+
 
 You can plot the gradient of selection in a finite population of \(Z=100\) individuals and assuming and intensity of
-selection \(\bet=1\) in the following way:
+selection ![\beta=1](https://latex.codecogs.com/gif.latex?\beta=1) in the following way:
 
 ```python
 import numpy as np
@@ -141,7 +143,7 @@ plt.show()
 
 ![Gradient of selection](docs/images/hawk_dove_analytical_gradient.png)
 
-And you can plot the stationary distribution for a mutation rate \(\mu=1e-3\) with:
+And you can plot the stationary distribution for a mutation rate ![\mu=1eˆ{-3}](https://latex.codecogs.com/gif.latex?\mu=1e-3) with:
 
 ```python
 evolver.mu = 1e-3
@@ -178,10 +180,10 @@ stationary_points = []
 # numerical simulations
 for i in range(len(betas)):
     stationary_points.append(numerical_evolver.stationary_distribution(30, int(1e6), int(1e3),
-                                                             betas[i], 1e-3))
+                                                                       betas[i], 1e-3))
 stationary_points = np.asarray(stationary_points)
 # Now we estimate the probability of Cooperation for each possible state
-state_frequencies = np.arange(0, Z+1) / Z
+state_frequencies = np.arange(0, Z + 1) / Z
 coop_level = np.dot(state_frequencies, stationary_points.T)
 ```
 
@@ -189,6 +191,7 @@ Lastly, we plot the results:
 
 ```python
 from sklearn.metrics import mean_squared_error
+
 mse = mean_squared_error(coop_level_analytical, coop_level)
 
 # Finally, we plot and compare visually (and check how much error we get)
@@ -204,12 +207,13 @@ ax.set_ylabel('Cooperation level', fontsize=15)
 ax.set_xscale('log')
 plt.show()
 ```
+
 ![Comparison numerical analytical](docs/images/hawk_dove_comparison.png)
 
 Finally, you may also visualize the result of independent simulations:
 
 ```python
-init_states = np.random.randint(0, Z+1, size=10, dtype=np.uint64)
+init_states = np.random.randint(0, Z + 1, size=10, dtype=np.uint64)
 output = []
 for i in range(10):
     output.append(evolver.run(int(1e6), 1, 1e-3,
@@ -218,11 +222,12 @@ for i in range(10):
 fig, ax = plt.subplots(figsize=(5, 4))
 
 for run in output:
-    ax.plot(run[:, 0]/Z, color='gray', linewidth=.1, alpha=0.6)
+    ax.plot(run[:, 0] / Z, color='gray', linewidth=.1, alpha=0.6)
 ax.set_ylabel('k/Z')
 ax.set_xlabel('generation')
 ax.set_xscale('log')
 ```
+
 ![Comparison numerical analytical](docs/images/hawk_dove_indep_runs.png)
 
 ---
