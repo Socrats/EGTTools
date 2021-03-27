@@ -27,7 +27,8 @@ of researchers.
 4. [Documentation](#documentation)
 5. [Caveats](#caveats)
 6. [Citing](#citing)
----
+
+
 ## Requirements
 
 To be able to install EGTtools, you must have:
@@ -41,7 +42,7 @@ To be able to install EGTtools, you must have:
 * Ideally, you should also install [**OpenBLAS**](https://www.openblas.net), which offers optimized implementations of
   linear algebra kernels for several processor architectures, and install numpy and scipy versions that use it.
 
----
+
 ## Downloading sources
 
 When cloning the repository you should also clone the submodules so that pybind11 is downloaded. You can do that by
@@ -51,8 +52,6 @@ running:
 git clone --recurse-submodules -j8 https://github.com/Socrats/EGTTools.git
 ```
 
----
-<a name="installation"/>
 
 ## Installation
 
@@ -95,9 +94,6 @@ modifications to the package:
 ```bash
 python -m pip install -e <path>
 ```
-
----
-<a name="examples"/>
 
 ## Examples of usage
 
@@ -238,7 +234,6 @@ ax.set_xscale('log')
 
 ![Comparison numerical analytical](docs/images/hawk_dove_indep_runs.png)
 
----
 
 ## Documentation
 
@@ -253,7 +248,6 @@ simulations, or perform individual runs of the Moran process.
 
 You can find more information in the [ReadTheDocs](https://egttools.readthedocs.io/en/latest/) documentation.
 
----
 
 ### Caveats
 
@@ -268,8 +262,7 @@ You can find more information in the [ReadTheDocs](https://egttools.readthedocs.
 
 5. You **do not** need any of the above if you install EGTtools through ```pip install egttools```. This will soon be an
    option.
-
----
+   
 
 ## Citing
 
