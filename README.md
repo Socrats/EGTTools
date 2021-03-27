@@ -20,7 +20,15 @@ that can run in parallel in a reasonable time, while Python bindings make the me
 of researchers.
 
 ---
+## Table of Contents
 
+1. [Requirements](#requirements)
+2. [Downloading sources](#downloading-sources)
+3. [Examples of usage](#examples-of-usage)
+4. [Documentation](#documentation)
+5. [Caveats](#caveats)
+6. [Citing](#citing)
+---
 ## Requirements
 
 To be able to install EGTtools, you must have:
@@ -35,7 +43,6 @@ To be able to install EGTtools, you must have:
   linear algebra kernels for several processor architectures, and install numpy and scipy versions that use it.
 
 ---
-
 ## Downloading sources
 
 When cloning the repository you should also clone the submodules so that pybind11 is downloaded. You can do that by
@@ -46,6 +53,7 @@ git clone --recurse-submodules -j8 https://github.com/Socrats/EGTTools.git
 ```
 
 ---
+<a name="installation"/>
 
 ## Installation
 
@@ -90,8 +98,9 @@ python -m pip install -e <path>
 ```
 
 ---
+<a name="examples"/>
 
-## Examples of use
+## Examples of usage
 
 The [Analytical example](docs/examples/hawk_dove_dynamics.ipynb) is a jupyter notebook which analyses analytically the
 evolutionary dynamics in a (2-person, 2-actions, one-shot) Hawk-Dove game.
