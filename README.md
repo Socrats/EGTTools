@@ -26,7 +26,7 @@ of researchers.
 To be able to install EGTtools, you must have:
 
 * A recent version of Linux (only tested on Ubuntu), MacOSX (Mojave or above) or Windows
-* [**CMake**](https://cmake.org) version 3.17 or bigger
+* [**CMake**](https://cmake.org) version 3.17 or higher
 * [**C++ 17**](https://en.cppreference.com/w/cpp/17)
 * [**Eigen**](https://eigen.tuxfamily.org/index.php?title=Main_Page) 3.3.*
 * **Python** 3.5 or higher
