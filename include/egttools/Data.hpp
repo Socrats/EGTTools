@@ -5,7 +5,7 @@
 #ifndef EGTTOOLS_DATA_HPP
 #define EGTTOOLS_DATA_HPP
 
-namespace egttools::DataStructures {
+namespace egttools { namespace DataStructures {
     struct DataTable {
         size_t nb_rows, nb_columns;
         std::vector<std::string> header;
@@ -17,6 +17,6 @@ namespace egttools::DataStructures {
                   std::vector<std::string> &headers,
                   std::vector<std::string> &column_types);
     };
-}
+} }
 
 #endif//EGTTOOLS_DATA_HPP

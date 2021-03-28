@@ -13,7 +13,7 @@
 
 // Many of the strategies defined here have been extracted from https://plato.stanford.edu/entries/prisoner-dilemma/strategy-table.html
 
-namespace egttools::FinitePopulations::behaviors::twoActions {
+namespace egttools { namespace FinitePopulations { namespace behaviors { namespace twoActions {
     /**
      * Always cooperates
      */
@@ -201,6 +201,6 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
     };
 
     constexpr size_t nb_actions = 2;
-}// namespace egttools::FinitePopulations::behaviors::twoActions
+} } } }// namespace egttools::FinitePopulations::behaviors::twoActions
 
 #endif//EGTTOOLS_FINITEPOPULATIONS_BEHAVIORS_NFGSTRATEGIES_HPP

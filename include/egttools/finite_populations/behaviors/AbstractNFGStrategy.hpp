@@ -5,7 +5,7 @@
 #ifndef EGTTOOLS_FINITEPOPULATIONS_BEHAVIORS_ABSTRACTSTRATEGY_HPP
 #define EGTTOOLS_FINITEPOPULATIONS_BEHAVIORS_ABSTRACTSTRATEGY_HPP
 
-namespace egttools::FinitePopulations::behaviors {
+namespace egttools { namespace FinitePopulations { namespace behaviors {
 
     /**
      * @brief defines the interface for strategies that can be used with AbstractGame (and child classes)
@@ -34,6 +34,6 @@ namespace egttools::FinitePopulations::behaviors {
          */
         virtual std::string type() = 0;
     };
-}// namespace egttools::FinitePopulations::behaviors
+} } }// namespace egttools::FinitePopulations::behaviors
 
 #endif//EGTTOOLS_FINITEPOPULATIONS_BEHAVIORS_ABSTRACTSTRATEGY_HPP

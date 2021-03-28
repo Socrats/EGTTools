@@ -7,7 +7,7 @@
 
 #include <unordered_set>
 
-namespace egttools::sampling {
+namespace egttools { namespace sampling {
 
 /**
  * @brief Samples a set of \p k elements from a set of \p N elements without replacement.
@@ -191,6 +191,6 @@ void sample_without_replacement(T N, T k, C &sample_container, std::unordered_se
   std::shuffle(sample_container.begin(), sample_container.end(), gen);
 }
 
-}
+} }
 
 #endif //DYRWIN_INCLUDE_SAMPLING_H_

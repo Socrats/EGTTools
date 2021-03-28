@@ -9,7 +9,7 @@
 
 #include <egttools/finite_populations/Utils.hpp>
 
-namespace egttools::FinitePopulations {
+namespace egttools { namespace FinitePopulations {
     using PayoffVector = std::vector<double>;
     using RandomDist = std::uniform_real_distribution<double>;
 
@@ -97,6 +97,6 @@ namespace egttools::FinitePopulations {
          */
         virtual void save_payoffs(std::string file_name) const = 0;
     };
-}// namespace egttools::FinitePopulations
+} }// namespace egttools::FinitePopulations
 
 #endif//EGTTOOLS_ABSTRACTGAME_HPP

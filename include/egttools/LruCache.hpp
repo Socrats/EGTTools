@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <cassert>
 
-namespace egttools::Utils {
+namespace egttools { namespace Utils {
     template<class TKey, class TValue>
     class LRUCache {
     public:
@@ -186,7 +186,7 @@ namespace egttools::Utils {
     void LRUCache<TKey, TValue>::set_max_size(size_t max_size) {
         max_size_ = max_size;
     }
-}
+} }
 
 
 

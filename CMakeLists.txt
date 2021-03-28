@@ -76,8 +76,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(EIGEN_VERSION_REQUIRED 3.3)
-#set(PYTHON_VERSION 3)
-#set(PYBIND11_CPP_STANDARD -std=c++1z) # Experimental C++17 support
 
 find_package(Eigen3 ${EIGEN_VERSION_REQUIRED} QUIET CONFIG)
 if (NOT EIGEN3_FOUND)
@@ -126,16 +124,3 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
 if(SKBUILD)
     install(TARGETS numerical LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX})
 endif()
-
-# Python bindings
-#if (MAKE_PYTHON)
-#    # Wrappers -- if unused macros will skip them
-#    set(PYTHON_FILES
-#            src/python/EGTtoolsWrapper.cpp
-#            )
-#    add_subdirectory(pybind11)
-#    pybind11_add_module(EGTtools SHARED ${PYTHON_FILES})
-#    target_link_libraries(EGTtools PRIVATE EGTTools)
-#endif ()
-
-

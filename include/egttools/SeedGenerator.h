@@ -8,7 +8,7 @@
 #include <random>
 #include <thread>
 
-namespace egttools::Random {
+namespace egttools { namespace Random {
 
     /**
     * This template function can be used to initialize a random generator
@@ -97,6 +97,6 @@ namespace egttools::Random {
 
     std::mt19937_64 * thread_local_generator();
 
-}// namespace egttools::Random
+} }// namespace egttools::Random
 
 #endif//EGTTOOLS_RANDGEN_H

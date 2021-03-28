@@ -12,7 +12,7 @@
 #include <limits>
 #include <vector>
 
-namespace egttools::FinitePopulations {
+namespace egttools { namespace FinitePopulations {
     using GroupPayoffs = egttools::Matrix2D;
     using StrategyCounts = std::vector<size_t>;
 
@@ -111,6 +111,6 @@ namespace egttools::FinitePopulations {
      * @brief Defines the numeric limit of floating points
      */
     constexpr double_t doubleEpsilon = std::numeric_limits<double>::digits10;
-}// namespace egttools::FinitePopulations
+} }// namespace egttools::FinitePopulations
 
 #endif//DYRWIN_FINITEPOPULATIONS_UTILS_HPP
