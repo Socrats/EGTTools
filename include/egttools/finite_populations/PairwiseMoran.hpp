@@ -382,78 +382,32 @@ namespace egttools {
         VectorXui
         PairwiseMoran<Cache>::evolve(size_t nb_generations, double beta, double mu,
                                      const Eigen::Ref<const VectorXui> &init_state, std::mt19937_64 &generator) {
-            size_t die, birth;
-            std::vector<size_t> population(_pop_size, 0);
             VectorXui strategies(_nb_strategies);
             // Initialise strategies from init_state
             strategies.array() = init_state;
 
             // Avg. number of rounds for a mutation to happen
-            std::geometric_distribution<size_t> geometric(1 - mu);
+            std::geometric_distribution<size_t> geometric(mu);
             auto [homogeneous, idx_homo] = _is_homogeneous(strategies);
 
             // Creates a cache for the fitness data
             Cache cache(_cache_size);
+            // Initialize helper parameters
+            size_t die = 0, birth = 0, strategy_p1 = 0, strategy_p2 = 0, k = 0;
 
-            // initialise population
-            _initialise_population(strategies, population);
+            // Imitation process
+            for (size_t j = 0; j < nb_generations; ++j) {
+                _sample_players(strategy_p1, strategy_p2, strategies, generator);
 
-            // Now we start the imitation process
-            for (size_t i = 0; i < nb_generations; ++i) {
-                // First we pick 2 players randomly
-                auto [player1, player2] = _sample_players(generator);
+                // Update with mutation and return how many steps should be added to the current
+                // generation if the only change in the population could have been a mutation
+                k = _update_multi_step(strategy_p1, strategy_p2, beta, mu,
+                                       birth, die, homogeneous, idx_homo,
+                                       strategies, cache,
+                                       geometric, generator);
 
-                if (homogeneous) {
-                    if (mu > 0) {
-                        i += geometric(generator);
-                        // mutate
-                        birth = _strategy_sampler(generator);
-                        // If population still homogeneous we wait for another mutation
-                        while (birth == idx_homo) {
-                            i += geometric(generator);
-                            birth = _strategy_sampler(generator);
-                        }
-                        if (i < nb_generations) {
-                            population[player1] = birth;
-                            strategies(birth) += 1;
-                            strategies(idx_homo) -= 1;
-                            homogeneous = false;
-                        }
-                        continue;
-                    } else
-                        break;
-                }
-
-                // Check if player mutates
-                if (_real_rand(generator) < mu) {
-                    die = population[player1];
-                    birth = _strategy_sampler(generator);
-                    population[player1] = birth;
-                } else {// If no mutation, player imitates
-                    // Then we let them play to calculate their payoffs
-                    auto fitness_p1 = _calculate_fitness(population[player1], strategies, cache);
-                    auto fitness_p2 = _calculate_fitness(population[player2], strategies, cache);
-
-                    // Then we apply the moran process with mutation
-                    if (_real_rand(generator) < egttools::FinitePopulations::fermi(beta, fitness_p1, fitness_p2)) {
-                        // player 1 copies player 2
-                        die = population[player1];
-                        birth = population[player2];
-                        population[player1] = birth;
-                    } else {
-                        // player 2 copies player 1
-                        die = population[player2];
-                        birth = population[player1];
-                        population[player2] = birth;
-                    }
-                }
-                strategies(birth) += 1;
-                strategies(die) -= 1;
-                // Check if population is homogeneous
-                if (strategies(birth) == _pop_size) {
-                    homogeneous = true;
-                    idx_homo = birth;
-                }
+                // Update state count by k steps
+                j += k;
             }
 
             return strategies;

@@ -13,8 +13,6 @@ graft src
 graft pybind11
 
 include .gitmodules
-graft extern
-exclude extern/fmt/.git
 
 graft res
 
