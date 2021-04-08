@@ -1,6 +1,8 @@
 from .utils import find_saddle_type_and_gradient_direction
 import egttools.plotting as plotting
 import egttools.analytical as analytical
+import egttools.games as games
+import  egttools.behaviors as behavior
 
 try:
     import egttools.numerical as numerical

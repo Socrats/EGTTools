@@ -174,7 +174,8 @@ PYBIND11_MODULE(numerical, m) {
             .def_property_readonly("strategies", &egttools::FinitePopulations::NormalFormGame::strategies)
             .def("save_payoffs", &egttools::FinitePopulations::NormalFormGame::save_payoffs);
 
-    py::class_<egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNF, "AbstractNFGStrategy")
+    py::class_<egttools::FinitePopulations::behaviors::AbstractNFGStrategy, stubs::PyAbstractNFGStrategy>(mNF, "AbstractNFGStrategy")
+            .def(py::init<>())
             .def("get_action", &egttools::FinitePopulations::behaviors::AbstractNFGStrategy::get_action,
                  R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))

@@ -18,6 +18,7 @@
 
 #include <egttools/Types.h>
 
+#include <egttools/finite_populations/behaviors/AbstractNFGStrategy.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 
 namespace stubs {
@@ -121,6 +122,32 @@ namespace stubs {
                     egttools::FinitePopulations::AbstractGame, /* Parent class */
                     payoff,                                    /* Name of function in C++ (must match Python name) */
                     file_name                                  /* Argument(s) */
+            );
+        }
+    };
+
+    class PyAbstractNFGStrategy : public egttools::FinitePopulations::behaviors::AbstractNFGStrategy {
+    public:
+        /* Inherit the constructors */
+        using egttools::FinitePopulations::behaviors::AbstractNFGStrategy::AbstractNFGStrategy;
+
+        /* Trampoline (need one for each virtual function) */
+        size_t get_action(size_t time_step, size_t action_prev) override {
+            PYBIND11_OVERRIDE_PURE(
+                    size_t,                                                      /* Return type */
+                    egttools::FinitePopulations::behaviors::AbstractNFGStrategy, /* Parent class */
+                    get_action,                                                  /* Name of function in C++ (must match Python name) */
+                    time_step, action_prev                                       /* Argument(s) */
+            );
+        }
+
+        /* Trampoline (need one for each virtual function) */
+        std::string type() override {
+            PYBIND11_OVERRIDE_PURE(
+                    std::string,                                                 /* Return type */
+                    egttools::FinitePopulations::behaviors::AbstractNFGStrategy, /* Parent class */
+                    type                                                         /* Name of function in C++ (must match Python name) */
+                                                                                 /* Argument(s) */
             );
         }
     };
