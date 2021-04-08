@@ -4,6 +4,8 @@ from egttools.numerical import PairwiseMoran
 from egttools.numerical import Random
 from egttools.numerical.games import NormalFormGame
 
+import os
+
 
 @pytest.fixture
 def setup_hawk_dove_parameters() -> np.ndarray:
@@ -15,6 +17,11 @@ def setup_hawk_dove_parameters() -> np.ndarray:
     ])
 
     return payoffs
+
+
+@pytest.fixture
+def set_anaconda_apple_environment_flag_for_openmp():
+    return os.environ.get('TEST_NAME')
 
 
 def test_normal_form_game_runs(setup_hawk_dove_parameters) -> None:
@@ -29,8 +36,8 @@ def test_normal_form_game_runs(setup_hawk_dove_parameters) -> None:
     assert game.nb_strategies == 2
     assert game.nb_rounds == 1
     assert game.type() == "NormalFormGame"
-    assert (game.payoffs() == payoffs).all()
-    assert (game.expected_payoffs() == payoffs).all()
+    np.testing.assert_array_equal(game.payoffs(), payoffs)
+    np.testing.assert_array_equal(game.expected_payoffs(), payoffs)
 
 
 def test_pairwise_moran_run(setup_hawk_dove_parameters) -> None:
@@ -65,6 +72,9 @@ def test_pairwise_moran_stationary_distribution(setup_hawk_dove_parameters) -> N
     """
     payoffs = setup_hawk_dove_parameters
 
+    # Necessary to avoid issues with Anaconda on MacOSX
+    os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+
     Random.init()
     Random.seed(3610063510)
 
@@ -74,9 +84,9 @@ def test_pairwise_moran_stationary_distribution(setup_hawk_dove_parameters) -> N
 
     pop_size = 100
     cache_size = 1000000
-    nb_generations = int(1e6)
+    nb_generations = int(1e3)
     transitory = int(1e3)
-    beta = 1
+    beta = 10
     mu = 1e-3
     runs = 10
 
@@ -84,5 +94,4 @@ def test_pairwise_moran_stationary_distribution(setup_hawk_dove_parameters) -> N
 
     evolver = PairwiseMoran(pop_size, game, cache_size)
     dist = evolver.stationary_distribution(runs, nb_generations, transitory, beta, mu)
-
     assert dist.shape == (nb_states,)

@@ -1,6 +1,20 @@
-//
-// Created by Elias Fernandez on 28/12/2020.
-//
+/** Copyright (c) 2020-2021  Elias Fernandez
+  *
+  * This file is part of EGTtools.
+  *
+  * EGTtools is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  *
+  * EGTtools is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
+*/
 
 #ifndef EGTTOOLS_INCLUDE_DYRWIN_FINITEPOPULATIONS_GAMES_NORMALFORMGAME_H_
 #define EGTTOOLS_INCLUDE_DYRWIN_FINITEPOPULATIONS_GAMES_NORMALFORMGAME_H_
@@ -16,7 +30,7 @@
 #include <egttools/OpenMPUtils.hpp>
 #endif
 
-namespace egttools { namespace FinitePopulations {
+namespace egttools::FinitePopulations {
     using PayoffVector = std::vector<double>;
     using AbstractNFGStrategy = egttools::FinitePopulations::behaviors::AbstractNFGStrategy;
     using StrategyVector = std::vector<AbstractNFGStrategy *>;
@@ -112,6 +126,6 @@ namespace egttools { namespace FinitePopulations {
         void _update_cooperation_and_payoffs(size_t s1, size_t s2);
     };
 
-} }// namespace egttools::FinitePopulations
+}// namespace egttools::FinitePopulations
 
 #endif//DYRWIN_INCLUDE_DYRWIN_FINITEPOPULATIONS_GAMES_NORMALFORMGAME_H_

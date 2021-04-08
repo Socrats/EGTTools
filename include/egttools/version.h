@@ -1,4 +1,4 @@
-/** Copyright (c) 2019-2020  Elias Fernandez
+/** Copyright (c) 2019-2021  Elias Fernandez
   *
   * This file is part of EGTtools.
   *
@@ -18,6 +18,6 @@
 #ifndef EGTTOOLS_VERSION_H
 #define EGTTOOLS_VERSION_H
 
-#define EGTTOOLS_VERSION 0.1.3.dev0
+#define EGTTOOLS_VERSION 0.1.4.dev1
 
 #endif//EGTTOOLS_VERSION_H

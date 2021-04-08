@@ -1,6 +1,20 @@
-//
-// Created by Elias Fernandez on 2019-06-04.
-//
+/** Copyright (c) 2019-2021  Elias Fernandez
+  *
+  * This file is part of EGTtools.
+  *
+  * EGTtools is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  *
+  * EGTtools is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
+*/
 
 #ifndef EGTTOOLS_LRUCACHE_HPP
 #define EGTTOOLS_LRUCACHE_HPP
@@ -10,7 +24,7 @@
 #include <unordered_map>
 #include <cassert>
 
-namespace egttools { namespace Utils {
+namespace egttools::Utils {
     template<class TKey, class TValue>
     class LRUCache {
     public:
@@ -186,7 +200,7 @@ namespace egttools { namespace Utils {
     void LRUCache<TKey, TValue>::set_max_size(size_t max_size) {
         max_size_ = max_size;
     }
-} }
+}
 
 
 

@@ -1,6 +1,20 @@
-//
-// Created by Elias Fernandez on 18/02/2021.
-//
+/** Copyright (c) 2020-2021  Elias Fernandez
+  *
+  * This file is part of EGTtools.
+  *
+  * EGTtools is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  *
+  * EGTtools is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
+*/
 
 #ifndef EGTTOOLS_FINITEPOPULATIONS_BEHAVIORS_NFGSTRATEGIES_HPP
 #define EGTTOOLS_FINITEPOPULATIONS_BEHAVIORS_NFGSTRATEGIES_HPP
@@ -13,7 +27,7 @@
 
 // Many of the strategies defined here have been extracted from https://plato.stanford.edu/entries/prisoner-dilemma/strategy-table.html
 
-namespace egttools { namespace FinitePopulations { namespace behaviors { namespace twoActions {
+namespace egttools::FinitePopulations::behaviors::twoActions {
     /**
      * Always cooperates
      */
@@ -201,6 +215,6 @@ namespace egttools { namespace FinitePopulations { namespace behaviors { namespa
     };
 
     constexpr size_t nb_actions = 2;
-} } } }// namespace egttools::FinitePopulations::behaviors::twoActions
+}// namespace egttools::FinitePopulations::behaviors::twoActions
 
 #endif//EGTTOOLS_FINITEPOPULATIONS_BEHAVIORS_NFGSTRATEGIES_HPP

@@ -1,7 +1,22 @@
-//
-// Created by Elias Fernandez on 2019-02-11.
-//
+/** Copyright (c) 2019-2021  Elias Fernandez
+  *
+  * This file is part of EGTtools.
+  *
+  * EGTtools is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  *
+  * EGTtools is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
+*/
 
+#include <egttools/Distributions.h>
 #include <egttools/SeedGenerator.h>
 #include <egttools/finite_populations/games/NormalFormGame.h>
 #include <pybind11/eigen.h>
@@ -14,22 +29,24 @@
 #include <egttools/finite_populations/behaviors/NFGStrategies.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 
+#include "python_stubs.hpp"
+
 namespace py = pybind11;
 using namespace egttools;
 using PairwiseComparison = egttools::FinitePopulations::PairwiseMoran<egttools::Utils::LRUCache<std::string, double>>;
 
-std::string call_get_action(const py::list &strategies) {
+std::string call_get_action(const py::list &strategies, size_t time_step, size_t action) {
     std::stringstream result;
     result << "(";
     for (py::handle strategy : strategies) {
-        result << py::cast<egttools::FinitePopulations::behaviors::AbstractNFGStrategy *>(strategy)->get_action(0, 1) << ", ";
+        result << py::cast<egttools::FinitePopulations::behaviors::AbstractNFGStrategy *>(strategy)->get_action(time_step, action) << ", ";
     }
     result << ")";
     return result.str();
 }
 
 std::unique_ptr<egttools::FinitePopulations::NormalFormGame> init_normal_form_game_from_python_list(size_t nb_rounds,
-                                                                                   const Eigen::Ref<const Matrix2D> &payoff_matrix, const py::list &strategies) {
+                                                                                                    const Eigen::Ref<const Matrix2D> &payoff_matrix, const py::list &strategies) {
     egttools::FinitePopulations::StrategyVector strategies_cpp;
     for (py::handle strategy : strategies) {
         strategies_cpp.push_back(py::cast<egttools::FinitePopulations::behaviors::AbstractNFGStrategy *>(strategy));
@@ -43,7 +60,7 @@ PYBIND11_MODULE(numerical, m) {
         This library is written in C++ (with python bindings) and pure Python.
 
         Note:
-        This model is part a larger library named Dyrwin which also includes other methods to model
+        This module is part a larger library named Dyrwin which also includes other methods to model
         social dynamics which use learning theory (e.g., Reinforcement Learning), and methods to analyze, process
         and model experimental data.
         -----------------------
@@ -92,12 +109,14 @@ PYBIND11_MODULE(numerical, m) {
     auto mNF = mBehaviors.def_submodule("NormalForm");
     auto mNFTwoActions = mNF.def_submodule("TwoActions");
     auto mData = m.def_submodule("DataStructures");
+    auto mDistributions = m.def_submodule("distributions");
 
-    py::class_<egttools::FinitePopulations::AbstractGame>(mGames, "AbstractGame")
+    py::class_<egttools::FinitePopulations::AbstractGame, stubs::PyAbstractGame>(mGames, "AbstractGame")
+            .def(py::init<>())
             .def("play", &egttools::FinitePopulations::AbstractGame::play)
             .def("calculate_payoffs", &egttools::FinitePopulations::AbstractGame::calculate_payoffs)
             .def("calculate_fitness", &egttools::FinitePopulations::AbstractGame::calculate_fitness)
-            .def("to_string", &egttools::FinitePopulations::AbstractGame::toString)
+            .def("__str__", &egttools::FinitePopulations::AbstractGame::toString)
             .def("type", &egttools::FinitePopulations::AbstractGame::type)
             .def("payoffs", &egttools::FinitePopulations::AbstractGame::payoffs)
             .def("payoff", &egttools::FinitePopulations::AbstractGame::payoff)
@@ -142,7 +161,7 @@ PYBIND11_MODULE(numerical, m) {
             .def("calculate_cooperation_rate", &egttools::FinitePopulations::NormalFormGame::calculate_cooperation_level,
                  "calculates the rate/level of cooperation in the population at a given state.",
                  py::arg("population_size"), py::arg("population_state"))
-            .def("to_string", &egttools::FinitePopulations::NormalFormGame::toString)
+            .def("__str__", &egttools::FinitePopulations::NormalFormGame::toString)
             .def("type", &egttools::FinitePopulations::NormalFormGame::type)
             .def("payoffs", &egttools::FinitePopulations::NormalFormGame::payoffs)
             .def("payoff", &egttools::FinitePopulations::NormalFormGame::payoff,
@@ -331,5 +350,19 @@ PYBIND11_MODULE(numerical, m) {
             .def_readwrite("column_types", &egttools::DataStructures::DataTable::column_types,
                            py::return_value_policy::reference_internal);
 
-    m.def("call_get_action", &call_get_action);
+    m.def("call_get_action", &call_get_action,
+          "Returns a string with a tuple of actions",
+          py::arg("strategies"),
+          py::arg("time_step"),
+          py::arg("prev_action"));
+
+    mDistributions.def("multivariate_hypergeometric_pdf",
+                       static_cast<double (*)(size_t, size_t, size_t, const std::vector<size_t> &,
+                                              const Eigen::Ref<const VectorXui> &)>(&egttools::multivariateHypergeometricPDF),
+                       "Calculates the probability density function of a multivariate hypergeometric distribution.",
+                       py::arg("m"),
+                       py::arg("k"),
+                       py::arg("n"),
+                       py::arg("sample_counts"),
+                       py::arg("population_counts"));
 }

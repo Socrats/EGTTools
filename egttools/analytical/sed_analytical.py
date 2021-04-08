@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2020  Elias Fernandez
+# Copyright (c) 2019-2021  Elias Fernandez
 #
 # This file is part of EGTtools.
 #
@@ -197,7 +197,7 @@ class StochDynamics:
 
         fitness_i, fitness_j = 0., 0.
         for state_index in range(self.nb_group_combinations):
-            group = sample_simplex(i, self.Z - 1, self.nb_strategies)
+            group = sample_simplex(i, self.N, self.nb_strategies)
             if group[i] > 0:
                 group[i] -= 1
                 fitness_i += self.payoffs[i, state_index] * rv_i.pmf(x=group)

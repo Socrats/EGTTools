@@ -1,11 +1,25 @@
-//
-// Created by Elias Fernandez on 18/02/2021.
-//
+/** Copyright (c) 2020-2021  Elias Fernandez
+  *
+  * This file is part of EGTtools.
+  *
+  * EGTtools is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  *
+  * EGTtools is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
+*/
 
 #ifndef EGTTOOLS_FINITEPOPULATIONS_BEHAVIORS_ABSTRACTSTRATEGY_HPP
 #define EGTTOOLS_FINITEPOPULATIONS_BEHAVIORS_ABSTRACTSTRATEGY_HPP
 
-namespace egttools { namespace FinitePopulations { namespace behaviors {
+namespace egttools::FinitePopulations::behaviors {
 
     /**
      * @brief defines the interface for strategies that can be used with AbstractGame (and child classes)
@@ -34,6 +48,6 @@ namespace egttools { namespace FinitePopulations { namespace behaviors {
          */
         virtual std::string type() = 0;
     };
-} } }// namespace egttools::FinitePopulations::behaviors
+}// namespace egttools::FinitePopulations::behaviors
 
 #endif//EGTTOOLS_FINITEPOPULATIONS_BEHAVIORS_ABSTRACTSTRATEGY_HPP

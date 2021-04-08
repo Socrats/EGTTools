@@ -1,3 +1,21 @@
+/** Copyright (c) 2019-2021  Elias Fernandez
+  *
+  * This file is part of EGTtools.
+  *
+  * EGTtools is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  *
+  * EGTtools is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
+*/
+
 //
 // Adapted from https://github.com/Svalorzen/AI-Toolbox/
 //
@@ -139,6 +157,26 @@ namespace egttools {
     */
     double
     multivariateHypergeometricPDF(size_t m, size_t k, size_t n, const std::vector<size_t> &sample_counts,
+                                  const Eigen::Ref<const VectorXui> &population_counts);
+
+    /**
+    * @brief Calculates the probability density function of a multivariate hypergeometric distribution.
+    *
+    * This function returns the probability that a sample of size @param n in a population of @param k
+    * objects with have @param sample_counts counts of each object in a sample, given a population D
+    * with @param population_counts counts of each object.
+    *
+    * The sampling is without replacement.
+    *
+    * @param m size of the population
+    * @param k number of objects in the population
+    * @param n size of the sample
+    * @param sample_counts a vector containing the counts of each objects in the sample
+    * @param population_counts a vector containing the counts of each objects in the population
+    * @return probability of a sample occurring in the population.
+    */
+    double
+    multivariateHypergeometricPDF(size_t m, size_t k, size_t n, const Eigen::Ref<const VectorXui> &sample_counts,
                                   const Eigen::Ref<const VectorXui> &population_counts);
 
     /**
