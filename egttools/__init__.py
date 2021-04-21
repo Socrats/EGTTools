@@ -2,7 +2,7 @@ from .utils import find_saddle_type_and_gradient_direction
 import egttools.plotting as plotting
 import egttools.analytical as analytical
 import egttools.games as games
-import  egttools.behaviors as behavior
+import egttools.behaviors as behaviors
 
 try:
     import egttools.numerical as numerical
