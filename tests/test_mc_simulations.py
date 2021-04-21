@@ -1,10 +1,13 @@
-import numpy as np
 import pytest
+
+import os
+from sys import platform
+
+import numpy as np
+
 from egttools.numerical import PairwiseMoran
 from egttools.numerical import Random
 from egttools.numerical.games import NormalFormGame
-
-import os
 
 
 @pytest.fixture
@@ -16,12 +19,11 @@ def setup_hawk_dove_parameters() -> np.ndarray:
         [0, (v / 2) - t],
     ])
 
+    # Necessary to avoid issues with Anaconda on MacOSX
+    if platform == "darwin":
+        os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+
     return payoffs
-
-
-@pytest.fixture
-def set_anaconda_apple_environment_flag_for_openmp():
-    return os.environ.get('TEST_NAME')
 
 
 def test_normal_form_game_runs(setup_hawk_dove_parameters) -> None:
@@ -71,9 +73,6 @@ def test_pairwise_moran_stationary_distribution(setup_hawk_dove_parameters) -> N
     This test checks that the stationary_distribution method of PairwiseMoran executes.
     """
     payoffs = setup_hawk_dove_parameters
-
-    # Necessary to avoid issues with Anaconda on MacOSX
-    os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
     Random.init()
     Random.seed(3610063510)

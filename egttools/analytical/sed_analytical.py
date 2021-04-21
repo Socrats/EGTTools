@@ -24,6 +24,7 @@ populations on 2-player games.
 import numpy as np
 from scipy.sparse import lil_matrix
 from scipy.stats import hypergeom, multivariate_hypergeom
+from typing import Tuple
 
 try:
     from egttools.numerical import sample_simplex, calculate_nb_states
@@ -61,7 +62,7 @@ class StochDynamics:
         mutation probability
     """
 
-    def __init__(self, nb_strategies: int, payoffs: np.ndarray, pop_size: int, group_size=2, mu=0):
+    def __init__(self, nb_strategies: int, payoffs: np.ndarray, pop_size: int, group_size=2, mu=0) -> None:
         self.nb_strategies = nb_strategies
         self.payoffs = payoffs
         self.Z = pop_size
@@ -210,7 +211,7 @@ class StochDynamics:
         return fitness_i - fitness_j
 
     @staticmethod
-    def fermi(beta, fitness_diff):
+    def fermi(beta: float, fitness_diff: float) -> float:
         """
         The fermi function determines the probability that the first type imitates the second.
 
@@ -221,7 +222,8 @@ class StochDynamics:
         """
         return np.clip(1. / (1. + np.exp(beta * fitness_diff, dtype=np.float64)), 0., 1.)
 
-    def prob_increase_decrease(self, k, invader, resident, beta, *args):
+    def prob_increase_decrease(self, k: int, invader: int, resident: int,
+                               beta: float, *args: {None, list}) -> Tuple[float, float]:
         """
         This function calculates for a given number of invaders the probability
         that the number increases or decreases with one.
@@ -240,7 +242,8 @@ class StochDynamics:
         decrease = ((k / float(self.Z)) * ((self.Z - k) / float(self.Z - 1))) * StochDynamics.fermi(beta, fitness_diff)
         return increase, decrease
 
-    def prob_increase_decrease_with_mutation(self, k, invader, resident, beta, *args):
+    def prob_increase_decrease_with_mutation(self, k: int, invader: int, resident: int, beta: float,
+                                             *args: {None, list}) -> Tuple[float, float]:
         """
         This function calculates for a given number of invaders the probability
         that the number increases or decreases with taking into account a mutation rate.
@@ -257,7 +260,7 @@ class StochDynamics:
         p_less = ((1 - self.mu) * p_less) + (self.mu * (k / self.Z))
         return p_plus, p_less
 
-    def full_prob_increase_decrease_with_mutation(self, population_state, beta):
+    def full_prob_increase_decrease_with_mutation(self, population_state: np.ndarray, beta: float) -> np.ndarray:
         """
 
         Parameters
@@ -290,7 +293,7 @@ class StochDynamics:
                 pass
         return transitions
 
-    def gradient_selection(self, k, invader, resident, beta, *args):
+    def gradient_selection(self, k: int, invader: int, resident: int, beta: float, *args: {None, list}) -> float:
         """
         Calculates the gradient of selection given an invader and a resident strategy.
 
@@ -326,14 +329,14 @@ class StochDynamics:
                                range(len(population_state))] for j in range(len(population_state))])
         return (probabilities * np.tanh((beta / 2) * fitness)).sum(axis=0)
 
-    def fixation_probability(self, invader, resident, beta, *args):
+    def fixation_probability(self, invader: int, resident: int, beta: float, *args: {None, list}) -> float:
         """
         function for calculating the fixation_probability probability of the invader
         in a population of residents.
 
         The fixation probability is derived analytically:
 
-        \( \phi = $ \)
+        @f[ \\phi = $ @f]
 
         :param invader: index of the invading strategy
         :param resident: index of the resident strategy
@@ -350,7 +353,7 @@ class StochDynamics:
 
         return 1.0 / (1.0 + phi)
 
-    def calculate_full_transition_matrix(self, beta, *args):
+    def calculate_full_transition_matrix(self, beta: float, *args: {None, list}) -> np.ndarray:
         """
         Returns the full transition matrix in sparse representation
 
@@ -375,7 +378,7 @@ class StochDynamics:
 
         return transitions.transpose()
 
-    def transition_and_fixation_matrix(self, beta, *args):
+    def transition_and_fixation_matrix(self, beta: float, *args: {None, list}) -> Tuple[np.ndarray, np.ndarray]:
         """
         Calculates the transition matrix (only for the monomorphic states)
         and the fixation_probability probabilities
@@ -396,9 +399,9 @@ class StochDynamics:
                     transitions[first, second] = tmp
                     transitions[first, first] = transitions[first, first] - tmp
 
-        return [np.nan_to_num(transitions.transpose(), copy=False), np.nan_to_num(fixprobs, copy=False)]
+        return np.nan_to_num(transitions.transpose(), copy=False), np.nan_to_num(fixprobs, copy=False)
 
-    def calculate_stationary_distribution(self, beta, *args):
+    def calculate_stationary_distribution(self, beta: float, *args: {None, list}) -> np.ndarray:
         """
         Calculates the stationary distribution of the monomorphic states is mu = 0 (SML).
         Otherwise, it calculates the stationary distribution including all possible population states.
@@ -409,7 +412,7 @@ class StochDynamics:
         if self.mu == 0:
             t, f = self.transition_and_fixation_matrix(beta, *args)
         else:
-            t = np.nan_to_num(self.calculate_full_transition_matrix(beta, *args).toarray())
+            t = np.nan_to_num(self.calculate_full_transition_matrix(beta, *args))
 
         # calculate stationary distributions using eigenvalues and eigenvectors
         w, v = np.linalg.eig(t)

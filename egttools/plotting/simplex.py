@@ -15,11 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
+# This code was taken from Marvin Boe's repository
+
 import math
 
+import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 import numpy as np
 import scipy.optimize
+
+from typing import Callable
 
 try:
     from egttools.numerical import sample_simplex, calculate_nb_states
@@ -40,21 +45,22 @@ class SimplexDynamics:
     trimesh = refiner.refine_triangulation(subdiv=5)
     trimesh_fine = refiner.refine_triangulation(subdiv=5)
 
-    def __init__(self, fun, discrete=False, pop_size=None, nb_points=100):
+    def __init__(self, fun: Callable[[np.ndarray, int], np.ndarray], discrete=False, pop_size=None,
+                 nb_points=100) -> None:
         self.f = fun
         self.discrete = discrete
         if self.discrete:
             nb_states = calculate_nb_states(pop_size, 3)
             points = np.random.choice(nb_states, nb_points, replace=False)
             self.simplex_points = np.asarray([sample_simplex(point, pop_size, 3) for point in points])
-            tmp = np.asarray([self.ba2xy(point) for point in self.simplex_points/Z])
+            tmp = np.asarray([self.ba2xy(point) for point in self.simplex_points / Z])
             self.trimesh.x = tmp[:, 0]
             self.trimesh.y = tmp[:, 1]
         self.calculate_stationary_points()
         self.calc_direction_and_strength()
 
     # barycentric coordinates
-    def xy2ba(self, x, y):
+    def xy2ba(self, x: float, y: float) -> np.ndarray:
         corner_x = self.corners.T[0]
         corner_y = self.corners.T[1]
         x_1 = corner_x[0]
@@ -70,10 +76,10 @@ class SimplexDynamics:
         l3 = 1 - l1 - l2
         return np.array([l1, l2, l3])
 
-    def ba2xy(self, x):
+    def ba2xy(self, x: np.array) -> np.array:
         return self.corners.T.dot(x.T).T
 
-    def calculate_stationary_points(self):
+    def calculate_stationary_points(self) -> None:
         fp_raw = []
         border = 5  # don't check points close to simplex border
         delta = 1e-12
@@ -101,7 +107,7 @@ class SimplexDynamics:
         else:
             self.fixpoints = np.array([])
 
-    def calc_direction_and_strength(self):
+    def calc_direction_and_strength(self) -> None:
         if self.discrete:
             direction = [self.f(x, 0) for x in self.simplex_points]
         else:
@@ -113,7 +119,7 @@ class SimplexDynamics:
         self.pvals = [np.linalg.norm(v) for v in direction]
         self.direction = np.array([self.ba2xy(v) for v in direction])
 
-    def plot_simplex(self, ax, cmap='viridis', typelabels=["A", "B", "C"], **kwargs):
+    def plot_simplex(self, ax: plt.axis, cmap='viridis', type_labels=("A", "B", "C"), **kwargs: {None, dict}) -> None:
 
         ax.triplot(self.triangle, linewidth=0.8, color="black")
         ax.tricontourf(self.trimesh, self.pvals, alpha=0.8, cmap=cmap, **kwargs)
@@ -132,18 +138,19 @@ class SimplexDynamics:
         if self.fixpoints.shape[0] > 0:
             ax.scatter(self.fixpoints[:, 0], self.fixpoints[:, 1], c="black", s=70, linewidth=0.3)
         # fig.colorbar(timescatter,label="time")
-        ax.annotate(typelabels[0], self.corners[0], xytext=self.corners[0] + np.array([0.0, 0.05]),
+        ax.annotate(type_labels[0], self.corners[0], xytext=self.corners[0] + np.array([0.0, 0.05]),
                     horizontalalignment='center', va='top')
-        ax.annotate(typelabels[1], self.corners[1], xytext=self.corners[1] + np.array([0.0, -0.02]),
+        ax.annotate(type_labels[1], self.corners[1], xytext=self.corners[1] + np.array([0.0, -0.02]),
                     horizontalalignment='center', va='top')
-        ax.annotate(typelabels[2], self.corners[2], xytext=self.corners[2] + np.array([0.0, -0.05]),
+        ax.annotate(type_labels[2], self.corners[2], xytext=self.corners[2] + np.array([0.0, -0.05]),
                     horizontalalignment='center', va='bottom')
 
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import egttools as egt
-    from egtplot import plot_static
+
+    # from egtplot import plot_static
 
     A = np.array([[1, 0, 0],
                   [0, 2, 0],

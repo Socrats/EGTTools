@@ -224,7 +224,7 @@ PYBIND11_MODULE(numerical, m) {
     py::class_<egttools::FinitePopulations::behaviors::twoActions::GenerousTFT,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "GenerousTFT")
             .def(py::init<double, double, double, double>(),
-                 "Cooprates on the first round and after its opponent "
+                 "Cooperates on the first round and after its opponent "
                  "cooperates. Following a defection,it cooperates with probability\n"
                  "@f[ p(R,P,T,S) = min{1 - \\frac{T-R}{R-S}, \\frac{R-P}{T-P}} @f]\n"
                  "where R, P, T and S are the reward, punishment, temptation and "
