@@ -126,6 +126,7 @@ jobs:
           sudo apt install libeigen3-dev
       - name: install Eigen3 windows
         if: runner.os == 'Windows'
+        run: |
           curl.exe --output eigen-3.3.9.tar.gz --url https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
           tar -cvzf eigen-3.3.9.tar.gz
           ren eigen-3.3.9 eigen3
