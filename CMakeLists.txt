@@ -90,7 +90,7 @@ if (EIGEN3_FOUND)
     message(STATUS "Eigen found")
 endif ()
 
-include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
+#include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
 
 # Support for OpenMP parallelization
 find_package(OpenMP)

@@ -19,6 +19,7 @@
 #ifndef EGTTOOLS_SEEDGENERATOR_H
 #define EGTTOOLS_SEEDGENERATOR_H
 
+#include <algorithm>
 #include <random>
 #include <thread>
 
