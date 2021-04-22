@@ -13,7 +13,7 @@ using namespace std;
 int main() {
 
     // First we define a vector of possible behaviors
-    size_t nb_strategies = 2;
+    long nb_strategies = 2;
     size_t pop_size = 100;
     size_t nb_rounds = 1;
     egttools::VectorXui init_state(nb_strategies);
@@ -28,9 +28,10 @@ int main() {
     // Initialise selection mutation process
     auto smProcess = egttools::FinitePopulations::PairwiseMoran(pop_size, game, 1000000);
 
-//    auto dist = smProcess.run(1000000, 1, 0.001, init_state);
+    auto dist = smProcess.run(1000, 1, 0.001, init_state);
 
-//    std::cout << dist << std::endl;
+    assert(dist.rows() == 1001);
+    assert(dist.cols() == nb_strategies);
 
     return 0;
 }

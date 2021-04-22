@@ -78,7 +78,7 @@ class PGG(AbstractGame):
         Calculates the Fitness of an strategy for a given population state.
 
         The calculation is done by computing the expected payoff over all possible group combinations
-        for the given population state: \(fitness = \sum_{states} payoff * P(state) \)
+        for the given population state: $ fitness = \\sum_{states} payoff * P(state) $
         Parameters
         ----------
         player_strategy : index of the strategy
