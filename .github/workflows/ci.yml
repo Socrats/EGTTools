@@ -120,12 +120,12 @@ jobs:
           brew install eigen
           echo "EIGEN=$(brew --prefix eigen)" >> $GITHUB_ENV
       - name: install openMP and Eigen3 on ubuntu
-        if: runner.os == 'ubuntu'
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get install libomp-dev
           sudo apt install libeigen3-dev
       - name: install Eigen3 windows
-        if: runner.os == 'windows'
+        if: runner.os == 'Windows'
         run: |
           curl.exe --output eigen-3.3.9.tar.gz --url https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
           tar -cvzf eigen-3.3.9.tar.gz
@@ -167,12 +167,10 @@ jobs:
           CMAKE_ARCH="${{ (runner.os == 'Windows' && matrix.arch == 'x86') && '-A Win32' || '' }}"
           CMAKE_BUILD_TYPE="${{ matrix.release && 'Release' || 'Debug' }}"
           cmake -S . -B build $CMAKE_ARCH -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE -DPython_EXECUTABLE="$(which python)"
+
       - name: Compile
         run: |
-          cmake --build build -j 2
-      - name: Run tests
-        run: |
-          cmake --build build --target tests
+          cmake --build build -j 2 --target egttools
   docs:
     name: Documentation
     runs-on: ubuntu-latest
@@ -195,13 +193,15 @@ jobs:
         run: |
           pip install --user -r docs/requirements.txt
           sudo apt install pandoc
+
       - name: Configure
         shell: bash
         run: |
           cmake -S . -B build -DPython_EXECUTABLE="$(which python)"
+
       - name: Build
         run: |
-          cmake --build build -j 2
+          cmake --build build -j 2 --target egttools
       - name: Build documentation
         run: |
           cmake --build build --target docs
