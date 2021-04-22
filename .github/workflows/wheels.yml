@@ -30,6 +30,12 @@ jobs:
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.8
 
+      - name: install openMP and Eigen3 on ubuntu
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get install libomp-dev
+          sudo apt install libeigen3-dev
+
       - name: Install requirements
         run: |
           pip install --user check-manifest twine
@@ -104,7 +110,7 @@ jobs:
           echo "CIBW_ENVIRONMENT=$CIBW_ENVIRONMENT_COMMON" >> $GITHUB_ENV
           echo "CIBW_ENVIRONMENT_LINUX=$CIBW_ENVIRONMENT_COMMON PIP_ONLY_BINARY='numpy'" >> $GITHUB_ENV
           echo "CIBW_ENVIRONMENT_MACOS=$CIBW_ENVIRONMENT_COMMON MACOSX_DEPLOYMENT_TARGET=10.9 CMAKE_OSX_ARCHITECTURES=\"$CMAKE_OSX_ARCHITECTURES\"" >> $GITHUB_ENV
-          CIBW_BEFORE_ALL_COMMON="cmake -S . -B build_dependencies $CMAKE_ARCH && cmake --build build_dependencies --target numerical -j 2"
+          CIBW_BEFORE_ALL_COMMON="cmake -S . -B build $CMAKE_ARCH && cmake --build build --target egttools -j 2"
           echo "CIBW_BEFORE_ALL=$CIBW_BEFORE_ALL_COMMON" >> $GITHUB_ENV
           echo "CIBW_BEFORE_ALL_LINUX=pip install cmake && ln -s \$(which cmake) /usr/local/bin/cmake && $CIBW_BEFORE_ALL_COMMON" >> $GITHUB_ENV
           echo "CIBW_BEFORE_ALL_WINDOWS=$CIBW_BEFORE_ALL_COMMON --config Release" >> $GITHUB_ENV
