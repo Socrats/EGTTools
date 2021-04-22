@@ -138,7 +138,7 @@ jobs:
           echo "OPENBLAS=$(brew --prefix openblas)" >> $GITHUB_ENV
       - name: Install requirements
         run: |
-          pip install --user --upgrade pip setuptools wheel
+          pip install --user --upgrade pip setuptools wheel build
           pip install --user --upgrade -r tests/requirements.txt
       - name: Select GCC
         if: matrix.gcc
