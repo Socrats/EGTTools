@@ -128,8 +128,8 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           curl.exe --output eigen-3.3.9.tar.gz --url https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
-          tar -zxvf eigen-3.3.9.tar.gz "C:\hostedtoolcache\windows"
-          ren "C:\hostedtoolcache\windows\eigen-3.3.9" -C "C:\hostedtoolcache\windows\eigen3"
+          tar -zxvf eigen-3.3.9.tar.gz "C:\"
+          ren "C:\eigen-3.3.9" -C "C:\eigen3"
 
       - name: Install OpenBLAS on macOS for NumPy
         if: runner.os == 'macOS' && startsWith(matrix.python, 'pypy')
