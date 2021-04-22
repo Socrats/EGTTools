@@ -98,12 +98,6 @@ jobs:
           echo "LIBOMP=$(brew --prefix libomp)" >> $GITHUB_ENV
           brew install eigen
           echo "EIGEN=$(brew --prefix eigen)" >> $GITHUB_ENV
-      - name: install openMP and Eigen3 on ubuntu
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get install libomp-dev
-          sudo apt install libeigen3-dev
-          echo "EIGEN='/usr/include/eigen3'" >> $GITHUB_ENV
       - name: install Eigen3 windows
         if: runner.os == 'Windows'
         run: |
