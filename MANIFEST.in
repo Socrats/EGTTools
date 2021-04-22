@@ -5,14 +5,18 @@ include MANIFEST.in
 include pyproject.toml
 include setup.cfg
 include setup.py
+include .clang-format
+include environment.yml
 
 include CMakeLists.txt
 include requirements.txt
 graft include
 graft src
+graft egttools
 graft pybind11
 
 include .gitmodules
+graft cmake
 
 graft res
 
@@ -24,3 +28,4 @@ prune docs/_build
 
 global-exclude *.py[co]
 global-exclude .DS_store
+global-exclude .ipynb_checkpoints/*
