@@ -16,6 +16,7 @@ graft egttools
 graft pybind11
 
 include .gitmodules
+exclude pybind11/.git
 graft cmake
 
 graft res
@@ -26,6 +27,7 @@ graft tests
 graft docs
 prune docs/_build
 
+global-exclude __pycache__
 global-exclude *.py[co]
-global-exclude .DS_store
+global-exclude .DS_Store
 global-exclude .ipynb_checkpoints/*
