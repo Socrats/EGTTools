@@ -130,7 +130,7 @@ jobs:
           curl.exe --output eigen-3.3.9.tar.gz --url https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
           tar -zxvf eigen-3.3.9.tar.gz
           ren eigen-3.3.9 eigen3
-          setx EIGEN3_INCLUDE_DIR "%cd%\eigen3"
+          echo "EIGEN3_INCLUDE_DIR='%cd%\eigen3'" >> $GITHUB_ENV
 
       - name: Install OpenBLAS on macOS for NumPy
         if: runner.os == 'macOS' && startsWith(matrix.python, 'pypy')
@@ -189,6 +189,26 @@ jobs:
 
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.8
+
+      - name: Install OpenMP and Eigen3 on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install libomp
+          echo "LIBOMP=$(brew --prefix libomp)" >> $GITHUB_ENV
+          brew install eigen
+          echo "EIGEN=$(brew --prefix eigen)" >> $GITHUB_ENV
+      - name: install openMP and Eigen3 on ubuntu
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get install libomp-dev
+          sudo apt install libeigen3-dev
+      - name: install Eigen3 windows
+        if: runner.os == 'Windows'
+        run: |
+          curl.exe --output eigen-3.3.9.tar.gz --url https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
+          tar -zxvf eigen-3.3.9.tar.gz
+          ren eigen-3.3.9 eigen3
+          echo "EIGEN3_INCLUDE_DIR='%cd%\eigen3'" >> $GITHUB_ENV
 
       - name: Install requirements
         run: |
