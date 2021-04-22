@@ -124,13 +124,14 @@ jobs:
         run: |
           sudo apt-get install libomp-dev
           sudo apt install libeigen3-dev
+          echo "EIGEN='/usr/include/eigen3'" >> $GITHUB_ENV
       - name: install Eigen3 windows
         if: runner.os == 'Windows'
         run: |
           curl.exe --output eigen-3.3.9.tar.gz --url https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
           tar -zxvf eigen-3.3.9.tar.gz
           ren eigen-3.3.9 eigen3
-          echo "EIGEN3_INCLUDE_DIR='%cd%\eigen3'" >> $GITHUB_ENV
+          echo "EIGEN='%cd%\eigen3'" >> $GITHUB_ENV
 
       - name: Install OpenBLAS on macOS for NumPy
         if: runner.os == 'macOS' && startsWith(matrix.python, 'pypy')
@@ -202,13 +203,14 @@ jobs:
         run: |
           sudo apt-get install libomp-dev
           sudo apt install libeigen3-dev
+          echo "EIGEN='/usr/include/eigen3'" >> $GITHUB_ENV
       - name: install Eigen3 windows
         if: runner.os == 'Windows'
         run: |
           curl.exe --output eigen-3.3.9.tar.gz --url https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
           tar -zxvf eigen-3.3.9.tar.gz
           ren eigen-3.3.9 eigen3
-          echo "EIGEN3_INCLUDE_DIR='%cd%\eigen3'" >> $GITHUB_ENV
+          echo "EIGEN='%cd%\eigen3'" >> $GITHUB_ENV
 
       - name: Install requirements
         run: |
