@@ -133,7 +133,7 @@ jobs:
           curl.exe --output eigen-3.3.9.tar.gz --url https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
           tar -zxvf eigen-3.3.9.tar.gz
           ren eigen-3.3.9 eigen3
-          mv eigen3 C:/Program Files (x86)/eigen3
+          move eigen3 "C:/Program Files (x86)/eigen3"
           echo "Eigen3_DIR='C:/Program Files (x86)/eigen3'" >> $GITHUB_ENV
 
       - name: Install OpenBLAS on macOS for NumPy
