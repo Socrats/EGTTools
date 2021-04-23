@@ -91,20 +91,24 @@ jobs:
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.8
 
-      - name: Install OpenMP and Eigen3 on macOS
+      - name: Install system dependencies macOS
         if: runner.os == 'macOS'
         run: |
           brew install libomp
           echo "LIBOMP=$(brew --prefix libomp)" >> $GITHUB_ENV
           brew install eigen
           echo "EIGEN=$(brew --prefix eigen)" >> $GITHUB_ENV
+          brew install gfortran
+          echo "GFORTRAN=$(brew --prefix gfortran)" >> $GITHUB_ENV
       - name: install Eigen3 windows
         if: runner.os == 'Windows'
         run: |
           curl.exe --output eigen-3.3.9.tar.gz --url https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
           tar -zxvf eigen-3.3.9.tar.gz
           ren eigen-3.3.9 eigen3
-          echo "EIGEN='%cd%\eigen3'" >> $GITHUB_ENV
+          echo "Eigen is on %cd%"
+          echo "Directory contents: %dir%"
+          echo "Eigen3_DIR='%cd%\eigen3'" >> $GITHUB_ENV
 
       - name: Install OpenBLAS on macOS for NumPy
         if: runner.os == 'macOS' && startsWith(matrix.python, 'pypy')
