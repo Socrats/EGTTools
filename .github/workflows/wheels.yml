@@ -100,6 +100,12 @@ jobs:
           echo "EIGEN=$(brew --prefix eigen)" >> $GITHUB_ENV
           brew install gfortran
           echo "GFORTRAN=$(brew --prefix gfortran)" >> $GITHUB_ENV
+      - name: Install system dependencies Linux
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get install libomp-dev
+          sudo apt install libeigen3-dev
+          echo "Eigen3_DIR='/usr/include/eigen3'" >> $GITHUB_ENV
       - name: install Eigen3 windows
         if: runner.os == 'Windows'
         run: |
@@ -132,7 +138,7 @@ jobs:
           echo "CIBW_ENVIRONMENT_MACOS=$CIBW_ENVIRONMENT_COMMON MACOSX_DEPLOYMENT_TARGET=10.9 CMAKE_OSX_ARCHITECTURES=\"$CMAKE_OSX_ARCHITECTURES\"" >> $GITHUB_ENV
           CIBW_BEFORE_ALL_COMMON="cmake -S . -B build_dependencies $CMAKE_ARCH && cmake --build build_dependencies --target egttools -j 2"
           echo "CIBW_BEFORE_ALL=$CIBW_BEFORE_ALL_COMMON" >> $GITHUB_ENV
-          echo "CIBW_BEFORE_ALL_LINUX=pip install cmake && ln -s \$(which cmake) /usr/local/bin/cmake && sudo apt-get install libomp-dev && sudo apt install libeigen3-dev && $CIBW_BEFORE_ALL_COMMON" >> $GITHUB_ENV
+          echo "CIBW_BEFORE_ALL_LINUX=pip install cmake && ln -s \$(which cmake) /usr/local/bin/cmake && $CIBW_BEFORE_ALL_COMMON" >> $GITHUB_ENV
           echo "CIBW_BEFORE_ALL_WINDOWS=$CIBW_BEFORE_ALL_COMMON --config Release" >> $GITHUB_ENV
       - name: Only build ReadTheDocs wheel
         if: startsWith(github.ref, 'refs/heads/docs')
