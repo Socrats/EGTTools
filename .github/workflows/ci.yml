@@ -133,9 +133,10 @@ jobs:
           curl.exe --output eigen-3.3.9.tar.gz --url https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
           tar -zxvf eigen-3.3.9.tar.gz
           ren eigen-3.3.9 eigen3
-          echo "Eigen is on %cd%"
-          echo "Directory contents: %dir%"
-          echo "Eigen3_DIR='%cd%\eigen3'" >> $GITHUB_ENV
+          echo Eigen
+          echo Eigen is on %cd%
+          echo Directory contents: %dir%
+          echo Eigen3_DIR=%cd%\eigen3 >> $GITHUB_ENV
 
       - name: Install OpenBLAS on macOS for NumPy
         if: runner.os == 'macOS' && startsWith(matrix.python, 'pypy')
