@@ -67,11 +67,11 @@ jobs:
             cibw-arch: macosx_arm64
           - runs-on: macos-latest
             cibw-arch: macosx_universal2
-          - runs-on: windows-latest
-            cibw-arch: win_amd64
-          - runs-on: windows-latest
-            cibw-arch: win32
-            python-arch: x86
+#          - runs-on: windows-latest
+#            cibw-arch: win_amd64
+#          - runs-on: windows-latest
+#            cibw-arch: win32
+#            python-arch: x86
 
     name: Wheels • ${{ matrix.cibw-arch }}
     runs-on: ${{ matrix.runs-on }}
@@ -106,15 +106,14 @@ jobs:
           sudo apt-get install libomp-dev
           sudo apt install libeigen3-dev
           echo "Eigen3_DIR='/usr/include/eigen3'" >> $GITHUB_ENV
-      - name: install Eigen3 windows
-        if: runner.os == 'Windows'
-        run: |
-          curl.exe --output eigen-3.3.9.tar.gz --url https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
-          tar -zxvf eigen-3.3.9.tar.gz
-          ren eigen-3.3.9 eigen3
-          echo "Eigen is on %cd%"
-          echo "Directory contents: %dir%"
-          echo "Eigen3_DIR='%cd%\eigen3'" >> $GITHUB_ENV
+#      - name: install Eigen3 windows
+#        if: runner.os == 'Windows'
+#        run: |
+#          curl.exe --output eigen-3.3.9.tar.gz --url https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
+#          tar -zxvf eigen-3.3.9.tar.gz
+#          ren eigen-3.3.9 eigen3
+#          move eigen3 "C:/Program Files (x86)/eigen3"
+#          echo "Eigen3_DIR='C:/Program Files (x86)/eigen3'" >> $GITHUB_ENV
 
       - name: Install OpenBLAS on macOS for NumPy
         if: runner.os == 'macOS' && startsWith(matrix.python, 'pypy')
@@ -144,7 +143,7 @@ jobs:
         if: startsWith(github.ref, 'refs/heads/docs')
         shell: bash
         run: |
-          echo "CIBW_BUILD=cp37-manylinux_x86_64" >> $GITHUB_ENV
+          echo "CIBW_BUILD=cp38-manylinux_x86_64" >> $GITHUB_ENV
       - name: Run cibuildwheel
         if: startsWith(github.ref, 'refs/heads/docs') != true || matrix.cibw-arch == 'manylinux_x86_64'
         run: |

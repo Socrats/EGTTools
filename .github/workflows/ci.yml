@@ -66,32 +66,32 @@ jobs:
             arch: x64
             release: true
             name-extra: ' (Release)'
-          - runs-on: macos-latest
-            python: pypy-3.6
-            arch: x64
+#          - runs-on: macos-latest
+#            python: pypy-3.6
+#            arch: x64
 
-          - runs-on: windows-latest
-            python: 3.6
-            arch: x64
-          - runs-on: windows-latest
-            python: 3.9
-            arch: x64
-          - runs-on: windows-latest
-            python: 3.6
-            arch: x86
-            name-extra: ' (32-bit)'
-          - runs-on: windows-latest
-            python: 3.9
-            arch: x86
-            name-extra: ' (32-bit)'
-          - runs-on: windows-latest
-            python: 3.6
-            arch: x64
-            release: true
-            name-extra: ' (Release)'
-          - runs-on: windows-latest
-            python: pypy-3.6
-            arch: x86
+#          - runs-on: windows-latest
+#            python: 3.6
+#            arch: x64
+#          - runs-on: windows-latest
+#            python: 3.9
+#            arch: x64
+#          - runs-on: windows-latest
+#            python: 3.6
+#            arch: x86
+#            name-extra: ' (32-bit)'
+#          - runs-on: windows-latest
+#            python: 3.9
+#            arch: x86
+#            name-extra: ' (32-bit)'
+#          - runs-on: windows-latest
+#            python: 3.6
+#            arch: x64
+#            release: true
+#            name-extra: ' (Release)'
+#          - runs-on: windows-latest
+#            python: pypy-3.6
+#            arch: x86
 
     name: Python ${{ matrix.python }}${{ matrix.name-extra }} • ${{ matrix.runs-on }}
     runs-on: ${{ matrix.runs-on }}
@@ -127,14 +127,14 @@ jobs:
           sudo apt-get install libomp-dev
           sudo apt install libeigen3-dev
           echo "Eigen3_DIR='/usr/include/eigen3'" >> $GITHUB_ENV
-      - name: Install Eigen3 windows
-        if: runner.os == 'Windows'
-        run: |
-          curl.exe --output eigen-3.3.9.tar.gz --url https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
-          tar -zxvf eigen-3.3.9.tar.gz
-          ren eigen-3.3.9 eigen3
-          move eigen3 "C:/Program Files (x86)/eigen3"
-          echo "Eigen3_DIR='C:/Program Files (x86)/eigen3'" >> $GITHUB_ENV
+#      - name: Install Eigen3 windows
+#        if: runner.os == 'Windows'
+#        run: |
+#          curl.exe --output eigen-3.3.9.tar.gz --url https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
+#          tar -zxvf eigen-3.3.9.tar.gz
+#          ren eigen-3.3.9 eigen3
+#          move eigen3 "C:/Program Files (x86)/eigen3"
+#          echo "Eigen3_DIR='C:/Program Files (x86)/eigen3'" >> $GITHUB_ENV
 
       - name: Install OpenBLAS on macOS for NumPy
         if: runner.os == 'macOS' && startsWith(matrix.python, 'pypy')
