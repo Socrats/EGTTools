@@ -92,11 +92,13 @@ endif ()
 
 #include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
 
-# Support for OpenMP parallelization
-find_package(OpenMP)
-if (OPENMP_FOUND)
-    include_directories(SYSTEM ${OPENMP_INCLUDE_DIR})
-    message(STATUS "OpenMP enabled")
+# Support for OpenMP parallelization - not on windows
+if (NOT MSVC)
+    find_package(OpenMP)
+    if (OPENMP_FOUND)
+        include_directories(SYSTEM ${OPENMP_INCLUDE_DIR})
+        message(STATUS "OpenMP enabled")
+    endif ()
 endif ()
 
 # Currently, scikit-build does not support FindPython.
