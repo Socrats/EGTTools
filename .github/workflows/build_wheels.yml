@@ -109,16 +109,17 @@ jobs:
           CIBW_SKIP: cp27-win*
           CIBW_BUILD: cp38-${{ matrix.cibw-arch }}
           CIBW_BEFORE_ALL_MACOS: |
-            brew install libomp
-            brew install eigen
-            brew install openblas
-            echo "LIBOMP=$(brew --prefix libomp)" >> $GITHUB_ENV
-            echo "EIGEN=$(brew --prefix eigen)" >> $GITHUB_ENV
-            echo "GFORTRAN=$(brew --prefix gfortran)" >> $GITHUB_ENV
-            echo "OPENBLAS=$(brew --prefix openblas)" >> $GITHUB_ENV
+            brew install libomp && \
+            brew install eigen && \
+            brew install openblas && \
+            echo "LIBOMP=$(brew --prefix libomp)" >> $GITHUB_ENV && \
+            echo "EIGEN=$(brew --prefix eigen)" >> $GITHUB_ENV && \
+            echo "GFORTRAN=$(brew --prefix gfortran)" >> $GITHUB_ENV && \
+            echo "OPENBLAS=$(brew --prefix openblas)" >> $GITHUB_ENV && \
           CIBW_BEFORE_ALL_LINUX: |
-            sudo apt-get install libomp-dev
-            sudo apt install libeigen3-dev
+            sudo apt-get install libomp-dev && \
+            sudo apt install libeigen3-dev && \
+            echo "EIGEN=/usr/include/eigen3" >> $GITHUB_ENV
           CIBW_ENVIRONMENT_LINUX: "-DEigen3_DIR='/usr/include/eigen3/cmake'"
           CIBW_ENVIRONMENT_MACOS: "-DEigen3_DIR='$(brew --prefix eigen)/cmake'"
 
