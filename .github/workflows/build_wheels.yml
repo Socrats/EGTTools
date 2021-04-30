@@ -36,8 +36,9 @@ jobs:
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.8
 
-      - name: Build SDist
-        run: pipx run build --sdist
+      - name: Install requirements
+        run: |
+          pip install --user check-manifest twine
 
       - name: Run check-manifest
         run: |
@@ -63,12 +64,13 @@ jobs:
 
 
   build_wheels:
-    name: Wheels on ${{ matrix.os }}
+    name: Wheels on ${{ matrix.cibw-arch }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]  # Windows wheels currently not supported very well by scikit-build
+        cibw-arch: [manylinux_x86_64, macosx_x86_64]
 
     steps:
       - name: Checkout code
@@ -80,37 +82,19 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: '3.8'
-#          architecture: ${{ matrix.python-arch }}
+          architecture: ${{ matrix.python-arch }}
 
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.8
-
-      - name: Install system dependencies macOS
-        shell: bash
-        if: runner.os == 'macOS'
-        run: |
-          brew install libomp
-          echo "LIBOMP=$(brew --prefix libomp)" >> $GITHUB_ENV
-          brew install eigen
-          echo "EIGEN=$(brew --prefix eigen)" >> $GITHUB_ENV
-          brew install gfortran
-          echo "GFORTRAN=$(brew --prefix gfortran)" >> $GITHUB_ENV
-      - name: Install system dependencies Linux
-        shell: bash
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get install libomp-dev
-          sudo apt install libeigen3-dev
-          echo "Eigen3_DIR='/usr/include/eigen3/cmake'" >> $GITHUB_ENV
 
       - uses: joerick/cibuildwheel@v1.10.0
         env:
           # Python 2.7 on Windows with workaround not supported by scikit-build
           CIBW_SKIP: cp27-win*
+          CIBW_BUILD: cp38-${{ matrix.cibw-arch }}
           CIBW_BEFORE_ALL_MACOS: |
             brew install libomp
             brew install eigen
-            brew install gfortran
             brew install openblas
             echo "LIBOMP=$(brew --prefix libomp)" >> $GITHUB_ENV
             echo "EIGEN=$(brew --prefix eigen)" >> $GITHUB_ENV
