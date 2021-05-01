@@ -122,7 +122,7 @@ jobs:
           echo "CIBW_BEFORE_ALL=$CIBW_BEFORE_ALL_COMMON" >> $GITHUB_ENV
           echo "CIBW_BEFORE_ALL_MACOS=brew install libomp && brew install eigen && brew install openblas && $CIBW_BEFORE_ALL_COMMON" >> $GITHUB_ENV
 #          echo "CIBW_BEFORE_ALL_LINUX=apt-get install libomp-dev libeigen3-dev && pip install cmake && ln -s \$(which cmake) /usr/local/bin/cmake && $CIBW_BEFORE_ALL_COMMON" >> $GITHUB_ENV
-          echo "CIBW_BEFORE_BUILD=apt-get install libomp-dev libeigen3-dev && pip install cmake && ln -s \$(which cmake) /usr/local/bin/cmake && $CIBW_BEFORE_ALL_COMMON" >> $GITHUB_ENV
+          echo "CIBW_BEFORE_BUILD_LINUX=apt-get install libomp-dev libeigen3-dev && pip install cmake && ln -s \$(which cmake) /usr/local/bin/cmake && $CIBW_BEFORE_ALL_COMMON" >> $GITHUB_ENV
 
       - name: Only build ReadTheDocs wheel
         if: startsWith(github.ref, 'refs/heads/docs')
