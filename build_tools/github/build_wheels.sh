@@ -21,7 +21,7 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
     export CXXFLAGS="$CXXFLAGS -I/usr/local/opt/libomp/include"
     export LDFLAGS="$LDFLAGS -Wl,-rpath,/usr/local/opt/libomp/lib -L/usr/local/opt/libomp/lib -lomp"
 
-    brew install libeigen3
+    brew install eigen
     brew install openblas
 
     export LDFLAGS="$LDFLAGS -L/usr/local/opt/openblas/lib"
