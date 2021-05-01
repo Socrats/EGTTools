@@ -113,13 +113,13 @@ jobs:
           CIBW_BUILD: cp38-${{ matrix.cibw-arch }}
           CIBW_ENVIRONMENT: EGTTOOLS_EXTRA_CMAKE_ARGS="-DPREBUILT_DEPENDENCIES=$(python -c 'import os; print(os.getcwd().replace(os.path.sep, '/'))')/build_dependencies"
                             CMAKE_BUILD_PARALLEL_LEVEL=2
-                            CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch }}
+                            CMAKE_OSX_ARCHITECTURES="arm64"
           CIBW_BEFORE_ALL_MACOS: |
             brew install libomp && brew install eigen && brew install openblas
           CIBW_BEFORE_ALL_LINUX: |
             yum install  eigen3-devel
           CIBW_BEFORE_BUILD: cmake -S . -B build_dependencies $CMAKE_ARCH && cmake --build build_dependencies --target numerical -j 2 && cp build_dependencies/src/*.so egttools/
-          CIBW_BEFORE_BUILD_MACOS: cmake -S . -B build_dependencies -DCMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch }} $CMAKE_ARCH && cmake --build build_dependencies --target numerical -j 2 && cp build_dependencies/src/*.so egttools/
+          CIBW_BEFORE_BUILD_MACOS: cmake -S . -B build_dependencies -DCMAKE_OSX_ARCHITECTURES="arm64" $CMAKE_ARCH && cmake --build build_dependencies --target numerical -j 2 && cp build_dependencies/src/*.so egttools/
           CIBW_BEFORE_TEST: pip install --upgrade -r tests/requirements.txt
           CIBW_TEST_COMMAND: pytest {project}/tests
 
