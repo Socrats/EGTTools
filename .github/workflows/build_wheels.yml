@@ -108,7 +108,7 @@ jobs:
 
       - uses: joerick/cibuildwheel@v1.10.0
         env:
-          CIBW_BEFORE_TEST: pip install --user --upgrade -r tests/requirements.txt
+          CIBW_BEFORE_TEST: pip install --upgrade -r tests/requirements.txt
           CIBW_TEST_COMMAND: pytest {package}/tests
           # Python 2.7 on Windows with workaround not supported by scikit-build
           CIBW_SKIP: cp27-win*
@@ -118,8 +118,8 @@ jobs:
 #            echo "LIBOMP=$(brew --prefix libomp)" >> $GITHUB_ENV && \
 #            echo "EIGEN=$(brew --prefix eigen)" >> $GITHUB_ENV && \
 #            echo "OPENBLAS=$(brew --prefix openblas)" >> $GITHUB_ENV
-          CIBW_BEFORE_ALL_LINUX: |
-            apt-get install libomp-dev libeigen3-dev
+          CIBW_BEFORE_BUILD_LINUX: |
+            sudo apt-get install libomp-dev libeigen3-dev
 #            echo "EIGEN=/usr/include/eigen3" >> $GITHUB_ENV
           CIBW_ENVIRONMENT_LINUX: "-DEigen3_DIR='/usr/include/eigen3/cmake'"
           CIBW_ENVIRONMENT_MACOS: "-DEigen3_DIR='$(brew --prefix eigen)/cmake'"
