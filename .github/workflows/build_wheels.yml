@@ -108,11 +108,11 @@ jobs:
 
       - uses: joerick/cibuildwheel@v1.10.0
         env:
-          CIBW_TEST_COMMAND: pytest
+          CIBW_BEFORE_TEST: pip install --user --upgrade -r tests/requirements.txt
+          CIBW_TEST_COMMAND: pytest {package}/tests
           # Python 2.7 on Windows with workaround not supported by scikit-build
           CIBW_SKIP: cp27-win*
           CIBW_BUILD: cp38-${{ matrix.cibw-arch }}
-          CIBW_BEFORE_ALL: pip install pytest
           CIBW_BEFORE_ALL_MACOS: |
             brew install libomp && brew install eigen && brew install openblas
 #            echo "LIBOMP=$(brew --prefix libomp)" >> $GITHUB_ENV && \
