@@ -109,9 +109,6 @@ jobs:
       - name: Configure cibuildwheel
         shell: bash
         run: |
-#          CMAKE_ARCH="${{ matrix.cibw-arch == 'win32' && '-A Win32' || '' }}"
-#          CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch == 'macosx_x86_64' && 'x86_64' || matrix.cibw-arch == 'macosx_arm64' && 'arm64' || matrix.cibw-arch == 'macosx_universal2' && '"arm64;x86_64"' || '' }}
-#          echo "CIBW_ARCHS_MACOS=x86_64 arm64 universal2" >> $GITHUB_ENV
           echo "CIBW_BUILD=*-${{ matrix.cibw-arch }}" >> $GITHUB_ENV
           CIBW_ENVIRONMENT_COMMON="EGTTOOLS_EXTRA_CMAKE_ARGS=\"-DPREBUILT_DEPENDENCIES=\$(python -c 'import os; print(os.getcwd().replace(os.path.sep, '/'))')/build_dependencies\" CMAKE_BUILD_PARALLEL_LEVEL=2"
           echo "CIBW_ENVIRONMENT=$CIBW_ENVIRONMENT_COMMON" >> $GITHUB_ENV
@@ -121,7 +118,22 @@ jobs:
           echo "CIBW_BEFORE_ALL=$CIBW_BEFORE_ALL_COMMON" >> $GITHUB_ENV
           echo "CIBW_BEFORE_ALL_MACOS=brew install libomp && brew install eigen && brew install openblas && $CIBW_BEFORE_ALL_COMMON" >> $GITHUB_ENV
           echo "CIBW_BEFORE_ALL_LINUX=yum install libomp-dev libeigen3-dev && pip install cmake && ln -s \$(which cmake) /usr/local/bin/cmake && $CIBW_BEFORE_ALL_COMMON" >> $GITHUB_ENV
-#          echo "CIBW_BEFORE_ALL_WINDOWS=$CIBW_BEFORE_ALL_COMMON --config Release" >> $GITHUB_ENV
+
+      - name: Only build ReadTheDocs wheel
+        if: startsWith(github.ref, 'refs/heads/docs')
+        shell: bash
+        run: |
+          echo "CIBW_BUILD=cp38-manylinux_x86_64" >> $GITHUB_ENV
+
+      - name: Run cibuildwheel
+        if: startsWith(github.ref, 'refs/heads/docs') != true || matrix.cibw-arch == 'manylinux_x86_64'
+        run: |
+          cibuildwheel
+
+      - name: Check built wheels
+        if: startsWith(github.ref, 'refs/heads/docs') != true || matrix.cibw-arch == 'manylinux_x86_64'
+        run: |
+          twine check wheelhouse/*
 
 #      - uses: joerick/cibuildwheel@v1.10.0
 #        env:
@@ -149,9 +161,12 @@ jobs:
         shell: bash
 
       - name: Upload wheels
+        if: startsWith(github.ref, 'refs/heads/docs') != true
         uses: actions/upload-artifact@v2
         with:
-          path: wheelhouse/*.whl
+          name: wheels
+          path: wheelhouse/egttools-*.whl
+          if-no-files-found: error
 
 
 #  upload_all:
