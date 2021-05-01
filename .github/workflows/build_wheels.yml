@@ -110,54 +110,53 @@ jobs:
         run: |
           python -m pip install cibuildwheel twine build
 
-      - name: Configure cibuildwheel
-        shell: bash
-        run: |
-          echo "CIBW_BUILD=*-${{ matrix.cibw-arch }}" >> $GITHUB_ENV
-          CIBW_ENVIRONMENT_COMMON="EGTTOOLS_EXTRA_CMAKE_ARGS=\"-DPREBUILT_DEPENDENCIES=\$(python -c 'import os; print(os.getcwd().replace(os.path.sep, '/'))')/build_dependencies\" CMAKE_BUILD_PARALLEL_LEVEL=2"
-          echo "CIBW_ENVIRONMENT=$CIBW_ENVIRONMENT_COMMON" >> $GITHUB_ENV
-          echo "CIBW_ENVIRONMENT_LINUX=$CIBW_ENVIRONMENT_COMMON PIP_ONLY_BINARY='numpy'" >> $GITHUB_ENV
-          echo "CIBW_ENVIRONMENT_MACOS=$CIBW_ENVIRONMENT_COMMON" >> $GITHUB_ENV
-          CIBW_BEFORE_ALL_COMMON="python -m pip install build && python -m build"
-          echo "CIBW_BEFORE_ALL=$CIBW_BEFORE_ALL_COMMON" >> $GITHUB_ENV
-          echo "CIBW_BEFORE_ALL_MACOS=brew install libomp && brew install eigen && brew install openblas && $CIBW_BEFORE_ALL_COMMON" >> $GITHUB_ENV
-          echo "CIBW_BEFORE_ALL_LINUX=yum install eigen3-devel && pip install cmake && ln -s \$(which cmake) /usr/local/bin/cmake && $CIBW_BEFORE_ALL_COMMON" >> $GITHUB_ENV
-
-      - name: Only build ReadTheDocs wheel
-        if: startsWith(github.ref, 'refs/heads/docs')
-        shell: bash
-        run: |
-          echo "CIBW_BUILD=cp38-manylinux_x86_64" >> $GITHUB_ENV
-
-      - name: Run cibuildwheel
-        if: startsWith(github.ref, 'refs/heads/docs') != true || matrix.cibw-arch == 'manylinux_x86_64'
-        run: |
-          cibuildwheel
-
-      - name: Check built wheels
-        if: startsWith(github.ref, 'refs/heads/docs') != true || matrix.cibw-arch == 'manylinux_x86_64'
-        run: |
-          twine check wheelhouse/*
-
-#      - uses: joerick/cibuildwheel@v1.10.0
+#      - name: Configure cibuildwheel
 #        env:
-#          # Python 2.7 on Windows with workaround not supported by scikit-build
-#          CIBW_SKIP: cp27-win*
-#          CIBW_BUILD: cp38-${{ matrix.cibw-arch }}
-#          CIBW_ENVIRONMENT: "EGTTOOLS_EXTRA_CMAKE_ARGS=\"-DPREBUILT_DEPENDENCIES=$(python -c 'import os; print(os.getcwd().replace(os.path.sep, '/'))')/build_dependencies\" CMAKE_BUILD_PARALLEL_LEVEL=2"
-#          CIBW_ENVIRONMENT_LINUX: "PIP_ONLY_BINARY='numpy' -DEigen3_DIR='/usr/include/eigen3/cmake'"
-#          CIBW_ENVIRONMENT_MACOS: "-DEigen3_DIR='$(brew --prefix eigen)/cmake'"
-#          CIBW_BEFORE_ALL_MACOS: |
-#            brew install libomp && brew install eigen && brew install openblas
-##            echo "LIBOMP=$(brew --prefix libomp)" >> $GITHUB_ENV && \
-##            echo "EIGEN=$(brew --prefix eigen)" >> $GITHUB_ENV && \
-##            echo "OPENBLAS=$(brew --prefix openblas)" >> $GITHUB_ENV
-#          CIBW_BEFORE_BUILD_LINUX: |
-#            yum install libomp-dev libeigen3-dev
-##            echo "EIGEN=/usr/include/eigen3" >> $GITHUB_ENV
-#          CIBW_BEFORE_ALL: cmake -S . -B build_dependencies $CMAKE_ARCH && cmake --build build_dependencies --target egttools -j 2
-#          CIBW_BEFORE_TEST: pip install --upgrade -r tests/requirements.txt
-#          CIBW_TEST_COMMAND: pytest {package}/tests
+#          CIBW_BUILD: cp*-${{ matrix.cibw-arch }}
+#        shell: bash
+#        run: |
+#          echo "CIBW_BUILD=*-${{ matrix.cibw-arch }}" >> $GITHUB_ENV
+#          CIBW_ENVIRONMENT_COMMON="EGTTOOLS_EXTRA_CMAKE_ARGS=\"-DPREBUILT_DEPENDENCIES=\$(python -c 'import os; print(os.getcwd().replace(os.path.sep, '/'))')/build_dependencies\" CMAKE_BUILD_PARALLEL_LEVEL=2"
+#          echo "CIBW_ENVIRONMENT=$CIBW_ENVIRONMENT_COMMON" >> $GITHUB_ENV
+#          echo "CIBW_ENVIRONMENT_LINUX=$CIBW_ENVIRONMENT_COMMON PIP_ONLY_BINARY='numpy'" >> $GITHUB_ENV
+#          echo "CIBW_ENVIRONMENT_MACOS=$CIBW_ENVIRONMENT_COMMON" >> $GITHUB_ENV
+#          CIBW_BEFORE_ALL_COMMON="python -m pip install build && python -m build"
+#          echo "CIBW_BEFORE_TEST= pip install --upgrade -r tests/requirements.txt ">> $GITHUB_ENV
+#          echo "CIBW_TEST_COMMAND: pytest"
+#          echo "CIBW_BEFORE_ALL=$CIBW_BEFORE_ALL_COMMON" >> $GITHUB_ENV
+#          echo "CIBW_BEFORE_ALL_MACOS=brew install libomp && brew install eigen && brew install openblas && $CIBW_BEFORE_ALL_COMMON" >> $GITHUB_ENV
+#          echo "CIBW_BEFORE_ALL_LINUX=yum install eigen3-devel && pip install cmake && ln -s \$(which cmake) /usr/local/bin/cmake && $CIBW_BEFORE_ALL_COMMON" >> $GITHUB_ENV
+#
+#      - name: Only build ReadTheDocs wheel
+#        if: startsWith(github.ref, 'refs/heads/docs')
+#        shell: bash
+#        run: |
+#          echo "CIBW_BUILD=cp38-manylinux_x86_64" >> $GITHUB_ENV
+#
+#      - name: Run cibuildwheel
+#        if: startsWith(github.ref, 'refs/heads/docs') != true || matrix.cibw-arch == 'manylinux_x86_64'
+#        run: |
+#          cibuildwheel
+#
+#      - name: Check built wheels
+#        if: startsWith(github.ref, 'refs/heads/docs') != true || matrix.cibw-arch == 'manylinux_x86_64'
+#        run: |
+#          twine check wheelhouse/*
+
+      - uses: joerick/cibuildwheel@v1.10.0
+        env:
+          # Python 2.7 on Windows with workaround not supported by scikit-build
+          CIBW_SKIP: cp27-win*
+          CIBW_BUILD: cp38-${{ matrix.cibw-arch }}
+          CIBW_ENVIRONMENT: EGTTOOLS_EXTRA_CMAKE_ARGS=\"-DPREBUILT_DEPENDENCIES=$(python -c 'import os; print(os.getcwd().replace(os.path.sep, '/'))')/build_dependencies\"
+                            CMAKE_BUILD_PARALLEL_LEVEL=2"
+          CIBW_BEFORE_ALL_MACOS: |
+            brew install libomp && brew install eigen && brew install openblas
+          CIBW_BEFORE_ALL_LINUX: |
+            yum install  eigen3-devel
+          CIBW_BEFORE_BUILD: cmake -S . -B build_dependencies $CMAKE_ARCH && cmake --build build_dependencies --target numerical -j 2
+          CIBW_BEFORE_TEST: pip install --upgrade -r tests/requirements.txt
+          CIBW_TEST_COMMAND: pytest
 
 
       - name: Verify clean directory
