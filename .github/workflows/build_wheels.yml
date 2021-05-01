@@ -108,7 +108,7 @@ jobs:
 
       - name: Install requirements
         run: |
-          python -m pip install cibuildwheel twine
+          python -m pip install cibuildwheel twine build
 
       - name: Configure cibuildwheel
         shell: bash
