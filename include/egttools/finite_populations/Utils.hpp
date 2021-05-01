@@ -69,10 +69,12 @@ namespace egttools::FinitePopulations {
     *
     * This method was copied from @ebargiac
     *
-    * @param group_size The sum of the values contained in data.
+    * The group_size parameter
+    *
+    * @param group_size maximum bin size (it can also be the population size)
     * @param current_group The vector to convert.
     *
-    * @return The unique index in [0, starsBars(history, data.size() - 1)) representing data.
+    * @return The unique index in [0, starsBars(history, group_size - 1)) representing the n-dimensional simplex.
     */
     size_t calculate_state(const size_t &group_size, const egttools::Factors &current_group);
 

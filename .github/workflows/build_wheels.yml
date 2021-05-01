@@ -80,16 +80,37 @@ jobs:
 
 
   build_wheels:
-    name: Wheels on ${{ matrix.cibw-arch }}
-    runs-on: ${{ matrix.runs-on }}
+    name: Build wheel for cp${{ matrix.python }}-${{ matrix.platform_id }}-${{ matrix.manylinux_image }}
+    runs-on: ${{ matrix.os }}
+
     strategy:
+      # Ensure that a wheel builder finishes even if another fails
       fail-fast: false
       matrix:
-        include:  # Windows wheels currently not supported very well by scikit-build
-          - runs-on: ubuntu-latest
-            cibw-arch: manylinux_x86_64
-          - runs-on: macos-latest
-            cibw-arch: macosx_x86_64
+        os: [ubuntu-latest, macos-latest]
+        python: [36, 37, 38, 39]
+        bitness: [32, 64]
+        manylinux_image: [manylinux1, manylinux2010]
+        include:
+          # Run 32 and 64 bit version in parallel for Linux and Windows
+          - os: ubuntu-latest
+            bitness: 64
+            platform_id: manylinux_x86_64
+          - os: ubuntu-latest
+            bitness: 32
+            platform_id: manylinux_i686
+          - os: macos-latest
+            bitness: 64
+            platform_id: macosx_x86_64
+        exclude:
+          - os: macos-latest
+            bitness: 32
+          # Remove manylinux1 from the windows and osx build matrix since
+          # manylinux_image is not used for these platforms
+          - os: windows-latest
+            manylinux_image: manylinux1
+          - os: macos-latest
+            manylinux_image: manylinux1
 
     steps:
       - name: Checkout code
@@ -99,41 +120,34 @@ jobs:
 
       - name: Setup Python
         uses: actions/setup-python@v2
-        with:
-          python-version: '3.8'
-          architecture: ${{ matrix.python-arch }}
 
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.8
 
-      - uses: joerick/cibuildwheel@v1.10.0
+      - name: Build and test wheels
         env:
-          # Python 2.7 on Windows with workaround not supported by scikit-build
-          CIBW_SKIP: cp27-win*
-          CIBW_BUILD: cp38-${{ matrix.cibw-arch }}
-          CIBW_ENVIRONMENT: EGTTOOLS_EXTRA_CMAKE_ARGS="-DPREBUILT_DEPENDENCIES=$(python -c 'import os; print(os.getcwd().replace(os.path.sep, '/'))')/build_dependencies"
-                            CMAKE_BUILD_PARALLEL_LEVEL=2
-                            CMAKE_OSX_ARCHITECTURES="arm64"
+          CONFTEST_PATH: ${{ github.workspace }}/conftest.py
+          CONFTEST_NAME: conftest.py
+          CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
+          CIBW_ENVIRONMENT: CMAKE_BUILD_PARALLEL_LEVEL=2
+                            MACOSX_DEPLOYMENT_TARGET=10.13
           CIBW_BEFORE_ALL_MACOS: |
             brew install libomp && brew install eigen && brew install openblas
           CIBW_BEFORE_ALL_LINUX: |
-            yum install  eigen3-devel
-          CIBW_BEFORE_BUILD: cmake -S . -B build_dependencies $CMAKE_ARCH && cmake --build build_dependencies --target numerical -j 2 && cp build_dependencies/src/*.so egttools/
-          CIBW_BEFORE_BUILD_MACOS: cmake -S . -B build_dependencies -DCMAKE_OSX_ARCHITECTURES="arm64" $CMAKE_ARCH && cmake --build build_dependencies --target numerical -j 2 && cp build_dependencies/src/*.so egttools/
+            yum install eigen3-devel
+          CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
+          CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_BEFORE_TEST: pip install --upgrade -r tests/requirements.txt
-          CIBW_TEST_COMMAND: pytest {project}/tests
-
-
-      - name: Verify clean directory
-        run: git diff --exit-code
-        shell: bash
+          CIBW_TEST_REQUIRES: pytest
+          CIBW_TEST_COMMAND: bash {project}/build_tools/github/test_wheels.sh
+        run: bash build_tools/github/build_wheels.sh
 
       - name: Upload wheels
         if: startsWith(github.ref, 'refs/heads/docs') != true
         uses: actions/upload-artifact@v2
         with:
           name: wheels
-          path: wheelhouse/egttools-*.whl
+          path: wheelhouse/*.whl
           if-no-files-found: error
 
 
