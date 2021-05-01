@@ -112,8 +112,8 @@ jobs:
           CIBW_SKIP: cp27-win*
           CIBW_BUILD: cp38-${{ matrix.cibw-arch }}
           CIBW_ENVIRONMENT: "EGTTOOLS_EXTRA_CMAKE_ARGS=\"-DPREBUILT_DEPENDENCIES=$(python -c 'import os; print(os.getcwd().replace(os.path.sep, '/'))')/build_dependencies\" CMAKE_BUILD_PARALLEL_LEVEL=2"
-          CIBW_ENVIRONMENT_LINUX: "$CIBW_ENVIRONMENT_COMMON PIP_ONLY_BINARY='numpy' -DEigen3_DIR='/usr/include/eigen3/cmake'"
-          CIBW_ENVIRONMENT_MACOS: "$CIBW_ENVIRONMENT_COMMON -DEigen3_DIR='$(brew --prefix eigen)/cmake'"
+          CIBW_ENVIRONMENT_LINUX: "PIP_ONLY_BINARY='numpy' -DEigen3_DIR='/usr/include/eigen3/cmake'"
+          CIBW_ENVIRONMENT_MACOS: "-DEigen3_DIR='$(brew --prefix eigen)/cmake'"
           CIBW_BEFORE_ALL_MACOS: |
             brew install libomp && brew install eigen && brew install openblas
 #            echo "LIBOMP=$(brew --prefix libomp)" >> $GITHUB_ENV && \
