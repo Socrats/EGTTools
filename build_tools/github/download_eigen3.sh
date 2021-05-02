@@ -13,7 +13,7 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
     tar xf eigen-3.3.9.tar.gz
     mv eigen-3.3.9 eigen3
 
-    EIGEN_PATH=$(realpath eigen3)
+    EIGEN_PATH="$(cd "$(dirname "$1")"; pwd -P)/$(basename "$1")/eigen3"
 
     export CFLAGS="$CFLAGS -I$EIGEN_PATH/include"
     export CXXFLAGS="$CXXFLAGS -I$EIGEN_PATH/include"
