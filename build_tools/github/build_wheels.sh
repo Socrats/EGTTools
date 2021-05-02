@@ -3,6 +3,8 @@
 set -e
 set -x
 
+echo "Running on $RUNNER_OS"
+
 # OpenMP is not present on macOS by default
 if [[ "$RUNNER_OS" == "macOS" ]]; then
     # Make sure to use a libomp version binary compatible with the oldest
