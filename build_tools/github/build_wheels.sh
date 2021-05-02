@@ -29,7 +29,8 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
 
 elif [[ "$RUNNER_OS" == "Linux" ]]; then
   # Install eigen3 dependencies
-  yum install eigen3-devel
+  #  yum install eigen3-devel
+  sudo apt-get install libeigen3-dev
 fi
 
 # The version of the built dependencies are specified
