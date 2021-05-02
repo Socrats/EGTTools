@@ -134,8 +134,7 @@ jobs:
           CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_BEFORE_TEST: pip install --upgrade -r tests/requirements.txt
           CIBW_TEST_REQUIRES: pytest
-          CIBW_TEST_COMMAND: pytest {project}/tests
-          CIBW_BUILD_VERBOSITY: 2
+          CIBW_TEST_COMMAND: pytest {package}/tests
         run: bash build_tools/github/build_wheels.sh {project}
 
       - name: Upload wheels
