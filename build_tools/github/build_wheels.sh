@@ -3,8 +3,6 @@
 set -e
 set -x
 
-echo "Running on $RUNNER_OS"
-
 # OpenMP is not present on macOS by default
 if [[ "$RUNNER_OS" == "macOS" ]]; then
     # Make sure to use a libomp version binary compatible with the oldest
@@ -28,11 +26,6 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
 
     export LDFLAGS="$LDFLAGS -L/usr/local/opt/openblas/lib"
     export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/openblas/include"
-
-elif [[ "$RUNNER_OS" == "Linux" ]]; then
-  # Install eigen3 dependencies
-  #  yum install eigen3-devel
-  sudo apt-get install libeigen3-dev
 fi
 
 # The version of the built dependencies are specified
