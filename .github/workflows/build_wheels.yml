@@ -31,7 +31,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: '3.9'
 
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.8
@@ -88,7 +88,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python: [38]
+        python: [39]
         bitness: [32, 64]
         manylinux_image: [manylinux1, manylinux2010]
         include:
@@ -120,8 +120,6 @@ jobs:
 
       - name: Setup Python
         uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python }}
 
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.8
