@@ -134,7 +134,7 @@ jobs:
           CIBW_BEFORE_TEST: pip install --upgrade -r tests/requirements.txt
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: bash {project}/build_tools/github/test_wheels.sh
-        run: bash build_tools/github/build_wheels.sh
+        run: bash build_tools/github/build_wheels.sh {project}
 
       - name: Upload wheels
         if: startsWith(github.ref, 'refs/heads/docs') != true
