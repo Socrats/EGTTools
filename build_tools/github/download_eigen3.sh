@@ -10,7 +10,7 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
 
     # First we download the correct eigen3 version
     curl -O  https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
-    tar xvzf eigen-3.3.9.tar.gz
+    tar xf eigen-3.3.9.tar.gz
     mv eigen-3.3.9 eigen3
 
     EIGEN_PATH=$(realpath eigen3)
