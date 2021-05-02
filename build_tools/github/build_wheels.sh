@@ -34,6 +34,4 @@ fi
 
 python -m pip install cibuildwheel
 python -m cibuildwheel --output-dir wheelhouse
-# check built wheels
-twine check wheelhouse/*
 

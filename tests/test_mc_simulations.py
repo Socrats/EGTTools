@@ -5,8 +5,7 @@ from sys import platform
 
 import numpy as np
 
-from egttools.numerical import PairwiseMoran
-from egttools.numerical import Random
+from egttools.numerical import Random, PairwiseMoran
 from egttools.numerical.games import NormalFormGame
 
 
