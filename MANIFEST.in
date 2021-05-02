@@ -16,12 +16,6 @@ graft egttools
 graft pybind11
 
 include .gitmodules
-exclude pybind11/.git
-exclude build_tools
-recursive-exclude build_tools *
-exclude simulation
-recursive-exclude egttools/simulation *
-exclude egttools/plotting/barplots.py
 
 graft cmake
 
@@ -32,9 +26,17 @@ graft tests
 
 graft docs
 prune docs/_build
+prune _skbuild
 
+# exclude from sdist
 global-exclude __pycache__
 global-exclude *.py[co]
 global-exclude .DS_Store
 global-exclude .ipynb_checkpoints/*
 global-exclude *.so
+exclude pybind11/.git
+exclude build_tools
+recursive-exclude build_tools *
+exclude simulation
+recursive-exclude egttools/simulation *
+exclude egttools/plotting/barplots.py
