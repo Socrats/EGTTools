@@ -18,4 +18,5 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
     export CFLAGS="$CFLAGS -I$EIGEN_PATH/include"
     export CXXFLAGS="$CXXFLAGS -I$EIGEN_PATH/include"
     export Eigen3_DIR="$EIGEN_PATH/cmake"
+    export CIBW_ENVIRONMENT="$CIBW_ENVIRONMENT Eigen3_DIR=$Eigen3_DIR"
 fi
