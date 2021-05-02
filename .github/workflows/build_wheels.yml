@@ -121,7 +121,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
-          python-version: "3.8"
+          python-version: ${{ matrix.python }}
 
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.8
@@ -136,7 +136,7 @@ jobs:
           CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_BEFORE_TEST: pip install --upgrade -r tests/requirements.txt
           CIBW_TEST_REQUIRES: pytest
-          CIBW_TEST_COMMAND: pytest {package}/tests
+          CIBW_TEST_COMMAND: pytest {project}/tests
         run: bash build_tools/github/build_wheels.sh {project}
 
       - name: Upload wheels
