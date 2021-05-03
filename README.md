@@ -284,3 +284,11 @@ You may cite this repository in the following way:
 
 * EGTtools is released under the [GNU General Public Licence](LICENSE), version 3 or later.
 * [pybind11](https://github.com/pybind/pybind11) is released under [a BSD-style license](pybind11/LICENSE).
+
+## Acknowledgements
+
+* Great parts of this project have been possible thanks to the help of 
+  [Yannick Jadoul](https://github.com/YannickJadoul) and [Eugenio Bargiacchi](https://github.com/Svalorzen)
+* EGTtools makes use of the amazing [pybind11](https://github.com/pybind/pybind11) 
+  library to provide a Python interface for optimized monte-carlo simulations written
+  in C++.
