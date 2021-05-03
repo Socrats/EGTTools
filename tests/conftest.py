@@ -22,3 +22,5 @@ import sys
 
 if '' not in sys.path:
     sys.path.insert(2, '')
+
+print(sys.path)
