@@ -7,5 +7,4 @@ set -x
 python "$1/build_tools/github/check_if_egttools_is_installed.py"
 
 #pip install pytest-github-actions-annotate-failures
-#pytest "$1/tests"
-pytest -m pytest
+python -m pytest "$1/tests"
