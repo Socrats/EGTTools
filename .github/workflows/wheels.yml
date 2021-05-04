@@ -98,19 +98,18 @@ jobs:
             cibw-arch: win_amd64
           - runs-on: windows-latest
             cibw-arch: win32
-            ython-arch: x86
-
+            python-arch: x86
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
           submodules: recursive
 
-      - name: Setup Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.8'
-          architecture: ${{ matrix.cibw-arch }}
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+        architecture: ${{ matrix.python-arch }}
 
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.8
