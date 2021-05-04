@@ -122,7 +122,7 @@ jobs:
                             BUILD_ARCH=${{ matrix.cibw-arch }}
                             CMAKE_ARCH="${{ matrix.cibw-arch == 'win32' && '-A Win32' || '' }}"
           CIBW_ARCHS_MACOS: "x86_64"
-          CIBW_ARCHS_WINDOWS: "AMD64 x86"
+#          CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
           CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3.sh
           CIBW_BEFORE_TEST: pip install --upgrade -r tests/requirements.txt

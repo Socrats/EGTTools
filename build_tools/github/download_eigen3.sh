@@ -28,7 +28,7 @@ elif [[ "$RUNNER_OS" == "Windows" ]]; then
   curl -O https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
   tar xf eigen-3.3.9.tar.gz
   mv eigen-3.3.9 eigen3
-  EIGEN3_INCLUDE_DIR="$(python -c 'import os; print(os.getcwd().replace(os.path.sep, '/'))')/eigen3"
+  EIGEN3_INCLUDE_DIR="$(pwd)/eigen3"
   export EIGEN3_INCLUDE_DIR
   echo "EIGEN3_INCLUDE_DIR=$EIGEN3_INCLUDE_DIR"
   echo "EIGEN3_INCLUDE_DIR=$EIGEN3_INCLUDE_DIR" >> "$GITHUB_ENV"
