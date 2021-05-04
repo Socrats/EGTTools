@@ -25,7 +25,7 @@ elif [[ "$RUNNER_OS" == "Windows" ]]; then
   #  ren eigen-3.3.9 eigen3
   #  export EIGEN_INCLUDE_DIR="eigen3"
   pip install cmake
-  ln -s "$(which cmake)" /usr/local/bin/cmake
+#  ln -s "$(which cmake)" /usr/local/bin/cmake
 
   # First we download the correct eigen3 version and build it
   curl -O https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
