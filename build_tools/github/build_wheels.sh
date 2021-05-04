@@ -22,10 +22,10 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
     brew install libomp-11.0.0.high_sierra.bottle.tar.gz
     export CC=/usr/bin/clang
     export CXX=/usr/bin/clang++
-    export CPPFLAGS="$CPPFLAGS -Xpreprocessor -fopenmp -macosx-version-min $MACOSX_DEPLOYMENT_TARGET"
+    export CPPFLAGS="$CPPFLAGS -Xpreprocessor -fopenmp"
     export CFLAGS="$CFLAGS -I/usr/local/opt/libomp/include"
     export CXXFLAGS="$CXXFLAGS -I/usr/local/opt/libomp/include"
-    export LDFLAGS="$LDFLAGS -Wl,-rpath,/usr/local/opt/libomp/lib -L/usr/local/opt/libomp/lib -lomp -macosx-version-min $MACOSX_DEPLOYMENT_TARGET"
+    export LDFLAGS="$LDFLAGS -Wl,-rpath,/usr/local/opt/libomp/lib -L/usr/local/opt/libomp/lib -lomp"
 
     brew install eigen
     brew install openblas
