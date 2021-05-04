@@ -28,7 +28,6 @@ of researchers.
 5. [Caveats](#caveats)
 6. [Citing](#citing)
 
-
 ## Requirements
 
 To be able to install EGTtools, you must have:
@@ -42,7 +41,6 @@ To be able to install EGTtools, you must have:
 * Ideally, you should also install [**OpenBLAS**](https://www.openblas.net), which offers optimized implementations of
   linear algebra kernels for several processor architectures, and install numpy and scipy versions that use it.
 
-
 ## Downloading sources
 
 When cloning the repository you should also clone the submodules so that pybind11 is downloaded. You can do that by
@@ -51,7 +49,6 @@ running:
 ```bash
 git clone --recurse-submodules -j8 https://github.com/Socrats/EGTTools.git
 ```
-
 
 ## Installation
 
@@ -107,8 +104,6 @@ For example, assuming the following payoff matrix:
 
 ![A=\begin{pmatrix} -0.5 & 2 \\ 0 & 0 \end{pmatrix}](https://latex.codecogs.com/gif.latex?A=\begin{pmatrix}&space;-0.5&space;&&space;2&space;\\\\&space;0&space;&&space;0&space;\end{pmatrix})
 
-
-
 You can plot the gradient of selection in a finite population of \(Z=100\) individuals and assuming and intensity of
 selection ![\beta=1](https://latex.codecogs.com/gif.latex?\beta=1) in the following way:
 
@@ -147,7 +142,8 @@ plt.show()
 
 ![Gradient of selection](docs/images/hawk_dove_analytical_gradient.png)
 
-And you can plot the stationary distribution for a mutation rate ![\mu=1eˆ{-3}](https://latex.codecogs.com/gif.latex?\mu=1e-3) with:
+And you can plot the stationary distribution for a mutation
+rate ![\mu=1eˆ{-3}](https://latex.codecogs.com/gif.latex?\mu=1e-3) with:
 
 ```python
 evolver.mu = 1e-3
@@ -234,7 +230,6 @@ ax.set_xscale('log')
 
 ![Comparison numerical analytical](docs/images/hawk_dove_indep_runs.png)
 
-
 ## Documentation
 
 The [analytical](egttools/analytical/sed_analytical.py) module contains classes and functions that you may use to
@@ -247,7 +242,6 @@ Python. You may use it to estimate the fixation probabilities and stiationary di
 simulations, or perform individual runs of the Moran process.
 
 You can find more information in the [ReadTheDocs](https://egttools.readthedocs.io/en/latest/) documentation.
-
 
 ### Caveats
 
@@ -262,7 +256,6 @@ You can find more information in the [ReadTheDocs](https://egttools.readthedocs.
 
 5. You **do not** need any of the above if you install EGTtools through ```pip install egttools```. This will soon be an
    option.
-   
 
 ## Citing
 
@@ -287,8 +280,10 @@ You may cite this repository in the following way:
 
 ## Acknowledgements
 
-* Great parts of this project have been possible thanks to the help of 
-  [Yannick Jadoul](https://github.com/YannickJadoul) and [Eugenio Bargiacchi](https://github.com/Svalorzen)
-* EGTtools makes use of the amazing [pybind11](https://github.com/pybind/pybind11) 
-  library to provide a Python interface for optimized monte-carlo simulations written
-  in C++.
+* Great parts of this project have been possible thanks to the help of
+  [Yannick Jadoul](https://github.com/YannickJadoul) author of
+  [Parselmouth](https://github.com/YannickJadoul/Parselmouth)
+  and [Eugenio Bargiacchi](https://github.com/Svalorzen) author of [AIToolBox](https://github.com/Svalorzen/AI-Toolbox).
+  They are both great programmers and scientists, so it is always a good idea to check out their work.
+* EGTtools makes use of the amazing [pybind11](https://github.com/pybind/pybind11). library to provide a Python
+  interface for optimized monte-carlo simulations written in C++.

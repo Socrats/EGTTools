@@ -18,11 +18,8 @@ graft pybind11
 include .gitmodules
 
 graft cmake
-
 graft res
-
 include pytest.ini
-graft tests
 
 graft docs
 prune docs/_build
