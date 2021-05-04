@@ -110,7 +110,7 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: '3.8'
-          architecture: ${{ matrix.python-arch }}
+          architecture: ${{ matrix.cibw-arch }}
 
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.8
