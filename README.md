@@ -27,6 +27,8 @@ of researchers.
 4. [Documentation](#documentation)
 5. [Caveats](#caveats)
 6. [Citing](#citing)
+7. [Licence](#licence)
+8. [Acknowledgements](#acknowledgements)
 
 ## Requirements
 
