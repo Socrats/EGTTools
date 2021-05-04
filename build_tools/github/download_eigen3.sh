@@ -31,7 +31,7 @@ elif [[ "$RUNNER_OS" == "Windows" ]]; then
   curl -O https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
   tar xf eigen-3.3.9.tar.gz
   mv eigen-3.3.9 eigen3
-  move eigen3 "C:/Program Files (x86)/eigen3"
+  mv eigen3 "C:/Program Files (x86)/eigen3"
   EIGEN3_INCLUDE_DIR="C:/Program Files (x86)/eigen3"
   export EIGEN3_INCLUDE_DIR
   echo "EIGEN3_INCLUDE_DIR=$EIGEN3_INCLUDE_DIR"
