@@ -81,7 +81,7 @@ jobs:
 
   build_wheels:
     name: Build wheel for cp${{ matrix.python }}-${{ matrix.cibw-arch }}
-    runs-on: ${{ matrix.runs-os }}
+    runs-on: ${{ matrix.runs-on }}
 
     strategy:
       # Ensure that a wheel builder finishes even if another fails
