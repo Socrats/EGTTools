@@ -1,22 +1,27 @@
 name: Wheels
 
 on:
+  workflow_dispatch:
+  pull_request:
   push:
     branches:
       - master
-      - stable
-      - docs
       - develop
     tags:
       - v*
-  workflow_dispatch:
+  release:
+    types:
+      - published
+
+env:
+  CIBW_TEST_COMMAND: pytest
+
 
 jobs:
-  sdist:
-    name: Source distribution
+  build_sdist:
+    name: Build source distribution (sdist)
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/heads/docs') != true
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -26,67 +31,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
-
-      - name: Setup CMake
-        uses: jwlawson/actions-setup-cmake@v1.8
-
-      - name: Install requirements
-        run: |
-          pip install --user check-manifest twine
-      - name: Run check-manifest
-        run: |
-          python -m check_manifest
-      - name: Build sdist
-        run: |
-          python -m build --sdist --outdir wheelhouse
-      - name: Install from sdist
-        run: |
-          pip install --user wheelhouse/*.tar.gz
-      - name: Check sdist
-        run: |
-          python -m twine check wheelhouse/*
-      - name: Upload sdist
-        uses: actions/upload-artifact@v2
-        with:
-          name: wheels
-          path: wheelhouse/*.tar.gz
-
-  wheels:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runs-on: ubuntu-latest
-            cibw-arch: manylinux_x86_64
-          - runs-on: ubuntu-latest
-            cibw-arch: manylinux_i686
-          - runs-on: macos-latest
-            cibw-arch: macosx_x86_64
-          - runs-on: macos-latest
-            cibw-arch: macosx_arm64
-          - runs-on: macos-latest
-            cibw-arch: macosx_universal2
-#          - runs-on: windows-latest
-#            cibw-arch: win_amd64
-#          - runs-on: windows-latest
-#            cibw-arch: win32
-#            python-arch: x86
-
-    name: Wheels • ${{ matrix.cibw-arch }}
-    runs-on: ${{ matrix.runs-on }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          submodules: recursive
-
-      - name: Setup Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.8'
-          architecture: ${{ matrix.python-arch }}
+          python-version: '3.9'
 
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.8
@@ -104,105 +49,123 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get install libomp-dev
-          sudo apt install libeigen3-dev
+          sudo apt-get install libeigen3-dev
           echo "Eigen3_DIR='/usr/include/eigen3'" >> $GITHUB_ENV
-#      - name: install Eigen3 windows
-#        if: runner.os == 'Windows'
-#        run: |
-#          curl.exe --output eigen-3.3.9.tar.gz --url https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
-#          tar -zxvf eigen-3.3.9.tar.gz
-#          ren eigen-3.3.9 eigen3
-#          move eigen3 "C:/Program Files (x86)/eigen3"
-#          echo "Eigen3_DIR='C:/Program Files (x86)/eigen3'" >> $GITHUB_ENV
-
-      - name: Install OpenBLAS on macOS for NumPy
-        if: runner.os == 'macOS' && startsWith(matrix.python, 'pypy')
-        run: |
-          brew install openblas
-          echo "OPENBLAS=$(brew --prefix openblas)" >> $GITHUB_ENV
 
       - name: Install requirements
         run: |
-          python -m pip install cibuildwheel twine
-      - name: Configure cibuildwheel
-        shell: bash
+          pip install --user check-manifest twine
+
+      - name: Run check-manifest
         run: |
-          CMAKE_ARCH="${{ matrix.cibw-arch == 'win32' && '-A Win32' || '' }}"
-          CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch == 'macosx_x86_64' && 'x86_64' || matrix.cibw-arch == 'macosx_arm64' && 'arm64' || matrix.cibw-arch == 'macosx_universal2' && '"arm64;x86_64"' || '' }}
-          echo "CIBW_ARCHS_MACOS=x86_64 arm64 universal2" >> $GITHUB_ENV
-          echo "CIBW_BUILD=*-${{ matrix.cibw-arch }}" >> $GITHUB_ENV
-          CIBW_ENVIRONMENT_COMMON="EGTTOOLS_EXTRA_CMAKE_ARGS=\"-DPREBUILT_DEPENDENCIES=\$(python -c 'import os; print(os.getcwd().replace(os.path.sep, '/'))')/build_dependencies\" CMAKE_BUILD_PARALLEL_LEVEL=2"
-          echo "CIBW_ENVIRONMENT=$CIBW_ENVIRONMENT_COMMON" >> $GITHUB_ENV
-          echo "CIBW_ENVIRONMENT_LINUX=$CIBW_ENVIRONMENT_COMMON PIP_ONLY_BINARY='numpy'" >> $GITHUB_ENV
-          echo "CIBW_ENVIRONMENT_MACOS=$CIBW_ENVIRONMENT_COMMON MACOSX_DEPLOYMENT_TARGET=10.9 CMAKE_OSX_ARCHITECTURES=\"$CMAKE_OSX_ARCHITECTURES\"" >> $GITHUB_ENV
-          CIBW_BEFORE_ALL_COMMON="cmake -S . -B build_dependencies && cmake --build build_dependencies --target egttools -j 2"
-          echo "CIBW_BEFORE_ALL=$CIBW_BEFORE_ALL_COMMON" >> $GITHUB_ENV
-          echo "CIBW_BEFORE_ALL_LINUX=pip install cmake && ln -s \$(which cmake) /usr/local/bin/cmake && $CIBW_BEFORE_ALL_COMMON" >> $GITHUB_ENV
-          echo "CIBW_BEFORE_ALL_WINDOWS=$CIBW_BEFORE_ALL_COMMON --config Release" >> $GITHUB_ENV
-      - name: Only build ReadTheDocs wheel
-        if: startsWith(github.ref, 'refs/heads/docs')
-        shell: bash
+          python -m check_manifest
+
+      - name: Build sdist
         run: |
-          echo "CIBW_BUILD=cp38-manylinux_x86_64" >> $GITHUB_ENV
-      - name: Run cibuildwheel
-        if: startsWith(github.ref, 'refs/heads/docs') != true || matrix.cibw-arch == 'manylinux_x86_64'
+          python -m build --sdist --outdir wheelhouse
+
+      - name: Install from sdist
         run: |
-          cibuildwheel
+          pip install --user wheelhouse/*.tar.gz
+
+      - name: Check sdist metadata
+        run: |
+          python -m twine check wheelhouse/*
+
+      - name: Upload sdist
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: wheelhouse/*.tar.gz
+
+
+  build_wheels:
+    name: Build wheel for cp${{ matrix.python }}-${{ matrix.platform_id }}-${{ matrix.manylinux_image }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      # Ensure that a wheel builder finishes even if another fails
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: [37, 38, 39]
+        bitness: [32, 64]
+        manylinux_image: [manylinux2010]
+        include:
+          # Run 32 and 64 bit version in parallel for Linux and Windows
+          - os: ubuntu-latest
+            bitness: 64
+            platform_id: manylinux_x86_64
+          - os: ubuntu-latest
+            bitness: 32
+            platform_id: manylinux_i686
+          - os: macos-latest
+            bitness: 64
+            platform_id: macosx_x86_64
+        exclude:
+          - os: macos-latest
+            bitness: 32
+          # Remove manylinux1 from the windows and osx build matrix since
+          # manylinux_image is not used for these platforms
+          - os: windows-latest
+            manylinux_image: manylinux1
+          - os: macos-latest
+            manylinux_image: manylinux1
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v1.8
+
+      - name: Build and test wheels
+        env:
+          CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
+          CIBW_ENVIRONMENT: CMAKE_BUILD_PARALLEL_LEVEL=2
+          CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
+          CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
+          CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
+          CIBW_BEFORE_TEST: pip install --upgrade -r tests/requirements.txt
+          CIBW_TEST_REQUIRES: pytest
+          CIBW_TEST_COMMAND: bash {project}/build_tools/github/test_wheels.sh {project}
+          CIBW_BUILD_VERBOSITY: 2
+        run: bash build_tools/github/build_wheels.sh
+
       - name: Check built wheels
-        if: startsWith(github.ref, 'refs/heads/docs') != true || matrix.cibw-arch == 'manylinux_x86_64'
+        if: startsWith(github.ref, 'refs/heads/docs') != true || matrix.platform_id == 'manylinux_x86_64'
         run: |
           twine check wheelhouse/*
-      - name: Upload built wheels
+
+      - name: Upload wheels
         if: startsWith(github.ref, 'refs/heads/docs') != true
         uses: actions/upload-artifact@v2
         with:
           name: wheels
-          path: wheelhouse/egttools-*.whl
+          path: wheelhouse/*.whl
           if-no-files-found: error
 
-      - name: Upload wheel for ReadTheDocs
-        if: runner.os == 'Linux' && matrix.cibw-arch == 'manylinux_x86_64' && startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
-        uses: actions/upload-artifact@v2
-        with:
-          name: rtd-wheel
-          path: wheelhouse/egttools-*-cp38-cp38m-manylinux2010_x86_64.whl
-          if-no-files-found: error
 
-  trigger_rtd:
-    name: Trigger ReadTheDocs build
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
-    needs: [wheels]
-
-    steps:
-      - name: Get branch name
-        id: get_branch
-        run: |
-          echo "::set-output name=branch::${GITHUB_REF##refs/heads/}"
-      - name: Trigger ReadTheDocs webhook
-        run: |
-          curl -X POST -d "branches=${{ steps.get_branch.outputs.branch }}" -d "token=${{ secrets.READTHEDOCS_WEBHOOK_TOKEN }}" https://readthedocs.org/api/v2/webhook/egttools/134783/
-  create_release:
-    name: Create release
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: [sdist, wheels]
-
-    steps:
-      - name: Collect sdist and wheels
-        uses: actions/download-artifact@v2
-        with:
-          name: wheels
-          path: wheelhouse
-
-      - name: Get release name
-        id: get_version
-        run: |
-          echo "::set-output name=version::${GITHUB_REF##refs/tags/v}"
-      - name: Upload sdist and wheels to release
-        uses: ncipollo/release-action@v1
-        with:
-          name: ${{ steps.get_version.outputs.version }}
-          draft: true
-          artifacts: wheelhouse/*
-          token: ${{ secrets.GITHUB_TOKEN }}
+#  upload_all:
+#    name: Upload if release
+#    needs: [build_wheels, build_sdist]
+#    runs-on: ubuntu-latest
+#    if: github.event_name == 'release' && github.event.action == 'published'
+#
+#    steps:
+#      - uses: actions/setup-python@v2
+#
+#      - uses: actions/download-artifact@v2
+#        with:
+#          name: artifact
+#          path: dist
+#
+#      - uses: pypa/gh-action-pypi-publish@v1.4.2
+#        with:
+#          user: __token__
+#          password: ${{ secrets.pypi_password }}
