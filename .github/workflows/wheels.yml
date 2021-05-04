@@ -7,8 +7,8 @@ on:
     branches:
       - master
       - develop
-#    tags:
-#      - v*
+    tags:
+      - v*
 #  release:
 #    types:
 #      - published
@@ -94,11 +94,11 @@ jobs:
             cibw-arch: manylinux_i686
           - runs-on: macos-latest
             cibw-arch: macosx_x86_64
-          - runs-on: windows-latest
-            cibw-arch: win_amd64
-          - runs-on: windows-latest
-            cibw-arch: win32
-            python-arch: x86
+#          - runs-on: windows-latest
+#            cibw-arch: win_amd64
+#          - runs-on: windows-latest
+#            cibw-arch: win32
+#            python-arch: x86
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -122,7 +122,7 @@ jobs:
                             BUILD_ARCH=${{ matrix.cibw-arch }}
                             CMAKE_ARCH="${{ matrix.cibw-arch == 'win32' && '-A Win32' || '' }}"
           CIBW_ARCHS_MACOS: "x86_64"
-          CIBW_ARCHS_WINDOWS: "AMD64 x86"
+#          CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
           CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3.sh
           CIBW_BEFORE_TEST: pip install --upgrade -r tests/requirements.txt
@@ -144,22 +144,43 @@ jobs:
           path: wheelhouse/*.whl
           if-no-files-found: error
 
+      - name: Upload wheel for ReadTheDocs
+        if: runner.os == 'Linux' && matrix.cibw-arch == 'manylinux_x86_64' && startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
+        uses: actions/upload-artifact@v2
+        with:
+          name: rtd-wheel
+          path: wheelhouse/egttools-*-cp37-cp37m-manylinux2010_x86_64.whl
+          if-no-files-found: error
 
-#  upload_all:
-#    name: Upload if release
-#    needs: [build_wheels, build_sdist]
-#    runs-on: ubuntu-latest
-#    if: github.event_name == 'release' && github.event.action == 'published'
-#
-#    steps:
-#      - uses: actions/setup-python@v2
-#
-#      - uses: actions/download-artifact@v2
-#        with:
-#          name: artifact
-#          path: dist
-#
-#      - uses: pypa/gh-action-pypi-publish@v1.4.2
-#        with:
-#          user: __token__
-#          password: ${{ secrets.pypi_password }}
+  trigger_rtd:
+    name: Trigger ReadTheDocs build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
+    needs: [ wheels ]
+
+    steps:
+      - name: Get branch name
+        id: get_branch
+        run: |
+          echo "::set-output name=branch::${GITHUB_REF##refs/heads/}"
+      - name: Trigger ReadTheDocs webhook
+        run: |
+          curl -X POST -d "branches=${{ steps.get_branch.outputs.branch }}" -d "token=${{ secrets.READTHEDOCS_WEBHOOK_TOKEN }}" https://readthedocs.org/api/v2/webhook/egttools/134783/
+
+  create_release:
+    name: Create release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [ sdist, wheels ]
+
+    steps:
+      - name: Collect sdist and wheels
+        uses: actions/download-artifact@v2
+        with:
+          name: wheels
+          path: wheelhouse
+
+      - name: Get release name
+        id: get_version
+        run: |
+          echo "::set-output name=version::${GITHUB_REF##refs/tags/v}"
