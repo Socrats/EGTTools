@@ -31,9 +31,8 @@ elif [[ "$RUNNER_OS" == "Windows" ]]; then
   curl -O https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
   tar xf eigen-3.3.9.tar.gz
   mv eigen-3.3.9 eigen3
-  cd eigen3
-  mkdir "build"
-  cd build
-  cmake ..
-  make install
+  export EIGEN3_INCLUDE_DIR="$(pwd)\eigen3"
+  echo "EIGEN3_INCLUDE_DIR=$EIGEN3_INCLUDE_DIR"
+  echo "EIGEN3_INCLUDE_DIR=$EIGEN3_INCLUDE_DIR" >> "$GITHUB_ENV"
+  export CIBW_ENVIRONMENT="$CIBW_ENVIRONMENT EIGEN3_INCLUDE_DIR=$EIGEN3_INCLUDE_DIR"
 fi
