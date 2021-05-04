@@ -4,7 +4,7 @@ set -e
 set -x
 
 # OpenMP is not present on macOS by default
-if [[ "$RUNNER_OS" == "macOS" && "$BUILD_ARCH" != "x86_64" ]]; then
+if [[ "$RUNNER_OS" == "macOS" && "$BUILD_ARCH" != "macosx_x86_64" ]]; then
   # We need to build scipy and numpy from source
   brew install openblas gfortran
   export OPENBLAS=$(brew --prefix openblas)
