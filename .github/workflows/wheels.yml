@@ -94,6 +94,11 @@ jobs:
             cibw-arch: manylinux_i686
           - runs-on: macos-latest
             cibw-arch: macosx_x86_64
+          - runs-on: windows-latest
+            cibw-arch: win_amd64
+          - runs-on: windows-latest
+            cibw-arch: win32
+            ython-arch: x86
 
     steps:
       - name: Checkout code
