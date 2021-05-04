@@ -113,9 +113,6 @@ endif()
 
 set(Python_FIND_IMPLEMENTATIONS CPython PyPy)
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
-if (PYTHON3_FOUND)
-    message("-- Using Python version ${PYTHON_VERSION_STRING}")
-endif ()
 add_subdirectory(pybind11)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)

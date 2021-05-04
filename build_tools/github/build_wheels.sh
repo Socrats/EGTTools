@@ -18,8 +18,12 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
 #      wget https://homebrew.bintray.com/bottles/libomp-11.0.0.high_sierra.bottle.tar.gz
 #      brew install libomp-11.0.0.high_sierra.bottle.tar.gz
 #    fi
-    wget https://homebrew.bintray.com/bottles/libomp-11.0.0.high_sierra.bottle.tar.gz
-    brew install libomp-11.0.0.high_sierra.bottle.tar.gz
+    if [[ "$BUILD_ARCH" == "x86_64"  ]]; then
+      wget https://homebrew.bintray.com/bottles/libomp-11.0.0.high_sierra.bottle.tar.gz
+      brew install libomp-11.0.0.high_sierra.bottle.tar.gz
+    else
+      brew install libomp
+    fi
     export CC=/usr/bin/clang
     export CXX=/usr/bin/clang++
     export CPPFLAGS="$CPPFLAGS -Xpreprocessor -fopenmp"
