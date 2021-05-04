@@ -119,7 +119,6 @@ jobs:
           CIBW_BUILD: "cp*-${{ matrix.cibw-arch }}"
           CIBW_ENVIRONMENT: CMAKE_BUILD_PARALLEL_LEVEL=2
                             CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch == 'macosx_x86_64' && 'x86_64' || matrix.cibw-arch == 'macosx_arm64' && 'arm64' || matrix.cibw-arch == 'macosx_universal2' && '"arm64;x86_64"' || '' }}
-                            MACOSX_DEPLOYMENT_TARGET=10.13
                             BUILD_ARCH=${{ matrix.cibw-arch }}
           CIBW_ARCHS_MACOS: x86_64 arm64 universal2
           CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
