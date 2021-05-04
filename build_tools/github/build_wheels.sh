@@ -12,15 +12,10 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
     # supported macos version is: High Sierra / 10.13. When upgrading this, be
     # sure to update the MACOSX_DEPLOYMENT_TARGET environment variable in
     # wheels.yml accordingly.
-#    if [[ "$PLATFORM_ID" == "macosx_arm64" ]]; then
-#      brew install libomp
-#    else
-#      wget https://homebrew.bintray.com/bottles/libomp-11.0.0.high_sierra.bottle.tar.gz
-#      brew install libomp-11.0.0.high_sierra.bottle.tar.gz
-#    fi
     if [[ "$BUILD_ARCH" == "x86_64"  ]]; then
       wget https://homebrew.bintray.com/bottles/libomp-11.0.0.high_sierra.bottle.tar.gz
       brew install libomp-11.0.0.high_sierra.bottle.tar.gz
+      export MACOSX_DEPLOYMENT_TARGET=10.15
     else
       brew install libomp
     fi
