@@ -105,6 +105,12 @@ jobs:
         exclude:
           - os: macos-latest
             bitness: 32
+          - os: macos-latest
+            bitness: 32
+            python: 37
+          - os: macos-latest
+            bitness: 32
+            python: 38
           # Remove manylinux1 from the windows and osx build matrix since
           # manylinux_image is not used for these platforms
           - os: windows-latest

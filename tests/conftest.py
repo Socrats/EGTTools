@@ -15,9 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
-import os
-import sys
-sys.path.remove(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-print(sys.path)
-import egttools
+# import os
+# import sys
+# sys.path.remove(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+#
+# print(sys.path)
+# import egttools
