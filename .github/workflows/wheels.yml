@@ -7,11 +7,11 @@ on:
     branches:
       - master
       - develop
-    tags:
-      - v*
-  release:
-    types:
-      - published
+#    tags:
+#      - v*
+#  release:
+#    types:
+#      - published
 
 env:
   CIBW_TEST_COMMAND: pytest
