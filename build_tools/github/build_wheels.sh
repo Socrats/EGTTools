@@ -12,7 +12,7 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
     # supported macos version is: High Sierra / 10.13. When upgrading this, be
     # sure to update the MACOSX_DEPLOYMENT_TARGET environment variable in
     # wheels.yml accordingly.
-    if [[ "$BUILD_ARCH" == "x86_64"  ]]; then
+    if [[ "$BUILD_ARCH" == "macosx_x86_64"  ]]; then
       wget https://homebrew.bintray.com/bottles/libomp-11.0.0.high_sierra.bottle.tar.gz
       brew install libomp-11.0.0.high_sierra.bottle.tar.gz
       export MACOSX_DEPLOYMENT_TARGET=10.13
@@ -34,6 +34,7 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
 
     export LDFLAGS="$LDFLAGS -L/usr/local/opt/openblas/lib"
     export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/openblas/include"
+# No opemp support for windows
 fi
 
 # The version of the built dependencies are specified
