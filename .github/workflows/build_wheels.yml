@@ -88,7 +88,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python: [39]
+        python: [36, 37, 38, 39]
         bitness: [32, 64]
         manylinux_image: [manylinux2010]
         include:
@@ -102,12 +102,6 @@ jobs:
           - os: macos-latest
             bitness: 64
             platform_id: macosx_x86_64
-          - os: macos-latest
-            bitness: 64
-            platform_id: macosx_universal2
-          - os: macos-latest
-            bitness: 64
-            platform_id: macosx_arm64
         exclude:
           - os: macos-latest
             bitness: 32
