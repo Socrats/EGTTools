@@ -24,15 +24,11 @@ elif [[ "$RUNNER_OS" == "Windows" ]]; then
   #  tar -zxvf eigen-3.3.9.tar.gz
   #  ren eigen-3.3.9 eigen3
   #  export EIGEN_INCLUDE_DIR="eigen3"
-  pip install cmake
-#  ln -s "$(which cmake)" /usr/local/bin/cmake
-
   # First we download the correct eigen3 version and build it
   curl -O https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
   tar xf eigen-3.3.9.tar.gz
   mv eigen-3.3.9 eigen3
-  mv eigen3 "C:/Program Files (x86)/eigen3"
-  EIGEN3_INCLUDE_DIR="C:/Program Files (x86)/eigen3"
+  EIGEN3_INCLUDE_DIR="$(pwd)/eigen3"
   export EIGEN3_INCLUDE_DIR
   echo "EIGEN3_INCLUDE_DIR=$EIGEN3_INCLUDE_DIR"
   echo "EIGEN3_INCLUDE_DIR=$EIGEN3_INCLUDE_DIR" >> "$GITHUB_ENV"
