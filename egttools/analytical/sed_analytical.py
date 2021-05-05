@@ -24,7 +24,7 @@ populations on 2-player games.
 import numpy as np
 from scipy.sparse import lil_matrix
 from scipy.stats import hypergeom, multivariate_hypergeom
-from typing import Tuple
+from typing import Tuple, Optional
 
 try:
     from egttools.numerical import sample_simplex, calculate_nb_states
@@ -77,7 +77,7 @@ class StochDynamics:
             self.fitness = self.fitness_pair
             self.full_fitness = self.full_fitness_difference_pairwise
 
-    def fitness_pair(self, x: int, i: int, j: int, *args: {None, list}) -> float:
+    def fitness_pair(self, x: int, i: int, j: int, *args: Optional[list]) -> float:
         """
         Calculates the fitness of strategy i versus strategy j, in
         a population of x i-strategists and (Z-x) j strategists, considering
@@ -91,7 +91,7 @@ class StochDynamics:
             index of strategy i
         j : int
             index of strategy j
-        args : {None, List}, optional
+        args : Optional[list]
 
         Returns
         -------
@@ -136,7 +136,7 @@ class StochDynamics:
 
         return (fitness_i - fitness_j) / (self.Z - 1)
 
-    def fitness_group(self, x: int, i: int, j: int, *args: {None, list}) -> float:
+    def fitness_group(self, x: int, i: int, j: int, *args: Optional[list]) -> float:
         """
         In a population of x i-strategists and (Z-x) j strategists, where players
         interact in group of 'group_size' participants this function
@@ -150,7 +150,7 @@ class StochDynamics:
             index of strategy i
         j : int
             index of strategy j
-        args : {None, List}, optional
+        args : Optional[list]
             Other Parameters. This can be used to pass extra parameters to functions
             stored in the payoff matrix
 
@@ -223,7 +223,7 @@ class StochDynamics:
         return np.clip(1. / (1. + np.exp(beta * fitness_diff, dtype=np.float64)), 0., 1.)
 
     def prob_increase_decrease(self, k: int, invader: int, resident: int,
-                               beta: float, *args: {None, list}) -> Tuple[float, float]:
+                               beta: float, *args: Optional[list]) -> Tuple[float, float]:
         """
         This function calculates for a given number of invaders the probability
         that the number increases or decreases with one.
@@ -243,7 +243,7 @@ class StochDynamics:
         return increase, decrease
 
     def prob_increase_decrease_with_mutation(self, k: int, invader: int, resident: int, beta: float,
-                                             *args: {None, list}) -> Tuple[float, float]:
+                                             *args: Optional[list]) -> Tuple[float, float]:
         """
         This function calculates for a given number of invaders the probability
         that the number increases or decreases with taking into account a mutation rate.
@@ -293,7 +293,7 @@ class StochDynamics:
                 pass
         return transitions
 
-    def gradient_selection(self, k: int, invader: int, resident: int, beta: float, *args: {None, list}) -> float:
+    def gradient_selection(self, k: int, invader: int, resident: int, beta: float, *args: Optional[list]) -> float:
         """
         Calculates the gradient of selection given an invader and a resident strategy.
 
@@ -329,7 +329,7 @@ class StochDynamics:
                                range(len(population_state))] for j in range(len(population_state))])
         return (probabilities * np.tanh((beta / 2) * fitness)).sum(axis=0)
 
-    def fixation_probability(self, invader: int, resident: int, beta: float, *args: {None, list}) -> float:
+    def fixation_probability(self, invader: int, resident: int, beta: float, *args: Optional[list]) -> float:
         """
         function for calculating the fixation_probability probability of the invader
         in a population of residents.
@@ -353,7 +353,7 @@ class StochDynamics:
 
         return 1.0 / (1.0 + phi)
 
-    def calculate_full_transition_matrix(self, beta: float, *args: {None, list}) -> np.ndarray:
+    def calculate_full_transition_matrix(self, beta: float, *args: Optional[list]) -> np.ndarray:
         """
         Returns the full transition matrix in sparse representation
 
@@ -378,7 +378,7 @@ class StochDynamics:
 
         return transitions.transpose()
 
-    def transition_and_fixation_matrix(self, beta: float, *args: {None, list}) -> Tuple[np.ndarray, np.ndarray]:
+    def transition_and_fixation_matrix(self, beta: float, *args: Optional[list]) -> Tuple[np.ndarray, np.ndarray]:
         """
         Calculates the transition matrix (only for the monomorphic states)
         and the fixation_probability probabilities
@@ -401,13 +401,21 @@ class StochDynamics:
 
         return np.nan_to_num(transitions.transpose(), copy=False), np.nan_to_num(fixprobs, copy=False)
 
-    def calculate_stationary_distribution(self, beta: float, *args: {None, list}) -> np.ndarray:
+    def calculate_stationary_distribution(self, beta: float, *args: Optional[list]) -> np.ndarray:
         """
         Calculates the stationary distribution of the monomorphic states is mu = 0 (SML).
         Otherwise, it calculates the stationary distribution including all possible population states.
 
-        :param beta: intensity of selection
-        :return stationary distribution
+        Parameters
+        ----------
+        beta : float
+            intensity of selection.
+        args : Optional[list]
+            extra arguments for calculating payoffs.
+        Returns
+        -------
+        numpy.ndarray
+            A vector containing the stationary distribution
         """
         if self.mu == 0:
             t, f = self.transition_and_fixation_matrix(beta, *args)

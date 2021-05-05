@@ -7,6 +7,7 @@ on:
     branches:
       - master
       - develop
+      - docs
     tags:
       - v*
 #  release:
@@ -128,7 +129,7 @@ jobs:
           CIBW_BEFORE_TEST: pip install --upgrade -r tests/requirements.txt
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: bash {project}/build_tools/github/test_wheels.sh {project}
-          CIBW_BUILD_VERBOSITY: 2
+#          CIBW_BUILD_VERBOSITY: 2
         run: bash build_tools/github/build_wheels.sh
 
       - name: Check built wheels

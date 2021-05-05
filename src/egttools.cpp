@@ -16,47 +16,55 @@
   * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include <egttools/Distributions.h>
-#include <egttools/SeedGenerator.h>
-#include <egttools/finite_populations/games/NormalFormGame.h>
-#include <pybind11/eigen.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#include "egttools.h"
 
-#include <egttools/Data.hpp>
-#include <egttools/LruCache.hpp>
-#include <egttools/finite_populations/PairwiseMoran.hpp>
-#include <egttools/finite_populations/behaviors/NFGStrategies.hpp>
-#include <egttools/finite_populations/games/AbstractGame.hpp>
+#include "version.h"
 
-#include "python_stubs.hpp"
+#define XSTR(s) STR(s)
+#define STR(s) #s
 
 namespace py = pybind11;
 using namespace egttools;
 using PairwiseComparison = egttools::FinitePopulations::PairwiseMoran<egttools::Utils::LRUCache<std::string, double>>;
 
-std::string call_get_action(const py::list &strategies, size_t time_step, size_t action) {
-    std::stringstream result;
-    result << "(";
-    for (py::handle strategy : strategies) {
-        result << py::cast<egttools::FinitePopulations::behaviors::AbstractNFGStrategy *>(strategy)->get_action(time_step, action) << ", ";
-    }
-    result << ")";
-    return result.str();
-}
+namespace egttools {
 
-std::unique_ptr<egttools::FinitePopulations::NormalFormGame> init_normal_form_game_from_python_list(size_t nb_rounds,
-                                                                                                    const Eigen::Ref<const Matrix2D> &payoff_matrix, const py::list &strategies) {
-    egttools::FinitePopulations::StrategyVector strategies_cpp;
-    for (py::handle strategy : strategies) {
-        strategies_cpp.push_back(py::cast<egttools::FinitePopulations::behaviors::AbstractNFGStrategy *>(strategy));
+    std::string call_get_action(const py::list &strategies, size_t time_step, size_t action) {
+        std::stringstream result;
+        result << "(";
+        for (py::handle strategy : strategies) {
+            result << py::cast<egttools::FinitePopulations::behaviors::AbstractNFGStrategy *>(strategy)->get_action(time_step, action) << ", ";
+        }
+        result << ")";
+        return result.str();
     }
-    return std::make_unique<egttools::FinitePopulations::NormalFormGame>(nb_rounds, payoff_matrix, strategies_cpp);
-}
+
+    std::unique_ptr<egttools::FinitePopulations::NormalFormGame> init_normal_form_game_from_python_list(size_t nb_rounds,
+                                                                                                        const Eigen::Ref<const Matrix2D> &payoff_matrix, const py::list &strategies) {
+        egttools::FinitePopulations::StrategyVector strategies_cpp;
+        for (py::handle strategy : strategies) {
+            strategies_cpp.push_back(py::cast<egttools::FinitePopulations::behaviors::AbstractNFGStrategy *>(strategy));
+        }
+        return std::make_unique<egttools::FinitePopulations::NormalFormGame>(nb_rounds, payoff_matrix, strategies_cpp);
+    }
+}// namespace egttools
+
+namespace {
+
+    inline std::string attr_doc(const py::module_ &m, const char *name, const char *doc) {
+        auto attr = m.attr(name);
+        return ".. data:: "s + name + "\n    :annotation: = "s + py::cast<std::string>(py::repr(attr)) + "\n\n    "s + doc + "\n\n"s;
+    }
+
+}// namespace
 
 PYBIND11_MODULE(numerical, m) {
+
+    m.attr("__version__") = py::str(XSTR(EGTTOOLS_VERSION));
+    m.attr("VERSION") = py::str(XSTR(EGTTOOLS_VERSION));
+
     m.doc() = R"pbdoc(
-        EGTtools: Efficient Evolutionary Game Theory models and methods.
+        EGTtools: Toolbox of efficient Evolutionary Game Theory (EGT) models and methods.
         This library is written in C++ (with python bindings) and pure Python.
 
         Note:
@@ -69,7 +77,8 @@ PYBIND11_MODULE(numerical, m) {
            :toctree: _generate
            add
            subtract
-    )pbdoc";
+    )pbdoc" + attr_doc(m, "VERSION", "This version of EGTtools.");
+
 
     // Use this function to get access to the singleton
     py::class_<Random::SeedGenerator, std::unique_ptr<Random::SeedGenerator, py::nodelete>>(m, "Random")
@@ -78,7 +87,17 @@ PYBIND11_MODULE(numerical, m) {
                         return std::unique_ptr<Random::SeedGenerator, py::nodelete>(&Random::SeedGenerator::getInstance());
                     },
                     R"pbdoc(
-            Initializes the random seed generator from random_device.
+            This static method initializes the random seed generator from random_device
+            and returns an instance of egttools::Random::SeedGenerator which is used
+            to seed the random generators used across egttools.
+
+            Parameters
+            ----------
+
+            Returns
+            -------
+            egttools.Random
+                An instance of the random seed generator.
            )pbdoc")
             .def(
                     "init", [](unsigned long int seed) {
@@ -87,21 +106,66 @@ PYBIND11_MODULE(numerical, m) {
                         return instance;
                     },
                     R"pbdoc(
-            Initializes the random seed generator from seed.
+            This static method initializes the random seed generator from seed
+            and returns an instance of egttools.Random which is used
+            to seed the random generators used across egttools.
+
+            Parameters
+            ----------
+            seed : int
+                Integer value used to seed the random generator.
+
+            Returns
+            -------
+            egttools.Random
+                An instance of the random seed generator.
            )pbdoc")
             .def_property_readonly_static(
                     "seed_", [](const py::object &) {
                         return egttools::Random::SeedGenerator::getInstance().getMainSeed();
                     },
-                    R"pbdoc(Returns current seed)pbdoc")
+                    R"pbdoc(
+                    Property which returns the integer used to see egttools.Random.
+
+                    Parameters
+                    ----------
+
+                    Returns
+                    -------
+                    int
+                        The value used to see egttools.Random.
+                    )pbdoc")
             .def_static(
                     "generate", []() {
                         return egttools::Random::SeedGenerator::getInstance().getSeed();
                     },
-                    "generates a random seed")
-            .def_static("seed", [](unsigned long int seed) {
-                egttools::Random::SeedGenerator::getInstance().setMainSeed(seed);
-            });
+                    R"pbdoc(
+                    Generates a random seed.
+
+                    Parameters
+                    ----------
+
+                    Returns
+                    -------
+                    int
+                        A seed.
+                    )pbdoc")
+            .def_static(
+                    "seed", [](unsigned long int seed) {
+                        egttools::Random::SeedGenerator::getInstance().setMainSeed(seed);
+                    },
+                    R"pbdoc(
+                    This static methods changes the seed of egttools.Random.
+
+                    Parameters
+                    ----------
+                    int
+                        A seed.
+
+                    Returns
+                    -------
+
+                    )pbdoc");
 
     // Now we define a submodule
     auto mGames = m.def_submodule("games");
@@ -113,41 +177,242 @@ PYBIND11_MODULE(numerical, m) {
 
     py::class_<egttools::FinitePopulations::AbstractGame, stubs::PyAbstractGame>(mGames, "AbstractGame")
             .def(py::init<>())
-            .def("play", &egttools::FinitePopulations::AbstractGame::play)
-            .def("calculate_payoffs", &egttools::FinitePopulations::AbstractGame::calculate_payoffs)
-            .def("calculate_fitness", &egttools::FinitePopulations::AbstractGame::calculate_fitness)
+            .def("play", &egttools::FinitePopulations::AbstractGame::play, R"pbdoc(
+                    Updates the vector of payoffs with the payoffs of each player after playing the game.
+
+                    This method will run the game using the players and player types defined in :param group_composition,
+                    and will update the vector :param game_payoffs with the resulting payoff of each player.
+
+                    Parameters
+                    ----------
+                    group_composition : List[int]
+                        A list with counts of the number of players of each strategy in the group.
+                    game_payoffs : List[float]
+                        A list used as container for the payoffs of each player
+
+                    Returns
+                    -------
+                    )pbdoc")
+            .def("calculate_payoffs", &egttools::FinitePopulations::AbstractGame::calculate_payoffs,
+                 R"pbdoc(
+                    Estimates the payoff matrix for each strategy.
+
+                    Parameters
+                    ----------
+                    group_composition : List[int]
+                        A list with counts of the number of players of each strategy in the group.
+                    game_payoffs : List[float]
+                        A list used as container for the payoffs of each player
+
+                    Returns
+                    -------
+                    )pbdoc")
+            .def("calculate_fitness", &egttools::FinitePopulations::AbstractGame::calculate_fitness,
+                 R"pbdoc(
+                    Estimates the fitness for a :param player_type in the population with state :param strategies.
+
+                    This function assumes that the player with strategy @param player_type is not included in
+                    the vector of strategy counts :param strategies.
+
+                    Parameters
+                    ----------
+                    player_type : int
+                        The index of the strategy used by the player.
+                    pop_size : int
+                        The size of the population.
+                    strategies : numpy.ndarray[np.uint64]
+                        A vector of counts of which strategy. The current state of the population
+
+                    Returns
+                    -------
+                    float
+                        The fitness of the strategy give the population state.
+                    )pbdoc")
             .def("__str__", &egttools::FinitePopulations::AbstractGame::toString)
-            .def("type", &egttools::FinitePopulations::AbstractGame::type)
-            .def("payoffs", &egttools::FinitePopulations::AbstractGame::payoffs)
-            .def("payoff", &egttools::FinitePopulations::AbstractGame::payoff)
+            .def("type", &egttools::FinitePopulations::AbstractGame::type, "returns the type of game.")
+            .def("payoffs", &egttools::FinitePopulations::AbstractGame::payoffs, "returns the payoff matrix of the game.")
+            .def("payoff", &egttools::FinitePopulations::AbstractGame::payoff,
+                 R"pbdoc(
+                    Returns the payoff of a strategy given a group composition.
+
+                    If the group composition does not include the strategy, the payoff should be zero.
+
+                    Parameters
+                    ----------
+                    strategy : int
+                        The index of the strategy used by the player.
+                    group_composition : List[int]
+                        List with the group composition. The structure of this list
+                        depends on the particular implementation of this abstract method.
+
+                    Returns
+                    -------
+                    float
+                        The payoff value.
+                    )pbdoc")
             .def_property_readonly("nb_strategies", &egttools::FinitePopulations::AbstractGame::nb_strategies)
-            .def("save_payoffs", &egttools::FinitePopulations::AbstractGame::save_payoffs);
+            .def("save_payoffs", &egttools::FinitePopulations::AbstractGame::save_payoffs,
+                 R"pbdoc(
+                    Stores the payoff matrix in a txt file
+
+                    Parameters
+                    ----------
+                    file_name : str
+                        Name of the file in which the data will be stored.
+
+                    Returns
+                    -------
+                    )pbdoc");
 
     m.def("calculate_state",
           static_cast<size_t (*)(const size_t &, const egttools::Factors &)>(&egttools::FinitePopulations::calculate_state),
-          "calculates an index given a simplex state",
+          R"pbdoc(
+                    This function converts a vector containing counts into an index.
+
+                    This method was copied from @Svalorzen.
+
+                    Parameters
+                    ----------
+                    group_size : int
+                        Maximum bin size (it can also be the population size).
+                    group_composition : List[int]
+                        The vector to convert from simplex coordinates to index.
+
+                    Returns
+                    -------
+                    int
+                        The unique index in [0, egttools.calculate_nb_states(group_size, len(group_composition))
+                        representing the n-dimensional simplex.
+
+                    See Also
+                    --------
+                    egttools.sample_simplex, egttools.calculate_nb_states
+                    )pbdoc",
           py::arg("group_size"), py::arg("group_composition"));
     m.def("calculate_state",
           static_cast<size_t (*)(const size_t &,
                                  const Eigen::Ref<const egttools::VectorXui> &)>(&egttools::FinitePopulations::calculate_state),
-          "calculates an index given a simplex state",
+          R"pbdoc(
+                    This function converts a vector containing counts into an index.
+
+                    This method was copied from @Svalorzen.
+
+                    Parameters
+                    ----------
+                    group_size : int
+                        Maximum bin size (it can also be the population size).
+                    group_composition : np.ndarray[int]
+                        The vector to convert from simplex coordinates to index.
+
+                    Returns
+                    -------
+                    int
+                        The unique index in [0, egttools.calculate_nb_states(group_size, len(group_composition))
+                        representing the n-dimensional simplex.
+
+                    See Also
+                    --------
+                    egttools.sample_simplex, egttools.calculate_nb_states
+                    )pbdoc",
           py::arg("group_size"), py::arg("group_composition"));
     m.def("sample_simplex",
           static_cast<egttools::VectorXui (*)(size_t, const size_t &, const size_t &)>(&egttools::FinitePopulations::sample_simplex),
-          "returns a point in the simplex given an index", py::arg("index"), py::arg("pop_size"),
+          R"pbdoc(
+                    Transforms a state index into a vector.
+
+                    Parameters
+                    ----------
+                    index : int
+                        State index.
+                    pop_size : int
+                        Size of the population.
+                    nb_strategies : int
+                        Number of strategies.
+
+                    Returns
+                    -------
+                    numpy.ndarray[int]
+                        Vector with the sampled state.
+
+                    See Also
+                    --------
+                    egttools.calculate_state, egttools.calculate_nb_states
+                    )pbdoc",
+          py::arg("index"), py::arg("pop_size"),
           py::arg("nb_strategies"));
     m.def("calculate_nb_states",
           &egttools::starsBars,
-          "calculates the number of states (combinations) of the members of a group in a subgroup.",
-          py::arg("group_size"), py::arg("sub_group_size"));
+          R"pbdoc(
+                    Calculates the number of states (combinations) of the members of a group in a subgroup.
+                    It can be used to calculate the maximum number of states in a discrete simplex.
+
+                    The implementation of this method follows the stars and bars algorithm (see Wikipedia).
+
+                    Parameters
+                    ----------
+                    group_size : int
+                        Size of the group (maximum number of players/elements that can adopt each possible strategy).
+                    nb_strategies : int
+                        number of strategies that can be assigned to players.
+
+                    Returns
+                    -------
+                    int
+                        Number of states (possible combinations of strategies and players).
+
+                    See Also
+                    --------
+                    egttools.calculate_state, egttools.sample_simplex
+                    )pbdoc",
+          py::arg("group_size"), py::arg("nb_strategies"));
 
     py::class_<egttools::FinitePopulations::NormalFormGame, egttools::FinitePopulations::AbstractGame>(mGames, "NormalFormGame")
             .def(py::init<size_t, const Eigen::Ref<const Matrix2D> &>(),
-                 "Normal Form Game. This constructor assumes that there are only two possible strategies and two possible actions.",
+                 R"pbdoc(
+                    Normal Form Game. This constructor assumes that there are only two possible strategies and two possible actions.
+
+                    This method will run the game using the players and player types defined in :param group_composition,
+                    and will update the vector :param game_payoffs with the resulting payoff of each player.
+
+                    Parameters
+                    ----------
+                    nb_rounds : int
+                        Number of rounds of the game.
+                    payoff_matrix : numpy.ndarray[float]
+                        A payoff matrix of shape (nb_actions, nb_actions).
+
+                    Returns
+                    -------
+
+                    See Also
+                    --------
+                    egttools.games.AbstractGame
+                    )pbdoc",
                  py::arg("nb_rounds"),
                  py::arg("payoff_matrix"))
-            .def(py::init(&init_normal_form_game_from_python_list),
-                 "Normal Form Game", py::arg("nb_rounds"),
+            .def(py::init(&egttools::init_normal_form_game_from_python_list),
+                 R"pbdoc(
+                    Normal Form Game. This constructor assumes that there are only two possible strategies and two possible actions.
+
+                    This method will run the game using the players and player types defined in :param group_composition,
+                    and will update the vector :param game_payoffs with the resulting payoff of each player.
+
+                    Parameters
+                    ----------
+                    nb_rounds : int
+                        Number of rounds of the game.
+                    payoff_matrix : numpy.ndarray[float]
+                        A payoff matrix of shape (nb_actions, nb_actions).
+                    strategies : List[egttools.behaviors.AbstractNFGStrategy]
+                        A list containing references of AbstractNFGStrategy strategies (or child classes).
+
+                    Returns
+                    -------
+
+                    See Also
+                    --------
+                    egttools.games.AbstractGame
+                    )pbdoc", py::arg("nb_rounds"),
                  py::arg("payoff_matrix"), py::arg("strategies"), py::return_value_policy::reference_internal)
             .def("play", &egttools::FinitePopulations::NormalFormGame::play)
             .def("calculate_payoffs", &egttools::FinitePopulations::NormalFormGame::calculate_payoffs,
@@ -351,7 +616,7 @@ PYBIND11_MODULE(numerical, m) {
             .def_readwrite("column_types", &egttools::DataStructures::DataTable::column_types,
                            py::return_value_policy::reference_internal);
 
-    m.def("call_get_action", &call_get_action,
+    m.def("call_get_action", &egttools::call_get_action,
           "Returns a string with a tuple of actions",
           py::arg("strategies"),
           py::arg("time_step"),

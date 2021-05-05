@@ -40,11 +40,8 @@ namespace egttools::FinitePopulations {
          * This method will run the game using the players and player types defined in @param group_composition,
          * and will update the vector @param game_payoffs with the resulting payoff of each player.
          *
-         * @param nb_strategies number of strategies in the population
          * @param group_composition number of players of each strategy in the group
          * @param game_payoffs container for the payoffs of each player
-         * @param urand distribution for uniform random numbers
-         * @param generator random generator
          */
         virtual void play(const egttools::FinitePopulations::StrategyCounts &group_composition,
                           PayoffVector &game_payoffs) = 0;
@@ -52,8 +49,6 @@ namespace egttools::FinitePopulations {
         /**
          * @brief Estimates the payoff matrix for each strategy.
          *
-         * @param urand : uniform random distribution [0, 1).
-         * @param generator : random generator
          * @return a payoff matrix
          */
         virtual const GroupPayoffs &calculate_payoffs() = 0;
@@ -67,7 +62,6 @@ namespace egttools::FinitePopulations {
          * @param player_type : index of the strategy used by the player
          * @param pop_size : size of the population
          * @param strategies : current state of the population
-         * @param payoffs : the payoff matrix of the game
          * @return a fitness value
          */
         virtual double

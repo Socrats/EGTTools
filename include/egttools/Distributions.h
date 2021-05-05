@@ -181,9 +181,9 @@ namespace egttools {
 
     /**
      * @brief Finds the number for elements given possible bins/slots and star types.
-     * @param stars
-     * @param bins
-     * @return
+     * @param stars : number of elments to feel the bins
+     * @param bins : number of bins that can be filled
+     * @return the number of possible combinations of stars in the bins.
      */
     size_t starsBars(size_t stars, size_t bins);
 

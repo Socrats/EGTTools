@@ -69,8 +69,6 @@ namespace egttools::FinitePopulations {
     *
     * This method was copied from @ebargiac
     *
-    * The group_size parameter
-    *
     * @param group_size maximum bin size (it can also be the population size)
     * @param current_group The vector to convert.
     *

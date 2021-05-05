@@ -60,7 +60,7 @@ skbuild.platform_specifics.windows.WindowsPlatform.__init__ = patched_windows_pl
 
 
 def find_version():
-    with io.open(os.path.join(os.path.dirname(__file__), "include/egttools", "version.h"), encoding='utf8') as f:
+    with io.open(os.path.join(os.path.dirname(__file__), "src", "version.h"), encoding='utf8') as f:
         version_file = f.read()
     version_match = re.search(r"^#define EGTTOOLS_VERSION ([0-9a-z.]+)$", version_file, re.M)
     if version_match:
