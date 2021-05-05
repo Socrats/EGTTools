@@ -1,8 +1,16 @@
+Sphinx>=3
+sphinx_rtd_theme
+
+GitPython
+PyGithub
+requests
+
 -r ../requirements.txt
 
-Sphinx==3.2.1
 ipykernel
 ipywidgets
 nbsphinx
 recommonmark
-sphinx_rtd_theme
+
+
+-r examples/requirements.txt
