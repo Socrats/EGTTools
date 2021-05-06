@@ -47,6 +47,10 @@ if (OPENMP_FOUND)
 endif ()
 target_link_libraries(egttoolsNumerical)
 
-add_executable(testPM test_PairwiseMoran.cpp)
+add_executable(testPMrun test_PairwiseMoran_run.cpp)
 #set_target_properties(testPM PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${LTO_SUPPORTED})
-target_link_libraries(testPM egttoolsNumerical)
+target_link_libraries(testPMrun egttoolsNumerical)
+
+add_executable(testPMBstationary_distribution test_PairwiseMoran_stationary_distribution.cpp)
+#set_target_properties(testPM PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${LTO_SUPPORTED})
+target_link_libraries(testPMBstationary_distribution egttoolsNumerical)

@@ -167,7 +167,7 @@ if __name__ == "__main__":
         return evolver.full_gradient_selection(x, beta)
 
 
-    dynamics = SimplexDynamics(f, discrete=True, pop_size=Z, nb_points=1500)
+    dynamics = SimplexDynamics(f, discrete=True, pop_size=Z, nb_points=5000)
     fig, ax = plt.subplots()
     dynamics.plot_simplex(ax)
     plt.show()
