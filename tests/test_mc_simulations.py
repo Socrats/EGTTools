@@ -93,3 +93,31 @@ def test_pairwise_moran_stationary_distribution(setup_hawk_dove_parameters) -> N
     evolver = PairwiseMoran(pop_size, game, cache_size)
     dist = evolver.stationary_distribution(runs, nb_generations, transitory, beta, mu)
     assert dist.shape == (nb_states,)
+
+
+def test_pairwise_moran_stationary_distribution_sparse(setup_hawk_dove_parameters) -> None:
+    """
+    This test checks that the stationary_distribution method of PairwiseMoran executes.
+    """
+    payoffs = setup_hawk_dove_parameters
+
+    Random.init()
+    Random.seed(3610063510)
+
+    assert Random.seed_ == 3610063510
+
+    game = NormalFormGame(1, payoffs)
+
+    pop_size = 100
+    cache_size = 1000000
+    nb_generations = int(1e3)
+    transitory = int(1e3)
+    beta = 10
+    mu = 1e-3
+    runs = 10
+
+    nb_states = pop_size + 1
+
+    evolver = PairwiseMoran(pop_size, game, cache_size)
+    dist = evolver.stationary_distribution_sparse(runs, nb_generations, transitory, beta, mu)
+    assert dist.shape == (1, nb_states)

@@ -42,15 +42,21 @@ set_target_properties(egttoolsNumerical PROPERTIES
 #        CXX_VISIBILITY_PRESET hidden
         )
 
-if (OPENMP_FOUND)
-    target_link_libraries(egttoolsNumerical OpenMP::OpenMP_CXX)
-endif ()
+#if (OPENMP_FOUND)
+#    target_link_libraries(egttoolsNumerical OpenMP::OpenMP_CXX)
+#endif ()
 target_link_libraries(egttoolsNumerical)
 
 add_executable(testPMrun test_PairwiseMoran_run.cpp)
 #set_target_properties(testPM PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${LTO_SUPPORTED})
 target_link_libraries(testPMrun egttoolsNumerical)
 
-add_executable(testPMBstationary_distribution test_PairwiseMoran_stationary_distribution.cpp)
+add_executable(testPMBstationary_distribution_sparse test_PairwiseMoran_stationary_distribution_sparse.cpp)
 #set_target_properties(testPM PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${LTO_SUPPORTED})
-target_link_libraries(testPMBstationary_distribution egttoolsNumerical)
+target_link_libraries(testPMBstationary_distribution_sparse egttoolsNumerical)
+
+add_executable(testPMBstationary_distribution_dense test_PairwiseMoran_stationary_distribution_dense.cpp)
+#set_target_properties(testPM PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${LTO_SUPPORTED})
+target_link_libraries(testPMBstationary_distribution_dense egttoolsNumerical)
+
+add_executable(testEigenSparseMatrix test_eigen_sparse_matrix.cpp)

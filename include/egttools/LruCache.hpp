@@ -100,8 +100,8 @@ namespace egttools::Utils {
         void clear();
 
         // getters
-        size_t max_size() const;
-        size_t current_size() const;
+        [[nodiscard]] size_t max_size() const;
+        [[nodiscard]] size_t current_size() const;
 
         // setters
         void set_max_size(size_t max_size);
@@ -204,4 +204,4 @@ namespace egttools::Utils {
 
 
 
-#endif //DYRWIN_LRUCACHE_HPP
+#endif //EGTTOOLS_LRUCACHE_HPP

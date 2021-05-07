@@ -25,7 +25,6 @@
 
 #include <random>
 #include <algorithm>
-#include <Eigen/Dense>
 #include <egttools/Types.h>
 
 namespace egttools {
@@ -189,4 +188,4 @@ namespace egttools {
 
 }
 
-#endif //DYRWIN_DISTRIBUTIONS_H
+#endif //EGTTOOLS_DISTRIBUTIONS_H

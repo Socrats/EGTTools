@@ -2,6 +2,7 @@
 // Created by Elias Fernandez on 2019-02-10.
 //
 #include <iostream>
+#include <chrono>
 #include <egttools/Types.h>
 #include <egttools/SeedGenerator.h>
 #include <egttools/finite_populations/Utils.hpp>
@@ -11,6 +12,7 @@
 
 
 using namespace std;
+using namespace std::chrono;
 
 int main() {
 
@@ -48,13 +50,23 @@ int main() {
     egttools::FinitePopulations::NormalFormGame game(nb_rounds, payoff_matrix, strategies);
 
     // Initialise selection mutation process
-    auto smProcess = egttools::FinitePopulations::PairwiseMoran(pop_size, game, 1000000);
+    auto smProcess = egttools::FinitePopulations::PairwiseMoran(pop_size, game, 100000);
 
-    auto dist = smProcess.stationaryDistribution(1, 1000, 10, 1, 1e-3);
+    auto start = high_resolution_clock::now();
 
-    assert(dist.rows() == static_cast<long>(nb_states));
+    auto dist = smProcess.estimate_stationary_distribution_sparse(1, 100000, 1000, 1, 1e-3);
 
-    std::cout << "nb_strategies: " << nb_strategies << " nb_states: " << nb_states << std::endl;
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+    std::cout << "Time taken by function: "
+              << duration.count() << " microseconds" << std::endl;
+
+    assert(dist.cols() == static_cast<long>(nb_states));
+//    std::cout << "stationary_distribution: " << dist << std::endl;
+    std::cout << "nb_strategies: " << nb_strategies << " nb_states: "
+              << nb_states << " nb_states_int: " << static_cast<int>(nb_states)
+              << " nb_states_long: " << static_cast<long int>(nb_states) << " nb_states_slong: " << static_cast<signed long>(nb_states) << std::endl;
+
     std::cout << "strategies: [";
 
     for (auto const &strategy: strategies) {

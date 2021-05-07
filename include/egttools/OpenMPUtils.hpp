@@ -34,4 +34,7 @@
 #pragma omp declare reduction (+: egttools::Vector3d: omp_out=omp_out+omp_in)\
      initializer(omp_priv=egttools::Vector3d::Zero())
 
-#endif //DYRWIN_OPENMPUTILS_HPP
+#pragma omp declare reduction (+: egttools::SparseMatrix2DXui: omp_out=omp_out+omp_in)\
+     initializer(omp_priv=egttools::SparseMatrix2DXui())
+
+#endif //EGTTOOLS_OPENMPUTILS_HPP

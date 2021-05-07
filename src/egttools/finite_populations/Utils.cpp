@@ -99,7 +99,7 @@ egttools::FinitePopulations::calculate_state(const size_t &group_size,
     // Note that by using this algorithm the last element in the array is never
     // needed (since it is determined by the others), and additionally when we
     // have no remaining elements to parse we can just break.
-    for (size_t i = 0; i < static_cast<size_t>(current_group.size()) - 1; ++i) {
+    for (long int i = 0; i < current_group.size() - 1; ++i) {
         auto h = remaining;
         while (h > current_group(i)) {
             retval += egttools::starsBars(remaining - h, current_group.size() - i - 1);
