@@ -19,7 +19,6 @@
 #ifndef EGTTOOLS_OPENMPUTILS_HPP
 #define EGTTOOLS_OPENMPUTILS_HPP
 
-#include <omp.h>
 #include <egttools/Types.h>
 
 #pragma omp declare reduction (+: egttools::Vector: omp_out=omp_out+omp_in)\
@@ -32,9 +31,9 @@
      initializer(omp_priv=egttools::VectorXi::Zero(omp_orig.size()))
 
 #pragma omp declare reduction (+: egttools::Vector3d: omp_out=omp_out+omp_in)\
-     initializer(omp_priv=egttools::Vector3d::Zero())
+     initializer(omp_priv=egttools::Vector3d::Zero(omp_orig.size()))
 
 #pragma omp declare reduction (+: egttools::SparseMatrix2DXui: omp_out=omp_out+omp_in)\
-     initializer(omp_priv=egttools::SparseMatrix2DXui())
+     initializer(omp_priv=egttools::SparseMatrix2DXui(omp_orig.rows(), omp_orig.cols()))
 
 #endif //EGTTOOLS_OPENMPUTILS_HPP

@@ -20,10 +20,13 @@
 #define EGTTOOLS_FINITEPOPULATIONS_UTILS_HPP
 
 #include <egttools/Distributions.h>
+#include <egttools/Sampling.h>
 #include <egttools/Types.h>
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
+#include <unordered_set>
 #include <vector>
 
 namespace egttools::FinitePopulations {
@@ -108,17 +111,73 @@ namespace egttools::FinitePopulations {
      */
     void sample_simplex(size_t i, const size_t &pop_size, const size_t &nb_strategies, VectorXui &state);
 
+    /**
+     * @brief Transforms and state index into a vector.
+     *
+     * @param i : state index
+     * @param pop_size : size of the population
+     * @param nb_strategies : number of strategies
+     * @param state : container for the sampled state
+     */
     void
     sample_simplex(size_t i, const size_t &pop_size, const size_t &nb_strategies, std::vector<size_t> &state);
 
-    template<typename G>
-    void sample_simplex(size_t nb_strategies, Vector &state, std::uniform_real_distribution<double> prob_dist,
-                        G &generator) {
-        for (size_t i = 0; i < nb_strategies; ++i) {
+    /**
+     * @brief Samples the unit n-dimensional simplex randomly uniform.
+     * @tparam SizeType : type of size variables
+     * @tparam G
+     * @param nb_strategies
+     * @param state
+     * @param prob_dist
+     * @param generator
+     */
+    template<typename SizeType, typename G>
+    void sample_unit_simplex(SizeType nb_strategies, Vector &state, std::uniform_real_distribution<double> prob_dist,
+                             G &generator) {
+        for (int i = 0; i < static_cast<int>(nb_strategies); ++i) {
             state(i) = -std::log(prob_dist(generator));
         }
         state.array() /= state.sum();
         assert(state.sum() == 1.0);
+    }
+
+    /**
+     * @brief Samples uniformly a point in the simplex.
+     *
+     * This algorithm has been proposed in "Sampling Uniformly the Unit
+     * Simplex", from Noah A. Smith and Roy W. Tromble.
+     *
+     * Sample x_1, ..., x_{n−1}
+     * uniformly at random from {0, 2, ..., M − 1}
+     * without replacement (i.e., choose n−1 distinct values).
+     * Let x_0 = 0, xn = M and order the sampled values.
+     * Let y_i = x_i−x_{i−1}, ∀i∈{1,2,...,n}.
+     *
+     * To get a point in the unit simplex it is enough to divide the vector
+     * produced by pop_size.
+     *
+     * @tparam SizeType : Type of the of values
+     * @tparam OutputVector : Type of vector which will contain the
+     *                        n-dimensional point in the simplex
+     * @tparam G : Type of the random generator
+     * @param nb_strategies : number of strategies
+     * @param pop_size : population size
+     * @param state : vector container for the state (point in the n-dimensional simplex)
+     * @param generator : random generator
+     */
+    template<typename SizeType, typename OutputVector, typename G>
+    void sample_simplex_direct_method(SizeType nb_strategies, SizeType pop_size, OutputVector &state,
+                                      G &generator) {
+        std::vector<SizeType> samples(nb_strategies - 1);
+        std::unordered_set<long int> container(nb_strategies - 1);
+        // sample without replacement nb_strategies - 1 elements
+        egttools::sampling::ordered_sample_without_replacement<SizeType, long int, G>(0, pop_size, nb_strategies - 1,
+                                                                                      samples, container, generator);
+        state(0) = samples[0];
+        for (int i = 1; i < nb_strategies - 1; ++i) {
+            state(i) = samples[i] - samples[i-1];
+        }
+        state(nb_strategies - 1) = pop_size - samples[nb_strategies - 2];
     }
 
     /**
@@ -127,4 +186,4 @@ namespace egttools::FinitePopulations {
     constexpr double_t doubleEpsilon = std::numeric_limits<double>::digits10;
 }// namespace egttools::FinitePopulations
 
-#endif//DYRWIN_FINITEPOPULATIONS_UTILS_HPP
+#endif//EGTTOOLS_FINITEPOPULATIONS_UTILS_HPP

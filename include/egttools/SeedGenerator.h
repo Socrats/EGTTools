@@ -114,4 +114,4 @@ namespace egttools::Random {
 
 }// namespace egttools::Random
 
-#endif//EGTTOOLS_RANDGEN_H
+#endif//EGTTOOLS_SEEDGENERATOR_H

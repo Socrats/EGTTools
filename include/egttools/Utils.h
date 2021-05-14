@@ -21,5 +21,5 @@
 
 #define UNUSED(expr) do { (void)(expr); } while (0)
 
-#endif //DYRWIN_UTILS_H
+#endif //EGTTOOLS_UTILS_H
 

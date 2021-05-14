@@ -48,6 +48,23 @@ namespace egttools {
         }
         return std::make_unique<egttools::FinitePopulations::NormalFormGame>(nb_rounds, payoff_matrix, strategies_cpp);
     }
+
+    egttools::VectorXli sample_simplex_directly(int64_t nb_strategies, int64_t pop_size) {
+        std::mt19937_64 generator(egttools::Random::SeedGenerator::getInstance().getSeed());
+        egttools::VectorXli state = egttools::VectorXli::Zero(nb_strategies);
+
+        egttools::FinitePopulations::sample_simplex_direct_method<long int, egttools::VectorXli, std::mt19937_64>(nb_strategies, pop_size, state, generator);
+
+        return state;
+    }
+    egttools::Vector  sample_unit_simplex(int64_t nb_strategies) {
+        std::mt19937_64 generator(egttools::Random::SeedGenerator::getInstance().getSeed());
+        auto real_rand = std::uniform_real_distribution<double>(0, 1);
+        egttools::Vector state = egttools::Vector::Zero(nb_strategies);
+        egttools::FinitePopulations::sample_unit_simplex<int64_t, std::mt19937_64>(nb_strategies, state, real_rand, generator);
+
+        return state;
+    }
 }// namespace egttools
 
 namespace {
@@ -341,8 +358,53 @@ PYBIND11_MODULE(numerical, m) {
                     )pbdoc",
           py::arg("index"), py::arg("pop_size"),
           py::arg("nb_strategies"));
+    m.def("sample_simplex_directly",
+          &sample_simplex_directly,
+          R"pbdoc(
+                    Samples an N-dimensional point directly from the simplex.
+                    N is the number of strategies.
+
+                    Parameters
+                    ----------
+                    nb_strategies : int
+                        Number of strategies.
+                    pop_size : int
+                        Size of the population.
+
+                    Returns
+                    -------
+                    numpy.ndarray[np.int64]
+                        Vector with the sampled state.
+
+                    See Also
+                    --------
+                    egttools.calculate_state, egttools.calculate_nb_states, egttools.sample_simplex
+                    )pbdoc",
+          py::arg("nb_strategies"),
+          py::arg("pop_size"));
+    m.def("sample_unit_simplex",
+          &sample_unit_simplex,
+          R"pbdoc(
+                    Samples uniformly at random the unit simplex with nb_strategies dimensionse.
+
+                    Parameters
+                    ----------
+                    nb_strategies : int
+                        Number of strategies.
+
+                    Returns
+                    -------
+                    numpy.ndarray[np.int64]
+                        Vector with the sampled state.
+
+                    See Also
+                    --------
+                    egttools.calculate_state, egttools.calculate_nb_states, egttools.sample_simplex
+                    )pbdoc",
+          py::arg("nb_strategies"));
+
     m.def("calculate_nb_states",
-          &egttools::starsBars,
+          &egttools::starsBars<size_t>,
           R"pbdoc(
                     Calculates the number of states (combinations) of the members of a group in a subgroup.
                     It can be used to calculate the maximum number of states in a discrete simplex.
@@ -366,6 +428,33 @@ PYBIND11_MODULE(numerical, m) {
                     egttools.calculate_state, egttools.sample_simplex
                     )pbdoc",
           py::arg("group_size"), py::arg("nb_strategies"));
+
+    //    m.def("calculate_strategies_distribution",
+    //          static_cast<egttools::Vector (*)(size_t, size_t, egttools::SparseMatrix2D&)>(&egttools::utils::calculate_strategies_distribution),
+    //          R"pbdoc(
+    //                    Calculates the average frequency of each strategy available in
+    //                    the population given the stationary distribution.
+    //
+    //                    Parameters
+    //                    ----------
+    //                    pop_size : int
+    //                        Size of the population.
+    //                    nb_strategies : int
+    //                        Number of strategies that can be assigned to players.
+    //                    stationary_distribution : scipy.sparse.csr_matrix
+    //                        A sparse matrix which contains the stationary distribution (the frequency with which the evolutionary system visits each
+    //                        stationary state).
+    //
+    //                    Returns
+    //                    -------
+    //                    numpy.ndarray
+    //                        Average frequency of each strategy in the stationary evolutionary system.
+    //
+    //                    See Also
+    //                    --------
+    //                    egttools.calculate_state, egttools.sample_simplex, egttools.calculate_nb_states, egttools.PairwiseMoran.stationary_distribution_sparse
+    //                    )pbdoc",
+    //          py::arg("pop_size"), py::arg("nb_strategies"), py::arg("stationary_distribution"));
 
     py::class_<egttools::FinitePopulations::NormalFormGame, egttools::FinitePopulations::AbstractGame>(mGames, "NormalFormGame")
             .def(py::init<size_t, const Eigen::Ref<const Matrix2D> &>(),
@@ -413,7 +502,8 @@ PYBIND11_MODULE(numerical, m) {
                     See Also
                     --------
                     egttools.games.AbstractGame
-                    )pbdoc", py::arg("nb_rounds"),
+                    )pbdoc",
+                 py::arg("nb_rounds"),
                  py::arg("payoff_matrix"), py::arg("strategies"), py::return_value_policy::reference_internal)
             .def("play", &egttools::FinitePopulations::NormalFormGame::play)
             .def("calculate_payoffs", &egttools::FinitePopulations::NormalFormGame::calculate_payoffs,
@@ -595,7 +685,7 @@ PYBIND11_MODULE(numerical, m) {
                  "Estimates the stationary distribution of the population of strategies given the game.",
                  py::arg("nb_runs"), py::arg("nb_generations"), py::arg("transitory"), py::arg("beta"), py::arg("mu"))
             .def("stationary_distribution_sparse", &PairwiseComparison::estimate_stationary_distribution_sparse,
-//                 py::call_guard<py::gil_scoped_release>(),
+                 //                 py::call_guard<py::gil_scoped_release>(),
                  "Estimates the stationary distribution of the population of strategies given the game.",
                  py::arg("nb_runs"), py::arg("nb_generations"), py::arg("transitory"), py::arg("beta"), py::arg("mu"))
             .def_property_readonly("nb_strategies", &PairwiseComparison::nb_strategies)

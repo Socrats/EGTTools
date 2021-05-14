@@ -28,7 +28,7 @@ egttools::FinitePopulations::NormalFormGame::NormalFormGame(size_t nb_rounds,
     // We consider only 2 for now (Cooperate and Defect)
     nb_strategies_ = 2;
     // nb_states_ will give the amount of game combinations (between) strategies that can happen
-    nb_states_ = egttools::starsBars(2, nb_strategies_);
+    nb_states_ = egttools::starsBars<size_t>(2, nb_strategies_);
     // Calculate the number of possible states
     expected_payoffs_ = Matrix2D::Zero(nb_strategies_, nb_strategies_);
     coop_level_ = Matrix2D::Zero(nb_strategies_, nb_strategies_);
@@ -53,7 +53,7 @@ egttools::FinitePopulations::NormalFormGame::NormalFormGame(size_t nb_rounds,
     nb_strategies_ = strategies.size();
     // nb_states_ will give the amount of game combinations (between) strategies that can happen
     // The first argument represents the pairwise interactions
-    nb_states_ = egttools::starsBars(2, nb_strategies_);
+    nb_states_ = egttools::starsBars<size_t>(2, nb_strategies_);
     // Calculate the number of possible states
     expected_payoffs_ = Matrix2D::Zero(nb_strategies_, nb_strategies_);
     coop_level_ = Matrix2D::Zero(nb_strategies_, nb_strategies_);

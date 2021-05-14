@@ -23,9 +23,10 @@
 #ifndef EGTTOOLS_DISTRIBUTIONS_H
 #define EGTTOOLS_DISTRIBUTIONS_H
 
-#include <random>
-#include <algorithm>
 #include <egttools/Types.h>
+
+#include <algorithm>
+#include <random>
 
 namespace egttools {
     /**
@@ -101,22 +102,28 @@ namespace egttools {
     }
 
     /**
-     * @brief Calculates the binomial coefficient C(n, k)
-     *
-     * @param n size of the fixed set
-     * @param k size of the unordered subset
-     * @return C(n, k)
-     */
-    size_t binomialCoeff(size_t n, size_t k);
+    * @brief Calculates the binomial coefficient C(n, k)
+    *
+    * @tparam T : Type of to use for the computation
+    * @param n size of the fixed set
+    * @param k size of the unordered subset
+    * @return C(n, k)
+    */
+    template<typename T>
+    T binomialCoeff(T n, T k) {
+        T res = 1;
 
-    /**
-     * @brief Calculates the binomial coefficient C(n, k)
-     *
-     * @param n size of the fixed set
-     * @param k size of the unordered subset
-     * @return C(n, k)
-     */
-    double binomialCoeff(double n, double k);
+        // Since C(n, k) = C(n, n-k)
+        if (k > n - k) k = n - k;
+
+        // Calculate value of [n * (n-1) * ... * (n-k+1)] / [k * (k-1) * ... * 1]
+        for (int64_t i = 0; i < static_cast<int64_t>(k); ++i) {
+            res *= n - static_cast<T>(i);
+            res /= static_cast<T>(i) + 1;
+        }
+
+        return res;
+    }
 
     /**
      * @brief Calculates the probability density function of a multivariate hypergeometric distribution.
@@ -180,12 +187,17 @@ namespace egttools {
 
     /**
      * @brief Finds the number for elements given possible bins/slots and star types.
+     *
+     * @tparam T : Type of to use for the computation
      * @param stars : number of elments to feel the bins
      * @param bins : number of bins that can be filled
      * @return the number of possible combinations of stars in the bins.
      */
-    size_t starsBars(size_t stars, size_t bins);
+    template<typename T>
+    T starsBars(T stars, T bins) {
+        return egttools::binomialCoeff(stars + bins - 1, stars);
+    }
 
-}
+}// namespace egttools
 
-#endif //EGTTOOLS_DISTRIBUTIONS_H
+#endif//EGTTOOLS_DISTRIBUTIONS_H

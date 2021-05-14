@@ -102,7 +102,7 @@ egttools::FinitePopulations::calculate_state(const size_t &group_size,
     for (long int i = 0; i < current_group.size() - 1; ++i) {
         auto h = remaining;
         while (h > current_group(i)) {
-            retval += egttools::starsBars(remaining - h, current_group.size() - i - 1);
+            retval += egttools::starsBars<size_t>(remaining - h, current_group.size() - i - 1);
             --h;
         }
         if (remaining == current_group(i))
@@ -119,13 +119,13 @@ egttools::FinitePopulations::sample_simplex(size_t i, const size_t &pop_size, co
     // we apply a recursive algorithm that will complete a vector of size
     // nb_strategies from right to left
 
-    egttools::VectorXui state = egttools::VectorXui::Zero(nb_strategies);
+    egttools::VectorXui state = egttools::VectorXui::Zero(static_cast<int64_t>(nb_strategies));
     auto remaining = pop_size;
 
-    for (size_t a = 0; a < nb_strategies; ++a) {
+    for (signed long a = 0; a < static_cast<int64_t>(nb_strategies); ++a) {
         // reset the state container
         for (size_t j = remaining; j > 0; --j) {
-            auto count = egttools::starsBars(remaining - j, nb_strategies - a - 1);
+            auto count = egttools::starsBars<size_t>(remaining - j, nb_strategies - a - 1);
             if (i >= count) {
                 i -= count;
             } else {
@@ -146,11 +146,11 @@ void egttools::FinitePopulations::sample_simplex(size_t i, const size_t &pop_siz
 
     auto remaining = pop_size;
 
-    for (size_t a = 0; a < nb_strategies; ++a) {
+    for (signed long a = 0; a < static_cast<signed long>(nb_strategies); ++a) {
         // reset the state container
         state(a) = 0;
         for (size_t j = remaining; j > 0; --j) {
-            auto count = egttools::starsBars(remaining - j, nb_strategies - a - 1);
+            auto count = egttools::starsBars<size_t>(remaining - j, nb_strategies - a - 1);
             if (i >= count) {
                 i -= count;
             } else {

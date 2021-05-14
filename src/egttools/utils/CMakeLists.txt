@@ -16,9 +16,5 @@
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
 target_sources(numerical PRIVATE
-        SeedGenerator.cpp
-        Distributions.cpp
-        Data.cpp
+        CalculateExpectedIndicators.cpp
         )
-add_subdirectory(finite_populations)
-add_subdirectory(utils)

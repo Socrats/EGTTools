@@ -7,6 +7,7 @@
 
 #include <egttools/Distributions.h>
 #include <egttools/SeedGenerator.h>
+#include <egttools/utils/CalculateExpectedIndicators.h>
 #include <egttools/finite_populations/games/NormalFormGame.h>
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>

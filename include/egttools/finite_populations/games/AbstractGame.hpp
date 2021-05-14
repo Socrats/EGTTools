@@ -107,4 +107,4 @@ namespace egttools::FinitePopulations {
     };
 }// namespace egttools::FinitePopulations
 
-#endif//EGTTOOLS_ABSTRACTGAME_HPP
+#endif//EGTTOOLS_FINITEPOPULATIONS_GAMES_ABSTRACTGAME_HPP

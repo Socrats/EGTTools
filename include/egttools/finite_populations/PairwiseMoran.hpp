@@ -704,12 +704,12 @@ namespace egttools::FinitePopulations {
                                                                   double mu) {
         // First we initialise the container for the stationary distribution
         auto sdist = SparseMatrix2DXui(1, _nb_states);
-//        sdist.reserve(VectorXi::Constant(_nb_states, std::min(10000, static_cast<int>(_nb_states))));
+        //        sdist.reserve(VectorXi::Constant(_nb_states, std::min(10000, static_cast<int>(_nb_states))));
         // Distribution number of generations for a mutation to happen
         std::geometric_distribution<size_t> geometric(mu);
 
-//#pragma omp parallel for reduction(+ \
-//                                   : sdist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu)
+        #pragma omp parallel for reduction(+ \
+                                   : sdist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu)
         for (size_t i = 0; i < nb_runs; ++i) {
             // Random generators - each thread should have its own generator
             std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
