@@ -39,6 +39,7 @@ egttools::FinitePopulations::NormalFormGame::NormalFormGame(size_t nb_rounds,
     coop_level_(0, 1) = 0;
     coop_level_(1, 0) = 1;
     coop_level_(1, 1) = 1;
+    strategies_ = egttools::FinitePopulations::StrategyVector();
 }
 
 egttools::FinitePopulations::NormalFormGame::NormalFormGame(size_t nb_rounds,

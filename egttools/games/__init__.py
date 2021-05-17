@@ -1,6 +1,7 @@
-try:
-    from egttools.numerical.games import *
-except ImportError:
-    raise ImportError("Cannot import numerical.games. The numerical model might not have been compiled correctly.")
+"""
+API reference documentation for the `games` submodule.
+"""
+
+from egttools.numerical.games import AbstractGame, NormalFormGame
 
 from .pgg import PGG

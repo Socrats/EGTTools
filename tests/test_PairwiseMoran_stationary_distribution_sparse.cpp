@@ -9,6 +9,7 @@
 #include <egttools/finite_populations/games/NormalFormGame.h>
 #include <egttools/finite_populations/behaviors/NFGStrategies.hpp>
 #include <egttools/finite_populations/PairwiseMoran.hpp>
+#include <egttools/utils/CalculateExpectedIndicators.h>
 
 
 using namespace std;
@@ -33,16 +34,16 @@ int main() {
     strategies.push_back(&defector);
     auto tft = egttools::FinitePopulations::behaviors::twoActions::TitForTat();
     strategies.push_back(&tft);
-    auto pavlov = egttools::FinitePopulations::behaviors::twoActions::Pavlov();
-    strategies.push_back(&pavlov);
-    auto randp = egttools::FinitePopulations::behaviors::twoActions::RandomPlayer();
-    strategies.push_back(&randp);
-    auto grim = egttools::FinitePopulations::behaviors::twoActions::GRIM();
-    strategies.push_back(&grim);
-    auto imptft = egttools::FinitePopulations::behaviors::twoActions::ImperfectTFT(0.3);
-    strategies.push_back(&imptft);
-    auto suspicioustft = egttools::FinitePopulations::behaviors::twoActions::SuspiciousTFT();
-    strategies.push_back(&suspicioustft);
+//    auto pavlov = egttools::FinitePopulations::behaviors::twoActions::Pavlov();
+//    strategies.push_back(&pavlov);
+//    auto randp = egttools::FinitePopulations::behaviors::twoActions::RandomPlayer();
+//    strategies.push_back(&randp);
+//    auto grim = egttools::FinitePopulations::behaviors::twoActions::GRIM();
+//    strategies.push_back(&grim);
+//    auto imptft = egttools::FinitePopulations::behaviors::twoActions::ImperfectTFT(0.3);
+//    strategies.push_back(&imptft);
+//    auto suspicioustft = egttools::FinitePopulations::behaviors::twoActions::SuspiciousTFT();
+//    strategies.push_back(&suspicioustft);
 
     size_t nb_strategies = strategies.size();
     auto nb_states = egttools::starsBars(pop_size, nb_strategies);
@@ -54,7 +55,7 @@ int main() {
 
     auto start = high_resolution_clock::now();
 
-    auto dist = smProcess.estimate_stationary_distribution_sparse(1, 100000, 1000, 1, 1e-3);
+    auto dist = smProcess.estimate_stationary_distribution_sparse(1, 1000000, 1000, 10, 1e-3);
 
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
@@ -74,5 +75,18 @@ int main() {
     }
 
     std::cout << "]" << std::endl;
+
+    auto strategy_dist = egttools::utils::calculate_strategies_distribution(pop_size, nb_strategies, dist);
+
+    assert(strategy_dist.sum() >= 0.99);
+
+    std::cout << "strategies_dist: [";
+
+    for (int i = 0; i < static_cast<int>(nb_strategies); ++i) {
+        std::cout << strategy_dist(i) << "\t";
+    }
+
+    std::cout << "]" << std::endl;
+
     return 0;
 }

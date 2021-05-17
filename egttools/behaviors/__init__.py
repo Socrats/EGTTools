@@ -1,6 +1,8 @@
-try:
-    from egttools.numerical.behaviors import *
-except ImportError:
-    raise ImportError("Cannot import numerical.behaviors. The numerical model might not have been compiled correctly.")
+"""
+API reference documentation for `behaviors` submodule.
+"""
+
+from egttools.numerical.behaviors import NormalForm
+from egttools.numerical.behaviors.NormalForm import AbstractNFGStrategy
 
 from .pgg_behaviors import PGGOneShotStrategy, player_factory

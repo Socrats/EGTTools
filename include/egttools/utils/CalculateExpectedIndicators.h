@@ -16,7 +16,7 @@
   * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#pragma once
+//#pragma once
 #ifndef EGTTOOLS_UTILS_CALCULATEEXPECTEDINDICATORS_H
 #define EGTTOOLS_UTILS_CALCULATEEXPECTEDINDICATORS_H
 
@@ -43,32 +43,32 @@ namespace egttools::utils {
     Vector calculate_strategies_distribution(size_t pop_size, size_t nb_strategies,
                                              SparseMatrix2D& stationary_distribution);
 
-    /**
-      * @brief Calculates the average frequency of each strategy available in the population given the stationary distribution.
-      *
-      * @param pop_size : size of the population.
-      * @param nb_strategies : number of strategies.
-      * @param stationary_distribution : an Eigen SparseMatrix containing the frequency of each state in the system.
-      * @param strategy_distribution : a container Eigen::Vector which is used to sture the average frequency of each strategy.
-      * @return
-      */
-    void calculate_strategies_distribution(size_t pop_size, size_t nb_strategies,
-                                           SparseMatrix2D& stationary_distribution, Vector& strategy_distribution);
-
-    /**
-     * @brief Calculates the average frequency of each strategy available in the population given the stationary distribution.
-     *
-     * @param pop_size : size of the population.
-     * @param nb_strategies : number of strategies.
-     * @param stationary_distribution : an Eigen SparseMatrix containing the frequency of each state in the system
-     * @param strategy_distribution : a container Eigen::Vector which is used to sture the average frequency of each strategy.
-     * @param state : a container Eigen::Vector of size nb_strategies which is used to store the counts of each strategy in a given
-     *                population state.
-     * @return
-     */
-    void calculate_strategies_distribution(size_t pop_size, size_t nb_strategies,
-                                           SparseMatrix2D& stationary_distribution,
-                                           Vector& strategy_distribution, VectorXui& state);
+//    /**
+//      * @brief Calculates the average frequency of each strategy available in the population given the stationary distribution.
+//      *
+//      * @param pop_size : size of the population.
+//      * @param nb_strategies : number of strategies.
+//      * @param stationary_distribution : an Eigen SparseMatrix containing the frequency of each state in the system.
+//      * @param strategy_distribution : a container Eigen::Vector which is used to sture the average frequency of each strategy.
+//      * @return
+//      */
+//    void calculate_strategies_distribution(size_t pop_size, size_t nb_strategies,
+//                                           SparseMatrix2D& stationary_distribution, Vector& strategy_distribution);
+//
+//    /**
+//     * @brief Calculates the average frequency of each strategy available in the population given the stationary distribution.
+//     *
+//     * @param pop_size : size of the population.
+//     * @param nb_strategies : number of strategies.
+//     * @param stationary_distribution : an Eigen SparseMatrix containing the frequency of each state in the system
+//     * @param strategy_distribution : a container Eigen::Vector which is used to sture the average frequency of each strategy.
+//     * @param state : a container Eigen::Vector of size nb_strategies which is used to store the counts of each strategy in a given
+//     *                population state.
+//     * @return
+//     */
+//    void calculate_strategies_distribution(size_t pop_size, size_t nb_strategies,
+//                                           SparseMatrix2D& stationary_distribution,
+//                                           Vector& strategy_distribution, VectorXui& state);
 }// namespace egttools::utils
 
 

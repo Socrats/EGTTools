@@ -18,10 +18,9 @@
 
 #include <egttools/utils/CalculateExpectedIndicators.h>
 
-using namespace egttools::utils;
-
-egttools::Vector calculate_strategies_distribution(size_t pop_size, size_t nb_strategies,
-                                                   egttools::SparseMatrix2D& stationary_distribution) {
+egttools::Vector egttools::utils::calculate_strategies_distribution(size_t pop_size,
+                                                                    size_t nb_strategies,
+                                                                    SparseMatrix2D& stationary_distribution) {
     egttools::Vector strategy_distribution = egttools::Vector::Zero(static_cast<signed long>(nb_strategies));
     egttools::VectorXui state = egttools::VectorXui::Zero(static_cast<signed long>(nb_strategies));
 
@@ -32,28 +31,28 @@ egttools::Vector calculate_strategies_distribution(size_t pop_size, size_t nb_st
 
     return strategy_distribution;
 }
-
-void calculate_strategies_distribution(size_t pop_size, size_t nb_strategies,
-                                       egttools::SparseMatrix2D& stationary_distribution,
-                                       egttools::Vector& strategy_distribution) {
-    strategy_distribution.setZero();
-    egttools::VectorXui state = egttools::VectorXui::Zero(static_cast<signed long>(nb_strategies));
-    //#pragma omp simd
-    for (SparseMatIt it(stationary_distribution, 0); it; ++it) {
-        egttools::FinitePopulations::sample_simplex(it.index(), pop_size, nb_strategies, state);
-        strategy_distribution += (state.cast<double>() / pop_size) * it.value();
-    }
-}
-
-void calculate_strategies_distribution(size_t pop_size, size_t nb_strategies,
-                                       egttools::SparseMatrix2D& stationary_distribution,
-                                       egttools::Vector& strategy_distribution,
-                                       egttools::VectorXui& state) {
-    strategy_distribution.setZero();
-    state.setZero();
-    //#pragma omp simd
-    for (SparseMatIt it(stationary_distribution, 0); it; ++it) {
-        egttools::FinitePopulations::sample_simplex(it.index(), pop_size, nb_strategies, state);
-        strategy_distribution += (state.cast<double>() / pop_size) * it.value();
-    }
-}
+//
+//void egttools::utils::calculate_strategies_distribution(size_t pop_size, size_t nb_strategies,
+//                                                        egttools::SparseMatrix2D& stationary_distribution,
+//                                                        egttools::Vector& strategy_distribution) {
+//    strategy_distribution.setZero();
+//    egttools::VectorXui state = egttools::VectorXui::Zero(static_cast<signed long>(nb_strategies));
+//    //#pragma omp simd
+//    for (SparseMatIt it(stationary_distribution, 0); it; ++it) {
+//        egttools::FinitePopulations::sample_simplex(it.index(), pop_size, nb_strategies, state);
+//        strategy_distribution += (state.cast<double>() / pop_size) * it.value();
+//    }
+//}
+//
+//void egttools::utils::calculate_strategies_distribution(size_t pop_size, size_t nb_strategies,
+//                                                        egttools::SparseMatrix2D& stationary_distribution,
+//                                                        egttools::Vector& strategy_distribution,
+//                                                        egttools::VectorXui& state) {
+//    strategy_distribution.setZero();
+//    state.setZero();
+//    //#pragma omp simd
+//    for (SparseMatIt it(stationary_distribution, 0); it; ++it) {
+//        egttools::FinitePopulations::sample_simplex(it.index(), pop_size, nb_strategies, state);
+//        strategy_distribution += (state.cast<double>() / pop_size) * it.value();
+//    }
+//}

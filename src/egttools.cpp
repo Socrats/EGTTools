@@ -57,7 +57,7 @@ namespace egttools {
 
         return state;
     }
-    egttools::Vector  sample_unit_simplex(int64_t nb_strategies) {
+    egttools::Vector sample_unit_simplex(int64_t nb_strategies) {
         std::mt19937_64 generator(egttools::Random::SeedGenerator::getInstance().getSeed());
         auto real_rand = std::uniform_real_distribution<double>(0, 1);
         egttools::Vector state = egttools::Vector::Zero(nb_strategies);
@@ -77,30 +77,20 @@ namespace {
 }// namespace
 
 PYBIND11_MODULE(numerical, m) {
-
     m.attr("__version__") = py::str(XSTR(EGTTOOLS_VERSION));
     m.attr("VERSION") = py::str(XSTR(EGTTOOLS_VERSION));
+    m.attr("__init__") = py::str(
+            "The `numerical` module contains optimized "
+            "functions and classes to simulate evolutionary dynamics in large populations.");
 
-    m.doc() = R"pbdoc(
-        EGTtools: Toolbox of efficient Evolutionary Game Theory (EGT) models and methods.
-        This library is written in C++ (with python bindings) and pure Python.
-
-        Note:
-        This module is part a larger library named Dyrwin which also includes other methods to model
-        social dynamics which use learning theory (e.g., Reinforcement Learning), and methods to analyze, process
-        and model experimental data.
-        -----------------------
-        .. currentmodule:: egttools
-        .. autosummary::
-           :toctree: _generate
-           add
-           subtract
-    )pbdoc" + attr_doc(m, "VERSION", "This version of EGTtools.");
+    m.doc() =
+            "The `numerical` module contains optimized functions and classes to simulate "
+            "evolutionary dynamics in large populations. This module is written in C++.";
 
 
     // Use this function to get access to the singleton
-    py::class_<Random::SeedGenerator, std::unique_ptr<Random::SeedGenerator, py::nodelete>>(m, "Random")
-            .def(
+    py::class_<Random::SeedGenerator, std::unique_ptr<Random::SeedGenerator, py::nodelete>>(m, "Random", "Random seed generator.")
+            .def_static(
                     "init", []() {
                         return std::unique_ptr<Random::SeedGenerator, py::nodelete>(&Random::SeedGenerator::getInstance());
                     },
@@ -117,7 +107,7 @@ PYBIND11_MODULE(numerical, m) {
             egttools.Random
                 An instance of the random seed generator.
            )pbdoc")
-            .def(
+            .def_static(
                     "init", [](unsigned long int seed) {
                         auto instance = std::unique_ptr<Random::SeedGenerator, py::nodelete>(&Random::SeedGenerator::getInstance());
                         instance->setMainSeed(seed);
@@ -137,22 +127,13 @@ PYBIND11_MODULE(numerical, m) {
             -------
             egttools.Random
                 An instance of the random seed generator.
-           )pbdoc")
+           )pbdoc",
+                    py::arg("seed"))
             .def_property_readonly_static(
-                    "seed_", [](const py::object &) {
+                    "_seed", [](const py::object &) {
                         return egttools::Random::SeedGenerator::getInstance().getMainSeed();
                     },
-                    R"pbdoc(
-                    Property which returns the integer used to see egttools.Random.
-
-                    Parameters
-                    ----------
-
-                    Returns
-                    -------
-                    int
-                        The value used to see egttools.Random.
-                    )pbdoc")
+                    "The initial seed of egttools.Random.")
             .def_static(
                     "generate", []() {
                         return egttools::Random::SeedGenerator::getInstance().getSeed();
@@ -183,7 +164,8 @@ PYBIND11_MODULE(numerical, m) {
                     Returns
                     -------
 
-                    )pbdoc");
+                    )pbdoc",
+                    py::arg("seed"));
 
     // Now we define a submodule
     auto mGames = m.def_submodule("games");
@@ -192,6 +174,17 @@ PYBIND11_MODULE(numerical, m) {
     auto mNFTwoActions = mNF.def_submodule("TwoActions");
     auto mData = m.def_submodule("DataStructures");
     auto mDistributions = m.def_submodule("distributions");
+
+    mGames.attr("__init__") = py::str("The `game` submodule contains the available games.");
+    mBehaviors.attr("__init__") = py::str("The `behaviors` submodule contains the available strategies to evolve.");
+    mNF.attr("__init__") = py::str("The `NormalForm` submodule contains the strategies for normal form games.");
+    mNFTwoActions.attr("__init__") = py::str(
+            "The `TwoActions` submodule contains the strategies for "
+            "normal form games with 2 actions.");
+    mData.attr("__init__") = py::str("The `DataStructures` submodule contains helpful data structures to store.");
+    mDistributions.attr("__init__") = py::str(
+            "The `distributions` submodule contains "
+            "functions and classes that produce stochastic distributions.");
 
     py::class_<egttools::FinitePopulations::AbstractGame, stubs::PyAbstractGame>(mGames, "AbstractGame")
             .def(py::init<>())
@@ -210,27 +203,28 @@ PYBIND11_MODULE(numerical, m) {
 
                     Returns
                     -------
-                    )pbdoc")
+                    )pbdoc",
+                 py::arg("group_composition"), py::arg("game_payoffs"))
             .def("calculate_payoffs", &egttools::FinitePopulations::AbstractGame::calculate_payoffs,
                  R"pbdoc(
-                    Estimates the payoff matrix for each strategy.
-
-                    Parameters
-                    ----------
-                    group_composition : List[int]
-                        A list with counts of the number of players of each strategy in the group.
-                    game_payoffs : List[float]
-                        A list used as container for the payoffs of each player
+                    Estimates the payoffs for each strategy and returns the values in a matrix.
+                    Each row of the matrix represents a strategy and each column a game state.
+                    E.g., in case of a 2 player game, each entry a_ij gives the payoff for strategy
+                    i against strategy j. In case of a group game, each entry a_ij gives the payoff
+                    of strategy i for game state j, which represents the group composition.
 
                     Returns
                     -------
+                    numpy.ndarray[np.float64]
+                        A matrix with the expected payoffs for each strategy given each possible game
+                        state.
                     )pbdoc")
             .def("calculate_fitness", &egttools::FinitePopulations::AbstractGame::calculate_fitness,
                  R"pbdoc(
-                    Estimates the fitness for a :param player_type in the population with state :param strategies.
+                    Estimates the fitness for a player_type in the population with state :param strategies.
 
-                    This function assumes that the player with strategy @param player_type is not included in
-                    the vector of strategy counts :param strategies.
+                    This function assumes that the player with strategy player_type is not included in
+                    the vector of strategy counts strategies.
 
                     Parameters
                     ----------
@@ -238,14 +232,15 @@ PYBIND11_MODULE(numerical, m) {
                         The index of the strategy used by the player.
                     pop_size : int
                         The size of the population.
-                    strategies : numpy.ndarray[np.uint64]
+                    strategies : numpy.ndarray[numpy.uint64]
                         A vector of counts of which strategy. The current state of the population
 
                     Returns
                     -------
                     float
-                        The fitness of the strategy give the population state.
-                    )pbdoc")
+                        The fitness of the strategy in the population state given by strategies.
+                    )pbdoc",
+                 py::arg("player_type"), py::arg("pop_size"), py::arg("strategies"))
             .def("__str__", &egttools::FinitePopulations::AbstractGame::toString)
             .def("type", &egttools::FinitePopulations::AbstractGame::type, "returns the type of game.")
             .def("payoffs", &egttools::FinitePopulations::AbstractGame::payoffs, "returns the payoff matrix of the game.")
@@ -268,10 +263,11 @@ PYBIND11_MODULE(numerical, m) {
                     float
                         The payoff value.
                     )pbdoc")
-            .def_property_readonly("nb_strategies", &egttools::FinitePopulations::AbstractGame::nb_strategies)
+            .def_property_readonly("nb_strategies", &egttools::FinitePopulations::AbstractGame::nb_strategies,
+                                   "Number of different strategies playing the game.")
             .def("save_payoffs", &egttools::FinitePopulations::AbstractGame::save_payoffs,
                  R"pbdoc(
-                    Stores the payoff matrix in a txt file
+                    Stores the payoff matrix in a txt file.
 
                     Parameters
                     ----------
@@ -280,7 +276,8 @@ PYBIND11_MODULE(numerical, m) {
 
                     Returns
                     -------
-                    )pbdoc");
+                    )pbdoc",
+                 py::arg("file_name"));
 
     m.def("calculate_state",
           static_cast<size_t (*)(const size_t &, const egttools::Factors &)>(&egttools::FinitePopulations::calculate_state),
@@ -319,7 +316,7 @@ PYBIND11_MODULE(numerical, m) {
                     ----------
                     group_size : int
                         Maximum bin size (it can also be the population size).
-                    group_composition : np.ndarray[int]
+                    group_composition : numpy.ndarray[int]
                         The vector to convert from simplex coordinates to index.
 
                     Returns
@@ -354,7 +351,7 @@ PYBIND11_MODULE(numerical, m) {
 
                     See Also
                     --------
-                    egttools.calculate_state, egttools.calculate_nb_states
+                    egttools.numerical.calculate_state, egttools.numerical.calculate_nb_states
                     )pbdoc",
           py::arg("index"), py::arg("pop_size"),
           py::arg("nb_strategies"));
@@ -373,12 +370,12 @@ PYBIND11_MODULE(numerical, m) {
 
                     Returns
                     -------
-                    numpy.ndarray[np.int64]
+                    numpy.ndarray[numpy.int64]
                         Vector with the sampled state.
 
                     See Also
                     --------
-                    egttools.calculate_state, egttools.calculate_nb_states, egttools.sample_simplex
+                    egttools.numerical.calculate_state, egttools.numerical.calculate_nb_states, egttools.numerical.sample_simplex
                     )pbdoc",
           py::arg("nb_strategies"),
           py::arg("pop_size"));
@@ -394,12 +391,12 @@ PYBIND11_MODULE(numerical, m) {
 
                     Returns
                     -------
-                    numpy.ndarray[np.int64]
+                    numpy.ndarray[numpy.int64]
                         Vector with the sampled state.
 
                     See Also
                     --------
-                    egttools.calculate_state, egttools.calculate_nb_states, egttools.sample_simplex
+                    egttools.numerical.calculate_state, egttools.numerical.calculate_nb_states, egttools.numerical.sample_simplex
                     )pbdoc",
           py::arg("nb_strategies"));
 
@@ -425,36 +422,37 @@ PYBIND11_MODULE(numerical, m) {
 
                     See Also
                     --------
-                    egttools.calculate_state, egttools.sample_simplex
+                    egttools.numerical.calculate_state, egttools.numerical.sample_simplex
                     )pbdoc",
           py::arg("group_size"), py::arg("nb_strategies"));
 
-    //    m.def("calculate_strategies_distribution",
-    //          static_cast<egttools::Vector (*)(size_t, size_t, egttools::SparseMatrix2D&)>(&egttools::utils::calculate_strategies_distribution),
-    //          R"pbdoc(
-    //                    Calculates the average frequency of each strategy available in
-    //                    the population given the stationary distribution.
-    //
-    //                    Parameters
-    //                    ----------
-    //                    pop_size : int
-    //                        Size of the population.
-    //                    nb_strategies : int
-    //                        Number of strategies that can be assigned to players.
-    //                    stationary_distribution : scipy.sparse.csr_matrix
-    //                        A sparse matrix which contains the stationary distribution (the frequency with which the evolutionary system visits each
-    //                        stationary state).
-    //
-    //                    Returns
-    //                    -------
-    //                    numpy.ndarray
-    //                        Average frequency of each strategy in the stationary evolutionary system.
-    //
-    //                    See Also
-    //                    --------
-    //                    egttools.calculate_state, egttools.sample_simplex, egttools.calculate_nb_states, egttools.PairwiseMoran.stationary_distribution_sparse
-    //                    )pbdoc",
-    //          py::arg("pop_size"), py::arg("nb_strategies"), py::arg("stationary_distribution"));
+    m.def("calculate_strategies_distribution",
+          static_cast<egttools::Vector (*)(size_t, size_t, egttools::SparseMatrix2D &)>(&egttools::utils::calculate_strategies_distribution),
+          R"pbdoc(
+                        Calculates the average frequency of each strategy available in
+                        the population given the stationary distribution.
+
+                        Parameters
+                        ----------
+                        pop_size : int
+                            Size of the population.
+                        nb_strategies : int
+                            Number of strategies that can be assigned to players.
+                        stationary_distribution : scipy.sparse.csr_matrix
+                            A sparse matrix which contains the stationary distribution (the frequency with which the evolutionary system visits each
+                            stationary state).
+
+                        Returns
+                        -------
+                        numpy.ndarray[numpy.float64[m, 1]]
+                            Average frequency of each strategy in the stationary evolutionary system.
+
+                        See Also
+                        --------
+                        egttools.numerical.calculate_state, egttools.numerical.sample_simplex,
+                        egttools.numerical.calculate_nb_states, egttools.numerical.PairwiseMoran.stationary_distribution_sparse
+                        )pbdoc",
+          py::arg("pop_size"), py::arg("nb_strategies"), py::arg("stationary_distribution"));
 
     py::class_<egttools::FinitePopulations::NormalFormGame, egttools::FinitePopulations::AbstractGame>(mGames, "NormalFormGame")
             .def(py::init<size_t, const Eigen::Ref<const Matrix2D> &>(),
@@ -471,20 +469,18 @@ PYBIND11_MODULE(numerical, m) {
                     payoff_matrix : numpy.ndarray[float]
                         A payoff matrix of shape (nb_actions, nb_actions).
 
-                    Returns
-                    -------
-
                     See Also
                     --------
-                    egttools.games.AbstractGame
+                    egttools.numerical.games.AbstractGame
                     )pbdoc",
                  py::arg("nb_rounds"),
                  py::arg("payoff_matrix"))
             .def(py::init(&egttools::init_normal_form_game_from_python_list),
                  R"pbdoc(
-                    Normal Form Game. This constructor assumes that there are only two possible strategies and two possible actions.
+                    Normal Form Game. This constructor assumes that there are only two possible
+                    strategies and two possible actions.
 
-                    This method will run the game using the players and player types defined in :param group_composition,
+                    This method will run the game using the players and player types defined in group_composition,
                     and will update the vector :param game_payoffs with the resulting payoff of each player.
 
                     Parameters
@@ -493,15 +489,12 @@ PYBIND11_MODULE(numerical, m) {
                         Number of rounds of the game.
                     payoff_matrix : numpy.ndarray[float]
                         A payoff matrix of shape (nb_actions, nb_actions).
-                    strategies : List[egttools.behaviors.AbstractNFGStrategy]
+                    strategies : List[egttools.numerical.behaviors.AbstractNFGStrategy]
                         A list containing references of AbstractNFGStrategy strategies (or child classes).
-
-                    Returns
-                    -------
 
                     See Also
                     --------
-                    egttools.games.AbstractGame
+                    egttools.numerical.games.AbstractGame
                     )pbdoc",
                  py::arg("nb_rounds"),
                  py::arg("payoff_matrix"), py::arg("strategies"), py::return_value_policy::reference_internal)
@@ -524,16 +517,46 @@ PYBIND11_MODULE(numerical, m) {
                  "returns the payoff of a strategy given a strategy pair.", py::arg("strategy"),
                  py::arg("strategy pair"))
             .def("expected_payoffs", &egttools::FinitePopulations::NormalFormGame::expected_payoffs, "returns the expected payoffs of each strategy vs another")
-            .def_property_readonly("nb_strategies", &egttools::FinitePopulations::NormalFormGame::nb_strategies)
-            .def_property_readonly("nb_rounds", &egttools::FinitePopulations::NormalFormGame::nb_rounds)
-            .def_property_readonly("nb_states", &egttools::FinitePopulations::NormalFormGame::nb_states)
-            .def_property_readonly("strategies", &egttools::FinitePopulations::NormalFormGame::strategies)
-            .def("save_payoffs", &egttools::FinitePopulations::NormalFormGame::save_payoffs);
+            .def_property_readonly("nb_strategies", &egttools::FinitePopulations::NormalFormGame::nb_strategies,
+                                   "Number of different strategies which are playing the game.")
+            .def_property_readonly("nb_rounds", &egttools::FinitePopulations::NormalFormGame::nb_rounds,
+                                   "Number of rounds of the game.")
+            .def_property_readonly("nb_states", &egttools::FinitePopulations::NormalFormGame::nb_states,
+                                   "Number of combinations of 2 strategies that can be matched in the game.")
+            .def_property_readonly("strategies", &egttools::FinitePopulations::NormalFormGame::strategies,
+                                   "A list with pointers to the strategies that are playing the game.")
+            .def("save_payoffs", &egttools::FinitePopulations::NormalFormGame::save_payoffs,
+                 "Saves the payoff matrix in a txt file.");
 
     py::class_<egttools::FinitePopulations::behaviors::AbstractNFGStrategy, stubs::PyAbstractNFGStrategy>(mNF, "AbstractNFGStrategy")
             .def(py::init<>())
             .def("get_action", &egttools::FinitePopulations::behaviors::AbstractNFGStrategy::get_action,
-                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 R"pbdoc(
+                Returns an action in function of time_step
+                round and the previous action action_prev
+                of the opponent.
+
+                Parameters
+                ----------
+                time_step : int
+                    Current round.
+                action_prev : int
+                    Previous action of the opponent.
+
+                Returns
+                -------
+                int
+                    The action selected by the strategy.
+
+                See Also
+                --------
+                egttools.numerical.behaviors.TwoActions.Cooperator, egttools.numerical.behaviors.TwoActions.Defector,
+                egttools.numerical.behaviors.TwoActions.Random, egttools.numerical.behaviors.TwoActions.TFT,
+                egttools.numerical.behaviors.TwoActions.SuspiciousTFT, egttools.numerical.behaviors.TwoActions.GenerousTFT,
+                egttools.numerical.behaviors.TwoActions.GradualTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
+                egttools.numerical.behaviors.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
+                egttools.numerical.behaviors.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::AbstractNFGStrategy::type, "Returns a string indicating the Strategy Type.");
 
@@ -541,7 +564,32 @@ PYBIND11_MODULE(numerical, m) {
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "Cooperator")
             .def(py::init<>(), "This strategy always cooperates.")
             .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::Cooperator::get_action,
-                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 R"pbdoc(
+                Returns an action in function of time_step
+                round and the previous action action_prev
+                of the opponent.
+
+                Parameters
+                ----------
+                time_step : int
+                    Current round.
+                action_prev : int
+                    Previous action of the opponent.
+
+                Returns
+                -------
+                int
+                    The action selected by the strategy.
+
+                See Also
+                --------
+                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Defector,
+                egttools.numerical.behaviors.TwoActions.Random, egttools.numerical.behaviors.TwoActions.TFT,
+                egttools.numerical.behaviors.TwoActions.SuspiciousTFT, egttools.numerical.behaviors.TwoActions.GenerousTFT,
+                egttools.numerical.behaviors.TwoActions.GradualTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
+                egttools.numerical.behaviors.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
+                egttools.numerical.behaviors.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::Cooperator::type, "Returns a string indicating the Strategy Type.");
 
@@ -549,7 +597,32 @@ PYBIND11_MODULE(numerical, m) {
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "Defector")
             .def(py::init<>(), "This strategy always defects.")
             .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::Defector::get_action,
-                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 R"pbdoc(
+                Returns an action in function of time_step
+                round and the previous action action_prev
+                of the opponent.
+
+                Parameters
+                ----------
+                time_step : int
+                    Current round.
+                action_prev : int
+                    Previous action of the opponent.
+
+                Returns
+                -------
+                int
+                    The action selected by the strategy.
+
+                See Also
+                --------
+                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
+                egttools.numerical.behaviors.TwoActions.Random, egttools.numerical.behaviors.TwoActions.TFT,
+                egttools.numerical.behaviors.TwoActions.SuspiciousTFT, egttools.numerical.behaviors.TwoActions.GenerousTFT,
+                egttools.numerical.behaviors.TwoActions.GradualTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
+                egttools.numerical.behaviors.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
+                egttools.numerical.behaviors.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::Defector::type, "Returns a string indicating the Strategy Type.");
 
@@ -557,7 +630,32 @@ PYBIND11_MODULE(numerical, m) {
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "Random")
             .def(py::init<>(), "This players chooses cooperation with uniform random probability.")
             .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::RandomPlayer::get_action,
-                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 R"pbdoc(
+                Returns an action in function of time_step
+                round and the previous action action_prev
+                of the opponent.
+
+                Parameters
+                ----------
+                time_step : int
+                    Current round.
+                action_prev : int
+                    Previous action of the opponent.
+
+                Returns
+                -------
+                int
+                    The action selected by the strategy.
+
+                See Also
+                --------
+                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
+                egttools.numerical.behaviors.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.TFT,
+                egttools.numerical.behaviors.TwoActions.SuspiciousTFT, egttools.numerical.behaviors.TwoActions.GenerousTFT,
+                egttools.numerical.behaviors.TwoActions.GradualTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
+                egttools.numerical.behaviors.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
+                egttools.numerical.behaviors.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::RandomPlayer::type, "Returns a string indicating the Strategy Type.");
 
@@ -565,7 +663,32 @@ PYBIND11_MODULE(numerical, m) {
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "TFT")
             .def(py::init<>(), "Tit for Tat: Cooperates in the first round and imitates the opponent's move thereafter.")
             .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::TitForTat::get_action,
-                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 R"pbdoc(
+                Returns an action in function of time_step
+                round and the previous action action_prev
+                of the opponent.
+
+                Parameters
+                ----------
+                time_step : int
+                    Current round.
+                action_prev : int
+                    Previous action of the opponent.
+
+                Returns
+                -------
+                int
+                    The action selected by the strategy.
+
+                See Also
+                --------
+                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
+                egttools.numerical.behaviors.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
+                egttools.numerical.behaviors.TwoActions.SuspiciousTFT, egttools.numerical.behaviors.TwoActions.GenerousTFT,
+                egttools.numerical.behaviors.TwoActions.GradualTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
+                egttools.numerical.behaviors.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
+                egttools.numerical.behaviors.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::TitForTat::type, "Returns a string indicating the Strategy Type.");
 
@@ -573,7 +696,32 @@ PYBIND11_MODULE(numerical, m) {
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "SuspiciousTFT")
             .def(py::init<>(), "Defects on the first round and imitates its opponent's previous move thereafter.")
             .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::SuspiciousTFT::get_action,
-                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 R"pbdoc(
+                Returns an action in function of time_step
+                round and the previous action action_prev
+                of the opponent.
+
+                Parameters
+                ----------
+                time_step : int
+                    Current round.
+                action_prev : int
+                    Previous action of the opponent.
+
+                Returns
+                -------
+                int
+                    The action selected by the strategy.
+
+                See Also
+                --------
+                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
+                egttools.numerical.behaviors.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
+                egttools.numerical.behaviors.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.GenerousTFT,
+                egttools.numerical.behaviors.TwoActions.GradualTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
+                egttools.numerical.behaviors.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
+                egttools.numerical.behaviors.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::SuspiciousTFT::type, "Returns a string indicating the Strategy Type.");
 
@@ -588,7 +736,32 @@ PYBIND11_MODULE(numerical, m) {
                  py::arg("R"), py::arg("P"),
                  py::arg("T"), py::arg("S"))
             .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::GenerousTFT::get_action,
-                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 R"pbdoc(
+                Returns an action in function of time_step
+                round and the previous action action_prev
+                of the opponent.
+
+                Parameters
+                ----------
+                time_step : int
+                    Current round.
+                action_prev : int
+                    Previous action of the opponent.
+
+                Returns
+                -------
+                int
+                    The action selected by the strategy.
+
+                See Also
+                --------
+                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
+                egttools.numerical.behaviors.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
+                egttools.numerical.behaviors.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.SuspiciousTFT,
+                egttools.numerical.behaviors.TwoActions.GradualTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
+                egttools.numerical.behaviors.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
+                egttools.numerical.behaviors.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::GenerousTFT::type, "Returns a string indicating the Strategy Type.");
 
@@ -601,7 +774,32 @@ PYBIND11_MODULE(numerical, m) {
                  "(2) it apologizes for each string of defections"
                  "by cooperating in the subsequent two rounds.")
             .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::GradualTFT::get_action,
-                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 R"pbdoc(
+                Returns an action in function of time_step
+                round and the previous action action_prev
+                of the opponent.
+
+                Parameters
+                ----------
+                time_step : int
+                    Current round.
+                action_prev : int
+                    Previous action of the opponent.
+
+                Returns
+                -------
+                int
+                    The action selected by the strategy.
+
+                See Also
+                --------
+                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
+                egttools.numerical.behaviors.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
+                egttools.numerical.behaviors.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.SuspiciousTFT,
+                egttools.numerical.behaviors.TwoActions.GenerousTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
+                egttools.numerical.behaviors.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
+                egttools.numerical.behaviors.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::GradualTFT::type, "Returns a string indicating the Strategy Type.");
 
@@ -612,7 +810,32 @@ PYBIND11_MODULE(numerical, m) {
                  "with :param error_probability.",
                  py::arg("error_probability"))
             .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::ImperfectTFT::get_action,
-                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 R"pbdoc(
+                Returns an action in function of time_step
+                round and the previous action action_prev
+                of the opponent.
+
+                Parameters
+                ----------
+                time_step : int
+                    Current round.
+                action_prev : int
+                    Previous action of the opponent.
+
+                Returns
+                -------
+                int
+                    The action selected by the strategy.
+
+                See Also
+                --------
+                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
+                egttools.numerical.behaviors.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
+                egttools.numerical.behaviors.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.SuspiciousTFT,
+                egttools.numerical.behaviors.TwoActions.GenerousTFT, egttools.numerical.behaviors.TwoActions.GradualTFT,
+                egttools.numerical.behaviors.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
+                egttools.numerical.behaviors.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::ImperfectTFT::type, "Returns a string indicating the Strategy Type.");
 
@@ -620,7 +843,32 @@ PYBIND11_MODULE(numerical, m) {
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "TFTT")
             .def(py::init<>(), "Tit for 2 tats: Defects if defected twice.")
             .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::TFTT::get_action,
-                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 R"pbdoc(
+                Returns an action in function of time_step
+                round and the previous action action_prev
+                of the opponent.
+
+                Parameters
+                ----------
+                time_step : int
+                    Current round.
+                action_prev : int
+                    Previous action of the opponent.
+
+                Returns
+                -------
+                int
+                    The action selected by the strategy.
+
+                See Also
+                --------
+                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
+                egttools.numerical.behaviors.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
+                egttools.numerical.behaviors.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.SuspiciousTFT,
+                egttools.numerical.behaviors.TwoActions.GenerousTFT, egttools.numerical.behaviors.TwoActions.GradualTFT,
+                egttools.numerical.behaviors.TwoActions.ImperfectTFT, egttools.numerical.behaviors.TwoActions.TTFT,
+                egttools.numerical.behaviors.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::TFTT::type, "Returns a string indicating the Strategy Type.");
 
@@ -628,7 +876,32 @@ PYBIND11_MODULE(numerical, m) {
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "TTFT")
             .def(py::init<>(), "2 Tits for tat: Defects twice if defected.")
             .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::TTFT::get_action,
-                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 R"pbdoc(
+                Returns an action in function of time_step
+                round and the previous action action_prev
+                of the opponent.
+
+                Parameters
+                ----------
+                time_step : int
+                    Current round.
+                action_prev : int
+                    Previous action of the opponent.
+
+                Returns
+                -------
+                int
+                    The action selected by the strategy.
+
+                See Also
+                --------
+                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
+                egttools.numerical.behaviors.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
+                egttools.numerical.behaviors.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.SuspiciousTFT,
+                egttools.numerical.behaviors.TwoActions.GenerousTFT, egttools.numerical.behaviors.TwoActions.GradualTFT,
+                egttools.numerical.behaviors.TwoActions.ImperfectTFT, egttools.numerical.behaviors.TwoActions.TFTT,
+                egttools.numerical.behaviors.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::TTFT::type, "Returns a string indicating the Strategy Type.");
 
@@ -638,7 +911,32 @@ PYBIND11_MODULE(numerical, m) {
                  "Grim (Trigger): Cooperates until its opponent has defected once, "
                  "and then defects for the rest of the game.")
             .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::GRIM::get_action,
-                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 R"pbdoc(
+                Returns an action in function of time_step
+                round and the previous action action_prev
+                of the opponent.
+
+                Parameters
+                ----------
+                time_step : int
+                    Current round.
+                action_prev : int
+                    Previous action of the opponent.
+
+                Returns
+                -------
+                int
+                    The action selected by the strategy.
+
+                See Also
+                --------
+                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
+                egttools.numerical.behaviors.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
+                egttools.numerical.behaviors.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.SuspiciousTFT,
+                egttools.numerical.behaviors.TwoActions.GenerousTFT, egttools.numerical.behaviors.TwoActions.GradualTFT,
+                egttools.numerical.behaviors.TwoActions.ImperfectTFT, egttools.numerical.behaviors.TwoActions.TFTT,
+                egttools.numerical.behaviors.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.Pavlov
+                )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::GRIM::type, "Returns a string indicating the Strategy Type.");
 
@@ -648,7 +946,32 @@ PYBIND11_MODULE(numerical, m) {
                  "Win-stay loose-shift: Cooperates if it and its opponent moved alike in"
                  "previous move and defects if they moved differently.")
             .def("get_action", &egttools::FinitePopulations::behaviors::twoActions::Pavlov::get_action,
-                 R"pbdoc(Returns an action in function of :param time_step round and the previous action :param action_prev of the opponent.)pbdoc",
+                 R"pbdoc(
+                Returns an action in function of time_step
+                round and the previous action action_prev
+                of the opponent.
+
+                Parameters
+                ----------
+                time_step : int
+                    Current round.
+                action_prev : int
+                    Previous action of the opponent.
+
+                Returns
+                -------
+                int
+                    The action selected by the strategy.
+
+                See Also
+                --------
+                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
+                egttools.numerical.behaviors.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
+                egttools.numerical.behaviors.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.SuspiciousTFT,
+                egttools.numerical.behaviors.TwoActions.GenerousTFT, egttools.numerical.behaviors.TwoActions.GradualTFT,
+                egttools.numerical.behaviors.TwoActions.ImperfectTFT, egttools.numerical.behaviors.TwoActions.TFTT,
+                egttools.numerical.behaviors.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.GRIM
+                )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::Pavlov::type, "Returns a string indicating the Strategy Type.");
 
@@ -663,19 +986,19 @@ PYBIND11_MODULE(numerical, m) {
                  "evolves the strategies for a maximum of nb_generations", py::arg("nb_generations"), py::arg("beta"),
                  py::arg("mu"), py::arg("init_state"))
             .def("run",
+                 static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(size_t, double,
+                                                                           const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
+                 "runs the moran process with social imitation and returns a matrix with all the states the system went through",
+                 py::arg("nb_generations"),
+                 py::arg("beta"),
+                 py::arg("init_state"))
+            .def("run",
                  static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(size_t, double, double,
                                                                            const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
                  "runs the moran process with social imitation and returns a matrix with all the states the system went through",
                  py::arg("nb_generations"),
                  py::arg("beta"),
                  py::arg("mu"),
-                 py::arg("init_state"))
-            .def("run",
-                 static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(size_t, double,
-                                                                           const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
-                 "runs the moran process with social imitation and returns a matrix with all the states the system went through",
-                 py::arg("nb_generations"),
-                 py::arg("beta"),
                  py::arg("init_state"))
             .def("fixation_probability", &PairwiseComparison::fixationProbability,
                  "Estimates the fixation probability of an strategy in the population.",
@@ -685,13 +1008,16 @@ PYBIND11_MODULE(numerical, m) {
                  "Estimates the stationary distribution of the population of strategies given the game.",
                  py::arg("nb_runs"), py::arg("nb_generations"), py::arg("transitory"), py::arg("beta"), py::arg("mu"))
             .def("stationary_distribution_sparse", &PairwiseComparison::estimate_stationary_distribution_sparse,
-                 //                 py::call_guard<py::gil_scoped_release>(),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Estimates the stationary distribution of the population of strategies given the game.",
                  py::arg("nb_runs"), py::arg("nb_generations"), py::arg("transitory"), py::arg("beta"), py::arg("mu"))
-            .def_property_readonly("nb_strategies", &PairwiseComparison::nb_strategies)
-            .def_property_readonly("payoffs", &PairwiseComparison::payoffs)
-            .def_property("pop_size", &PairwiseComparison::population_size, &PairwiseComparison::set_population_size)
-            .def_property("cache_size", &PairwiseComparison::cache_size, &PairwiseComparison::set_cache_size);
+            .def_property_readonly("nb_strategies", &PairwiseComparison::nb_strategies, "Number of strategies in the population.")
+            .def_property_readonly("payoffs", &PairwiseComparison::payoffs,
+                                   "Payoff matrix containing the payoff of each strategy (row) for each game state (column)")
+            .def_property("pop_size", &PairwiseComparison::population_size, &PairwiseComparison::set_population_size,
+                          "Size of the population.")
+            .def_property("cache_size", &PairwiseComparison::cache_size, &PairwiseComparison::set_cache_size,
+                          "Maximum memory which can be used to cache the fitness calculations.");
 
     py::class_<egttools::DataStructures::DataTable>(mData, "DataTable")
             .def(py::init<size_t,

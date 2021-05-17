@@ -25,6 +25,7 @@ add_library(egttoolsNumerical
         ../src/egttools/SeedGenerator.cpp
         ../src/egttools/Distributions.cpp
         ../src/egttools/Data.cpp
+        ../src/egttools/utils/CalculateExpectedIndicators.cpp
         ../src/egttools/finite_populations/Utils.cpp
         ../src/egttools/finite_populations/games/NormalFormGame.cpp
         ../src/egttools/finite_populations/behaviors/NFGStrategies.cpp
@@ -38,7 +39,7 @@ set_target_properties(egttoolsNumerical PROPERTIES
 #        POSITION_INDEPENDENT_CODE TRUE
         # Fixing "ld: warning: direct access in function '...' from file '...' to global weak symbol '...' from file '...' means the weak symbol cannot
         # be overridden at runtime. This was likely caused by different translation units being compiled with different visibility settings."
-        C_VISIBILITY_PRESET hidden
+#        C_VISIBILITY_PRESET hidden
 #        CXX_VISIBILITY_PRESET hidden
         )
 

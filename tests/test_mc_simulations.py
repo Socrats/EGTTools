@@ -22,6 +22,10 @@ def setup_hawk_dove_parameters() -> np.ndarray:
     if platform == "darwin":
         os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
+    Random.init(3610063510)
+
+    assert Random._seed == 3610063510
+
     return payoffs
 
 
@@ -47,11 +51,6 @@ def test_pairwise_moran_run(setup_hawk_dove_parameters) -> None:
     """
     payoffs = setup_hawk_dove_parameters
 
-    Random.init()
-    Random.seed(3610063510)
-
-    assert Random.seed_ == 3610063510
-
     game = NormalFormGame(1, payoffs)
 
     pop_size = 100
@@ -72,11 +71,6 @@ def test_pairwise_moran_stationary_distribution(setup_hawk_dove_parameters) -> N
     This test checks that the stationary_distribution method of PairwiseMoran executes.
     """
     payoffs = setup_hawk_dove_parameters
-
-    Random.init()
-    Random.seed(3610063510)
-
-    assert Random.seed_ == 3610063510
 
     game = NormalFormGame(1, payoffs)
 
@@ -100,11 +94,6 @@ def test_pairwise_moran_stationary_distribution_sparse(setup_hawk_dove_parameter
     This test checks that the stationary_distribution method of PairwiseMoran executes.
     """
     payoffs = setup_hawk_dove_parameters
-
-    Random.init()
-    Random.seed(3610063510)
-
-    assert Random.seed_ == 3610063510
 
     game = NormalFormGame(1, payoffs)
 

@@ -51,6 +51,7 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
+    'sphinx_autodoc_typehints',  # Automatically document param types (less noise in class signature)
     'recommonmark',
     'nbsphinx',
     'pybind11_docstrings',
@@ -81,7 +82,7 @@ if on_rtd:
     github_token = os.environ['GITHUB_TOKEN']
     head_sha = git.Repo(search_parent_directories=True).head.commit.hexsha
     g = github.Github()
-    runs = g.get_repo('YannickJadoul/Parselmouth').get_workflow("wheels.yml").get_runs(branch=branch)
+    runs = g.get_repo('Socrats/EGTTools').get_workflow("wheels.yml").get_runs(branch=branch)
     artifacts_url = next(r for r in runs if r.head_sha == head_sha).artifacts_url
 
     archive_download_url = \
@@ -96,7 +97,7 @@ if on_rtd:
         zf.extractall(tmpdir)
         subprocess.check_call(
             [sys.executable, '-m', 'pip', 'install', '--force-reinstall', tmpdir + '/' + zf.namelist()[0]])
-
+html_css_files = ["readthedocs-custom.css"]  # Override some CSS settings
 import egttools
 
 # The short X.Y version
@@ -119,22 +120,47 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '**.ipynb_checkpoints']
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 
+# If true, `todo` and `todoList` produce output, else they produce nothing.
+todo_include_todos = True
+
+# enable imported members
+autosummary_imported_members = True
+
 # Autodoc configuration
 autodoc_member_order = 'groupwise'
 
 # Intersphinx configuration
 intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
-                       'numpy': ('https://numpy.org/doc/stable/', None)}
+                       'numpy': ('https://numpy.org/doc/stable/', None),
+                       'scipy': ('https://numpy.org/doc/stable/', None),
+                       'networkx': ('https://networkx.org/documentation/stable/', None)
+                       }
 
-efault_role = 'py:obj'
+autosummary_generate = True  # Turn on sphinx.ext.autosummary
+autoclass_content = "both"  # Add __init__ doc (ie. params) to class summaries
+html_show_sourcelink = False  # Remove 'view source code' from top of page (for html, not python)
+autodoc_inherit_docstrings = True  # If no docstring, inherit from base class
+set_type_checking_flag = True  # Enable 'expensive' imports for sphinx_autodoc_typehints
+nbsphinx_allow_errors = True  # Continue through Jupyter errors
+# autodoc_typehints = "description" # Sphinx-native method. Not as good as sphinx_autodoc_typehints
+add_module_names = False  # Remove namespaces from class/method signatures
+
+# Add any paths that contain templates here, relative to this directory.
+templates_path = ['_templates']
+
+default_role = 'py:obj'
 nitpicky = True
 nitpick_ignore = [('py:class', 'pybind11_builtins.pybind11_object'),
                   ('py:class', 'List'),
                   ('py:class', 'Positive'),
                   ('py:class', 'NonNegative'),
+                  ('py:class', 'numpy.uint64'),
+                  ('py:class', 'numpy.int64'),
                   ('py:class', 'numpy.float64'),
                   ('py:class', 'numpy.complex128'),
-                  ('py:obj', 'List')]
+                  ('py:obj', 'List'),
+                  ('py:class', 'm'),
+                  ('py:class', '1')]
 
 if on_rtd:
     branch_or_tag = branch or 'v{}'.format(release)
@@ -142,7 +168,12 @@ else:
     rev_parse_name = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).decode('ascii').strip()
     branch_or_tag = rev_parse_name if rev_parse_name != 'HEAD' else 'v{}'.format(release)
 
-
+# nbsphinx_prolog = """
+# {{% set docname = 'docs/' + env.doc2path(env.docname, base=False) %}}
+#
+# .. only:: html
+#
+# """
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -251,8 +282,3 @@ epub_exclude_files = ['search.html']
 # -- Extension configuration -------------------------------------------------
 
 # -- Options for intersphinx extension ---------------------------------------
-
-# -- Options for todo extension ----------------------------------------------
-
-# If true, `todo` and `todoList` produce output, else they produce nothing.
-todo_include_todos = True

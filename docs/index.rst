@@ -22,12 +22,11 @@ that can run in parallel in a reasonable time, while Python bindings make the me
 of researchers.
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Getting Started
+   :hidden:
 
-   examples
-
-   api_reference
+   Home page <self>
+   Examples <examples>
+   API reference <_autosummary/egttools>
 
 Citing EGTtools
 ------------------
