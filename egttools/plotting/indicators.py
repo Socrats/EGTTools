@@ -14,9 +14,11 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
-
+import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
+
+from typing import List, Optional
 
 
 def plot_gradient(x, gradients, saddle_points, saddle_type, gradient_direction, fig_title='', xlabel='', figsize=(5, 4),
@@ -76,21 +78,44 @@ def plot_gradient(x, gradients, saddle_points, saddle_type, gradient_direction, 
     return ax
 
 
-def draw_stationary_distribution(strats, drift, f, stationary, colors=None, ax=None):
+def draw_stationary_distribution(strategies: List[str], drift: float, fixation_probabilities: np.ndarray,
+                                 stationary_distribution: np.ndarray,
+                                 max_displayed_label_letters: Optional[int] = 4,
+                                 node_size: Optional[int] = 4000,
+                                 colors: Optional[List[str]] = None,
+                                 ax: Optional[plt.axis] = None) -> nx.Graph:
     """
-    Draws the markov chain for a given stationary distribution of monomorfic states
-    :param strats and array of string labels for each strategy present in the population
-    :param drift double 1/Z
-    :param f a matrix specifying the fixation probabilities
-    :param stationary numpy.array with the strationary distribution
-    :param colors a list with the colors used to plot the nodes of the graph
-    :param ax matplotlib.pyplot.axis to draw on the specified axis.
+    Draws the markov chain for a given stationary distribution of monomorphic states.
+
+    Parameters
+    ----------
+    strategies : List[str]
+        Strategies and array of string labels for each strategy present in the population.
+    drift : float
+        drift = 1/pop_size
+    fixation_probabilities : np.ndarray[float, 2]
+        A matrix specifying the fixation probabilities.
+    stationary_distribution : np.ndarray[float, 1]
+        An array containing the stationary distribution (probability of each state in the system).
+    max_displayed_label_letters : int
+        Maximum number of letters of the strategy labels contained in the `strategies` List to
+        be displayed.
+    node_size : Optional[int]
+        Size of the nodes of the Graph to be plotted
+    colors : Optional[List[str]]
+        A list with the colors used to plot the nodes of the graph.
+    ax : Optional[plt.axis]
+        Axis on which to draw the graph.
+
+    Returns
+    -------
+    networkx.Graph
+        The graph depicting the Markov chain which represents the invasion dynamics.
     """
-    import networkx as nx
-    q = len(strats)
+    q = len(strategies)
 
     G = nx.DiGraph()
-    G.add_nodes_from(strats)
+    G.add_nodes_from(strategies)
     if colors is None:
         from seaborn import color_palette
         ncolors = color_palette("colorblind", q)
@@ -103,8 +128,8 @@ def draw_stationary_distribution(strats, drift, f, stationary, colors=None, ax=N
 
     for j in range(q):
         for i in range(q):
-            if f[i, j] >= drift:
-                G.add_edge(strats[i], strats[j], weight=f[i, j])
+            if fixation_probabilities[i, j] >= drift:
+                G.add_edge(strategies[i], strategies[j], weight=fixation_probabilities[i, j])
 
     eselect = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] > 1.0]
     eselect_labels = dict(((u, v), float("{0:.2f}".format(d['weight'])))
@@ -116,23 +141,21 @@ def draw_stationary_distribution(strats, drift, f, stationary, colors=None, ax=N
     # nodes
     nx.draw_networkx_nodes(G,
                            pos,
-                           node_size=4000,
+                           node_size=node_size,
                            node_color=ncolors,
-                           with_labels=True, ax=ax)
+                           ax=ax)
 
     # edges
     nx.draw_networkx_edges(G,
                            pos,
-                           node_size=4000,
+                           node_size=node_size,
                            edgelist=eselect,
-                           edge_labels=eselect_labels,
                            width=2,
-                           with_labels=True,
                            arrows=True,
                            arrowstyle='-|>', ax=ax)
     nx.draw_networkx_edges(G,
                            pos,
-                           node_size=4000,
+                           node_size=node_size,
                            edgelist=edrift,
                            width=2,
                            alpha=0.5,
@@ -140,7 +163,7 @@ def draw_stationary_distribution(strats, drift, f, stationary, colors=None, ax=N
                            arrows=False, ax=ax)
 
     # node labels
-    nx.draw_networkx_labels(G, pos, {strat: strat[:4] for strat in strats},
+    nx.draw_networkx_labels(G, pos, {strat: strat[:max_displayed_label_letters] for strat in strategies},
                             font_size=18, font_weight='bold', font_color='black', ax=ax)
 
     # edge labels
@@ -152,6 +175,6 @@ def draw_stationary_distribution(strats, drift, f, stationary, colors=None, ax=N
             value = 0.15
         else:
             value = - 0.2
-        ax.text(x, y + value, s="{0:.2f}".format(stationary[i]), horizontalalignment='center', fontsize=12)
+        ax.text(x, y + value, s="{0:.2f}".format(stationary_distribution[i]), horizontalalignment='center', fontsize=12)
 
     return G
