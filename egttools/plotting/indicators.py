@@ -18,7 +18,7 @@ import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 
 def plot_gradient(x, gradients, saddle_points, saddle_type, gradient_direction, fig_title='', xlabel='', figsize=(5, 4),
@@ -81,7 +81,14 @@ def plot_gradient(x, gradients, saddle_points, saddle_type, gradient_direction, 
 def draw_stationary_distribution(strategies: List[str], drift: float, fixation_probabilities: np.ndarray,
                                  stationary_distribution: np.ndarray,
                                  max_displayed_label_letters: Optional[int] = 4,
+                                 min_strategy_frequency: Optional[float] = -1,
                                  node_size: Optional[int] = 4000,
+                                 font_size_node_labels: Optional[int] = 18,
+                                 font_size_edge_labels: Optional[int] = 14,
+                                 font_size_sd_labels: Optional[int] = 12,
+                                 edge_width: Optional[int] = 2,
+                                 figsize: Optional[Tuple[int, int]] = (10, 10),
+                                 dpi: Optional[int] = 150,
                                  colors: Optional[List[str]] = None,
                                  ax: Optional[plt.axis] = None) -> nx.Graph:
     """
@@ -93,13 +100,28 @@ def draw_stationary_distribution(strategies: List[str], drift: float, fixation_p
         Strategies and array of string labels for each strategy present in the population.
     drift : float
         drift = 1/pop_size
-    fixation_probabilities : np.ndarray[float, 2]
+    fixation_probabilities : numpy.ndarray[float, 2]
         A matrix specifying the fixation probabilities.
-    stationary_distribution : np.ndarray[float, 1]
+    stationary_distribution : numpy.ndarray[float, 1]
         An array containing the stationary distribution (probability of each state in the system).
     max_displayed_label_letters : int
         Maximum number of letters of the strategy labels contained in the `strategies` List to
         be displayed.
+    min_strategy_frequency: Optional[float]
+        Minimum frequency of a strategy (its probability given by the stationary distribution)
+        to be shown in the Graph.
+    font_size_node_labels : Optional[int]
+        Font size of the labels displayed inside each node.
+    font_size_edge_labels : Optional[int]
+        Font size of the labels displayed in each edge (which contain the fixation probabilities).
+    font_size_sd_labels : Optional[int]
+        Font size of the labels displayed beside each node containing the value of the stationary distribution.
+    edge_width : Optional[int]
+        Width of the edge line.
+    figsize : Optional[Tuple[int, int]]
+        Size of the default figure (Only used if ax is not specified).
+    dpi : Optional[int]
+        Pixel density of the default plot
     node_size : Optional[int]
         Size of the nodes of the Graph to be plotted
     colors : Optional[List[str]]
@@ -111,11 +133,48 @@ def draw_stationary_distribution(strategies: List[str], drift: float, fixation_p
     -------
     networkx.Graph
         The graph depicting the Markov chain which represents the invasion dynamics.
+
+    Notes
+    -----
+    If there are too many strategies, this function may not only take a lot of time to generate the Graph, but
+    it will also not be easy to visualize. Also, you should only use this function when ploting the invasion
+    diagram assuming the small mutation limit of the replication dynamics (SML).
+
+    See Also
+    --------
+    plot_gradient
+
+    Examples
+    -------
+    >>> import matplotlib.pyplot as plt
+    >>> import egttools as egt
+    >>> strategies = [egt.behaviors.Cooperator(), egt.behaviors.Defector(), egt.behaviors.TFT(),
+    ...               egt.behaviors.Pavlov(), egt.behaviors.Random(), egt.behaviors.GRIM()]
+    >>> strategy_labels = [strategy.type().replace("NFGStrategies::", '') for strategy in strategies]
+    >>> T=4; R=2; P=1; S=0; Z= 100; beta=1
+    >>> A = np.array([
+    ...     [P, T],
+    ...     [S, R]
+    ... ])
+    >>> game = egt.games.NormalFormGame(100, A, strategies)
+    >>> evolver = egt.analytical.StochDynamics(len(strategies), game.expected_payoffs(), Z)
+    >>> sd = evolver.calculate_stationary_distribution(beta)
+    >>> transitions, fixation_probabilities = evolver.transition_and_fixation_matrix(beta)
+    >>> fig, ax = plt.subplots(figsize=(5, 5), dpi=150)
+    >>> G = egt.plotting.draw_stationary_distribution(strategy_labels, 1/Z, fixation_probabilities, sd,
+    ...     node_size=2000, min_strategy_frequency=0.00001, ax=ax)
+    >>> plt.axis('off')
+    >>> plt.show() # display
     """
-    q = len(strategies)
+    used_strategies = [strategy for i, strategy in enumerate(strategies) if
+                       (stationary_distribution[i] > min_strategy_frequency)]
+
+    used_strategies_idx = np.where(stationary_distribution > min_strategy_frequency)[0]
+
+    q = len(used_strategies)
 
     G = nx.DiGraph()
-    G.add_nodes_from(strategies)
+    G.add_nodes_from(used_strategies)
     if colors is None:
         from seaborn import color_palette
         ncolors = color_palette("colorblind", q)
@@ -124,12 +183,13 @@ def draw_stationary_distribution(strategies: List[str], drift: float, fixation_p
 
     if ax is None:
         import matplotlib.pyplot as plt
-        fig, ax = plt.subplots(figsize=(10, 10), dpi=150)
+        fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
 
     for j in range(q):
         for i in range(q):
-            if fixation_probabilities[i, j] >= drift:
-                G.add_edge(strategies[i], strategies[j], weight=fixation_probabilities[i, j])
+            if fixation_probabilities[used_strategies_idx[i], used_strategies_idx[j]] >= drift:
+                G.add_edge(used_strategies[i], used_strategies[j],
+                           weight=fixation_probabilities[used_strategies_idx[i], used_strategies_idx[j]])
 
     eselect = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] > 1.0]
     eselect_labels = dict(((u, v), float("{0:.2f}".format(d['weight'])))
@@ -150,24 +210,24 @@ def draw_stationary_distribution(strategies: List[str], drift: float, fixation_p
                            pos,
                            node_size=node_size,
                            edgelist=eselect,
-                           width=2,
+                           width=edge_width,
                            arrows=True,
                            arrowstyle='-|>', ax=ax)
     nx.draw_networkx_edges(G,
                            pos,
                            node_size=node_size,
                            edgelist=edrift,
-                           width=2,
+                           width=edge_width,
                            alpha=0.5,
                            style='dashed',
                            arrows=False, ax=ax)
 
     # node labels
-    nx.draw_networkx_labels(G, pos, {strat: strat[:max_displayed_label_letters] for strat in strategies},
-                            font_size=18, font_weight='bold', font_color='black', ax=ax)
+    nx.draw_networkx_labels(G, pos, {strat: strat[:max_displayed_label_letters] for strat in used_strategies},
+                            font_size=font_size_node_labels, font_weight='bold', font_color='black', ax=ax)
 
     # edge labels
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=eselect_labels, font_size=14, ax=ax)
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=eselect_labels, font_size=font_size_edge_labels, ax=ax)
 
     for i, (key, value) in enumerate(pos.items()):
         x, y = value
@@ -175,6 +235,7 @@ def draw_stationary_distribution(strategies: List[str], drift: float, fixation_p
             value = 0.15
         else:
             value = - 0.2
-        ax.text(x, y + value, s="{0:.2f}".format(stationary_distribution[i]), horizontalalignment='center', fontsize=12)
+        ax.text(x, y + value, s="{0:.2f}".format(stationary_distribution[used_strategies_idx[i]]),
+                horizontalalignment='center', fontsize=font_size_sd_labels)
 
     return G
