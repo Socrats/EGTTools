@@ -125,7 +125,7 @@ todo_include_todos = True
 
 # enable imported members
 autosummary_imported_members = True
-
+# autosummary_implicit_namespaces = True
 # Autodoc configuration
 autodoc_member_order = 'groupwise'
 

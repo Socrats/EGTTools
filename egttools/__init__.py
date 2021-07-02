@@ -1,5 +1,5 @@
 """
-API reference documentation for the `egttools` package.
+The :mod:`egttools` package implements methods to study evolutionary dynamics.
 """
 
 from .utils import find_saddle_type_and_gradient_direction
@@ -14,3 +14,8 @@ from egttools.numerical import VERSION
 from egttools.numerical import Random
 from egttools.numerical import (sample_simplex, calculate_nb_states, calculate_state,
                                 calculate_strategies_distribution, )
+
+__all__ = ['find_saddle_type_and_gradient_direction',
+           'plotting', 'analytical',
+           'games', 'behaviors', 'numerical', '__version__', 'VERSION', 'Random',
+           'sample_simplex', 'calculate_nb_states', 'calculate_state', 'calculate_strategies_distribution']

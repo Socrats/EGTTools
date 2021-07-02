@@ -23,8 +23,24 @@ from egttools.numerical import calculate_nb_states, calculate_state, sample_simp
 from egttools.numerical.games import AbstractGame
 
 
-class PGG(AbstractGame):
+class InformalRiskGame(AbstractGame):
     def __init__(self, group_size: int, cost: float, multiplying_factor: float, strategies: List) -> None:
+        """
+        This game has been taken from the model introduced in
+
+        ```Santos, F. P., Pacheco, J. M., Santos, F. C., & Levin, S. A. (2021).
+        Dynamics of informal risk sharing in collective index insurance.
+        Nature Sustainability. https://doi.org/10.1038/s41893-020-00667-2```
+
+        to investigate the dynamics of a collective index insurance with informal risk sharing.
+
+        Parameters
+        ----------
+        group_size
+        cost
+        multiplying_factor
+        strategies
+        """
         AbstractGame.__init__(self)
         self.group_size_ = group_size
         self.c_ = cost

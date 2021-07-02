@@ -22,6 +22,7 @@ populations on 2-player games.
 """
 
 import numpy as np
+import numpy.typing as npt
 from scipy.sparse import lil_matrix
 from scipy.stats import hypergeom, multivariate_hypergeom
 from typing import Tuple, Optional
@@ -207,7 +208,7 @@ class StochDynamics:
         return fitness_i - fitness_j
 
     @staticmethod
-    def fermi(beta: float, fitness_diff: float) -> float:
+    def fermi(beta: float, fitness_diff: float) -> npt.ArrayLike:
         """
         The fermi function determines the probability that the first type imitates the second.
 
