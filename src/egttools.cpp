@@ -42,11 +42,25 @@ namespace egttools {
 
     std::unique_ptr<egttools::FinitePopulations::NormalFormGame> init_normal_form_game_from_python_list(size_t nb_rounds,
                                                                                                         const Eigen::Ref<const Matrix2D> &payoff_matrix, const py::list &strategies) {
-        egttools::FinitePopulations::StrategyVector strategies_cpp;
+        egttools::FinitePopulations::NFGStrategyVector strategies_cpp;
         for (py::handle strategy : strategies) {
             strategies_cpp.push_back(py::cast<egttools::FinitePopulations::behaviors::AbstractNFGStrategy *>(strategy));
         }
         return std::make_unique<egttools::FinitePopulations::NormalFormGame>(nb_rounds, payoff_matrix, strategies_cpp);
+    }
+
+    std::unique_ptr<egttools::FinitePopulations::CRDGame> init_crd_game_from_python_list(int endowment,
+                                                                                         int threshold,
+                                                                                         int nb_rounds,
+                                                                                         int group_size,
+                                                                                         double risk,
+                                                                                         const py::list &strategies) {
+        egttools::FinitePopulations::CRDStrategyVector strategies_cpp;
+        for (py::handle strategy : strategies) {
+            strategies_cpp.push_back(py::cast<egttools::FinitePopulations::behaviors::AbstractCRDStrategy *>(strategy));
+        }
+        return std::make_unique<egttools::FinitePopulations::CRDGame>(endowment, threshold, nb_rounds,
+                                                                      group_size, risk, strategies_cpp);
     }
 
     egttools::VectorXli sample_simplex_directly(int64_t nb_strategies, int64_t pop_size) {
@@ -170,6 +184,7 @@ PYBIND11_MODULE(numerical, m) {
     // Now we define a submodule
     auto mGames = m.def_submodule("games");
     auto mBehaviors = m.def_submodule("behaviors");
+    auto mCRD = mBehaviors.def_submodule("CRD");
     auto mNF = mBehaviors.def_submodule("NormalForm");
     auto mNFTwoActions = mNF.def_submodule("TwoActions");
     auto mData = m.def_submodule("DataStructures");
@@ -477,11 +492,8 @@ PYBIND11_MODULE(numerical, m) {
                  py::arg("payoff_matrix"))
             .def(py::init(&egttools::init_normal_form_game_from_python_list),
                  R"pbdoc(
-                    Normal Form Game. This constructor assumes that there are only two possible
-                    strategies and two possible actions.
-
-                    This method will run the game using the players and player types defined in group_composition,
-                    and will update the vector :param game_payoffs with the resulting payoff of each player.
+                    Normal Form Game. This constructor allows you to define any number of strategies
+                    by passing a list of pointers to them. All strategies must by of type AbstractNFGStrategy *.
 
                     Parameters
                     ----------
@@ -528,6 +540,92 @@ PYBIND11_MODULE(numerical, m) {
             .def("save_payoffs", &egttools::FinitePopulations::NormalFormGame::save_payoffs,
                  "Saves the payoff matrix in a txt file.");
 
+    py::class_<egttools::FinitePopulations::CRDGame, egttools::FinitePopulations::AbstractGame>(mGames, "CRDGame")
+            .def(py::init(&egttools::init_crd_game_from_python_list),
+                 R"pbdoc(
+                    Collective Risk Dilemma. This allows you to define any number of strategies by passing them
+                    as a list. All strategies must be of type AbstractCRDStrategy *.
+
+                    The CRD dilemma implemented here follows the description of:
+                    Milinski, M., Sommerfeld, R. D., Krambeck, H.-J., Reed, F. A.,
+                    & Marotzke, J. (2008). The collective-risk social dilemma and the prevention of simulated
+                    dangerous climate change. Proceedings of the National Academy of Sciences of the United States of America, 105(7),
+                    2291–2294. https://doi.org/10.1073/pnas.0709546105
+
+                    Parameters
+                    ----------
+                    endowment : int
+                        Initial endowment for all players.
+                    threshold : int
+                        Collective target that the group must reach.
+                    nb_rounds : int
+                        Number of rounds of the game.
+                    group_size : int
+                        Size of the group that will play the CRD.
+                    risk : float
+                        The probability that all members will lose their remaining endowment if the threshold is not achieved.
+                    strategies : List[egttools.numerical.behaviors.AbstractCRDStrategy]
+                        A list containing references of AbstractCRDStrategy strategies (or child classes).
+
+                    See Also
+                    --------
+                    egttools.numerical.games.AbstractGame
+                    egttools.numerical.games.NormalFormGame
+                    )pbdoc",
+                 py::arg("endowment"),
+                 py::arg("threshold"),
+                 py::arg("nb_rounds"),
+                 py::arg("group_size"),
+                 py::arg("risk"),
+                 py::arg("strategies"), py::return_value_policy::reference_internal)
+            .def("play", &egttools::FinitePopulations::CRDGame::play)
+            .def("calculate_payoffs", &egttools::FinitePopulations::CRDGame::calculate_payoffs,
+                 "updates the internal payoff and coop_level matrices by calculating the payoff of each strategy "
+                 "given any possible strategy pair")
+            .def("calculate_fitness", &egttools::FinitePopulations::CRDGame::calculate_fitness,
+                 "calculates the fitness of an individual of a given strategy given a population state."
+                 "It always assumes that the population state does not contain the current individual",
+                 py::arg("player_strategy"),
+                 py::arg("pop_size"), py::arg("population_state"))
+            .def("calculate_population_group_achievement", &egttools::FinitePopulations::CRDGame::calculate_population_group_achievement,
+                 "calculates the group achievement in the population at a given state.",
+                 py::arg("population_size"), py::arg("population_state"))
+            .def("calculate_group_achievement", &egttools::FinitePopulations::CRDGame::calculate_group_achievement,
+                 "calculates the group achievement for a given stationary distribution.",
+                 py::arg("population_size"), py::arg("stationary_distribution"))
+            .def("calculate_polarization", &egttools::FinitePopulations::CRDGame::calculate_polarization,
+                 "calculates the fraction of players that contribute above, below or equal to the fair contribution (E/2)"
+                 "in a give population state.",
+                 py::arg("population_size"), py::arg("population_state"))
+            .def("calculate_polarization_success", &egttools::FinitePopulations::CRDGame::calculate_polarization_success,
+                 "calculates the fraction of players (from successful groups)) that contribute above, below or equal to the fair contribution (E/2)"
+                 "in a give population state.",
+                 py::arg("population_size"), py::arg("population_state"))
+            .def("__str__", &egttools::FinitePopulations::CRDGame::toString)
+            .def("type", &egttools::FinitePopulations::CRDGame::type)
+            .def("payoffs", &egttools::FinitePopulations::CRDGame::payoffs, "returns the expected payoffs of each strategy vs each possible game state")
+            .def("payoff", &egttools::FinitePopulations::CRDGame::payoff,
+                 "returns the payoff of a strategy given a group composition.", py::arg("strategy"),
+                 py::arg("strategy pair"))
+            .def_property_readonly("nb_strategies", &egttools::FinitePopulations::CRDGame::nb_strategies,
+                                   "Number of different strategies which are playing the game.")
+            .def_property_readonly("endowment", &egttools::FinitePopulations::CRDGame::endowment,
+                                   "Initial endowment for all players.")
+            .def_property_readonly("target", &egttools::FinitePopulations::CRDGame::target,
+                                   "Collective target which needs to be achieved by the group.")
+            .def_property_readonly("group_size", &egttools::FinitePopulations::CRDGame::group_size,
+                                   "Size of the group which will play the game.")
+            .def_property_readonly("risk", &egttools::FinitePopulations::CRDGame::risk,
+                                   "Probability that all players will lose their remaining endowment if the target si not achieved.")
+            .def_property_readonly("nb_rounds", &egttools::FinitePopulations::CRDGame::nb_rounds,
+                                   "Number of rounds of the game.")
+            .def_property_readonly("nb_states", &egttools::FinitePopulations::CRDGame::nb_states,
+                                   "Number of combinations of 2 strategies that can be matched in the game.")
+            .def_property_readonly("strategies", &egttools::FinitePopulations::CRDGame::strategies,
+                                   "A list with pointers to the strategies that are playing the game.")
+            .def("save_payoffs", &egttools::FinitePopulations::CRDGame::save_payoffs,
+                 "Saves the payoff matrix in a txt file.");
+
     py::class_<egttools::FinitePopulations::behaviors::AbstractNFGStrategy, stubs::PyAbstractNFGStrategy>(mNF, "AbstractNFGStrategy")
             .def(py::init<>())
             .def("get_action", &egttools::FinitePopulations::behaviors::AbstractNFGStrategy::get_action,
@@ -550,15 +648,48 @@ PYBIND11_MODULE(numerical, m) {
 
                 See Also
                 --------
-                egttools.numerical.behaviors.TwoActions.Cooperator, egttools.numerical.behaviors.TwoActions.Defector,
-                egttools.numerical.behaviors.TwoActions.Random, egttools.numerical.behaviors.TwoActions.TFT,
-                egttools.numerical.behaviors.TwoActions.SuspiciousTFT, egttools.numerical.behaviors.TwoActions.GenerousTFT,
-                egttools.numerical.behaviors.TwoActions.GradualTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
-                egttools.numerical.behaviors.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
-                egttools.numerical.behaviors.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                egttools.numerical.behaviors.NormalForm.TwoActions.Cooperator, egttools.numerical.behaviors.TwoActions.Defector,
+                egttools.numerical.behaviors.NormalForm.TwoActions.Random, egttools.numerical.behaviors.TwoActions.TFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.SuspiciousTFT, egttools.numerical.behaviors.TwoActions.GenerousTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GradualTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::AbstractNFGStrategy::type, "Returns a string indicating the Strategy Type.");
+
+    py::class_<egttools::FinitePopulations::behaviors::AbstractCRDStrategy, stubs::PyAbstractCRDStrategy>(mCRD, "AbstractCRDStrategy")
+            .def(py::init<>())
+            .def("get_action", &egttools::FinitePopulations::behaviors::AbstractCRDStrategy::get_action,
+                 R"pbdoc(
+                Returns an action in function of time_step
+                round and the previous action action_prev
+                of the opponent.
+
+                Parameters
+                ----------
+                time_step : int
+                    Current round.
+                group_contributions_prev : int
+                    Sum of contributions of the other members of the group (excluding the focal player) in the previous round.
+
+                Returns
+                -------
+                int
+                    The action selected by the strategy.
+
+                See Also
+                --------
+                egttools.numerical.behaviors.CRD.CRDPlayer,
+                egttools.numerical.behaviors.NormalForm.TwoActions.Cooperator, egttools.numerical.behaviors.TwoActions.Defector,
+                egttools.numerical.behaviors.NormalForm.TwoActions.Random, egttools.numerical.behaviors.TwoActions.TFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.SuspiciousTFT, egttools.numerical.behaviors.TwoActions.GenerousTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GradualTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                )pbdoc",
+                 py::arg("time_step"), py::arg("group_contributions_prev"))
+            .def("type", &egttools::FinitePopulations::behaviors::AbstractCRDStrategy::type, "Returns a string indicating the Strategy Type.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::Cooperator,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "Cooperator")
@@ -583,12 +714,12 @@ PYBIND11_MODULE(numerical, m) {
 
                 See Also
                 --------
-                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Defector,
-                egttools.numerical.behaviors.TwoActions.Random, egttools.numerical.behaviors.TwoActions.TFT,
-                egttools.numerical.behaviors.TwoActions.SuspiciousTFT, egttools.numerical.behaviors.TwoActions.GenerousTFT,
-                egttools.numerical.behaviors.TwoActions.GradualTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
-                egttools.numerical.behaviors.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
-                egttools.numerical.behaviors.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                egttools.numerical.behaviors.NormalForm.AbstractGame, egttools.numerical.behaviors.TwoActions.Defector,
+                egttools.numerical.behaviors.NormalForm.TwoActions.Random, egttools.numerical.behaviors.TwoActions.TFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.SuspiciousTFT, egttools.numerical.behaviors.TwoActions.GenerousTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GradualTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::Cooperator::type, "Returns a string indicating the Strategy Type.");
@@ -616,12 +747,12 @@ PYBIND11_MODULE(numerical, m) {
 
                 See Also
                 --------
-                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
-                egttools.numerical.behaviors.TwoActions.Random, egttools.numerical.behaviors.TwoActions.TFT,
-                egttools.numerical.behaviors.TwoActions.SuspiciousTFT, egttools.numerical.behaviors.TwoActions.GenerousTFT,
-                egttools.numerical.behaviors.TwoActions.GradualTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
-                egttools.numerical.behaviors.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
-                egttools.numerical.behaviors.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                egttools.numerical.behaviors.NormalForm.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
+                egttools.numerical.behaviors.NormalForm.TwoActions.Random, egttools.numerical.behaviors.TwoActions.TFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.SuspiciousTFT, egttools.numerical.behaviors.TwoActions.GenerousTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GradualTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::Defector::type, "Returns a string indicating the Strategy Type.");
@@ -649,12 +780,12 @@ PYBIND11_MODULE(numerical, m) {
 
                 See Also
                 --------
-                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
-                egttools.numerical.behaviors.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.TFT,
-                egttools.numerical.behaviors.TwoActions.SuspiciousTFT, egttools.numerical.behaviors.TwoActions.GenerousTFT,
-                egttools.numerical.behaviors.TwoActions.GradualTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
-                egttools.numerical.behaviors.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
-                egttools.numerical.behaviors.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                egttools.numerical.behaviors.NormalForm.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
+                egttools.numerical.behaviors.NormalForm.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.TFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.SuspiciousTFT, egttools.numerical.behaviors.TwoActions.GenerousTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GradualTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::RandomPlayer::type, "Returns a string indicating the Strategy Type.");
@@ -682,12 +813,12 @@ PYBIND11_MODULE(numerical, m) {
 
                 See Also
                 --------
-                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
-                egttools.numerical.behaviors.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
-                egttools.numerical.behaviors.TwoActions.SuspiciousTFT, egttools.numerical.behaviors.TwoActions.GenerousTFT,
-                egttools.numerical.behaviors.TwoActions.GradualTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
-                egttools.numerical.behaviors.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
-                egttools.numerical.behaviors.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                egttools.numerical.behaviors.NormalForm.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
+                egttools.numerical.behaviors.NormalForm.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
+                egttools.numerical.behaviors.NormalForm.TwoActions.SuspiciousTFT, egttools.numerical.behaviors.TwoActions.GenerousTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GradualTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::TitForTat::type, "Returns a string indicating the Strategy Type.");
@@ -715,12 +846,12 @@ PYBIND11_MODULE(numerical, m) {
 
                 See Also
                 --------
-                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
-                egttools.numerical.behaviors.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
-                egttools.numerical.behaviors.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.GenerousTFT,
-                egttools.numerical.behaviors.TwoActions.GradualTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
-                egttools.numerical.behaviors.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
-                egttools.numerical.behaviors.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                egttools.numerical.behaviors.NormalForm.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
+                egttools.numerical.behaviors.NormalForm.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
+                egttools.numerical.behaviors.NormalForm.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.GenerousTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GradualTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::SuspiciousTFT::type, "Returns a string indicating the Strategy Type.");
@@ -755,12 +886,12 @@ PYBIND11_MODULE(numerical, m) {
 
                 See Also
                 --------
-                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
-                egttools.numerical.behaviors.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
-                egttools.numerical.behaviors.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.SuspiciousTFT,
-                egttools.numerical.behaviors.TwoActions.GradualTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
-                egttools.numerical.behaviors.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
-                egttools.numerical.behaviors.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                egttools.numerical.behaviors.NormalForm.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
+                egttools.numerical.behaviors.NormalForm.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
+                egttools.numerical.behaviors.NormalForm.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.SuspiciousTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GradualTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::GenerousTFT::type, "Returns a string indicating the Strategy Type.");
@@ -793,12 +924,12 @@ PYBIND11_MODULE(numerical, m) {
 
                 See Also
                 --------
-                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
-                egttools.numerical.behaviors.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
-                egttools.numerical.behaviors.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.SuspiciousTFT,
-                egttools.numerical.behaviors.TwoActions.GenerousTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
-                egttools.numerical.behaviors.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
-                egttools.numerical.behaviors.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                egttools.numerical.behaviors.NormalForm.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
+                egttools.numerical.behaviors.NormalForm.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
+                egttools.numerical.behaviors.NormalForm.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.SuspiciousTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GenerousTFT, egttools.numerical.behaviors.TwoActions.ImperfectTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::GradualTFT::type, "Returns a string indicating the Strategy Type.");
@@ -829,12 +960,12 @@ PYBIND11_MODULE(numerical, m) {
 
                 See Also
                 --------
-                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
-                egttools.numerical.behaviors.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
-                egttools.numerical.behaviors.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.SuspiciousTFT,
-                egttools.numerical.behaviors.TwoActions.GenerousTFT, egttools.numerical.behaviors.TwoActions.GradualTFT,
-                egttools.numerical.behaviors.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
-                egttools.numerical.behaviors.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                egttools.numerical.behaviors.NormalForm.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
+                egttools.numerical.behaviors.NormalForm.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
+                egttools.numerical.behaviors.NormalForm.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.SuspiciousTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GenerousTFT, egttools.numerical.behaviors.TwoActions.GradualTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.TTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::ImperfectTFT::type, "Returns a string indicating the Strategy Type.");
@@ -862,12 +993,12 @@ PYBIND11_MODULE(numerical, m) {
 
                 See Also
                 --------
-                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
-                egttools.numerical.behaviors.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
-                egttools.numerical.behaviors.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.SuspiciousTFT,
-                egttools.numerical.behaviors.TwoActions.GenerousTFT, egttools.numerical.behaviors.TwoActions.GradualTFT,
-                egttools.numerical.behaviors.TwoActions.ImperfectTFT, egttools.numerical.behaviors.TwoActions.TTFT,
-                egttools.numerical.behaviors.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                egttools.numerical.behaviors.NormalForm.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
+                egttools.numerical.behaviors.NormalForm.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
+                egttools.numerical.behaviors.NormalForm.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.SuspiciousTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GenerousTFT, egttools.numerical.behaviors.TwoActions.GradualTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.ImperfectTFT, egttools.numerical.behaviors.TwoActions.TTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::TFTT::type, "Returns a string indicating the Strategy Type.");
@@ -895,12 +1026,12 @@ PYBIND11_MODULE(numerical, m) {
 
                 See Also
                 --------
-                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
-                egttools.numerical.behaviors.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
-                egttools.numerical.behaviors.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.SuspiciousTFT,
-                egttools.numerical.behaviors.TwoActions.GenerousTFT, egttools.numerical.behaviors.TwoActions.GradualTFT,
-                egttools.numerical.behaviors.TwoActions.ImperfectTFT, egttools.numerical.behaviors.TwoActions.TFTT,
-                egttools.numerical.behaviors.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
+                egttools.numerical.behaviors.NormalForm.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
+                egttools.numerical.behaviors.NormalForm.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
+                egttools.numerical.behaviors.NormalForm.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.SuspiciousTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GenerousTFT, egttools.numerical.behaviors.TwoActions.GradualTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.ImperfectTFT, egttools.numerical.behaviors.TwoActions.TFTT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GRIM, egttools.numerical.behaviors.TwoActions.Pavlov
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::TTFT::type, "Returns a string indicating the Strategy Type.");
@@ -930,12 +1061,12 @@ PYBIND11_MODULE(numerical, m) {
 
                 See Also
                 --------
-                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
-                egttools.numerical.behaviors.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
-                egttools.numerical.behaviors.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.SuspiciousTFT,
-                egttools.numerical.behaviors.TwoActions.GenerousTFT, egttools.numerical.behaviors.TwoActions.GradualTFT,
-                egttools.numerical.behaviors.TwoActions.ImperfectTFT, egttools.numerical.behaviors.TwoActions.TFTT,
-                egttools.numerical.behaviors.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.Pavlov
+                egttools.numerical.behaviors.NormalForm.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
+                egttools.numerical.behaviors.NormalForm.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
+                egttools.numerical.behaviors.NormalForm.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.SuspiciousTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GenerousTFT, egttools.numerical.behaviors.TwoActions.GradualTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.ImperfectTFT, egttools.numerical.behaviors.TwoActions.TFTT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.Pavlov
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::GRIM::type, "Returns a string indicating the Strategy Type.");
@@ -965,15 +1096,80 @@ PYBIND11_MODULE(numerical, m) {
 
                 See Also
                 --------
-                egttools.numerical.behaviors.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
-                egttools.numerical.behaviors.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
-                egttools.numerical.behaviors.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.SuspiciousTFT,
-                egttools.numerical.behaviors.TwoActions.GenerousTFT, egttools.numerical.behaviors.TwoActions.GradualTFT,
-                egttools.numerical.behaviors.TwoActions.ImperfectTFT, egttools.numerical.behaviors.TwoActions.TFTT,
-                egttools.numerical.behaviors.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.GRIM
+                egttools.numerical.behaviors.NormalForm.AbstractGame, egttools.numerical.behaviors.TwoActions.Cooperator,
+                egttools.numerical.behaviors.NormalForm.TwoActions.Defector, egttools.numerical.behaviors.TwoActions.Random,
+                egttools.numerical.behaviors.NormalForm.TwoActions.TFT, egttools.numerical.behaviors.TwoActions.SuspiciousTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GenerousTFT, egttools.numerical.behaviors.TwoActions.GradualTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.ImperfectTFT, egttools.numerical.behaviors.TwoActions.TFTT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.TFTT, egttools.numerical.behaviors.TwoActions.GRIM
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::Pavlov::type, "Returns a string indicating the Strategy Type.");
+
+    py::class_<egttools::FinitePopulations::behaviors::CRD::CRDMemoryOnePlayer,
+               egttools::FinitePopulations::behaviors::AbstractCRDStrategy>(mCRD, "CRDMemoryOnePlayer")
+            .def(py::init<int, int, int, int, int>(),
+                 R"pbdoc(
+                This strategy contributes in function of the contributions of the rest
+                of the group in the previous round.
+
+                This strategy contributes @param initial_action in the first round of the game,
+                afterwards compares the sum of contributions of the other members of the group
+                in the previous round (a_{-i}(t-1)) to a :param personal_threshold. If the
+                a_{-i}(t-1)) > personal_threshold the agent contributions :param action_above,
+                if a_{-i}(t-1)) = personal_threshold it contributes :param action_equal
+                or if a_{-i}(t-1)) < personal_threshold it contributes :param action_below.
+
+                Parameters
+                ----------
+                personal_threshold : int
+                    threshold value compared to the contributions of the other members of the group
+                initial_action : int
+                    Contribution in the first round
+                action_above : int
+                    contribution if a_{-i}(t-1)) > personal_threshold
+                action_equal : int
+                    contribution if a_{-i}(t-1)) = personal_threshold
+                action_below : int
+                    contribution if a_{-i}(t-1)) < personal_threshold
+
+                See Also
+                --------
+                egttools.numerical.behaviors.CRD.AbstractGame,
+                )pbdoc",
+                 py::arg("personal_threshold"), py::arg("initial_action"),
+                 py::arg("action_above"), py::arg("action_equal"), py::arg("action_below"))
+            .def("get_action", &egttools::FinitePopulations::behaviors::CRD::CRDMemoryOnePlayer::get_action,
+                 R"pbdoc(
+                Returns an action in function of time_step
+                round and the previous action action_prev
+                of the opponent.
+
+                Parameters
+                ----------
+                time_step : int
+                    Current round.
+                group_contributions_prev : int
+                    Sum of contributions of the other members of the group (without
+                    the focal player) in the previous round.
+
+                Returns
+                -------
+                int
+                    The action selected by the strategy.
+
+                See Also
+                --------
+                egttools.numerical.behaviors.CRD.AbstractGame,
+                egttools.numerical.behaviors.NormalForm.AbstractGame, egttools.numerical.behaviors.NormalForm.TwoActions.Cooperator,
+                egttools.numerical.behaviors.NormalForm.TwoActions.Defector, egttools.numerical.behaviors.NormalForm.TwoActions.Random,
+                egttools.numerical.behaviors.NormalForm.TwoActions.TFT, egttools.numerical.behaviors.NormalForm.TwoActions.SuspiciousTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.GenerousTFT, egttools.numerical.behaviors.NormalForm.TwoActions.GradualTFT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.ImperfectTFT, egttools.numerical.behaviors.NormalForm.TwoActions.TFTT,
+                egttools.numerical.behaviors.NormalForm.TwoActions.TFTT, egttools.numerical.behaviors.NormalForm.TwoActions.GRIM
+                )pbdoc",
+                 py::arg("time_step"), py::arg("group_contributions_prev"))
+            .def("type", &egttools::FinitePopulations::behaviors::CRD::CRDMemoryOnePlayer::type, "Returns a string indicating the Strategy Type.");
 
     py::class_<PairwiseComparison>(m, "PairwiseMoran")
             .def(py::init<size_t, egttools::FinitePopulations::AbstractGame &, size_t>(),

@@ -18,6 +18,7 @@
 
 #include <egttools/Types.h>
 
+#include <egttools/finite_populations/behaviors/AbstractCRDStrategy.hpp>
 #include <egttools/finite_populations/behaviors/AbstractNFGStrategy.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 
@@ -146,6 +147,32 @@ namespace stubs {
             PYBIND11_OVERRIDE_PURE(
                     std::string,                                                 /* Return type */
                     egttools::FinitePopulations::behaviors::AbstractNFGStrategy, /* Parent class */
+                    type                                                         /* Name of function in C++ (must match Python name) */
+                                                                                 /* Argument(s) */
+            );
+        }
+    };
+
+    class PyAbstractCRDStrategy : public egttools::FinitePopulations::behaviors::AbstractCRDStrategy {
+    public:
+        /* Inherit the constructors */
+        using egttools::FinitePopulations::behaviors::AbstractCRDStrategy::AbstractCRDStrategy;
+
+        /* Trampoline (need one for each virtual function) */
+        int get_action(size_t time_step, int action_prev) override {
+            PYBIND11_OVERRIDE_PURE(
+                    int,                                                         /* Return type */
+                    egttools::FinitePopulations::behaviors::AbstractCRDStrategy, /* Parent class */
+                    get_action,                                                  /* Name of function in C++ (must match Python name) */
+                    time_step, action_prev                                       /* Argument(s) */
+            );
+        }
+
+        /* Trampoline (need one for each virtual function) */
+        std::string type() override {
+            PYBIND11_OVERRIDE_PURE(
+                    std::string,                                                 /* Return type */
+                    egttools::FinitePopulations::behaviors::AbstractCRDStrategy, /* Parent class */
                     type                                                         /* Name of function in C++ (must match Python name) */
                                                                                  /* Argument(s) */
             );

@@ -26,7 +26,7 @@
 #include <random>
 
 // Many of the strategies defined here have been extracted from https://plato.stanford.edu/entries/prisoner-dilemma/strategy-table.html
-
+// TODO: Reformat all namespaces: here change to behaviors::NormalForm::twoActions
 namespace egttools::FinitePopulations::behaviors::twoActions {
     /**
      * Always cooperates

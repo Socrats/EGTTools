@@ -5,16 +5,18 @@
 #ifndef EGTTOOLS_FINITEPOPULATIONS_GAMES_CRDGAME_HPP
 #define EGTTOOLS_FINITEPOPULATIONS_GAMES_CRDGAME_HPP
 
-#include <cassert>
-#include <fstream>
 #include <egttools/Distributions.h>
-#include <egttools/finite_populations/games/AbstractGame.hpp>
-#include <egttools/finite_populations/behaviors/CrdBehaviors.hpp>
-#include <egttools/OpenMPUtils.hpp>
+#include <egttools/finite_populations/behaviors/CRDStrategies.h>
 
-namespace egttools::FinitePopulations::games {
+#include <cassert>
+#include <egttools/OpenMPUtils.hpp>
+#include <egttools/finite_populations/games/AbstractGame.hpp>
+#include <fstream>
+
+namespace egttools::FinitePopulations {
     using PayoffVector = std::vector<double>;
-    using RandomDist = std::uniform_real_distribution<double>;
+    using AbstractCRDStrategy = egttools::FinitePopulations::behaviors::AbstractCRDStrategy;
+    using CRDStrategyVector = std::vector<AbstractCRDStrategy *>;
 
     class CRDGame final : public egttools::FinitePopulations::AbstractGame {
     public:
@@ -25,26 +27,12 @@ namespace egttools::FinitePopulations::games {
          * @param nb_rounds : number of rounds of the game
          * @param group_size : number of players in the group
          * @param risk : probability that all players will lose their endowment if the target isn't reached
+         * @param strategies : vector containing pointers to the strategies that will play the game
          */
-        CRDGame(size_t endowment, size_t threshold, size_t nb_rounds, size_t group_size, double risk);
+        CRDGame(int endowment, int threshold, int nb_rounds, int group_size, double risk, const CRDStrategyVector &strategies);
 
-        void play(const EGTTools::SED::StrategyCounts &group_composition,
+        void play(const egttools::FinitePopulations::StrategyCounts &group_composition,
                   PayoffVector &game_payoffs) override;
-
-        /**
-         * @brief Gets an action from the strategy defined by player type.
-         *
-         * This method will call one of the behaviors specified in CrdBehaviors.hpp indexed by
-         * @param player_type with the parameters @param prev_donation, threshold, current_round.
-         *
-         * @param player_type : type of strategy (as an unsigned integer).
-         * @param prev_donation : previous donation of the group.
-         * @param threshold : Aspiration level of the strategy.
-         * @param current_round : current round of the game
-         * @return action of the strategy
-         */
-        static inline size_t get_action(const size_t &player_type, const size_t &prev_donation, const size_t &threshold,
-                                        const size_t &current_round);
 
         /**
          * @brief updates private payoff matrix and returns it
@@ -153,7 +141,7 @@ namespace egttools::FinitePopulations::games {
 
         [[nodiscard]] const GroupPayoffs &payoffs() const override;
 
-        [[nodiscard]] double payoff(size_t strategy, const EGTTools::SED::StrategyCounts &group_composition) const override;
+        [[nodiscard]] double payoff(size_t strategy, const egttools::FinitePopulations::StrategyCounts &group_composition) const override;
 
         void save_payoffs(std::string file_name) const override;
 
@@ -161,18 +149,17 @@ namespace egttools::FinitePopulations::games {
 
         [[nodiscard]] const MatrixXui2D &contribution_behaviors() const;
 
+        [[nodiscard]] const CRDStrategyVector &strategies() const;
+
     protected:
-        size_t endowment_, threshold_, nb_rounds_, group_size_, nb_strategies_, nb_states_;
+        int endowment_, threshold_, nb_rounds_, group_size_, nb_strategies_;
+        int64_t nb_states_;
         double risk_;
-        GroupPayoffs payoffs_;
+        GroupPayoffs expected_payoffs_;
         Vector group_achievement_;
         MatrixXui2D c_behaviors_;
 
-        // Random distributions
-        std::uniform_real_distribution<double> real_rand_;
-
-        // Random generators
-        std::mt19937_64 generator_{EGTTools::Random::SeedGenerator::getInstance().getSeed()};
+        CRDStrategyVector strategies_;
 
         /**
          * @brief Check if game is successful and update state in group_achievement_
@@ -185,11 +172,8 @@ namespace egttools::FinitePopulations::games {
          * @param group_composition : composition of the group
          */
         void _check_success(size_t state, PayoffVector &game_payoffs,
-                            const EGTTools::SED::StrategyCounts &group_composition);
+                            const egttools::FinitePopulations::StrategyCounts &group_composition);
     };
-}
+}// namespace egttools::FinitePopulations
 
-#endif //EGTTOOLS_FINITEPOPULATIONS_GAMES_CRDGAME_HPP
-
-
-#endif//EGTTOOLS_CRDGAME_HPP
+#endif//EGTTOOLS_FINITEPOPULATIONS_GAMES_CRDGAME_HPP

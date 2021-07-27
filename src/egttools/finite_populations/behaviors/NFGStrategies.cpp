@@ -173,7 +173,7 @@ std::string egttools::FinitePopulations::behaviors::twoActions::GRIM::type() {
 size_t egttools::FinitePopulations::behaviors::twoActions::Pavlov::get_action(size_t time_step, size_t action_prev) {
     if ((time_step == 0) || (action_prev == action_memory_)) {
         action_memory_ = COOPERATE;
-    }  else {
+    } else {
         action_memory_ = DEFECT;
     }
     return action_memory_;

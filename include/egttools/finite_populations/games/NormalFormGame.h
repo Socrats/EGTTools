@@ -33,7 +33,7 @@
 namespace egttools::FinitePopulations {
     using PayoffVector = std::vector<double>;
     using AbstractNFGStrategy = egttools::FinitePopulations::behaviors::AbstractNFGStrategy;
-    using StrategyVector = std::vector<AbstractNFGStrategy *>;
+    using NFGStrategyVector = std::vector<AbstractNFGStrategy *>;
 
     class NormalFormGame final : public egttools::FinitePopulations::AbstractGame {
     public:
@@ -60,7 +60,7 @@ namespace egttools::FinitePopulations {
         */
         NormalFormGame(size_t nb_rounds, const Eigen::Ref<const Matrix2D> &payoff_matrix);
 
-        NormalFormGame(size_t nb_rounds, const Eigen::Ref<const Matrix2D> &payoff_matrix, const StrategyVector &strategies);
+        NormalFormGame(size_t nb_rounds, const Eigen::Ref<const Matrix2D> &payoff_matrix, const NFGStrategyVector &strategies);
 
         //        NormalFormGame(size_t nb_rounds, const Eigen::Ref<const Matrix2D> &payoff_matrix, const std::vector<std::string> strategies);
 
@@ -108,7 +108,7 @@ namespace egttools::FinitePopulations {
         [[nodiscard]] const GroupPayoffs &payoffs() const override;
         [[nodiscard]] const Matrix2D &expected_payoffs() const;
         [[nodiscard]] double payoff(size_t strategy, const egttools::FinitePopulations::StrategyCounts &group_composition) const override;
-        [[nodiscard]] const StrategyVector &strategies() const;
+        [[nodiscard]] const NFGStrategyVector &strategies() const;
         void save_payoffs(std::string file_name) const override;
 
         // setters
@@ -116,7 +116,7 @@ namespace egttools::FinitePopulations {
     protected:
         size_t nb_rounds_, nb_strategies_, nb_states_;
         Matrix2D payoffs_, expected_payoffs_, coop_level_;
-        StrategyVector strategies_;
+        NFGStrategyVector strategies_;
 
         /**
         * @brief updates the expected_payoffs_ and coop_level_ matrices for the strategies indicates

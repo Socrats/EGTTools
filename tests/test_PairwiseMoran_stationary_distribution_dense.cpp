@@ -18,7 +18,7 @@ int main() {
 
     // First we define a vector of possible behaviors
 
-    egttools::FinitePopulations::StrategyVector strategies;
+    egttools::FinitePopulations::NFGStrategyVector strategies;
     size_t pop_size = 100;
     size_t nb_rounds = 1;
     egttools::Matrix2D payoff_matrix(2, 2);

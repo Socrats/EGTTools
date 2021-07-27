@@ -39,18 +39,17 @@ egttools::FinitePopulations::NormalFormGame::NormalFormGame(size_t nb_rounds,
     coop_level_(0, 1) = 0;
     coop_level_(1, 0) = 1;
     coop_level_(1, 1) = 1;
-    strategies_ = egttools::FinitePopulations::StrategyVector();
+    strategies_ = egttools::FinitePopulations::NFGStrategyVector();
 }
 
 egttools::FinitePopulations::NormalFormGame::NormalFormGame(size_t nb_rounds,
                                                             const Eigen::Ref<const Matrix2D> &payoff_matrix,
-                                                            const egttools::FinitePopulations::StrategyVector& strategies)
+                                                            const egttools::FinitePopulations::NFGStrategyVector & strategies)
     : nb_rounds_(nb_rounds),
       payoffs_(payoff_matrix),
       strategies_(strategies) {
 
     // First we check how many strategies will be in the game
-    // We consider only 2 for now (Cooperate and Defect)
     nb_strategies_ = strategies.size();
     // nb_states_ will give the amount of game combinations (between) strategies that can happen
     // The first argument represents the pairwise interactions
@@ -182,7 +181,7 @@ double egttools::FinitePopulations::NormalFormGame::payoff(size_t strategy,
     return expected_payoffs_(group_composition[0], group_composition[1]);
 }
 
-const egttools::FinitePopulations::StrategyVector &egttools::FinitePopulations::NormalFormGame::strategies() const {
+const egttools::FinitePopulations::NFGStrategyVector &egttools::FinitePopulations::NormalFormGame::strategies() const {
     return strategies_;
 }
 

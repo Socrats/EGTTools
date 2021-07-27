@@ -7,8 +7,9 @@
 
 #include <egttools/Distributions.h>
 #include <egttools/SeedGenerator.h>
-#include <egttools/utils/CalculateExpectedIndicators.h>
+#include <egttools/finite_populations/behaviors/CRDStrategies.h>
 #include <egttools/finite_populations/games/NormalFormGame.h>
+#include <egttools/utils/CalculateExpectedIndicators.h>
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -16,8 +17,11 @@
 #include <egttools/Data.hpp>
 #include <egttools/LruCache.hpp>
 #include <egttools/finite_populations/PairwiseMoran.hpp>
+#include <egttools/finite_populations/behaviors/AbstractCRDStrategy.hpp>
+#include <egttools/finite_populations/behaviors/AbstractNFGStrategy.hpp>
 #include <egttools/finite_populations/behaviors/NFGStrategies.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
+#include <egttools/finite_populations/games/CRDGame.hpp>
 
 #include "python_stubs.hpp"
 
