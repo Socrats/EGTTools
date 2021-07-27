@@ -1,7 +1,7 @@
 import numpy as np
 
 from egttools.games import PGG
-from egttools.behaviors import player_factory
+from egttools.behaviors.pgg_behaviors import player_factory
 
 
 def test_extend_abstract_game() -> None:

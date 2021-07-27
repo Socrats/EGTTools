@@ -15,8 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
-import pytest
-
 import egttools
 
 
@@ -42,7 +40,3 @@ def test_normal_form_game():
 
 def test_abstract_nfg_strategy():
     assert egttools.numerical.behaviors.NormalForm.AbstractNFGStrategy == egttools.behaviors.NormalForm.AbstractNFGStrategy
-
-
-def test_two_action_strategies():
-    assert egttools.numerical.behaviors.NormalForm.TwoActions == egttools.behaviors.NormalForm.TwoActions
