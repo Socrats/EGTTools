@@ -49,7 +49,7 @@ void egttools::FinitePopulations::CRDGame::play(const egttools::FinitePopulation
     for (int i = 0; i < nb_rounds_; ++i) {
         for (int j = 0; j < nb_strategies_; ++j) {
             if (group_composition[j] > 0) {
-                actions(j) = strategies_[group_composition[j]]->get_action(i, prev_donation - actions(j));
+                actions(j) = strategies_[j]->get_action(i, prev_donation - actions(j));
                 if (game_payoffs[j] >= actions(j)) {
                     game_payoffs[j] -= actions(j);
                     current_donation += static_cast<int>(group_composition[j]) * actions(j);
@@ -184,7 +184,7 @@ void egttools::FinitePopulations::CRDGame::_check_success(size_t state, PayoffVe
     for (int i = 0; i < nb_rounds_; ++i) {
         for (int j = 0; j < nb_strategies_; ++j) {
             if (group_composition[j] > 0) {
-                actions(j) = strategies_[group_composition[j]]->get_action(i, prev_donation - actions(j));
+                actions(j) = strategies_[j]->get_action(i, prev_donation - actions(j));
                 if (game_payoffs[j] >= actions(j)) {
                     game_payoffs[j] -= actions(j);
                     current_donation += static_cast<int>(group_composition[j]) * actions(j);

@@ -27,7 +27,7 @@
 
 namespace egttools::FinitePopulations::behaviors::CRD {
 
-    class CRDMemoryOnePlayer : public AbstractCRDStrategy {
+    class CRDMemoryOnePlayer final : public AbstractCRDStrategy {
     public:
         /**
          * @brief This strategy contributes in function of the contributions of the rest

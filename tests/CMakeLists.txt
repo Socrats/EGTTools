@@ -28,7 +28,9 @@ add_library(egttoolsNumerical
         ../src/egttools/utils/CalculateExpectedIndicators.cpp
         ../src/egttools/finite_populations/Utils.cpp
         ../src/egttools/finite_populations/games/NormalFormGame.cpp
+        ../src/egttools/finite_populations/games/CRDGame.cpp
         ../src/egttools/finite_populations/behaviors/NFGStrategies.cpp
+        ../src/egttools/finite_populations/behaviors/CRDStrategies.cpp
         )
 
 set_target_properties(egttoolsNumerical PROPERTIES
@@ -64,3 +66,6 @@ add_executable(testEigenSparseMatrix test_eigen_sparse_matrix.cpp)
 
 add_executable(testOrderedSamplingWithoutReplacement test_ordered_sampling_without_replacement.cpp)
 target_link_libraries(testOrderedSamplingWithoutReplacement egttoolsNumerical)
+
+add_executable(testCRDGame test_crd_game.cpp)
+target_link_libraries(testCRDGame egttoolsNumerical)
