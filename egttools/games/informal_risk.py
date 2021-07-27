@@ -19,8 +19,8 @@ from typing import List
 import numpy as np
 from scipy.stats import multivariate_hypergeom
 
-from egttools.numerical import calculate_nb_states, calculate_state, sample_simplex
-from egttools.numerical.games import AbstractGame
+from egttools import calculate_nb_states, calculate_state, sample_simplex
+from egttools.games import AbstractGame
 
 
 class InformalRiskGame(AbstractGame):
@@ -158,3 +158,6 @@ class InformalRiskGame(AbstractGame):
             f.write(f'group_size = {self.group_size_}\n')
             f.write(f'cost = {self.c_}\n')
             f.write(f'multiplying_factor = {self.r_}\n')
+
+
+__all__ = ['InformalRiskGame']
