@@ -23,7 +23,10 @@
 #include <egttools/Types.h>
 
 #include <egttools/finite_populations/behaviors/AbstractCRDStrategy.hpp>
+#include <iostream>
 #include <random>
+#include <sstream>
+
 
 namespace egttools::FinitePopulations::behaviors::CRD {
 
@@ -51,6 +54,7 @@ namespace egttools::FinitePopulations::behaviors::CRD {
 
         int get_action(size_t time_step, int group_contributions_prev) final;
         std::string type() final;
+        [[nodiscard]] std::string toString() const;
 
         int personal_threshold_;
         int initial_action_;

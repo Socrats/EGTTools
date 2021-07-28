@@ -41,5 +41,11 @@ int egttools::FinitePopulations::behaviors::CRD::CRDMemoryOnePlayer::get_action(
     }
 }
 std::string egttools::FinitePopulations::behaviors::CRD::CRDMemoryOnePlayer::type() {
-    return "CRDStrategies::CRDPlayer";
+    return toString();
+}
+std::string egttools::FinitePopulations::behaviors::CRD::CRDMemoryOnePlayer::toString() const {
+    std::stringstream ss;
+    ss << "CRDStrategies::CRDPlayer(" << personal_threshold_ << "," << initial_action_ << ","
+            << action_above_ << "," << action_equal_ << "," << action_below_ << ")";
+    return  ss.str();
 }

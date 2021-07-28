@@ -1163,7 +1163,8 @@ PYBIND11_MODULE(numerical, m) {
                 egttools.behaviors.NormalForm.TwoActions.TFTT, egttools.behaviors.NormalForm.TwoActions.GRIM
                 )pbdoc",
                  py::arg("time_step"), py::arg("group_contributions_prev"))
-            .def("type", &egttools::FinitePopulations::behaviors::CRD::CRDMemoryOnePlayer::type, "Returns a string indicating the Strategy Type.");
+            .def("type", &egttools::FinitePopulations::behaviors::CRD::CRDMemoryOnePlayer::type, "Returns a string indicating the Strategy Type.")
+            .def("__str__", &egttools::FinitePopulations::behaviors::CRD::CRDMemoryOnePlayer::toString);
 
     py::class_<PairwiseComparison>(m, "PairwiseMoran")
             .def(py::init<size_t, egttools::FinitePopulations::AbstractGame &, size_t>(),
