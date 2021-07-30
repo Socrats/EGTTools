@@ -47,6 +47,12 @@ namespace egttools::FinitePopulations::behaviors {
          * (e.g. StrategyType::Cooperator)
          */
         virtual std::string type() = 0;
+
+        /**
+         *
+         * @return bool Property indicating whether the strategy is stochastic.
+         */
+        virtual bool isStochastic() = 0;
     };
 }// namespace egttools::FinitePopulations::behaviors
 

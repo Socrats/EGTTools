@@ -206,30 +206,50 @@ void egttools::FinitePopulations::NormalFormGame::_update_cooperation_and_payoff
     // Initialize payoffs
     size_t coop1 = 0, coop2 = 0;
     size_t action1, action1_prev = 0, action2 = 0;
+    int div;
+
+    // Check if any of the strategies is stochastic, in which case repeat the loop 10000 times (for good statistics)
+    bool is_stochastic = strategies_[s1]->isStochastic() || strategies_[s2]->isStochastic();
 
     // This should be repeated many times if the strategies are stochastic
     // First we play the game
-    for (size_t i = 0; i < nb_rounds_; ++i) {
-        // For now since we will consider only C and D as strategies, we will pre-calculate all actions since they
-        // correspond with the strategies
-        action1 = strategies_[s1]->get_action(i, action2);
-        action2 = strategies_[s2]->get_action(i, action1_prev);
-        action1_prev = action1;
-        expected_payoffs_(s1, s2) += payoffs_(action1, action2);
-        coop1 += action1;
-        if (s1 != s2) {
-            expected_payoffs_(s2, s1) += payoffs_(action2, action1);
-            coop2 += action2;
+    if (is_stochastic) {
+        div = static_cast<int>(nb_rounds_) * 10000;
+        for (int j=0; j < 10000; ++j) {
+            for (size_t i = 0; i < nb_rounds_; ++i) {
+                action1 = strategies_[s1]->get_action(i, action2);
+                action2 = strategies_[s2]->get_action(i, action1_prev);
+                action1_prev = action1;
+                expected_payoffs_(s1, s2) += payoffs_(action1, action2);
+                coop1 += action1;
+                if (s1 != s2) {
+                    expected_payoffs_(s2, s1) += payoffs_(action2, action1);
+                    coop2 += action2;
+                }
+            }
+        }
+    } else {
+        div = static_cast<int>(nb_rounds_);
+        for (size_t i = 0; i < nb_rounds_; ++i) {
+            action1 = strategies_[s1]->get_action(i, action2);
+            action2 = strategies_[s2]->get_action(i, action1_prev);
+            action1_prev = action1;
+            expected_payoffs_(s1, s2) += payoffs_(action1, action2);
+            coop1 += action1;
+            if (s1 != s2) {
+                expected_payoffs_(s2, s1) += payoffs_(action2, action1);
+                coop2 += action2;
+            }
         }
     }
 
     if (s1 == s2) {
-        expected_payoffs_(s1, s1) /= nb_rounds_;
-        coop_level_(s1, s1) /= nb_rounds_;
+        expected_payoffs_(s1, s1) /= div;
+        coop_level_(s1, s1) /= div;
     } else {
-        expected_payoffs_(s1, s2) /= nb_rounds_;
-        expected_payoffs_(s2, s1) /= nb_rounds_;
-        coop_level_(s1, s2) = static_cast<double>(coop1) / nb_rounds_;
-        coop_level_(s2, s1) = static_cast<double>(coop2) / nb_rounds_;
+        expected_payoffs_(s1, s2) /= div;
+        expected_payoffs_(s2, s1) /= div;
+        coop_level_(s1, s2) = static_cast<double>(coop1) / div;
+        coop_level_(s2, s1) = static_cast<double>(coop2) / div;
     }
 }

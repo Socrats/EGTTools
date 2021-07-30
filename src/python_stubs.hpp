@@ -151,6 +151,16 @@ namespace stubs {
                                                                                  /* Argument(s) */
             );
         }
+
+        /* Trampoline (need one for each virtual function) */
+        bool isStochastic() override {
+            PYBIND11_OVERRIDE_PURE(
+                    bool,                                                        /* Return type */
+                    egttools::FinitePopulations::behaviors::AbstractNFGStrategy, /* Parent class */
+                    isStochastic                                                 /* Name of function in C++ (must match Python name) */
+                                                                                 /* Argument(s) */
+            );
+        }
     };
 
     class PyAbstractCRDStrategy : public egttools::FinitePopulations::behaviors::AbstractCRDStrategy {

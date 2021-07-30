@@ -34,6 +34,8 @@ int main() {
     strategies.push_back(&defector);
     auto tft = egttools::FinitePopulations::behaviors::twoActions::TitForTat();
     strategies.push_back(&tft);
+    auto rdn = egttools::FinitePopulations::behaviors::twoActions::RandomPlayer();
+    strategies.push_back(&rdn);
 //    auto pavlov = egttools::FinitePopulations::behaviors::twoActions::Pavlov();
 //    strategies.push_back(&pavlov);
 //    auto randp = egttools::FinitePopulations::behaviors::twoActions::RandomPlayer();

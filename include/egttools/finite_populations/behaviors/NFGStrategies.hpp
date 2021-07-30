@@ -35,6 +35,7 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
     public:
         size_t get_action(size_t time_step, size_t action_prev) final;
         std::string type() final;
+        bool isStochastic() final;
     };
     /**
      * Always defects
@@ -43,6 +44,7 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
     public:
         size_t get_action(size_t time_step, size_t action_prev) final;
         std::string type() final;
+        bool isStochastic() final;
     };
     /**
      * Chooses an action with uniform random probability
@@ -53,6 +55,7 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
 
         size_t get_action(size_t time_step, size_t action_prev) final;
         std::string type() final;
+        bool isStochastic() final;
 
         std::uniform_int_distribution<size_t> rand_int_;
     };
@@ -64,6 +67,7 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
     public:
         size_t get_action(size_t time_step, size_t action_prev) final;
         std::string type() final;
+        bool isStochastic() final;
     };
     /**
      * Defects on the first round and imitates its opponent's previous move thereafter.
@@ -72,6 +76,7 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
     public:
         size_t get_action(size_t time_step, size_t action_prev) final;
         std::string type() final;
+        bool isStochastic() final;
     };
     /**
      * Cooprates on the first round and after its opponent
@@ -86,6 +91,7 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
 
         size_t get_action(size_t time_step, size_t action_prev) final;
         std::string type() final;
+        bool isStochastic() final;
 
         double p_;
         std::uniform_real_distribution<double> rand_double_;
@@ -101,6 +107,7 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
     public:
         size_t get_action(size_t time_step, size_t action_prev) final;
         std::string type() final;
+        bool isStochastic() final;
 
         size_t defection_string_ = 0;
         size_t cooperation_string_ = 0;
@@ -115,6 +122,7 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
 
         size_t get_action(size_t time_step, size_t action_prev) final;
         std::string type() final;
+        bool isStochastic() final;
 
         double error_probability_;
         std::uniform_real_distribution<double> rand_double_;
@@ -126,6 +134,7 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
     public:
         size_t get_action(size_t time_step, size_t action_prev) final;
         std::string type() final;
+        bool isStochastic() final;
 
         size_t action_memory_ = 1;
     };
@@ -136,6 +145,7 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
     public:
         size_t get_action(size_t time_step, size_t action_prev) final;
         std::string type() final;
+        bool isStochastic() final;
 
         size_t defection_counter_ = 0;// starts with cooperation
     };
@@ -148,6 +158,7 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
     public:
         size_t get_action(size_t time_step, size_t action_prev) final;
         std::string type() final;
+        bool isStochastic() final;
 
         size_t action_ = 1;
     };
@@ -160,8 +171,28 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
     public:
         size_t get_action(size_t time_step, size_t action_prev) final;
         std::string type() final;
+        bool isStochastic() final;
 
         size_t action_memory_ = 1;
+    };
+
+    /**
+     * Always repeats the same action, but explores a different action
+     * with @param epsilon probability. The initial action is COOPERATE
+     * with probability @param p.
+     */
+    class ActionInertia : public AbstractNFGStrategy {
+    public:
+        explicit ActionInertia(double epsilon, double p);
+
+        size_t get_action(size_t time_step, size_t action_prev) final;
+        std::string type() final;
+        bool isStochastic() final;
+
+        double epsilon_, p_;
+        size_t action_ = 1;
+
+        std::uniform_real_distribution<double> rand_double_;
     };
 
     enum NFActions : size_t {
@@ -204,6 +235,8 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
             strategy = std::make_shared<egttools::FinitePopulations::behaviors::twoActions::GRIM>();
         } else if (strategy_name == "Pavlov") {
             strategy = std::make_shared<egttools::FinitePopulations::behaviors::twoActions::Pavlov>();
+        } else if (strategy_name == "ActionInertia") {
+            strategy = std::make_shared<egttools::FinitePopulations::behaviors::twoActions::ActionInertia>(std::forward<Args>(args)...);
         } else {
             std::string exception_message;
             exception_message.append(strategy_name);
