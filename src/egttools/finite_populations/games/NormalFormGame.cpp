@@ -209,7 +209,7 @@ void egttools::FinitePopulations::NormalFormGame::_update_cooperation_and_payoff
     int div;
 
     // Check if any of the strategies is stochastic, in which case repeat the loop 10000 times (for good statistics)
-    bool is_stochastic = strategies_[s1]->isStochastic() || strategies_[s2]->isStochastic();
+    bool is_stochastic = strategies_[s1]->is_stochastic() || strategies_[s2]->is_stochastic();
 
     // This should be repeated many times if the strategies are stochastic
     // First we play the game

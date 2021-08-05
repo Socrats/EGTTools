@@ -153,11 +153,11 @@ namespace stubs {
         }
 
         /* Trampoline (need one for each virtual function) */
-        bool isStochastic() override {
+        bool is_stochastic() override {
             PYBIND11_OVERRIDE_PURE(
                     bool,                                                        /* Return type */
                     egttools::FinitePopulations::behaviors::AbstractNFGStrategy, /* Parent class */
-                    isStochastic                                                 /* Name of function in C++ (must match Python name) */
+                    is_stochastic                                                /* Name of function in C++ (must match Python name) */
                                                                                  /* Argument(s) */
             );
         }

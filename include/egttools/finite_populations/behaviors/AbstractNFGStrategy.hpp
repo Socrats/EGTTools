@@ -52,7 +52,7 @@ namespace egttools::FinitePopulations::behaviors {
          *
          * @return bool Property indicating whether the strategy is stochastic.
          */
-        virtual bool isStochastic() = 0;
+        virtual bool is_stochastic() = 0;
     };
 }// namespace egttools::FinitePopulations::behaviors
 

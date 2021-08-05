@@ -652,8 +652,8 @@ PYBIND11_MODULE(numerical, m) {
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::AbstractNFGStrategy::type, "Returns a string indicating the Strategy Type.")
-            .def_property_readonly("is_stochastic", &egttools::FinitePopulations::behaviors::AbstractNFGStrategy::isStochastic,
-                                   "Indicates whether the strategy is stochastic.");
+            .def("is_stochastic", &egttools::FinitePopulations::behaviors::AbstractNFGStrategy::is_stochastic,
+                 "Property indicating if the strategy is stochastic.");
 
     py::class_<egttools::FinitePopulations::behaviors::AbstractCRDStrategy, stubs::PyAbstractCRDStrategy>(mCRD, "AbstractCRDStrategy")
             .def(py::init<>())
@@ -720,8 +720,8 @@ PYBIND11_MODULE(numerical, m) {
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::Cooperator::type, "Returns a string indicating the Strategy Type.")
-            .def_property_readonly("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::Cooperator::isStochastic,
-                                   "Indicates whether the strategy is stochastic.");
+            .def("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::Cooperator::is_stochastic,
+                 "Indicates whether the strategy is stochastic.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::Defector,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "Defector")
@@ -755,8 +755,8 @@ PYBIND11_MODULE(numerical, m) {
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::Defector::type, "Returns a string indicating the Strategy Type.")
-            .def_property_readonly("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::Defector::isStochastic,
-                                   "Indicates whether the strategy is stochastic.");
+            .def("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::Defector::is_stochastic,
+                 "Indicates whether the strategy is stochastic.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::RandomPlayer,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "Random")
@@ -790,8 +790,8 @@ PYBIND11_MODULE(numerical, m) {
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::RandomPlayer::type, "Returns a string indicating the Strategy Type.")
-            .def_property_readonly("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::RandomPlayer::isStochastic,
-                                   "Indicates whether the strategy is stochastic.");
+            .def("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::RandomPlayer::is_stochastic,
+                 "Indicates whether the strategy is stochastic.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::TitForTat,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "TFT")
@@ -825,8 +825,8 @@ PYBIND11_MODULE(numerical, m) {
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::TitForTat::type, "Returns a string indicating the Strategy Type.")
-            .def_property_readonly("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::TitForTat::isStochastic,
-                                   "Indicates whether the strategy is stochastic.");
+            .def("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::TitForTat::is_stochastic,
+                 "Indicates whether the strategy is stochastic.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::SuspiciousTFT,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "SuspiciousTFT")
@@ -860,8 +860,8 @@ PYBIND11_MODULE(numerical, m) {
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::SuspiciousTFT::type, "Returns a string indicating the Strategy Type.")
-            .def_property_readonly("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::SuspiciousTFT::isStochastic,
-                                   "Indicates whether the strategy is stochastic.");
+            .def("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::SuspiciousTFT::is_stochastic,
+                 "Indicates whether the strategy is stochastic.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::GenerousTFT,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "GenerousTFT")
@@ -902,8 +902,8 @@ PYBIND11_MODULE(numerical, m) {
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::GenerousTFT::type, "Returns a string indicating the Strategy Type.")
-            .def_property_readonly("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::GenerousTFT::isStochastic,
-                                   "Indicates whether the strategy is stochastic.");
+            .def("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::GenerousTFT::is_stochastic,
+                 "Indicates whether the strategy is stochastic.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::GradualTFT,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "GradualTFT")
@@ -942,8 +942,8 @@ PYBIND11_MODULE(numerical, m) {
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::GradualTFT::type, "Returns a string indicating the Strategy Type.")
-            .def_property_readonly("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::GradualTFT::isStochastic,
-                                   "Indicates whether the strategy is stochastic.");
+            .def("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::GradualTFT::is_stochastic,
+                 "Indicates whether the strategy is stochastic.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::ImperfectTFT,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "ImperfectTFT")
@@ -980,8 +980,8 @@ PYBIND11_MODULE(numerical, m) {
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::ImperfectTFT::type, "Returns a string indicating the Strategy Type.")
-            .def_property_readonly("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::ImperfectTFT::isStochastic,
-                                   "Indicates whether the strategy is stochastic.");
+            .def("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::ImperfectTFT::is_stochastic,
+                 "Indicates whether the strategy is stochastic.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::TFTT,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "TFTT")
@@ -1015,8 +1015,8 @@ PYBIND11_MODULE(numerical, m) {
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::TFTT::type, "Returns a string indicating the Strategy Type.")
-            .def_property_readonly("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::TFTT::isStochastic,
-                                   "Indicates whether the strategy is stochastic.");
+            .def("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::TFTT::is_stochastic,
+                 "Indicates whether the strategy is stochastic.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::TTFT,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "TTFT")
@@ -1050,8 +1050,8 @@ PYBIND11_MODULE(numerical, m) {
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::TTFT::type, "Returns a string indicating the Strategy Type.")
-            .def_property_readonly("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::TTFT::isStochastic,
-                                   "Indicates whether the strategy is stochastic.");
+            .def("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::TTFT::is_stochastic,
+                 "Indicates whether the strategy is stochastic.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::GRIM,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "GRIM")
@@ -1087,8 +1087,8 @@ PYBIND11_MODULE(numerical, m) {
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::GRIM::type, "Returns a string indicating the Strategy Type.")
-            .def_property_readonly("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::GRIM::isStochastic,
-                                   "Indicates whether the strategy is stochastic.");
+            .def("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::GRIM::is_stochastic,
+                 "Indicates whether the strategy is stochastic.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::Pavlov,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "Pavlov")
@@ -1124,8 +1124,8 @@ PYBIND11_MODULE(numerical, m) {
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::Pavlov::type, "Returns a string indicating the Strategy Type.")
-            .def_property_readonly("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::Pavlov::isStochastic,
-                                   "Indicates whether the strategy is stochastic.");
+            .def("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::Pavlov::is_stochastic,
+                 "Indicates whether the strategy is stochastic.");
 
     py::class_<egttools::FinitePopulations::behaviors::twoActions::ActionInertia,
                egttools::FinitePopulations::behaviors::AbstractNFGStrategy>(mNFTwoActions, "ActionInertia")
@@ -1181,8 +1181,8 @@ PYBIND11_MODULE(numerical, m) {
                 )pbdoc",
                  py::arg("time_step"), py::arg("action_prev"))
             .def("type", &egttools::FinitePopulations::behaviors::twoActions::ActionInertia::type, "Returns a string indicating the Strategy Type.")
-            .def_property_readonly("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::ActionInertia::isStochastic,
-                                   "Indicates whether the strategy is stochastic.");
+            .def("is_stochastic", &egttools::FinitePopulations::behaviors::twoActions::ActionInertia::is_stochastic,
+                 "Indicates whether the strategy is stochastic.");
 
 
     py::class_<egttools::FinitePopulations::behaviors::CRD::CRDMemoryOnePlayer,

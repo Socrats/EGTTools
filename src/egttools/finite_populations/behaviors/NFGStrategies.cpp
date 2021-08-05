@@ -29,7 +29,7 @@ size_t egttools::FinitePopulations::behaviors::twoActions::Cooperator::get_actio
 std::string egttools::FinitePopulations::behaviors::twoActions::Cooperator::type() {
     return "NFGStrategies::AllC";
 }
-bool egttools::FinitePopulations::behaviors::twoActions::Cooperator::isStochastic() {
+bool egttools::FinitePopulations::behaviors::twoActions::Cooperator::is_stochastic() {
     return false;
 }
 size_t egttools::FinitePopulations::behaviors::twoActions::Defector::get_action(size_t time_step, size_t action_prev) {
@@ -40,7 +40,7 @@ size_t egttools::FinitePopulations::behaviors::twoActions::Defector::get_action(
 std::string egttools::FinitePopulations::behaviors::twoActions::Defector::type() {
     return "NFGStrategies::AllD";
 }
-bool egttools::FinitePopulations::behaviors::twoActions::Defector::isStochastic() {
+bool egttools::FinitePopulations::behaviors::twoActions::Defector::is_stochastic() {
     return false;
 }
 egttools::FinitePopulations::behaviors::twoActions::RandomPlayer::RandomPlayer() {
@@ -54,7 +54,7 @@ size_t egttools::FinitePopulations::behaviors::twoActions::RandomPlayer::get_act
 std::string egttools::FinitePopulations::behaviors::twoActions::RandomPlayer::type() {
     return "NFGStrategies::Random";
 }
-bool egttools::FinitePopulations::behaviors::twoActions::RandomPlayer::isStochastic() {
+bool egttools::FinitePopulations::behaviors::twoActions::RandomPlayer::is_stochastic() {
     return true;
 }
 size_t egttools::FinitePopulations::behaviors::twoActions::TitForTat::get_action(size_t time_step, size_t action_prev) {
@@ -67,7 +67,7 @@ size_t egttools::FinitePopulations::behaviors::twoActions::TitForTat::get_action
 std::string egttools::FinitePopulations::behaviors::twoActions::TitForTat::type() {
     return "NFGStrategies::TFT";
 }
-bool egttools::FinitePopulations::behaviors::twoActions::TitForTat::isStochastic() {
+bool egttools::FinitePopulations::behaviors::twoActions::TitForTat::is_stochastic() {
     return false;
 }
 size_t egttools::FinitePopulations::behaviors::twoActions::SuspiciousTFT::get_action(size_t time_step, size_t action_prev) {
@@ -80,7 +80,7 @@ size_t egttools::FinitePopulations::behaviors::twoActions::SuspiciousTFT::get_ac
 std::string egttools::FinitePopulations::behaviors::twoActions::SuspiciousTFT::type() {
     return "NFGStrategies::SuspiciousTFT";
 }
-bool egttools::FinitePopulations::behaviors::twoActions::SuspiciousTFT::isStochastic() {
+bool egttools::FinitePopulations::behaviors::twoActions::SuspiciousTFT::is_stochastic() {
     return false;
 }
 egttools::FinitePopulations::behaviors::twoActions::GenerousTFT::GenerousTFT(double reward, double punishment,
@@ -100,7 +100,7 @@ size_t egttools::FinitePopulations::behaviors::twoActions::GenerousTFT::get_acti
 std::string egttools::FinitePopulations::behaviors::twoActions::GenerousTFT::type() {
     return "NFGStrategies::GenerousTFT";
 }
-bool egttools::FinitePopulations::behaviors::twoActions::GenerousTFT::isStochastic() {
+bool egttools::FinitePopulations::behaviors::twoActions::GenerousTFT::is_stochastic() {
     return true;
 }
 size_t egttools::FinitePopulations::behaviors::twoActions::GradualTFT::get_action(size_t time_step, size_t action_prev) {
@@ -129,7 +129,7 @@ size_t egttools::FinitePopulations::behaviors::twoActions::GradualTFT::get_actio
 std::string egttools::FinitePopulations::behaviors::twoActions::GradualTFT::type() {
     return "NFGStrategies::GradualTFT";
 }
-bool egttools::FinitePopulations::behaviors::twoActions::GradualTFT::isStochastic() {
+bool egttools::FinitePopulations::behaviors::twoActions::GradualTFT::is_stochastic() {
     return false;
 }
 egttools::FinitePopulations::behaviors::twoActions::ImperfectTFT::ImperfectTFT(double error_probability) : error_probability_(error_probability) {
@@ -148,7 +148,7 @@ size_t egttools::FinitePopulations::behaviors::twoActions::ImperfectTFT::get_act
 std::string egttools::FinitePopulations::behaviors::twoActions::ImperfectTFT::type() {
     return "NFGStrategies::ImperfectTFT";
 }
-bool egttools::FinitePopulations::behaviors::twoActions::ImperfectTFT::isStochastic() {
+bool egttools::FinitePopulations::behaviors::twoActions::ImperfectTFT::is_stochastic() {
     return true;
 }
 size_t egttools::FinitePopulations::behaviors::twoActions::TFTT::get_action(size_t time_step, size_t action_prev) {
@@ -165,7 +165,7 @@ size_t egttools::FinitePopulations::behaviors::twoActions::TFTT::get_action(size
 std::string egttools::FinitePopulations::behaviors::twoActions::TFTT::type() {
     return "NFGStrategies::TFTT";
 }
-bool egttools::FinitePopulations::behaviors::twoActions::TFTT::isStochastic() {
+bool egttools::FinitePopulations::behaviors::twoActions::TFTT::is_stochastic() {
     return false;
 }
 size_t egttools::FinitePopulations::behaviors::twoActions::TTFT::get_action(size_t time_step, size_t action_prev) {
@@ -184,7 +184,7 @@ size_t egttools::FinitePopulations::behaviors::twoActions::TTFT::get_action(size
 std::string egttools::FinitePopulations::behaviors::twoActions::TTFT::type() {
     return "NFGStrategies::TTFT";
 }
-bool egttools::FinitePopulations::behaviors::twoActions::TTFT::isStochastic() {
+bool egttools::FinitePopulations::behaviors::twoActions::TTFT::is_stochastic() {
     return false;
 }
 size_t egttools::FinitePopulations::behaviors::twoActions::GRIM::get_action(size_t time_step, size_t action_prev) {
@@ -199,7 +199,7 @@ size_t egttools::FinitePopulations::behaviors::twoActions::GRIM::get_action(size
 std::string egttools::FinitePopulations::behaviors::twoActions::GRIM::type() {
     return "NFGStrategies::GRIM";
 }
-bool egttools::FinitePopulations::behaviors::twoActions::GRIM::isStochastic() {
+bool egttools::FinitePopulations::behaviors::twoActions::GRIM::is_stochastic() {
     return false;
 }
 size_t egttools::FinitePopulations::behaviors::twoActions::Pavlov::get_action(size_t time_step, size_t action_prev) {
@@ -213,7 +213,7 @@ size_t egttools::FinitePopulations::behaviors::twoActions::Pavlov::get_action(si
 std::string egttools::FinitePopulations::behaviors::twoActions::Pavlov::type() {
     return "NFGStrategies::Pavlov";
 }
-bool egttools::FinitePopulations::behaviors::twoActions::Pavlov::isStochastic() {
+bool egttools::FinitePopulations::behaviors::twoActions::Pavlov::is_stochastic() {
     return false;
 }
 egttools::FinitePopulations::behaviors::twoActions::ActionInertia::ActionInertia(double epsilon, double p) : epsilon_(epsilon),
@@ -236,6 +236,6 @@ size_t egttools::FinitePopulations::behaviors::twoActions::ActionInertia::get_ac
 std::string egttools::FinitePopulations::behaviors::twoActions::ActionInertia::type() {
     return "NFGStrategies::ActionInertia";
 }
-bool egttools::FinitePopulations::behaviors::twoActions::ActionInertia::isStochastic() {
+bool egttools::FinitePopulations::behaviors::twoActions::ActionInertia::is_stochastic() {
     return true;
 }
