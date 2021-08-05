@@ -67,7 +67,7 @@ namespace egttools {
         std::mt19937_64 generator(egttools::Random::SeedGenerator::getInstance().getSeed());
         egttools::VectorXli state = egttools::VectorXli::Zero(nb_strategies);
 
-        egttools::FinitePopulations::sample_simplex_direct_method<long int, egttools::VectorXli, std::mt19937_64>(nb_strategies, pop_size, state, generator);
+        egttools::FinitePopulations::sample_simplex_direct_method<long int, long int, egttools::VectorXli, std::mt19937_64>(nb_strategies, pop_size, state, generator);
 
         return state;
     }
@@ -1286,6 +1286,45 @@ PYBIND11_MODULE(numerical, m) {
             .def("stationary_distribution_sparse", &PairwiseComparison::estimate_stationary_distribution_sparse,
                  py::call_guard<py::gil_scoped_release>(),
                  "Estimates the stationary distribution of the population of strategies given the game.",
+                 py::arg("nb_runs"), py::arg("nb_generations"), py::arg("transitory"), py::arg("beta"), py::arg("mu"))
+            .def("estimate_strategy_distribution", &PairwiseComparison::estimate_strategy_distribution,
+                 py::call_guard<py::gil_scoped_release>(),
+                 R"pbdoc(
+                Estimates the distribution of strategies in the population given the current game.
+
+                This method directly estimates how frequent each strategy is in the population, without calculating
+                the stationary distribution as an intermediary step. You should use this method when the number
+                of states of the system is bigger than MAX_LONG_INT, since it would not be possible to index the states
+                in this case, and stationaryDistribution and estimate_stationary_distribution_sparse would run into an
+                overflow error.
+
+                Parameters
+                ----------
+                nb_runs : int
+                    Number of independent simulations to perform. The final result will be an average over all the runs.
+                nb_generations : int
+                    Total number of generations.
+                transitory: int
+                    Transitory period. These generations will be excluded from the final average. Thus, only the last
+                    nb_generations - transitory generations will be taken into account. This is important, since in
+                    order to obtain a correct average at the steady state, we need to skip the transitory period.
+                beta: float
+                    Intensity of selection. This parameter determines how important the difference in payoff between players
+                    is for the probability of imitation. If beta is small, the system will mostly undergo random drift
+                    between strategies. If beta is high, a slight difference in payoff will make a strategy disapear.
+                mu: float
+                    Probability of mutation. This parameter defines how likely it is for a mutation event to occur at a given generation
+
+                Returns
+                -------
+                numpy.ndarray[numpy.float64[m, 1]]
+                    The average frequency of each strategy in the population.
+
+                See Also
+                --------
+                egttools.numerical.PairwiseMoran.stationary_distribution,
+                egttools.numerical.PairwiseMoran.stationary_distribution_sparse
+                )pbdoc",
                  py::arg("nb_runs"), py::arg("nb_generations"), py::arg("transitory"), py::arg("beta"), py::arg("mu"))
             .def_property_readonly("nb_strategies", &PairwiseComparison::nb_strategies, "Number of strategies in the population.")
             .def_property_readonly("payoffs", &PairwiseComparison::payoffs,

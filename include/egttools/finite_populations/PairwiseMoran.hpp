@@ -179,7 +179,39 @@ namespace egttools::FinitePopulations {
          */
         Vector stationaryDistribution(size_t nb_runs, size_t nb_generations, size_t transitory, double beta, double mu);
 
+        /**
+         * @brief Estimates the stationary distribution of the population of strategies in the game.
+         *
+         * This methods is equal to stationaryDistribution, but returns a Sparse Matrix instead of a
+         * dense one. You should use this method one the system has a very large number of states, since
+         * most of the entries of the stationary distribution will be 0, making it sparse.
+         *
+         * @param nb_runs : number of trials used to estimate the stationary distribution
+         * @param nb_generations : number of generations per trial
+         * @param transitory : transitory period not taken into account for the estimation
+         * @param beta : intensity of selection
+         * @param mu : mutation probability
+         * @return the stationary distribution
+         */
         SparseMatrix2D estimate_stationary_distribution_sparse(size_t nb_runs, size_t nb_generations, size_t transitory, double beta, double mu);
+
+        /**
+         * @brief Estimates the distribution of strategies in the population given the current game.
+         *
+         * This method directly estimates how frequent each strategy is in the population, without calculating
+         * the stationary distribution as an intermediary step. You should use this method when the number
+         * of states of the system is bigger than MAX_LONG_INT, since it would not be possible to index the states
+         * in this case, and stationaryDistribution and estimate_stationary_distribution_sparse would run into an
+         * overflow error.
+         *
+         * @param nb_runs : number of trials used to estimate the stationary distribution
+         * @param nb_generations : number of generations per trial
+         * @param transitory : transitory period not taken into account for the estimation
+         * @param beta : intensity of selection
+         * @param mu : mutation probability
+         * @return the stationary distribution
+         */
+        Vector estimate_strategy_distribution(size_t nb_runs, size_t nb_generations, size_t transitory, double beta, double mu);
 
         /**
          * @brief Estimates the full transition matrix that rules the Markov Chain.
@@ -708,7 +740,7 @@ namespace egttools::FinitePopulations {
         // Distribution number of generations for a mutation to happen
         std::geometric_distribution<size_t> geometric(mu);
 
-        #pragma omp parallel for reduction(+ \
+#pragma omp parallel for reduction(+ \
                                    : sdist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu)
         for (size_t i = 0; i < nb_runs; ++i) {
             // Random generators - each thread should have its own generator
@@ -787,6 +819,96 @@ namespace egttools::FinitePopulations {
             }
         }
         return sdist.cast<double>() / (nb_runs * (nb_generations - transitory));
+    }
+
+    template<class Cache>
+    Vector PairwiseMoran<Cache>::estimate_strategy_distribution(size_t nb_runs, size_t nb_generations, size_t transitory, double beta,
+                                                                double mu) {
+        // Here we are going to estimate the strategy distribution directly, without the stationary distribution.
+        // To do that, we need to keep count of the average frequency of each strategy in the population during the simulation.
+        // Thus, we will keep a matrix of size nb_strategies x min(1000, nb_generations - transitory). We will use this vector
+        // to store the game states. After the vector has been filled, we will calculate the average frequency of each strategy
+
+        VectorXui strategy_dist = VectorXui::Zero(_nb_strategies);
+
+        // Distribution number of generations for a mutation to happen
+        std::geometric_distribution<size_t> geometric(mu);
+
+#pragma omp parallel for reduction(+ \
+                                   : strategy_dist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu)
+        for (size_t i = 0; i < nb_runs; ++i) {
+
+            // Random generators - each thread should have its own generator
+            std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
+
+            // Then we sample a random population state
+            VectorXui strategies = VectorXui::Zero(_nb_strategies);
+            egttools::FinitePopulations::sample_simplex_direct_method<size_t, size_t, VectorXui, std::mt19937_64>(_nb_strategies,
+                                                                                                                  _pop_size,
+                                                                                                                  strategies,
+                                                                                                                  generator);
+
+            size_t die = 0, birth = 0, strategy_p1 = 0, strategy_p2 = 0;
+            // Check if state is homogeneous
+            auto [homogeneous, idx_homo] = _is_homogeneous(strategies);
+
+            // If it is we add a random mutant
+            if (homogeneous) {
+                mutate_(generator, birth, idx_homo);
+                strategies(static_cast<int>(birth)) += 1;
+                strategies(idx_homo) -= 1;
+                homogeneous = false;
+            }
+
+            // Creates a cache for the fitness data
+            Cache cache(_cache_size);
+            size_t k, j;
+
+            // First we run the simulations for a @param transitory number of generations
+            for (j = 0; j < transitory; ++j) {
+                _sample_players(strategy_p1, strategy_p2, strategies, generator);
+
+                // Update with mutation and return how many steps should be added to the current
+                // generation if the only change in the population could have been a mutation
+                k = _update_multi_step(strategy_p1, strategy_p2, beta, mu,
+                                       birth, die, homogeneous, idx_homo,
+                                       strategies, cache,
+                                       geometric, generator);
+
+                // Update state count by k steps
+                j += k;
+            }
+
+            // Then we start counting
+            for (; j < nb_generations; ++j) {
+                // If the strategies are the same, there will be no change in the population
+                if (homogeneous) {
+                    k = geometric(generator);
+                    // Update the current strategy average
+                    strategy_dist += strategies * k;
+                    mutate_(generator, birth, idx_homo);
+
+                    strategies(static_cast<int>(birth)) += 1;
+                    strategies(idx_homo) -= 1;
+
+                    homogeneous = false;
+
+                    // Update the generation by k steps
+                    j += k;
+                } else {
+                    // First we pick 2 players randomly
+                    _sample_players(strategy_p1, strategy_p2, strategies, generator);
+
+                    _update_step(strategy_p1, strategy_p2, beta, mu,
+                                 birth, die, homogeneous, idx_homo,
+                                 strategies, cache, generator);
+                    // Update the current strategy average
+                    strategy_dist += strategies;
+                }
+            }
+        }
+
+        return strategy_dist.template cast<double>() / (_pop_size * nb_runs * (nb_generations - transitory));
     }
 
     template<class Cache>

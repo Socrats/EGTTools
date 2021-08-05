@@ -17,7 +17,7 @@ int main() {
 
     // Test 100 values and make sure they always sum to the correct element
     for (int j = 0; j < 100; ++j) {
-        egttools::FinitePopulations::sample_simplex_direct_method<long int, egttools::VectorXli, std::mt19937_64>(nb_strategies, pop_size, state, generator);
+        egttools::FinitePopulations::sample_simplex_direct_method<long int, long int, egttools::VectorXli, std::mt19937_64>(nb_strategies, pop_size, state, generator);
 
         std::cout << "[\t";
         for (int i = 0; i < nb_strategies; ++i) {

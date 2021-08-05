@@ -165,17 +165,17 @@ namespace egttools::FinitePopulations {
      * @param state : vector container for the state (point in the n-dimensional simplex)
      * @param generator : random generator
      */
-    template<typename SizeType, typename OutputVector, typename G>
+    template<typename SizeType, typename SampleType, typename OutputVector, typename G>
     void sample_simplex_direct_method(SizeType nb_strategies, SizeType pop_size, OutputVector &state,
                                       G &generator) {
-        std::vector<SizeType> samples(nb_strategies - 1);
-        std::unordered_set<long int> container(nb_strategies - 1);
+        std::vector<SampleType> samples(nb_strategies - 1);
+        std::unordered_set<SampleType> container(nb_strategies - 1);
         // sample without replacement nb_strategies - 1 elements
-        egttools::sampling::ordered_sample_without_replacement<SizeType, long int, G>(0, pop_size, nb_strategies - 1,
-                                                                                      samples, container, generator);
+        egttools::sampling::ordered_sample_without_replacement<SizeType, SampleType, G>(0, pop_size, nb_strategies - 1,
+                                                                                        samples, container, generator);
         state(0) = samples[0];
-        for (int i = 1; i < nb_strategies - 1; ++i) {
-            state(i) = samples[i] - samples[i-1];
+        for (SizeType i = 1; i < nb_strategies - 1; ++i) {
+            state(i) = samples[i] - samples[i - 1];
         }
         state(nb_strategies - 1) = pop_size - samples[nb_strategies - 2];
     }
