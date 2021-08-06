@@ -23,6 +23,7 @@ populations on 2-player games.
 
 import numpy as np
 import numpy.typing as npt
+import scipy.sparse
 from scipy.sparse import lil_matrix
 from scipy.stats import hypergeom, multivariate_hypergeom
 from typing import Tuple, Optional
@@ -33,16 +34,28 @@ def replicator_equation(x: np.ndarray, payoffs: np.ndarray) -> np.ndarray:
     """
     Produces the discrete time derivative of the replicator dynamics
 
-    :param x: array with len equal to the number of strategies
-    :param payoffs: payoff matrix
-    :return time derivative of x
+    Parameters
+    ----------
+    x : numpy.ndarray[numpy.float64[m,1]]
+        array containing the frequency of each strategy in the population.
+    payoffs : numpy.ndarray[numpy.float64[m,m]]
+        payoff matrix
+    Returns
+    -------
+    numpy.ndarray
+        time derivative of x
+
+    See Also
+    --------
+    egttools.analytical.StochDynamics
+    egttools.numerical.PairwiseMoran
     """
     ax = np.dot(payoffs, x)
     return x * (ax - np.dot(x, ax))
 
 
 class StochDynamics:
-    """An Evolutionary Stochastic Dynamics class.
+    """A class containing methods to calculate the stochastic evolutionary dynamics of a population.
 
     Defines a class that contains methods to compute the stationary distribution for
     the limit of small mutation (only the monomorphic states) and the full transition matrix.
@@ -53,10 +66,15 @@ class StochDynamics:
                 number of strategies in the population
     pop_size : int
             population size
-    payoffs : array_like
+    payoffs : numpy.ndarray[numpy.float64[m,m]]
             payoff matrix indicating the payoff of each strategy (rows) against each other (columns)
     mu : float
         mutation probability
+
+    See Also
+    --------
+    egttools.numerical.PairwiseMoran
+    egttools.analytical.replicator_equation
     """
 
     def __init__(self, nb_strategies: int, payoffs: np.ndarray, pop_size: int, group_size=2, mu=0) -> None:
@@ -112,7 +130,7 @@ class StochDynamics:
             index of the strategy that will reproduce
         j : int
             index of the strategy that will die
-        population_state : array_like
+        population_state : numpy.ndarray[numpy.int64[m,1]]
                            vector containing the counts of each strategy in the population
 
         Returns
@@ -178,7 +196,7 @@ class StochDynamics:
             index of the strategy that will reproduce
         j : int
             index of the strategy that will die
-        population_state : array_like
+        population_state : numpy.ndarray[numpy.int64[m,1]]
                            vector containing the counts of each strategy in the population
 
         Returns
@@ -212,10 +230,17 @@ class StochDynamics:
         """
         The fermi function determines the probability that the first type imitates the second.
 
-        :param beta: intensity of selection
-        :param fitness_diff: f_a - f_b
-        :return: the imitation probability
-        :rtype: float
+        Parameters
+        ----------
+        beta : float
+            intensity of selection
+        fitness_diff : float
+            Difference in fitneess between the strategies (f_a - f_b).
+
+        Returns
+        -------
+        numpy.typing.ArrayLike
+            the probability of imitation
         """
         return np.clip(1. / (1. + np.exp(beta * fitness_diff, dtype=np.float64)), 0., 1.)
 
@@ -225,14 +250,23 @@ class StochDynamics:
         This function calculates for a given number of invaders the probability
         that the number increases or decreases with one.
 
-        :param k : number of invaders in the population
-        :param invader : index of the invading strategy
-        :param resident : index of the resitend strategy
-        :param beta : intensity of selection
-        :param args : other arguments. Can be used to pass extra arguments to functions contained
-                      in the payoff matrix.
-        :return tuple(probability of increasing the number of invaders, probability of decreasing)
-        :rtype: tuple[float, float]
+        Parameters
+        ----------
+        k : int
+            number of invaders in the population
+        invader: int
+            index of the invading strategy
+        resident: int
+            index of the resitent strategy
+        beta: float
+            intensity of selection
+        args: Optional[list]
+            other arguments. Can be used to pass extra arguments to functions contained
+            in the payoff matrix.
+        Returns
+        -------
+        Tuple[float, float]
+            tuple(probability of increasing the number of invaders, probability of decreasing)
         """
         fitness_diff = self.fitness(k, invader, resident, *args)
         increase = (((self.Z - k) / float(self.Z)) * (k / float(self.Z - 1))) * StochDynamics.fermi(-beta, fitness_diff)
@@ -245,12 +279,23 @@ class StochDynamics:
         This function calculates for a given number of invaders the probability
         that the number increases or decreases with taking into account a mutation rate.
 
-        :param k: number of invaders in the population
-        :param invader: index of the invading strategy
-        :param resident: index of the resitend strategy
-        :param beta: intensity of selection
-        :return tuple[probability of increasing the number of invaders, probability of decreasing]
-        :rtype: tuple[float, float]
+        Parameters
+        ----------
+        k : int
+            number of invaders in the population
+        invader: int
+            index of the invading strategy
+        resident: int
+            index of the resitent strategy
+        beta: float
+            intensity of selection
+        args: Optional[list]
+            other arguments. Can be used to pass extra arguments to functions contained
+            in the payoff matrix.
+        Returns
+        -------
+        Tuple[float, float]
+            tuple(probability of increasing the number of invaders, probability of decreasing)
         """
         p_plus, p_less = self.prob_increase_decrease(k, invader, resident, beta, *args)
         p_plus = ((1 - self.mu) * p_plus) + (self.mu * ((self.Z - k) / self.Z))
@@ -259,10 +304,12 @@ class StochDynamics:
 
     def full_prob_increase_decrease_with_mutation(self, population_state: np.ndarray, beta: float) -> np.ndarray:
         """
+        Calculates the probabilities of increasing/decreasing the frequency of a strategy in each possible population
+        state.
 
         Parameters
         ----------
-        population_state : array_like
+        population_state : numpy.ndarray[numpy.int64[m,1]]
                            structure of unsigned integers containing the
                            counts of each strategy in the population
         beta : float
@@ -270,14 +317,15 @@ class StochDynamics:
 
         Returns
         -------
-        Returns an ndarray matrix with the probabilities of increasing/decreasing one individual adopting
-        a given strategy in the current population state.
-        All possible new state transition probabilities are returned.
+        numpy.ndarray[np.float64[m,m]]
+            Returns an ndarray matrix with the probabilities of increasing/decreasing one individual adopting
+            a given strategy in the current population state.
+            All possible new state transition probabilities are returned.
 
-        e.g., given the population state (34, 33, 33) which represents a population of size 100 with 3
-        strategies - obviously the population state may be represented with a 2D tuple (34, 33) - then
-        there are 6 possible changes to the population: (35, 32, 33), (35, 33, 32), (33, 34, 33),
-        (33, 33, 34), (34, 34, 32), (34, 32, 34).
+            e.g., given the population state (34, 33, 33) which represents a population of size 100 with 3
+            strategies - obviously the population state may be represented with a 2D tuple (34, 33) - then
+            there are 6 possible changes to the population: (35, 32, 33), (35, 33, 32), (33, 34, 33),
+            (33, 33, 34), (34, 34, 32), (34, 32, 34).
         """
         transitions = np.zeros(shape=(2 * self.nb_strategies, 2 * self.nb_strategies))
         for i in range(self.nb_strategies):
@@ -294,30 +342,44 @@ class StochDynamics:
         """
         Calculates the gradient of selection given an invader and a resident strategy.
 
-        :param k: number of invaders in the population
-        :param invader: index of the invading strategy
-        :param resident: index of the resident strategy
-        :param beta: intensity of selection
-        :return: gradient of selection
-        :rtype: float
+        Parameters
+        ----------
+        k : int
+            number of invaders in the population
+        invader : int
+            index of the invading strategy
+        resident : int
+            index of the resident strategy
+        beta : float
+            intensity of selection
+        args : Optional[list[
+            other arguments. Can be used to pass extra arguments to functions contained
+            in the payoff matrix.
+
+        Returns
+        -------
+        float
+            The gradient of selection.
         """
         return ((self.Z - k) / float(self.Z)) * (k / float(self.Z - 1)) * np.tanh(
             (beta / 2) * self.fitness(k, invader, resident, *args))
 
     def full_gradient_selection(self, population_state: np.ndarray, beta: float) -> np.ndarray:
         """
-        Calculates the gradient of selection for an invading strategy, given a population satte.
+        Calculates the gradient of selection for an invading strategy, given a population state.
 
         Parameters
         ----------
-        population_state : array_like structure of unsigned integers containing the
-                           counts of each strategy in the population
-        beta : intensity of selection
+        population_state : numpy.ndarray[np.int64[m,1]]
+            structure of unsigned integers containing the
+            counts of each strategy in the population
+        beta : float
+            intensity of selection
 
         Returns
         -------
-        array_like
-        Matrix indicating the likelihood of change in the population given an starting point.
+        numpy.ndarray[numpy.float64[m,m]]
+            Matrix indicating the likelihood of change in the population given an starting point.
         """
         probability_selecting_strategy_first = population_state / self.Z
         probability_selecting_strategy_second = population_state / (self.Z - 1)
@@ -328,18 +390,29 @@ class StochDynamics:
 
     def fixation_probability(self, invader: int, resident: int, beta: float, *args: Optional[list]) -> float:
         """
-        function for calculating the fixation_probability probability of the invader
+        Function for calculating the fixation_probability probability of the invader
         in a population of residents.
 
-        The fixation probability is derived analytically:
+        Parameters
+        ----------
+        invader : int
+            index of the invading strategy
+        resident : int
+            index of the resident strategy
+        beta : float
+            intensity of selection
+        args : Optional[list]
+            Other arguments. Can be used to pass extra arguments to functions contained
+            in the payoff matrix.
 
-        @f[ \\phi = $ @f]
+        Returns
+        -------
+        float
+            The fixation_probability probability.
 
-        :param invader: index of the invading strategy
-        :param resident: index of the resident strategy
-        :param beta: intensity of selection
-        :return: fixation_probability probability
-        :rtype: float
+        See Also
+        --------
+        egttools.numerical.PairwiseMoran
         """
         phi = 0.
         prod = 1.
@@ -350,12 +423,22 @@ class StochDynamics:
 
         return 1.0 / (1.0 + phi)
 
-    def calculate_full_transition_matrix(self, beta: float, *args: Optional[list]) -> np.ndarray:
+    def calculate_full_transition_matrix(self, beta: float, *args: Optional[list]) -> scipy.sparse.lil_matrix:
         """
-        Returns the full transition matrix in sparse representation
+        Returns the full transition matrix in sparse representation.
 
-        :param beta: intensity of selection
-        :return full transition matrix between the two strategies
+        Parameters
+        ----------
+        beta : float
+            Intensity of selection.
+        args : Optional[list]
+            Other arguments. Can be used to pass extra arguments to functions contained
+            in the payoff matrix.
+
+        Returns
+        -------
+        scipy.sparse.lil_matrix
+            The full transition matrix between the two strategies in sparse format.
         """
         transitions = lil_matrix((self.Z + 1, self.Z + 1), dtype=np.float64)
         # Case of 0:
@@ -378,10 +461,24 @@ class StochDynamics:
     def transition_and_fixation_matrix(self, beta: float, *args: Optional[list]) -> Tuple[np.ndarray, np.ndarray]:
         """
         Calculates the transition matrix (only for the monomorphic states)
-        and the fixation_probability probabilities
+        and the fixation_probability probabilities.
 
-        :param beta: intensity of selection
-        :return tuple(transition matrix, matrix containing the fixation_probability probabilities)
+        This method calculates the transitions between monomorphic states. Thus, it assumes
+        that we are in the small mutation limit (SML) of the moran process. Only
+        use this method if this assumption is reasonable.
+
+        Parameters
+        ----------
+        beta : float
+            Intensity of selection.
+        args : Optional[list]
+            Other arguments. Can be used to pass extra arguments to functions contained
+            in the payoff matrix.
+        Returns
+        -------
+        Tuple[numpy.ndarray[numpy.float64[m,m]], numpy.ndarray[numpy.float64[m,m]]]
+            This method returns a tuple with the transition matrix as first element, and
+            the matrix of fixation probabilities as second element.
         """
         transitions = np.zeros((self.nb_strategies, self.nb_strategies))
         fixprobs = np.zeros((self.nb_strategies, self.nb_strategies))
