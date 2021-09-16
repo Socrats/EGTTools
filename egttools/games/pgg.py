@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
-from typing import List
+from typing import List, Union
 import numpy as np
 from scipy.stats import multivariate_hypergeom
 
@@ -35,7 +35,7 @@ class PGG(AbstractGame):
         self.payoffs_ = np.zeros(shape=(self.nb_strategies_, self.nb_states_), dtype=np.float64)
         self.calculate_payoffs()
 
-    def play(self, group_composiiton: List[int], game_payoffs: np.ndarray) -> None:
+    def play(self, group_composiiton: Union[List[int], np.ndarray], game_payoffs: np.ndarray) -> None:
         # Gather contributions
         contributions = 0.0
         non_zero = []
@@ -125,7 +125,7 @@ class PGG(AbstractGame):
     def payoffs(self) -> np.ndarray:
         return self.payoffs_
 
-    def payoff(self, strategy: int, group_composition: List[np.uint64]) -> float:
+    def payoff(self, strategy: int, group_composition: List[int]) -> float:
         if strategy > self.nb_strategies_:
             raise IndexError(f'You must specify a valid index for the strategy [0, {self.nb_strategies_}].')
         elif len(group_composition) != self.nb_strategies_:

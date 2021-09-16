@@ -63,6 +63,21 @@ namespace egttools {
                                                                       group_size, risk, strategies_cpp);
     }
 
+    std::unique_ptr<egttools::FinitePopulations::games::CRDGameTU> init_crd_tu_game_from_python_list(int endowment,
+                                                                                                     int threshold,
+                                                                                                     int nb_rounds,
+                                                                                                     int group_size,
+                                                                                                     double risk,
+                                                                                                     egttools::utils::TimingUncertainty<std::mt19937_64> tu,
+                                                                                                     const py::list &strategies) {
+        egttools::FinitePopulations::games::CRDStrategyVector strategies_cpp;
+        for (py::handle strategy : strategies) {
+            strategies_cpp.push_back(py::cast<egttools::FinitePopulations::behaviors::AbstractCRDStrategy *>(strategy));
+        }
+        return std::make_unique<egttools::FinitePopulations::games::CRDGameTU>(endowment, threshold, nb_rounds,
+                                                                               group_size, risk, tu, strategies_cpp);
+    }
+
     egttools::VectorXli sample_simplex_directly(int64_t nb_strategies, int64_t pop_size) {
         std::mt19937_64 generator(egttools::Random::SeedGenerator::getInstance().getSeed());
         egttools::VectorXli state = egttools::VectorXli::Zero(nb_strategies);
@@ -81,14 +96,14 @@ namespace egttools {
     }
 }// namespace egttools
 
-namespace {
-
-    inline std::string attr_doc(const py::module_ &m, const char *name, const char *doc) {
-        auto attr = m.attr(name);
-        return ".. data:: "s + name + "\n    :annotation: = "s + py::cast<std::string>(py::repr(attr)) + "\n\n    "s + doc + "\n\n"s;
-    }
-
-}// namespace
+//namespace {
+//
+////    inline std::string attr_doc(const py::module_ &m, const char *name, const char *doc) {
+////        auto attr = m.attr(name);
+////        return ".. data:: "s + name + "\n    :annotation: = "s + py::cast<std::string>(py::repr(attr)) + "\n\n    "s + doc + "\n\n"s;
+////    }
+//
+//}// namespace
 
 PYBIND11_MODULE(numerical, m) {
     m.attr("__version__") = py::str(XSTR(EGTTOOLS_VERSION));
@@ -110,7 +125,7 @@ PYBIND11_MODULE(numerical, m) {
                     },
                     R"pbdoc(
             This static method initializes the random seed generator from random_device
-            and returns an instance of egttools::Random::SeedGenerator which is used
+            and returns an instance of egttools.Random which is used
             to seed the random generators used across egttools.
 
             Parameters
@@ -129,8 +144,8 @@ PYBIND11_MODULE(numerical, m) {
                     },
                     R"pbdoc(
             This static method initializes the random seed generator from seed
-            and returns an instance of egttools.Random which is used
-            to seed the random generators used across egttools.
+            and returns an instance of `egttools.Random` which is used
+            to seed the random generators used across `egttools`.
 
             Parameters
             ----------
@@ -147,7 +162,7 @@ PYBIND11_MODULE(numerical, m) {
                     "_seed", [](const py::object &) {
                         return egttools::Random::SeedGenerator::getInstance().getMainSeed();
                     },
-                    "The initial seed of egttools.Random.")
+                    "The initial seed of `egttools.Random`.")
             .def_static(
                     "generate", []() {
                         return egttools::Random::SeedGenerator::getInstance().getSeed();
@@ -155,29 +170,29 @@ PYBIND11_MODULE(numerical, m) {
                     R"pbdoc(
                     Generates a random seed.
 
-                    Parameters
-                    ----------
+                    The generated seed can be used to seed other pseudo-random generators,
+                    so that the initial state of the simulation can always be tracked and
+                    the simulation can be reproduced. This is very important both for debugging
+                    purposes as well as for scientific research. However, this approach should
+                    NOT be used in any cryptographic applications, it is NOT safe.
 
                     Returns
                     -------
                     int
-                        A seed.
+                        A random seed which can be used to seed new random generators.
                     )pbdoc")
             .def_static(
                     "seed", [](unsigned long int seed) {
                         egttools::Random::SeedGenerator::getInstance().setMainSeed(seed);
                     },
                     R"pbdoc(
-                    This static methods changes the seed of egttools.Random.
+                    This static methods changes the seed of `egttools.Random`.
 
                     Parameters
                     ----------
                     int
-                        A seed.
-
-                    Returns
-                    -------
-
+                        The new seed for the `egttools.Random` module which is used to seed
+                        every other pseudo-random generation in the `egttools` package.
                     )pbdoc",
                     py::arg("seed"));
 
@@ -190,16 +205,44 @@ PYBIND11_MODULE(numerical, m) {
     auto mData = m.def_submodule("DataStructures");
     auto mDistributions = m.def_submodule("distributions");
 
-    mGames.attr("__init__") = py::str("The `game` submodule contains the available games.");
-    mBehaviors.attr("__init__") = py::str("The `behaviors` submodule contains the available strategies to evolve.");
-    mNF.attr("__init__") = py::str("The `NormalForm` submodule contains the strategies for normal form games.");
+    mGames.attr("__init__") = py::str("The `egttools.numerical.game` submodule contains the available games.");
+    mBehaviors.attr("__init__") = py::str("The `egttools.numerical.behaviors` submodule contains the available strategies to evolve.");
+    mNF.attr("__init__") = py::str("The `egttools.numerical.behaviors.NormalForm` submodule contains the strategies for normal form games.");
+    mCRD.attr("__init__") = py::str("The `egttools.numerical.behaviors.CRD` submodule contains the strategies for the CRD.");
     mNFTwoActions.attr("__init__") = py::str(
             "The `TwoActions` submodule contains the strategies for "
             "normal form games with 2 actions.");
-    mData.attr("__init__") = py::str("The `DataStructures` submodule contains helpful data structures to store.");
+    mData.attr("__init__") = py::str("The `egttools.numerical.DataStructures` submodule contains helpful data structures.");
     mDistributions.attr("__init__") = py::str(
-            "The `distributions` submodule contains "
+            "The `egttools.numerical.distributions` submodule contains "
             "functions and classes that produce stochastic distributions.");
+
+    py::class_<egttools::utils::TimingUncertainty<>>(mDistributions, "TimingUncertainty")
+            .def(py::init<double, int>(),
+                 R"pbdoc(
+                    Timing uncertainty distribution container.
+
+                    This class provides methods to calculate the final round of the game according to some predifined distribution, which is geometric by default.
+
+                    Parameters
+                    ----------
+                    p : float
+                        Probability that the game will end after the minimum number of rounds.
+                    max_rounds : int
+                        maximum number of rounds that the game can take (if 0, there is no maximum).
+                    )pbdoc",
+                 py::arg("p"), py::arg("max_rounds"))
+            .def("calculate_end", &egttools::utils::TimingUncertainty<>::calculate_end,
+                 "Calculates the final round limiting by max_rounds, i.e., outputs a value between"
+                 "[min_rounds, max_rounds].",
+                 py::arg("min_rounds"), py::arg("random_generator"))
+            .def("calculate_full_end", &egttools::utils::TimingUncertainty<>::calculate_full_end,
+                 "Calculates the final round, i.e., outputs a value between"
+                 "[min_rounds, Inf].",
+                 py::arg("min_rounds"), py::arg("random_generator"))
+            .def_property_readonly("p", &egttools::utils::TimingUncertainty<>::probability)
+            .def_property("max_rounds", &egttools::utils::TimingUncertainty<>::max_rounds,
+                          &egttools::utils::TimingUncertainty<>::set_max_rounds);
 
     py::class_<egttools::FinitePopulations::AbstractGame, stubs::PyAbstractGame>(mGames, "AbstractGame")
             .def(py::init<>())
@@ -227,7 +270,7 @@ PYBIND11_MODULE(numerical, m) {
 
                     Returns
                     -------
-                    numpy.ndarray[np.float64]
+                    numpy.ndarray[numpy.float64[m, n]]
                         A matrix with the expected payoffs for each strategy given each possible game
                         state.
                     )pbdoc")
@@ -244,8 +287,8 @@ PYBIND11_MODULE(numerical, m) {
                         The index of the strategy used by the player.
                     pop_size : int
                         The size of the population.
-                    strategies : numpy.ndarray[numpy.uint64]
-                        A vector of counts of which strategy. The current state of the population
+                    strategies : numpy.ndarray[numpy.uint64[m, 1]]
+                        A vector of counts of each strategy. The current state of the population.
 
                     Returns
                     -------
@@ -326,7 +369,7 @@ PYBIND11_MODULE(numerical, m) {
                     ----------
                     group_size : int
                         Maximum bin size (it can also be the population size).
-                    group_composition : numpy.ndarray[int]
+                    group_composition : numpy.ndarray[numpy.int64[m, 1]]
                         The vector to convert from simplex coordinates to index.
 
                     Returns
@@ -356,7 +399,7 @@ PYBIND11_MODULE(numerical, m) {
 
                     Returns
                     -------
-                    numpy.ndarray[int]
+                    numpy.ndarray[numpy.int64[m, 1]]
                         Vector with the sampled state.
 
                     See Also
@@ -380,7 +423,7 @@ PYBIND11_MODULE(numerical, m) {
 
                     Returns
                     -------
-                    numpy.ndarray[numpy.int64]
+                    numpy.ndarray[numpy.int64[m, 1]]
                         Vector with the sampled state.
 
                     See Also
@@ -401,7 +444,7 @@ PYBIND11_MODULE(numerical, m) {
 
                     Returns
                     -------
-                    numpy.ndarray[numpy.int64]
+                    numpy.ndarray[numpy.int64[m, 1]]
                         Vector with the sampled state.
 
                     See Also
@@ -476,7 +519,7 @@ PYBIND11_MODULE(numerical, m) {
                     ----------
                     nb_rounds : int
                         Number of rounds of the game.
-                    payoff_matrix : numpy.ndarray[float]
+                    payoff_matrix : numpy.ndarray[numpy.float64[m, m]]
                         A payoff matrix of shape (nb_actions, nb_actions).
 
                     See Also
@@ -619,6 +662,97 @@ PYBIND11_MODULE(numerical, m) {
             .def_property_readonly("strategies", &egttools::FinitePopulations::CRDGame::strategies,
                                    "A list with pointers to the strategies that are playing the game.")
             .def("save_payoffs", &egttools::FinitePopulations::CRDGame::save_payoffs,
+                 "Saves the payoff matrix in a txt file.");
+
+    py::class_<egttools::FinitePopulations::games::CRDGameTU, egttools::FinitePopulations::AbstractGame>(mGames, "CRDGame")
+            .def(py::init(&egttools::init_crd_tu_game_from_python_list),
+                 R"pbdoc(
+                    Collective Risk Dilemma. This allows you to define any number of strategies by passing them
+                    as a list. All strategies must be of type AbstractCRDStrategy *.
+
+                    The CRD dilemma implemented here follows the description of:
+                    Milinski, M., Sommerfeld, R. D., Krambeck, H.-J., Reed, F. A.,
+                    & Marotzke, J. (2008). The collective-risk social dilemma and the prevention of simulated
+                    dangerous climate change. Proceedings of the National Academy of Sciences of the United States of America, 105(7),
+                    2291–2294. https://doi.org/10.1073/pnas.0709546105
+
+                    Parameters
+                    ----------
+                    endowment : int
+                        Initial endowment for all players.
+                    threshold : int
+                        Collective target that the group must reach.
+                    min_rounds : int
+                        Minimum number of rounds of the game.
+                    group_size : int
+                        Size of the group that will play the CRD.
+                    risk : float
+                        The probability that all members will lose their remaining endowment if the threshold is not achieved.
+                    tu : egttools.distributions.TimingUncertainty
+                        Timing uncertainty object which can output the total number of rounds of the game according
+                        to pre-defined distribution (by default it uses a geometric distribution).
+                    strategies : List[egttools.behaviors.AbstractCRDStrategy]
+                        A list containing references of AbstractCRDStrategy strategies (or child classes).
+
+                    See Also
+                    --------
+                    egttools.games.AbstractGame
+                    egttools.games.NormalFormGame
+                    egttools.games.CRDGame
+                    )pbdoc",
+                 py::arg("endowment"),
+                 py::arg("threshold"),
+                 py::arg("min_rounds"),
+                 py::arg("group_size"),
+                 py::arg("risk"),
+                 py::arg("tu"),
+                 py::arg("strategies"), py::return_value_policy::reference_internal)
+            .def("play", &egttools::FinitePopulations::games::CRDGameTU::play)
+            .def("calculate_payoffs", &egttools::FinitePopulations::games::CRDGameTU::calculate_payoffs,
+                 "updates the internal payoff and coop_level matrices by calculating the payoff of each strategy "
+                 "given any possible strategy pair")
+            .def("calculate_fitness", &egttools::FinitePopulations::games::CRDGameTU::calculate_fitness,
+                 "calculates the fitness of an individual of a given strategy given a population state."
+                 "It always assumes that the population state does not contain the current individual",
+                 py::arg("player_strategy"),
+                 py::arg("pop_size"), py::arg("population_state"))
+            .def("calculate_population_group_achievement", &egttools::FinitePopulations::games::CRDGameTU::calculate_population_group_achievement,
+                 "calculates the group achievement in the population at a given state.",
+                 py::arg("population_size"), py::arg("population_state"))
+            .def("calculate_group_achievement", &egttools::FinitePopulations::games::CRDGameTU::calculate_group_achievement,
+                 "calculates the group achievement for a given stationary distribution.",
+                 py::arg("population_size"), py::arg("stationary_distribution"))
+            .def("calculate_polarization", &egttools::FinitePopulations::games::CRDGameTU::calculate_polarization,
+                 "calculates the fraction of players that contribute above, below or equal to the fair contribution (E/2)"
+                 "in a give population state.",
+                 py::arg("population_size"), py::arg("population_state"))
+            .def("calculate_polarization_success", &egttools::FinitePopulations::games::CRDGameTU::calculate_polarization_success,
+                 "calculates the fraction of players (from successful groups)) that contribute above, below or equal to the fair contribution (E/2)"
+                 "in a give population state.",
+                 py::arg("population_size"), py::arg("population_state"))
+            .def("__str__", &egttools::FinitePopulations::games::CRDGameTU::toString)
+            .def("type", &egttools::FinitePopulations::games::CRDGameTU::type)
+            .def("payoffs", &egttools::FinitePopulations::games::CRDGameTU::payoffs, "returns the expected payoffs of each strategy vs each possible game state")
+            .def("payoff", &egttools::FinitePopulations::games::CRDGameTU::payoff,
+                 "returns the payoff of a strategy given a group composition.", py::arg("strategy"),
+                 py::arg("strategy pair"))
+            .def_property_readonly("nb_strategies", &egttools::FinitePopulations::games::CRDGameTU::nb_strategies,
+                                   "Number of different strategies which are playing the game.")
+            .def_property_readonly("endowment", &egttools::FinitePopulations::games::CRDGameTU::endowment,
+                                   "Initial endowment for all players.")
+            .def_property_readonly("target", &egttools::FinitePopulations::games::CRDGameTU::target,
+                                   "Collective target which needs to be achieved by the group.")
+            .def_property_readonly("group_size", &egttools::FinitePopulations::games::CRDGameTU::group_size,
+                                   "Size of the group which will play the game.")
+            .def_property_readonly("risk", &egttools::FinitePopulations::games::CRDGameTU::risk,
+                                   "Probability that all players will lose their remaining endowment if the target si not achieved.")
+            .def_property_readonly("min_rounds", &egttools::FinitePopulations::games::CRDGameTU::min_rounds,
+                                   "Minimum number of rounds of the game.")
+            .def_property_readonly("nb_states", &egttools::FinitePopulations::games::CRDGameTU::nb_states,
+                                   "Number of combinations of 2 strategies that can be matched in the game.")
+            .def_property_readonly("strategies", &egttools::FinitePopulations::games::CRDGameTU::strategies,
+                                   "A list with pointers to the strategies that are playing the game.")
+            .def("save_payoffs", &egttools::FinitePopulations::games::CRDGameTU::save_payoffs,
                  "Saves the payoff matrix in a txt file.");
 
     py::class_<egttools::FinitePopulations::behaviors::AbstractNFGStrategy, stubs::PyAbstractNFGStrategy>(mNF, "AbstractNFGStrategy")

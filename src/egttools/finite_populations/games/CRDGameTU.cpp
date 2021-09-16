@@ -2,15 +2,19 @@
 // Created by Elias Fernandez on 2019-06-27.
 //
 
-#include <egttools/finite_populations/games/CRDGame.hpp>
+#include <egttools/finite_populations/games/CRDGameTU.hpp>
 
-egttools::FinitePopulations::CRDGame::CRDGame(int endowment, int threshold, int nb_rounds, int group_size,
-                                              double risk, const CRDStrategyVector &strategies)
+egttools::FinitePopulations::games::CRDGameTU::CRDGameTU(int endowment, int threshold,
+                                                         int min_rounds, int group_size,
+                                                         double risk,
+                                                         egttools::utils::TimingUncertainty<std::mt19937_64> &tu,
+                                                         const CRDStrategyVector &strategies)
     : endowment_(endowment),
       threshold_(threshold),
-      nb_rounds_(nb_rounds),
+      min_rounds_(min_rounds),
       group_size_(group_size),
       risk_(risk),
+      tu_(tu),
       strategies_(strategies) {
 
     // First we check how many strategies will be in the game
@@ -21,20 +25,24 @@ egttools::FinitePopulations::CRDGame::CRDGame(int endowment, int threshold, int 
 
     expected_payoffs_ = GroupPayoffs::Zero(nb_strategies_, nb_states_);
     group_achievement_ = egttools::Vector::Zero(nb_states_);
-    c_behaviors_ = egttools::MatrixXui2D::Zero(nb_states_, 3);
+    c_behaviors_counts_ = egttools::MatrixXui2D::Zero(nb_states_, 3);
+    c_behaviors_ = egttools::Matrix2D::Zero(nb_states_, 3);
+
+    // initialise random distribution
+    real_rand_ = RandomDist(0.0, 1.0);
 
     // Initialise payoff matrix
-    egttools::FinitePopulations::CRDGame::calculate_payoffs();
+    calculate_payoffs();
 
     // Initialise group achievement vector
     calculate_success_per_group_composition();
 }
 
-
-void egttools::FinitePopulations::CRDGame::play(const egttools::FinitePopulations::StrategyCounts &group_composition,
-                                                PayoffVector &game_payoffs) {
+void egttools::FinitePopulations::games::CRDGameTU::play(const egttools::FinitePopulations::StrategyCounts &group_composition,
+                                                         PayoffVector &game_payoffs) {
     int prev_donation = 0, current_donation = 0;
     int public_account = 0;
+    int game_rounds = tu_.calculate_full_end(min_rounds_, generator_);
     VectorXi actions = VectorXi::Zero(nb_strategies_);
 
     // Initialize payoffs
@@ -46,7 +54,7 @@ void egttools::FinitePopulations::CRDGame::play(const egttools::FinitePopulation
         }
     }
 
-    for (int i = 0; i < nb_rounds_; ++i) {
+    for (int i = 0; i < game_rounds; ++i) {
         for (int j = 0; j < nb_strategies_; ++j) {
             if (group_composition[j] > 0) {
                 actions(j) = strategies_[j]->get_action(i, prev_donation - actions(j));
@@ -67,20 +75,20 @@ void egttools::FinitePopulations::CRDGame::play(const egttools::FinitePopulation
         for (auto &type : game_payoffs) type *= (1.0 - risk_);
 }
 
-std::string egttools::FinitePopulations::CRDGame::toString() const {
-    return "Collective-risk dilemma game.\n"
-           "See Milinski et al. 2008.";
+std::string egttools::FinitePopulations::games::CRDGameTU::toString() const {
+    return "Collective-risk dilemma game with Timing uncertainty.\n"
+           "See Fernández Domingos et al. 2020.";
 }
 
-std::string egttools::FinitePopulations::CRDGame::type() const {
-    return "egttools::FinitePopulations::CRDGame";
+std::string egttools::FinitePopulations::games::CRDGameTU::type() const {
+    return "egttools::FinitePopulations::games::CRDGameTU";
 }
 
-size_t egttools::FinitePopulations::CRDGame::nb_strategies() const {
+size_t egttools::FinitePopulations::games::CRDGameTU::nb_strategies() const {
     return strategies_.size();
 }
 
-const egttools::FinitePopulations::GroupPayoffs &egttools::FinitePopulations::CRDGame::calculate_payoffs() {
+const egttools::FinitePopulations::GroupPayoffs &egttools::FinitePopulations::games::CRDGameTU::calculate_payoffs() {
     StrategyCounts group_composition(nb_strategies_, 0);
     std::vector<double> game_payoffs(nb_strategies_, 0);
 
@@ -92,18 +100,24 @@ const egttools::FinitePopulations::GroupPayoffs &egttools::FinitePopulations::CR
         // Update group composition from current state
         egttools::FinitePopulations::sample_simplex(i, group_size_, nb_strategies_, group_composition);
 
-        // play game and update game_payoffs
-        play(group_composition, game_payoffs);
+        // Since the number of rounds of the game is stochastic
+        // we repeat the game 10000 times to obtain a good estimation
+        for (size_t z = 0; z < 10000; ++z) {
+            // play game and update game_payoffs
+            play(group_composition, game_payoffs);
 
-        // Fill payoff table
-        for (int j = 0; j < nb_strategies_; ++j) expected_payoffs_(j, i) = game_payoffs[j];
+            // Fill payoff table
+            for (int j = 0; j < nb_strategies_; ++j) expected_payoffs_(j, i) += game_payoffs[j];
+        }
+        // avg. the results
+        expected_payoffs_.col(i) /= 10000;
     }
 
     return expected_payoffs_;
 }
 
-double egttools::FinitePopulations::CRDGame::calculate_fitness(const size_t &player_type, const size_t &pop_size,
-                                                               const Eigen::Ref<const VectorXui> &strategies) {
+double egttools::FinitePopulations::games::CRDGameTU::calculate_fitness(const size_t &player_type, const size_t &pop_size,
+                                                                        const Eigen::Ref<const VectorXui> &strategies) {
     // This function assumes that the strategy counts given in @param strategies does not include
     // the player with @param player_type strategy.
 
@@ -134,7 +148,7 @@ double egttools::FinitePopulations::CRDGame::calculate_fitness(const size_t &pla
     return fitness;
 }
 
-void egttools::FinitePopulations::CRDGame::save_payoffs(std::string file_name) const {
+void egttools::FinitePopulations::games::CRDGameTU::save_payoffs(std::string file_name) const {
     // Save payoffs
     std::ofstream file(file_name, std::ios::out | std::ios::trunc);
     if (file.is_open()) {
@@ -144,7 +158,8 @@ void egttools::FinitePopulations::CRDGame::save_payoffs(std::string file_name) c
         file << expected_payoffs_ << std::endl;
         file << "group_size = " << group_size_ << std::endl;
         file << "timing_uncertainty = false" << std::endl;
-        file << "nb_rounds = " << nb_rounds_ << std::endl;
+        file << "min_rounds = " << min_rounds_ << std::endl;
+        file << "p = " << tu_.probability() << std::endl;
         file << "risk = " << risk_ << std::endl;
         file << "endowment = " << endowment_ << std::endl;
         file << "threshold = " << threshold_ << std::endl;
@@ -152,12 +167,12 @@ void egttools::FinitePopulations::CRDGame::save_payoffs(std::string file_name) c
     }
 }
 
-const egttools::FinitePopulations::GroupPayoffs &egttools::FinitePopulations::CRDGame::payoffs() const {
+const egttools::FinitePopulations::GroupPayoffs &egttools::FinitePopulations::games::CRDGameTU::payoffs() const {
     return expected_payoffs_;
 }
 
 double
-egttools::FinitePopulations::CRDGame::payoff(size_t strategy, const egttools::FinitePopulations::StrategyCounts &group_composition) const {
+egttools::FinitePopulations::games::CRDGameTU::payoff(size_t strategy, const egttools::FinitePopulations::StrategyCounts &group_composition) const {
     if (strategy > static_cast<size_t>(nb_strategies_))
         throw std::invalid_argument(
                 "you must specify a valid index for the strategy [0, " + std::to_string(nb_strategies_) +
@@ -167,11 +182,12 @@ egttools::FinitePopulations::CRDGame::payoff(size_t strategy, const egttools::Fi
     return expected_payoffs_(static_cast<int>(strategy), static_cast<int64_t>(egttools::FinitePopulations::calculate_state(group_size_, group_composition)));
 }
 
-void egttools::FinitePopulations::CRDGame::_check_success(size_t state, PayoffVector &game_payoffs,
-                                                          const egttools::FinitePopulations::StrategyCounts &group_composition) {
+void egttools::FinitePopulations::games::CRDGameTU::_check_success(size_t state, PayoffVector &game_payoffs,
+                                                                   const egttools::FinitePopulations::StrategyCounts &group_composition) {
     int prev_donation = 0, current_donation = 0;
     int public_account = 0;
     double fair_endowment = static_cast<double>(endowment_) / 2;
+    int game_rounds = tu_.calculate_full_end(min_rounds_, generator_);
     VectorXi actions = VectorXi::Zero(nb_strategies_);
     auto tmp_state = static_cast<int64_t>(state);
 
@@ -184,7 +200,7 @@ void egttools::FinitePopulations::CRDGame::_check_success(size_t state, PayoffVe
         }
     }
 
-    for (int i = 0; i < nb_rounds_; ++i) {
+    for (int i = 0; i < game_rounds; ++i) {
         for (int j = 0; j < nb_strategies_; ++j) {
             if (group_composition[j] > 0) {
                 actions(j) = strategies_[j]->get_action(i, prev_donation - actions(j));
@@ -200,11 +216,11 @@ void egttools::FinitePopulations::CRDGame::_check_success(size_t state, PayoffVe
         if (public_account >= threshold_) {
             for (int j = 0; j < nb_strategies_; ++j) {
                 if (group_composition[j] > 0) {
-                    if (game_payoffs[j] > fair_endowment) c_behaviors_(tmp_state, 0) += group_composition[j];
+                    if (game_payoffs[j] > fair_endowment) c_behaviors_counts_(tmp_state, 0) += group_composition[j];
                     else if (game_payoffs[j] < fair_endowment)
-                        c_behaviors_(tmp_state, 2) += group_composition[j];
+                        c_behaviors_counts_(tmp_state, 2) += group_composition[j];
                     else
-                        c_behaviors_(tmp_state, 1) += group_composition[j];
+                        c_behaviors_counts_(tmp_state, 1) += group_composition[j];
                 }
             }
             group_achievement_(tmp_state) = 1.0;
@@ -212,40 +228,47 @@ void egttools::FinitePopulations::CRDGame::_check_success(size_t state, PayoffVe
         }
     }
 
-    if (public_account < threshold_)
-        group_achievement_(tmp_state) = 0.0;
-    else
-        group_achievement_(tmp_state) = 1.0;
+    if (public_account >= threshold_)
+        group_achievement_(tmp_state) += 1.0;
 
     for (int j = 0; j < nb_strategies_; ++j) {
         if (group_composition[j] > 0) {
-            if (game_payoffs[j] > fair_endowment) c_behaviors_(tmp_state, 0) += group_composition[j];
+            if (game_payoffs[j] > fair_endowment) c_behaviors_counts_(tmp_state, 0) += group_composition[j];
             else if (game_payoffs[j] < fair_endowment)
-                c_behaviors_(tmp_state, 2) += group_composition[j];
+                c_behaviors_counts_(tmp_state, 2) += group_composition[j];
             else
-                c_behaviors_(tmp_state, 1) += group_composition[j];
+                c_behaviors_counts_(tmp_state, 1) += group_composition[j];
         }
     }
 }
 
-const egttools::Vector &egttools::FinitePopulations::CRDGame::calculate_success_per_group_composition() {
+const egttools::Vector &egttools::FinitePopulations::games::CRDGameTU::calculate_success_per_group_composition() {
     StrategyCounts group_composition(nb_strategies_, 0);
     std::vector<double> game_payoffs(nb_strategies_, 0);
+
+    c_behaviors_counts_.setZero();
+    group_achievement_.setZero();
 
     // For every possible group composition run the game and store the payoff of each strategy
     for (int64_t i = 0; i < nb_states_; ++i) {
         // Update group composition from current state
         egttools::FinitePopulations::sample_simplex(i, group_size_, nb_strategies_, group_composition);
 
-        // play game and update group achievement
-        _check_success(i, game_payoffs, group_composition);
+        // Since the number of rounds of the game is stochastic
+        // we repeat the game a 10000 times to obtain a good estimation
+        for (size_t z = 0; z < 10000; ++z) {
+            // play game and update group achievement
+            _check_success(i, game_payoffs, group_composition);
+        }
+        group_achievement_(i) /= 10000;
+        c_behaviors_.row(i) = c_behaviors_counts_.cast<double>() / (10000 * group_size_);
     }
 
     return group_achievement_;
 }
 
-double egttools::FinitePopulations::CRDGame::calculate_population_group_achievement(size_t pop_size,
-                                                                                    const Eigen::Ref<const egttools::VectorXui> &population_state) {
+double egttools::FinitePopulations::games::CRDGameTU::calculate_population_group_achievement(size_t pop_size,
+                                                                                             const Eigen::Ref<const egttools::VectorXui> &population_state) {
     // This function assumes that the strategy counts given in @param strategies does not include
     // the player with @param player_type strategy.
 
@@ -270,8 +293,8 @@ double egttools::FinitePopulations::CRDGame::calculate_population_group_achievem
     return group_achievement;
 }
 
-double egttools::FinitePopulations::CRDGame::calculate_group_achievement(size_t pop_size,
-                                                                         const Eigen::Ref<const egttools::Vector> &stationary_distribution) {
+double egttools::FinitePopulations::games::CRDGameTU::calculate_group_achievement(size_t pop_size,
+                                                                                  const Eigen::Ref<const egttools::Vector> &stationary_distribution) {
     double group_achievement = 0;
 
 #pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_) reduction(+ \
@@ -284,9 +307,9 @@ double egttools::FinitePopulations::CRDGame::calculate_group_achievement(size_t 
     return group_achievement;
 }
 
-void egttools::FinitePopulations::CRDGame::calculate_population_polarization(size_t pop_size,
-                                                                             const Eigen::Ref<const egttools::VectorXui> &population_state,
-                                                                             egttools::Vector3d &polarization) {
+void egttools::FinitePopulations::games::CRDGameTU::calculate_population_polarization(size_t pop_size,
+                                                                                      const Eigen::Ref<const egttools::VectorXui> &population_state,
+                                                                                      egttools::Vector3d &polarization) {
     polarization.setZero();
     std::vector<size_t> sample_counts(nb_strategies_, 0);
 
@@ -299,13 +322,13 @@ void egttools::FinitePopulations::CRDGame::calculate_population_polarization(siz
         auto prob = egttools::multivariateHypergeometricPDF(pop_size, nb_strategies_, group_size_, sample_counts,
                                                             population_state);
 
-        polarization += (prob * c_behaviors_.row(i).cast<double>()) / group_size_;
+        polarization += prob * c_behaviors_.row(i);
     }
 }
 
-void egttools::FinitePopulations::CRDGame::calculate_population_polarization_success(size_t pop_size,
-                                                                                     const Eigen::Ref<const egttools::VectorXui> &population_state,
-                                                                                     egttools::Vector3d &polarization) {
+void egttools::FinitePopulations::games::CRDGameTU::calculate_population_polarization_success(size_t pop_size,
+                                                                                              const Eigen::Ref<const egttools::VectorXui> &population_state,
+                                                                                              egttools::Vector3d &polarization) {
     polarization.setZero();
     std::vector<size_t> sample_counts(nb_strategies_, 0);
 
@@ -318,14 +341,15 @@ void egttools::FinitePopulations::CRDGame::calculate_population_polarization_suc
         auto prob = egttools::multivariateHypergeometricPDF(pop_size, nb_strategies_, group_size_, sample_counts,
                                                             population_state);
 
-        polarization += (prob * group_achievement_(i) * c_behaviors_.row(i).cast<double>()) / group_size_;
+        polarization += prob * c_behaviors_.row(i) * group_achievement_(i);
     }
+
     auto sum = polarization.sum();
     if (sum > 0) polarization /= sum;
 }
 
-egttools::Vector3d egttools::FinitePopulations::CRDGame::calculate_polarization(size_t pop_size,
-                                                                                const Eigen::Ref<const egttools::Vector> &stationary_distribution) {
+egttools::Vector3d egttools::FinitePopulations::games::CRDGameTU::calculate_polarization(size_t pop_size,
+                                                                                         const Eigen::Ref<const egttools::Vector> &stationary_distribution) {
     egttools::Vector3d polarization = egttools::Vector3d::Zero();
 
 #pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_) reduction(+ \
@@ -338,11 +362,11 @@ egttools::Vector3d egttools::FinitePopulations::CRDGame::calculate_polarization(
         calculate_population_polarization(pop_size, strategies, container);
         polarization += stationary_distribution(i) * container;
     }
-    return polarization / polarization.sum();
+    return polarization;
 }
 
-egttools::Vector3d egttools::FinitePopulations::CRDGame::calculate_polarization_success(size_t pop_size,
-                                                                                        const Eigen::Ref<const egttools::Vector> &stationary_distribution) {
+egttools::Vector3d egttools::FinitePopulations::games::CRDGameTU::calculate_polarization_success(size_t pop_size,
+                                                                                                 const Eigen::Ref<const egttools::Vector> &stationary_distribution) {
     egttools::Vector3d polarization = egttools::Vector3d::Zero();
 
 #pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_) reduction(+ \
@@ -358,37 +382,37 @@ egttools::Vector3d egttools::FinitePopulations::CRDGame::calculate_polarization_
     return polarization;
 }
 
-const egttools::Vector &egttools::FinitePopulations::CRDGame::group_achievements() const {
+const egttools::Vector &egttools::FinitePopulations::games::CRDGameTU::group_achievements() const {
     return group_achievement_;
 }
 
-const egttools::MatrixXui2D &egttools::FinitePopulations::CRDGame::contribution_behaviors() const {
+const egttools::Matrix2D &egttools::FinitePopulations::games::CRDGameTU::contribution_behaviors() const {
     return c_behaviors_;
 }
 
-size_t egttools::FinitePopulations::CRDGame::target() const {
+size_t egttools::FinitePopulations::games::CRDGameTU::target() const {
     return threshold_;
 }
 
-size_t egttools::FinitePopulations::CRDGame::endowment() const {
+size_t egttools::FinitePopulations::games::CRDGameTU::endowment() const {
     return endowment_;
 }
 
-size_t egttools::FinitePopulations::CRDGame::nb_rounds() const {
-    return nb_rounds_;
+size_t egttools::FinitePopulations::games::CRDGameTU::min_rounds() const {
+    return min_rounds_;
 }
 
-size_t egttools::FinitePopulations::CRDGame::group_size() const {
+size_t egttools::FinitePopulations::games::CRDGameTU::group_size() const {
     return group_size_;
 }
 
-double egttools::FinitePopulations::CRDGame::risk() const {
+double egttools::FinitePopulations::games::CRDGameTU::risk() const {
     return risk_;
 }
 
-size_t egttools::FinitePopulations::CRDGame::nb_states() const {
+size_t egttools::FinitePopulations::games::CRDGameTU::nb_states() const {
     return nb_states_;
 }
-const egttools::FinitePopulations::CRDStrategyVector &egttools::FinitePopulations::CRDGame::strategies() const {
+const egttools::FinitePopulations::games::CRDStrategyVector &egttools::FinitePopulations::games::CRDGameTU::strategies() const {
     return strategies_;
 }

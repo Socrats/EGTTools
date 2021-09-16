@@ -25,7 +25,8 @@ namespace egttools::DataStructures {
         std::vector<std::string> header;
         std::vector<std::string> column_types;
         Matrix2D data;
-
+        /* TODO: either create a simplified pandas-like interface for this structure
+         * or try to get this structure transformed into a pandas dataframe in Python.  */
         DataTable(size_t nb_rows,
                   size_t nb_columns,
                   std::vector<std::string> &headers,

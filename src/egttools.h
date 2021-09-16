@@ -22,6 +22,8 @@
 #include <egttools/finite_populations/behaviors/NFGStrategies.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <egttools/finite_populations/games/CRDGame.hpp>
+#include <egttools/finite_populations/games/CRDGameTU.hpp>
+#include <egttools/utils/TimingUncertainty.hpp>
 
 #include "python_stubs.hpp"
 

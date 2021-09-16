@@ -19,6 +19,7 @@ target_sources(numerical PRIVATE
         Utils.cpp
         games/NormalFormGame.cpp
         games/CRDGame.cpp
+        games/CRDGameTU.cpp
         behaviors/NFGStrategies.cpp
         behaviors/CRDStrategies.cpp
         )
