@@ -2,6 +2,6 @@
 API reference documentation for the `games` submodule.
 """
 
-from egttools.numerical.games import AbstractGame, NormalFormGame, CRDGame
+from egttools.numerical.games import AbstractGame, NormalFormGame, CRDGame, CRDGameTU
 
 from .pgg import PGG

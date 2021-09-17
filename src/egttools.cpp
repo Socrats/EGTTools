@@ -231,7 +231,7 @@ PYBIND11_MODULE(numerical, m) {
                     max_rounds : int
                         maximum number of rounds that the game can take (if 0, there is no maximum).
                     )pbdoc",
-                 py::arg("p"), py::arg("max_rounds"))
+                 py::arg("p"), py::arg("max_rounds") = 0)
             .def("calculate_end", &egttools::utils::TimingUncertainty<>::calculate_end,
                  "Calculates the final round limiting by max_rounds, i.e., outputs a value between"
                  "[min_rounds, max_rounds].",
@@ -664,7 +664,7 @@ PYBIND11_MODULE(numerical, m) {
             .def("save_payoffs", &egttools::FinitePopulations::CRDGame::save_payoffs,
                  "Saves the payoff matrix in a txt file.");
 
-    py::class_<egttools::FinitePopulations::games::CRDGameTU, egttools::FinitePopulations::AbstractGame>(mGames, "CRDGame")
+    py::class_<egttools::FinitePopulations::games::CRDGameTU, egttools::FinitePopulations::AbstractGame>(mGames, "CRDGameTU")
             .def(py::init(&egttools::init_crd_tu_game_from_python_list),
                  R"pbdoc(
                     Collective Risk Dilemma. This allows you to define any number of strategies by passing them

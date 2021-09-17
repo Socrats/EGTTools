@@ -18,7 +18,6 @@ namespace egttools::FinitePopulations::games {
     using PayoffVector = std::vector<double>;
     using AbstractCRDStrategy = egttools::FinitePopulations::behaviors::AbstractCRDStrategy;
     using CRDStrategyVector = std::vector<AbstractCRDStrategy *>;
-    using RandomDist = std::uniform_real_distribution<double>;
 
     class CRDGameTU final : public egttools::FinitePopulations::AbstractGame {
     public:
@@ -171,9 +170,6 @@ namespace egttools::FinitePopulations::games {
         egttools::utils::TimingUncertainty<std::mt19937_64> tu_;
 
         CRDStrategyVector strategies_;
-
-        // Random distributions
-        RandomDist real_rand_;
 
         // Random generators
         std::mt19937_64 generator_{egttools::Random::SeedGenerator::getInstance().getSeed()};

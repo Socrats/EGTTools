@@ -28,9 +28,6 @@ egttools::FinitePopulations::games::CRDGameTU::CRDGameTU(int endowment, int thre
     c_behaviors_counts_ = egttools::MatrixXui2D::Zero(nb_states_, 3);
     c_behaviors_ = egttools::Matrix2D::Zero(nb_states_, 3);
 
-    // initialise random distribution
-    real_rand_ = RandomDist(0.0, 1.0);
-
     // Initialise payoff matrix
     calculate_payoffs();
 
@@ -261,7 +258,7 @@ const egttools::Vector &egttools::FinitePopulations::games::CRDGameTU::calculate
             _check_success(i, game_payoffs, group_composition);
         }
         group_achievement_(i) /= 10000;
-        c_behaviors_.row(i) = c_behaviors_counts_.cast<double>() / (10000 * group_size_);
+        c_behaviors_.row(i) = c_behaviors_counts_.row(i).cast<double>() / (10000 * group_size_);
     }
 
     return group_achievement_;
