@@ -15,14 +15,11 @@ int main() {
     auto tu = egttools::utils::TimingUncertainty(1. / 3);
 
     int avg_rounds = 0;
-    double tol = 0.05;
 
     for (int i = 0; i < 10000; ++i) {
         avg_rounds += tu.calculate_full_end(8, generator);
     }
 
-    auto avg = avg_rounds / 10000.0;
-
-    assert(avg > 10 - tol);
-    assert(avg < 10 + tol);
+    assert(avg_rounds / 10000.0 > 10 - 0.05);
+    assert(avg_rounds / 10000.0 < 10 + 0.05);
 }
