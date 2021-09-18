@@ -68,7 +68,7 @@ namespace egttools {
                                                                                                      int nb_rounds,
                                                                                                      int group_size,
                                                                                                      double risk,
-                                                                                                     egttools::utils::TimingUncertainty<std::mt19937_64> tu,
+                                                                                                     egttools::utils::TimingUncertainty<> tu,
                                                                                                      const py::list &strategies) {
         egttools::FinitePopulations::games::CRDStrategyVector strategies_cpp;
         for (py::handle strategy : strategies) {

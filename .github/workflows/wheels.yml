@@ -116,6 +116,7 @@ jobs:
         uses: jwlawson/actions-setup-cmake@v1.8
 
       - name: Build and test wheels
+        uses: pypa/cibuildwheel@v2.1.2
         env:
           CIBW_BUILD: "cp39-${{ matrix.cibw-arch }}"
           CIBW_ENVIRONMENT: CMAKE_BUILD_PARALLEL_LEVEL=2
