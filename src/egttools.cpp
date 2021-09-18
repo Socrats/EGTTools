@@ -723,10 +723,12 @@ PYBIND11_MODULE(numerical, m) {
                  "calculates the group achievement for a given stationary distribution.",
                  py::arg("population_size"), py::arg("stationary_distribution"))
             .def("calculate_polarization", &egttools::FinitePopulations::games::CRDGameTU::calculate_polarization,
+                 py::call_guard<py::gil_scoped_release>(),
                  "calculates the fraction of players that contribute above, below or equal to the fair contribution (E/2)"
                  "in a give population state.",
                  py::arg("population_size"), py::arg("population_state"))
             .def("calculate_polarization_success", &egttools::FinitePopulations::games::CRDGameTU::calculate_polarization_success,
+                 py::call_guard<py::gil_scoped_release>(),
                  "calculates the fraction of players (from successful groups)) that contribute above, below or equal to the fair contribution (E/2)"
                  "in a give population state.",
                  py::arg("population_size"), py::arg("population_state"))

@@ -86,14 +86,15 @@ size_t egttools::FinitePopulations::games::CRDGameTU::nb_strategies() const {
 }
 
 const egttools::FinitePopulations::GroupPayoffs &egttools::FinitePopulations::games::CRDGameTU::calculate_payoffs() {
-    StrategyCounts group_composition(nb_strategies_, 0);
-    std::vector<double> game_payoffs(nb_strategies_, 0);
-
     // Initialise matrix
     expected_payoffs_.setZero();
 
+#pragma omp parallel for default(none) shared(nb_strategies_, group_size_, expected_payoffs_)
     // For every possible group composition run the game and store the payoff of each strategy
     for (int64_t i = 0; i < nb_states_; ++i) {
+        StrategyCounts group_composition(nb_strategies_, 0);
+        std::vector<double> game_payoffs(nb_strategies_, 0);
+
         // Update group composition from current state
         egttools::FinitePopulations::sample_simplex(i, group_size_, nb_strategies_, group_composition);
 
@@ -197,7 +198,9 @@ void egttools::FinitePopulations::games::CRDGameTU::_check_success(size_t state,
         }
     }
 
+    // Play the game and find out whether the group is successful
     for (int i = 0; i < game_rounds; ++i) {
+        // Let each strategy choose an action (this assumes that the action is not stochastic)
         for (int j = 0; j < nb_strategies_; ++j) {
             if (group_composition[j] > 0) {
                 actions(j) = strategies_[j]->get_action(i, prev_donation - actions(j));
@@ -211,26 +214,15 @@ void egttools::FinitePopulations::games::CRDGameTU::_check_success(size_t state,
         prev_donation = current_donation;
         current_donation = 0;
         if (public_account >= threshold_) {
-            for (int j = 0; j < nb_strategies_; ++j) {
-                if (group_composition[j] > 0) {
-                    if (game_payoffs[j] > fair_endowment) c_behaviors_counts_(tmp_state, 0) += group_composition[j];
-                    else if (game_payoffs[j] < fair_endowment)
-                        c_behaviors_counts_(tmp_state, 2) += group_composition[j];
-                    else
-                        c_behaviors_counts_(tmp_state, 1) += group_composition[j];
-                }
-            }
-            group_achievement_(tmp_state) = 1.0;
-            return;
+            group_achievement_(tmp_state) += 1.0;
+            break;
         }
     }
 
-    if (public_account >= threshold_)
-        group_achievement_(tmp_state) += 1.0;
-
     for (int j = 0; j < nb_strategies_; ++j) {
         if (group_composition[j] > 0) {
-            if (game_payoffs[j] > fair_endowment) c_behaviors_counts_(tmp_state, 0) += group_composition[j];
+            if (game_payoffs[j] > fair_endowment)
+                c_behaviors_counts_(tmp_state, 0) += group_composition[j];
             else if (game_payoffs[j] < fair_endowment)
                 c_behaviors_counts_(tmp_state, 2) += group_composition[j];
             else
@@ -240,14 +232,15 @@ void egttools::FinitePopulations::games::CRDGameTU::_check_success(size_t state,
 }
 
 const egttools::Vector &egttools::FinitePopulations::games::CRDGameTU::calculate_success_per_group_composition() {
-    StrategyCounts group_composition(nb_strategies_, 0);
-    std::vector<double> game_payoffs(nb_strategies_, 0);
-
     c_behaviors_counts_.setZero();
     group_achievement_.setZero();
 
+#pragma omp parallel for default(none) shared(nb_strategies_, group_size_, group_achievement_, c_behaviors_counts_, c_behaviors_)
     // For every possible group composition run the game and store the payoff of each strategy
     for (int64_t i = 0; i < nb_states_; ++i) {
+        StrategyCounts group_composition(nb_strategies_, 0);
+        std::vector<double> game_payoffs(nb_strategies_, 0);
+
         // Update group composition from current state
         egttools::FinitePopulations::sample_simplex(i, group_size_, nb_strategies_, group_composition);
 
