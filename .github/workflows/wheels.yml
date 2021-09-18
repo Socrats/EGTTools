@@ -128,7 +128,7 @@ jobs:
           CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3.sh
           CIBW_BEFORE_TEST: pip install --upgrade -r tests/requirements.txt
           CIBW_TEST_REQUIRES: pytest
-          CIBW_TEST_COMMAND: bash {project}/build_tools/github/test_wheels.sh {package}
+          CIBW_TEST_COMMAND: bash {package}/build_tools/github/test_wheels.sh {package}
 #          CIBW_BUILD_VERBOSITY: 2
         run: bash build_tools/github/build_wheels.sh
 
