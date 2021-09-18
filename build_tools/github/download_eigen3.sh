@@ -8,17 +8,17 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
   # it is not possible to copy the test configuration file (yet)
 
   pip install cmake
-  ln -s "$(which cmake)" /usr/local/bin/cmake
+#  ln -s "$(which cmake)" /usr/local/bin/cmake
 
   # First we download the correct eigen3 version and build it
-#  curl -O https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
-#  tar xf eigen-3.3.9.tar.gz
-#  mv eigen-3.3.9 eigen3
-#  cd eigen3
-#  mkdir "build"
-#  cd build
-#  cmake ..
-#  make install
+  curl -O https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
+  tar xf eigen-3.3.9.tar.gz
+  mv eigen-3.3.9 eigen3
+  cd eigen3
+  mkdir "build"
+  cd build
+  cmake ..
+  make install
 elif [[ "$RUNNER_OS" == "Windows" ]]; then
   #  curl.exe --output eigen-3.3.9.tar.gz --url https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
   #  tar -zxvf eigen-3.3.9.tar.gz
