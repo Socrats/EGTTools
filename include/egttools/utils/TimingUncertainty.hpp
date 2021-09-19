@@ -6,6 +6,7 @@
 #define EGTTOOLS_UTILS_TIMINGUNCERTAINTY_HPP
 
 #include <random>
+#include <stdexcept>
 
 namespace egttools::utils {
     template<typename R = std::mt19937_64, typename G = std::geometric_distribution<int>>

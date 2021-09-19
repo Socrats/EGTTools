@@ -5,17 +5,19 @@
 #ifndef DYRWIN_SED_MLS_HPP
 #define DYRWIN_SED_MLS_HPP
 
-#include <cmath>
-#include <random>
-#include <algorithm>
-#include <unordered_set>
-#include <iterator>
 #include <Dyrwin/SeedGenerator.h>
 #include <Dyrwin/Types.h>
-#include <Dyrwin/SED/structure/Group.hpp>
-#include <Dyrwin/SED/structure/GarciaGroup.hpp>
-#include <Dyrwin/SED/Utils.hpp>
+
 #include <Dyrwin/OpenMPUtils.hpp>
+#include <Dyrwin/SED/Utils.hpp>
+#include <Dyrwin/SED/structure/GarciaGroup.hpp>
+#include <Dyrwin/SED/structure/Group.hpp>
+#include <algorithm>
+#include <cmath>
+#include <iterator>
+#include <random>
+#include <stdexcept>
+#include <unordered_set>
 
 namespace EGTTools::SED {
 template<typename S = Group>

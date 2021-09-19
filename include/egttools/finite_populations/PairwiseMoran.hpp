@@ -25,6 +25,7 @@
 #include <egttools/LruCache.hpp>
 #include <egttools/finite_populations/Utils.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
+#include <stdexcept>
 
 #if defined(_OPENMP)
 #include <egttools/OpenMPUtils.hpp>

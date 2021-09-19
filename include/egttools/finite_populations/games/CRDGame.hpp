@@ -9,9 +9,13 @@
 #include <egttools/finite_populations/behaviors/CRDStrategies.h>
 
 #include <cassert>
-#include <egttools/OpenMPUtils.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <fstream>
+#include <stdexcept>
+
+#if defined(_OPENMP)
+#include <egttools/OpenMPUtils.hpp>
+#endif
 
 namespace egttools::FinitePopulations {
     using PayoffVector = std::vector<double>;

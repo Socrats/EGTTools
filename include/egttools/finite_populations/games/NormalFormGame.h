@@ -25,6 +25,7 @@
 #include <egttools/finite_populations/behaviors/AbstractNFGStrategy.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <fstream>
+#include <stdexcept>
 
 #if defined(_OPENMP)
 #include <egttools/OpenMPUtils.hpp>

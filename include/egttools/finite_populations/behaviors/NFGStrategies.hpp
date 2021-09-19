@@ -24,6 +24,7 @@
 
 #include <egttools/finite_populations/behaviors/AbstractNFGStrategy.hpp>
 #include <random>
+#include <stdexcept>
 
 // Many of the strategies defined here have been extracted from https://plato.stanford.edu/entries/prisoner-dilemma/strategy-table.html
 // TODO: Reformat all namespaces: here change to behaviors::NormalForm::twoActions
