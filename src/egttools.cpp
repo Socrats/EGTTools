@@ -645,6 +645,7 @@ PYBIND11_MODULE(numerical, m) {
             .def("payoff", &egttools::FinitePopulations::CRDGame::payoff,
                  "returns the payoff of a strategy given a group composition.", py::arg("strategy"),
                  py::arg("strategy pair"))
+            .def_property_readonly("group_achievement_per_group", &egttools::FinitePopulations::CRDGame::group_achievements)
             .def_property_readonly("nb_strategies", &egttools::FinitePopulations::CRDGame::nb_strategies,
                                    "Number of different strategies which are playing the game.")
             .def_property_readonly("endowment", &egttools::FinitePopulations::CRDGame::endowment,

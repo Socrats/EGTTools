@@ -168,3 +168,28 @@ def transform_payoffs_to_pairwise(nb_strategies: int,
     """
     return np.asarray(
         [[get_payoff_function(i, j, nb_strategies, game) for j in range(nb_strategies)] for i in range(nb_strategies)])
+
+
+def calculate_stationary_distribution(transition_matrix: np.ndarray) -> np.ndarray:
+    """
+    Calculates stationary distribution from a transition matrix of Markov chain.
+
+    The stationary distribution is the normalized eigenvector associated with the eigenvalue 1
+
+    Parameters
+    ----------
+    transition_matrix : numpy.ndarray
+        A 2 dimensional transition matrix
+
+    Returns
+    -------
+    numpy.ndarray
+        A 1-dimensional vector containing the stationary distribution
+
+    """
+    # calculate stationary distributions using eigenvalues and eigenvectors
+    w, v = np.linalg.eig(transition_matrix)
+    j_stationary = np.argmin(abs(w - 1.0))  # look for the element closest to 1 in the list of eigenvalues
+    sd = abs(v[:, j_stationary].real)  # the, is essential to access the matrix by column
+    sd /= sd.sum()  # normalize
+    return sd
