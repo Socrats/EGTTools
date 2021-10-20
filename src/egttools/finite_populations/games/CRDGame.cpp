@@ -53,6 +53,9 @@ void egttools::FinitePopulations::CRDGame::play(const egttools::FinitePopulation
                 if (game_payoffs[j] >= actions(j)) {
                     game_payoffs[j] -= actions(j);
                     current_donation += static_cast<int>(group_composition[j]) * actions(j);
+                } else { // If not enough, contribute what is left of the endowment
+                    current_donation += static_cast<int>(group_composition[j]) * game_payoffs[j];
+                    game_payoffs[j] = 0;
                 }
             }
         }
