@@ -22,7 +22,7 @@ to find saddle points and plot gradients in 2 player, 2 strategy games.
 import egttools.numerical.games
 import numpy
 import numpy as np
-from typing import Optional
+from typing import Optional, List, Generator
 
 
 def find_saddle_type_and_gradient_direction(gradient, saddle_points_idx, offset=0.01):
@@ -128,6 +128,8 @@ def get_payoff_function(strategy_i: int,
             The payoff of strategy i in a group with k i strategists and group_size - k
             j strategists.
         """
+        if k > group_size:
+            return Exception("You have indicated a wrong group composition. k must be smaller or equal to group_size.")
         group_composition = np.zeros(shape=(nb_strategies,), dtype=int)
         group_composition[strategy_i] = k
         group_composition[strategy_j] = group_size - k
@@ -193,3 +195,44 @@ def calculate_stationary_distribution(transition_matrix: np.ndarray) -> np.ndarr
     sd = abs(v[:, j_stationary].real)  # the, is essential to access the matrix by column
     sd /= sd.sum()  # normalize
     return sd
+
+
+def combine(values: List, length: int) -> Generator:
+    """
+    Outputs a generator that will generate an ordered list
+    with the possible combinations of values with length.
+
+    Each time the generator is called it will output a list
+    of length :param length which contains a combinations of the elements in
+    the list of values.
+
+    Parameters
+    ----------
+    values : List
+        elements to combine
+    length : int
+        size of the output
+
+    Returns
+    -------
+    Generator
+        A generator which outputs ordered combinations of value as a list of size
+        length
+
+
+    Examples
+    --------
+    >>> for value in combine([1, 2], 2):
+    ...     print(value)
+    [1, 1]
+    [2, 1]
+    [1, 2]
+    [2, 2]
+    """
+    output = [values[0]] * length
+    max_combinations = len(values) ** length
+    yield output
+    for i in range(1, max_combinations):
+        for j in range(length):
+            output[j] = values[(i // len(values) ** j) % len(values)]
+        yield output
