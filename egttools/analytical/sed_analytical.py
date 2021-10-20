@@ -245,7 +245,7 @@ class StochDynamics:
         return np.clip(1. / (1. + np.exp(beta * fitness_diff, dtype=np.float64)), 0., 1.)
 
     def prob_increase_decrease(self, k: int, invader: int, resident: int,
-                               beta: float, *args: Optional[list]) -> Tuple[float, float]:
+                               beta: float, *args: Optional[list]) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
         """
         This function calculates for a given number of invaders the probability
         that the number increases or decreases with one.
@@ -265,13 +265,13 @@ class StochDynamics:
             in the payoff matrix.
         Returns
         -------
-        Tuple[float, float]
+        Tuple[numpy.typing.ArrayLike, numpy.typing.ArrayLike]
             tuple(probability of increasing the number of invaders, probability of decreasing)
         """
         fitness_diff = self.fitness(k, invader, resident, *args)
         increase = (((self.Z - k) / float(self.Z)) * (k / float(self.Z - 1))) * StochDynamics.fermi(-beta, fitness_diff)
         decrease = ((k / float(self.Z)) * ((self.Z - k) / float(self.Z - 1))) * StochDynamics.fermi(beta, fitness_diff)
-        return increase, decrease
+        return np.clip(increase, 0., 1.), np.clip(decrease, 0., 1.)
 
     def prob_increase_decrease_with_mutation(self, k: int, invader: int, resident: int, beta: float,
                                              *args: Optional[list]) -> Tuple[float, float]:
@@ -420,6 +420,9 @@ class StochDynamics:
             p_plus, p_minus = self.prob_increase_decrease(i, invader, resident, beta, *args)
             prod *= p_minus / p_plus
             phi += prod
+            # We can approximate by zero if phi is too big
+            if phi > 1e7:
+                return 0.0
 
         return 1.0 / (1.0 + phi)
 
@@ -514,7 +517,7 @@ class StochDynamics:
         if self.mu == 0:
             t, f = self.transition_and_fixation_matrix(beta, *args)
         else:
-            t = np.nan_to_num(self.calculate_full_transition_matrix(beta, *args))
+            t = np.nan_to_num(self.calculate_full_transition_matrix(beta, *args).toarray())
 
         # calculate stationary distributions using eigenvalues and eigenvectors
         w, v = np.linalg.eig(t)
