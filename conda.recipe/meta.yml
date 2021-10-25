@@ -1,6 +1,6 @@
 package:
   name: egttools
-  version: 0.1.5.dev3
+  version: 0.1.5.dev4
 
 source:
   path: ..
@@ -36,6 +36,5 @@ test:
     - pytest tests
 
 about:
-  summary: EGTtools provides a centralized repository with analytical and numerical methods to study/model
-           game theoretical problems under the Evolutionary Game Theory (EGT) framework.
+  summary: Analytical and numerical methods for Evolutionary Game Theory.
   license_file: LICENSE
