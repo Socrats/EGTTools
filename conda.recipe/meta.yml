@@ -1,0 +1,41 @@
+package:
+  name: egttools
+  version: 0.1.5.dev3
+
+source:
+  path: ..
+
+build:
+  number: 0
+  script: python -m pip install . -vvv
+
+requirements:
+  build:
+    - {{ compiler('cxx') }}
+
+  host:
+    - python
+    - pip
+    - pybind11 >=2.6.0
+    - scikit-build
+    - cmake >=3.18
+    - ninja
+
+  run:
+    - python
+
+
+test:
+  imports:
+    - egttools
+  requires:
+    - pytest
+  source_files:
+    - tests
+  commands:
+    - pytest tests
+
+about:
+  summary: EGTtools provides a centralized repository with analytical and numerical methods to study/model
+           game theoretical problems under the Evolutionary Game Theory (EGT) framework.
+  license_file: LICENSE
