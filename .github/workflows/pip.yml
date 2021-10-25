@@ -58,7 +58,7 @@ jobs:
       - name: Build and install
         run: |
 
-          python -m pip install --verbose
+          python -m pip install --verbose .
 
       - name: Test
         run: |
