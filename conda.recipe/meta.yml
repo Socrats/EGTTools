@@ -1,45 +1,44 @@
+{% set version = "0.1.5.dev4" %}
+
 package:
   name: egttools
-  version: 0.1.5.dev4
+  version: {{ version }}
 
 source:
-  path: ..
+  git_url: https://github.com/Socrats/EGTTools
+  git_tag: {{ version }}
 
 build:
   number: 0
-  script: python -m pip install . -vvv
+  features:
+    - nomkl  [nomkl]
 
 requirements:
   build:
-    - {{ compiler('cxx') }}
-
-  host:
     - python
-    - pip
-    - pybind11 >=2.6.0
-    - scikit-build
-    - cmake >=3.18
-    - ninja
-    - eigen3
+    - cmake
+    - numpy x.x
+    - eigen 3.*
 
   run:
     - python
-    - numpy>=1.7
-    - scipy>=1.5
-    - matplotlib>=3.3
-    - networkx
-
+    - numpy x.x
 
 test:
   imports:
     - egttools
-  requires:
-    - pytest
-  source_files:
-    - tests
+    - egttools.numerical
+
   commands:
-    - pytest tests
+
 
 about:
-  summary: Analytical and numerical methods for Evolutionary Game Theory.
-  license_file: LICENSE
+  home: http://opencv.org/
+  license: BSD 3-clause
+  license_family: BSD
+  summary: Computer vision and machine learning software library.
+  description: |
+    OpenCV (Open Source Computer Vision Library) includes several hundreds of computer vision algorithms.
+    It has a modular structure,which means that the package includes several shared or static libraries.
+  doc_url: http://docs.opencv.org/
+  doc_source_url: https://github.com/opencv/opencv/tree/master/doc
