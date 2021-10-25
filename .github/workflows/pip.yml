@@ -52,11 +52,13 @@ jobs:
 
       - name: Add requirements
         run: |
-          python -m pip install --upgrade wheel setuptools
+          python -m pip install --upgrade pip wheel setuptools
           python -m pip install --upgrade -r tests/requirements.txt
 
       - name: Build and install
-        run: pip install --verbose .[test]
+        run: python -m pip install --verbose .[test]
 
       - name: Test
-        run: bash build_tools/github/test_wheels.sh .
+        run: |
+          python build_tools/github/check_if_egttools_is_installed.py
+          python -m pytest tests -s --import-mode=importlib
