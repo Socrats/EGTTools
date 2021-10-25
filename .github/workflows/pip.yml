@@ -59,4 +59,4 @@ jobs:
         run: pip install --verbose .[test]
 
       - name: Test
-        run: bash ../build_tools/github/test_wheels.sh ..
+        run: bash ../../build_tools/github/test_wheels.sh ../..
