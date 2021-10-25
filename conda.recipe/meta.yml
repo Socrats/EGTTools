@@ -20,9 +20,14 @@ requirements:
     - scikit-build
     - cmake >=3.18
     - ninja
+    - eigen3
 
   run:
     - python
+    - numpy>=1.7
+    - scipy>=1.5
+    - matplotlib>=3.3
+    - networkx
 
 
 test:
