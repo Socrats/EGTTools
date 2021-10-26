@@ -58,7 +58,7 @@ jobs:
       - name: Build and install
         run: |
           python -m pip install --verbose .[test]
-          pyrhon -c "import egttools as egt; print(egt.__version__)"
+          python -c "import egttools as egt; print(egt.__version__)"
       - name: Test
         run: |
           python EGTTools/EGTTools/build_tools/github/check_if_egttools_is_installed.py
