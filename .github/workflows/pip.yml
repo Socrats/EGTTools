@@ -63,5 +63,5 @@ jobs:
           python -c "import egttools as egt; print(egt.__version__)"
       - name: Test
         run: |
-          python EGTTools/EGTTools/build_tools/github/check_if_egttools_is_installed.py
+          python build_tools/github/check_if_egttools_is_installed.py
           python -m pytest tests -s --import-mode=importlib
