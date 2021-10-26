@@ -58,9 +58,9 @@ jobs:
       - name: Build and install
         run: |
           python -m pip install --verbose .[test]
-          pip freeze
 
       - name: Test
         run: |
-          python build_tools/github/check_if_egttools_is_installed.py
+          cd ../..
+          python EGTTools/EGTTools/build_tools/github/check_if_egttools_is_installed.py
           python -m pytest tests -s --import-mode=importlib
