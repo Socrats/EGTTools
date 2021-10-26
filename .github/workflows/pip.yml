@@ -1,4 +1,4 @@
-name: "Pip"
+name: "Continuous Integration"
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    name: Build with Pip
+    name: Build and test package
     strategy:
       fail-fast: false
       matrix:
@@ -59,8 +59,6 @@ jobs:
         run: |
           python -m build
           python -m pip install -e ./
-          ls egttools/
-          python -c "import egttools as egt; print(egt.__version__)"
       - name: Test
         run: |
           python build_tools/github/check_if_egttools_is_installed.py
