@@ -52,7 +52,7 @@ jobs:
 
       - name: Add requirements
         run: |
-          python -m pip install --upgrade pip wheel setuptools
+          python -m pip install --upgrade pip wheel setuptools build
           python -m pip install --upgrade -r tests/requirements.txt
 
       - name: Build and install
