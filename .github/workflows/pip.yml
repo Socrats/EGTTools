@@ -57,7 +57,9 @@ jobs:
 
       - name: Build and install
         run: |
+          ls egttools/
           python -m pip install --verbose .[test]
+          ls egttools/
           python -c "import egttools as egt; print(egt.__version__)"
       - name: Test
         run: |
