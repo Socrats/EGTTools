@@ -36,6 +36,9 @@ jobs:
             release: true
             name-extra: ' (Release)'
           - runs-on: macos-latest
+            python: 3.8
+            arch: x64
+          - runs-on: macos-latest
             python: 3.9
             arch: x64
             release: true
@@ -52,10 +55,11 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup Python
+      - name: Setup Python ${{ matrix.python }}
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ matrix.python }}
+          architecture: ${{ matrix.arch }}
 
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.8
