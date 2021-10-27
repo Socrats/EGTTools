@@ -117,6 +117,7 @@ jobs:
 
       - name: Build and test wheels
         env:
+          CIBW_BUILD_FRONTEND: "build"
           CIBW_BUILD: "cp39-${{ matrix.cibw-arch }}"
           CIBW_ENVIRONMENT: CMAKE_BUILD_PARALLEL_LEVEL=2
                             CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch == 'macosx_x86_64' && 'x86_64' || matrix.cibw-arch == 'macosx_arm64' && 'arm64' || matrix.cibw-arch == 'macosx_universal2' && '"arm64;x86_64"' || '' }}
