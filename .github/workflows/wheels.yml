@@ -159,7 +159,7 @@ jobs:
     name: Trigger ReadTheDocs build
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
-    needs: [ wheels ]
+    needs: [ build_wheels ]
 
     steps:
       - name: Get branch name
@@ -174,7 +174,7 @@ jobs:
     name: Create release
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [sdist, wheels]
+    needs: [build_sdist, build_wheels]
 
     steps:
       - name: Collect sdist and wheels
