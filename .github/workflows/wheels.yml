@@ -96,7 +96,7 @@ jobs:
           - runs-on: macos-latest
             cibw-arch: macosx_x86_64
           - runs-on: macos-latest
-              cibw-arch: macosx_arm64
+            cibw-arch: macosx_arm64
 #          - runs-on: windows-latest
 #            cibw-arch: win_amd64
 #          - runs-on: windows-latest
