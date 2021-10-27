@@ -67,10 +67,6 @@ jobs:
       - name: Install system dependencies macOS
         if: runner.os == 'macOS'
         run: |
-#          wget https://homebrew.bintray.com/bottles/libomp-11.0.0.high_sierra.bottle.tar.gz
-#          brew install libomp-11.0.0.high_sierra.bottle.tar.gz
-#          export MACOSX_DEPLOYMENT_TARGET=10.13
-#          echo "LIBOMP=$(brew --prefix libomp)" >> $GITHUB_ENV
           brew install eigen
           echo "EIGEN=$(brew --prefix eigen)" >> $GITHUB_ENV
           brew install gfortran
