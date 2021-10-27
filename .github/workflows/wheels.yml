@@ -95,8 +95,8 @@ jobs:
             cibw-arch: manylinux_i686
           - runs-on: macos-latest
             cibw-arch: macosx_x86_64
-          - runs-on: macos-latest
-            cibw-arch: macosx_arm64
+#          - runs-on: macos-latest
+#            cibw-arch: macosx_arm64
 #          - runs-on: windows-latest
 #            cibw-arch: win_amd64
 #          - runs-on: windows-latest
@@ -131,7 +131,7 @@ jobs:
           CIBW_TEST_COMMAND_MACOS: "echo installed wheel"
           CIBW_TEST_COMMAND_WINDOWS: "echo installed wheel"
           CIBW_TEST_COMMAND_LINUX: "echo installed wheel"
-          CIBW_BUILD_VERBOSITY: 1
+          CIBW_BUILD_VERBOSITY: 2
         run: bash build_tools/github/build_wheels.sh
 
       - name: Check built wheels
