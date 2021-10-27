@@ -19,6 +19,7 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
   cd build
   cmake ..
   make install
+  apt install libjpeg8-dev
 #  yum install -y eigen3-devel
 #  echo "Eigen3_DIR='/usr/include/eigen3'" >> $GITHUB_ENV
 elif [[ "$RUNNER_OS" == "Windows" ]]; then
