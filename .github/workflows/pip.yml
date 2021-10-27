@@ -13,8 +13,34 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ macos-latest, ubuntu-latest ]
-        python-version: [ "3.8", "3.9" ]
+        include:
+          - runs-on: ubuntu-latest
+            python: 3.8
+            arch: x64
+          - runs-on: ubuntu-latest
+            python: 3.9
+            arch: x64
+
+          - runs-on: ubuntu-latest
+            python: 3.9
+            arch: x64
+            gcc: 10
+            name-extra: ' (GCC 10)'
+          - runs-on: ubuntu-latest
+            python: 3.9
+            arch: x64
+            clang: 12
+            name-extra: ' (Clang 12)'
+          - runs-on: ubuntu-latest
+            python: 3.9
+            arch: x64
+            release: true
+            name-extra: ' (Release)'
+          - runs-on: macos-latest
+            python: 3.9
+            arch: x64
+            release: true
+            name-extra: ' (Release)'
 
     runs-on: ${{ matrix.platform }}
 

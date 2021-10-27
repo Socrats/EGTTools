@@ -125,8 +125,7 @@ jobs:
                             CMAKE_ARCH="${{ matrix.cibw-arch == 'win32' && '-A Win32' || '' }}"
           CIBW_ARCHS_MACOS: "x86_64"
 #          CIBW_ARCHS_WINDOWS: "AMD64 x86"
-          CIBW_BEFORE_BUILD: bash build_tools/github/download_eigen3.sh
-          CIBW_TEST_REQUIRES: pytest
+          CIBW_BEFORE_ALL_LINUX: apt install libomp-dev && apt install libeigen3-dev && "Eigen3_DIR='/usr/include/eigen3'" >> $GITHUB_ENV
           CIBW_TEST_COMMAND_MACOS: "echo installed wheel"
           CIBW_TEST_COMMAND_WINDOWS: "echo installed wheel"
           CIBW_TEST_COMMAND_LINUX: "echo installed wheel"
