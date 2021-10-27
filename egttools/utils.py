@@ -22,6 +22,7 @@ to find saddle points and plot gradients in 2 player, 2 strategy games.
 import numpy
 import numpy as np
 from typing import Optional, List, Generator
+from egttools.numerical.games import AbstractGame
 
 
 def find_saddle_type_and_gradient_direction(gradient, saddle_points_idx, offset=0.01):
@@ -79,7 +80,7 @@ def find_saddle_type_and_gradient_direction(gradient, saddle_points_idx, offset=
 def get_payoff_function(strategy_i: int,
                         strategy_j: int,
                         nb_strategies: int,
-                        game: egttools.numerical.games.AbstractGame) -> object:
+                        game: AbstractGame) -> object:
     """
     Returns a function which gives the payoff of strategy i against strategy j.
 
@@ -138,7 +139,7 @@ def get_payoff_function(strategy_i: int,
 
 
 def transform_payoffs_to_pairwise(nb_strategies: int,
-                                  game: egttools.numerical.games.AbstractGame) -> numpy.ndarray:
+                                  game: AbstractGame) -> numpy.ndarray:
     """
     This function transform a payoff matrix in full format to a pairwise format.
 
