@@ -3,6 +3,8 @@
 set -e
 set -x
 
+python -m pip install --upgrade pip cibuildwheel twine
+
 # OpenMP is not present on macOS by default
 if [[ "$RUNNER_OS" == "macOS" ]]; then
     # Make sure to use a libomp version binary compatible with the oldest
@@ -52,15 +54,13 @@ elif [[ "$RUNNER_OS" == "Windows" ]]; then
   export CMAKE_MODULE_PATH="$CMAKE_MODULE_PATH $EIGEN3_INCLUDE_DIR$"
   export CIBW_ENVIRONMENT_WINDOWS="$CIBW_ENVIRONMENT_WINDOWS CMAKE_MODULE_PATH=$CMAKE_MODULE_PATH '--config Release'"
 elif [[ "$RUNNER_OS" == "Linux" ]]; then
-  pip install cmake
-  yum install -y eigen3-devel
+  sudo apt-get install libomp-dev
+  sudo apt-get install libeigen3-dev
   echo "Eigen3_DIR='/usr/include/eigen3'" >> $GITHUB_ENV
 fi
 
 # The version of the built dependencies are specified
 # in the pyproject.toml file, while the tests are run
 # against the most recent version of the dependencies
-
-python -m pip install --upgrade pip cibuildwheel twine
 python -m cibuildwheel --output-dir wheelhouse
 
