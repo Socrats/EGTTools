@@ -1,5 +1,6 @@
 Sphinx>=3
 sphinx_rtd_theme
+sphinx-autodoc-typehints
 
 GitPython
 PyGithub
