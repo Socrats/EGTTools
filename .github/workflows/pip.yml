@@ -43,6 +43,12 @@ jobs:
           echo "GFORTRAN=$(brew --prefix gfortran)" >> $GITHUB_ENV
           brew install openblas
           echo "OPENBLAS=$(brew --prefix openblas)" >> $GITHUB_ENV
+          export CC=/usr/bin/clang
+          export CXX=/usr/bin/clang++
+          export CPPFLAGS="$CPPFLAGS -Xpreprocessor -fopenmp"
+          export CFLAGS="$CFLAGS -I/usr/local/opt/libomp/include"
+          export CXXFLAGS="$CXXFLAGS -I/usr/local/opt/libomp/include"
+          export LDFLAGS="$LDFLAGS -Wl,-rpath,/usr/local/opt/libomp/lib -L/usr/local/opt/libomp/lib -lomp"
       - name: Install system dependencies Linux
         if: runner.os == 'Linux'
         run: |
