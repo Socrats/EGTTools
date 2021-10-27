@@ -16,9 +16,6 @@
   * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include <egttools/Utils.h>
-
-#include <algorithm>
 #include <egttools/finite_populations/behaviors/NFGStrategies.hpp>
 
 size_t egttools::FinitePopulations::behaviors::twoActions::Cooperator::get_action(size_t time_step, size_t action_prev) {

@@ -21,7 +21,9 @@
 
 #include <egttools/SeedGenerator.h>
 #include <egttools/Types.h>
+#include <egttools/Utils.h>
 
+#include <algorithm>
 #include <egttools/finite_populations/behaviors/AbstractNFGStrategy.hpp>
 #include <random>
 #include <stdexcept>

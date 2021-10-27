@@ -18,8 +18,6 @@
 
 #include "egttools.h"
 
-#include "version.h"
-
 #define XSTR(s) STR(s)
 #define STR(s) #s
 

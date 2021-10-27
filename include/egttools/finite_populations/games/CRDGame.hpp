@@ -10,6 +10,7 @@
 #include <egttools/finite_populations/behaviors/CRDStrategies.h>
 
 #include <cassert>
+#include <egttools/finite_populations/behaviors/AbstractCRDStrategy.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <fstream>
 #include <stdexcept>

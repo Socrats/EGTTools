@@ -3,6 +3,8 @@
 set -e
 set -x
 
+python -m pip install --upgrade pip cibuildwheel twine
+
 # OpenMP is not present on macOS by default
 if [[ "$RUNNER_OS" == "macOS" ]]; then
     # Make sure to use a libomp version binary compatible with the oldest
@@ -34,13 +36,10 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
 
     export LDFLAGS="$LDFLAGS -L/usr/local/opt/openblas/lib"
     export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/openblas/include"
-# No opemp support for windows
 fi
 
 # The version of the built dependencies are specified
 # in the pyproject.toml file, while the tests are run
 # against the most recent version of the dependencies
-
-python -m pip install --upgrade pip cibuildwheel twine
 python -m cibuildwheel --output-dir wheelhouse
 

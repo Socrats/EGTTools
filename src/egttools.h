@@ -7,6 +7,7 @@
 
 #include <egttools/Distributions.h>
 #include <egttools/SeedGenerator.h>
+#include <egttools/Types.h>
 #include <egttools/finite_populations/behaviors/CRDStrategies.h>
 #include <egttools/finite_populations/games/NormalFormGame.h>
 #include <egttools/utils/CalculateExpectedIndicators.h>
@@ -26,5 +27,6 @@
 #include <egttools/utils/TimingUncertainty.hpp>
 
 #include "python_stubs.hpp"
+#include "version.h"
 
 #endif//EGTTOOLS_EGTTOOLS_H
