@@ -67,6 +67,7 @@ jobs:
       - name: Install system dependencies macOS
         if: runner.os == 'macOS'
         run: |
+          wget https://homebrew.bintray.com/bottles/libomp-11.0.0.high_sierra.bottle.tar.gz
           brew install libomp-11.0.0.high_sierra.bottle.tar.gz
           export MACOSX_DEPLOYMENT_TARGET=10.13
           echo "LIBOMP=$(brew --prefix libomp)" >> $GITHUB_ENV
@@ -163,6 +164,7 @@ jobs:
 
       - name: Install requirements
         run: |
+          pip install --upgrade pip wheel setuptools build
           pip install --user -r docs/requirements.txt
           sudo apt install pandoc
       - name: Configure
