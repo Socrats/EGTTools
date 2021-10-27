@@ -19,7 +19,6 @@
 This python module contains some utility functions
 to find saddle points and plot gradients in 2 player, 2 strategy games.
 """
-import egttools.numerical.games
 import numpy
 import numpy as np
 from typing import Optional, List, Generator
@@ -129,7 +128,7 @@ def get_payoff_function(strategy_i: int,
             j strategists.
         """
         if k > group_size:
-            return Exception("You have indicated a wrong group composition. k must be smaller or equal to group_size.")
+            raise Exception("You have indicated a wrong group composition. k must be smaller or equal to group_size.")
         group_composition = np.zeros(shape=(nb_strategies,), dtype=int)
         group_composition[strategy_i] = k
         group_composition[strategy_j] = group_size - k
