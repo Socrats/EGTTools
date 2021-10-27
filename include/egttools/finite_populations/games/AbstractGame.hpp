@@ -19,13 +19,15 @@
 #ifndef EGTTOOLS_FINITEPOPULATIONS_GAMES_ABSTRACTGAME_HPP
 #define EGTTOOLS_FINITEPOPULATIONS_GAMES_ABSTRACTGAME_HPP
 
+#include <egttools/Types.h>
 #include <egttools/Utils.h>
 
 #include <egttools/finite_populations/Utils.hpp>
+#include <vector>
 
 namespace egttools::FinitePopulations {
     using PayoffVector = std::vector<double>;
-//    using RandomDist = std::uniform_real_distribution<double>;
+    //    using RandomDist = std::uniform_real_distribution<double>;
 
     /**
      * @brief This class defines the interface of a game to be used in an evolutionary process.

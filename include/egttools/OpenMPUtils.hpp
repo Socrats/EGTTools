@@ -16,6 +16,7 @@
   * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 */
 
+#pragma once
 #ifndef EGTTOOLS_OPENMPUTILS_HPP
 #define EGTTOOLS_OPENMPUTILS_HPP
 

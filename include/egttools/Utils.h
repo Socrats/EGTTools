@@ -16,6 +16,7 @@
   * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 */
 
+#pragma once
 #ifndef EGTTOOLS_UTILS_H
 #define EGTTOOLS_UTILS_H
 

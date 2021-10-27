@@ -16,10 +16,12 @@
   * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 */
 
+#pragma once
 #ifndef EGTTOOLS_INCLUDE_SAMPLING_H_
 #define EGTTOOLS_INCLUDE_SAMPLING_H_
 
 #include <unordered_set>
+#include <vector>
 
 namespace egttools::sampling {
     /**

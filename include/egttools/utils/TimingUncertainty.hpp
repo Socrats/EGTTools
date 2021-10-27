@@ -1,7 +1,7 @@
 //
 // Created by Elias Fernandez on 15/09/2021.
 //
-
+#pragma once
 #ifndef EGTTOOLS_UTILS_TIMINGUNCERTAINTY_HPP
 #define EGTTOOLS_UTILS_TIMINGUNCERTAINTY_HPP
 

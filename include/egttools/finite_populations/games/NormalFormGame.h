@@ -27,6 +27,7 @@
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <fstream>
 #include <stdexcept>
+#include <vector>
 
 #if defined(_OPENMP)
 #include <egttools/OpenMPUtils.hpp>

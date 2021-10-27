@@ -15,6 +15,7 @@
 #include <egttools/utils/TimingUncertainty.hpp>
 #include <fstream>
 #include <stdexcept>
+#include <vector>
 
 #if defined(_OPENMP)
 #include <egttools/OpenMPUtils.hpp>

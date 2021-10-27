@@ -15,9 +15,11 @@
   * You should have received a copy of the GNU General Public License
   * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 */
-
+#pragma once
 #ifndef EGTTOOLS_DATA_HPP
 #define EGTTOOLS_DATA_HPP
+
+#include <vector>
 
 namespace egttools::DataStructures {
     struct DataTable {

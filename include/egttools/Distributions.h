@@ -19,7 +19,7 @@
 //
 // Adapted from https://github.com/Svalorzen/AI-Toolbox/
 //
-
+#pragma once
 #ifndef EGTTOOLS_DISTRIBUTIONS_H
 #define EGTTOOLS_DISTRIBUTIONS_H
 
