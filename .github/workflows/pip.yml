@@ -37,10 +37,10 @@ jobs:
             name-extra: ' (Release)'
           - runs-on: macos-latest
             python: 3.8
-            arch: x64
+            arch: arm64
           - runs-on: macos-latest
             python: 3.9
-            arch: x64
+            arch: arm64
             release: true
             name-extra: ' (Release)'
 
@@ -67,6 +67,9 @@ jobs:
       - name: Install system dependencies macOS
         if: runner.os == 'macOS'
         run: |
+          export MACOSX_DEPLOYMENT_TARGET=10.15
+          brew install libomp
+          echo "LIBOMP=$(brew --prefix libomp)" >> $GITHUB_ENV
           brew install eigen
           echo "EIGEN=$(brew --prefix eigen)" >> $GITHUB_ENV
           brew install gfortran
