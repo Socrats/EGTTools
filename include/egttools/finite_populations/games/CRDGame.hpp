@@ -6,6 +6,7 @@
 #define EGTTOOLS_FINITEPOPULATIONS_GAMES_CRDGAME_HPP
 
 #include <egttools/Distributions.h>
+#include <egttools/Types.h>
 #include <egttools/finite_populations/behaviors/CRDStrategies.h>
 
 #include <cassert>

@@ -20,6 +20,7 @@
 #define EGTTOOLS_FINITEPOPULATIONS_GAMES_NORMALFORMGAME_HPP
 
 #include <egttools/Distributions.h>
+#include <egttools/Types.h>
 
 #include <cassert>
 #include <egttools/finite_populations/behaviors/AbstractNFGStrategy.hpp>
