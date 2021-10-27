@@ -159,7 +159,7 @@ jobs:
     name: Trigger ReadTheDocs build
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
-    needs: [ build_wheels ]
+    needs: [ wheels ]
 
     steps:
       - name: Get branch name
@@ -168,13 +168,13 @@ jobs:
           echo "::set-output name=branch::${GITHUB_REF##refs/heads/}"
       - name: Trigger ReadTheDocs webhook
         run: |
-          curl -X POST -d "branches=${{ steps.get_branch.outputs.branch }}" -d "token=${{ secrets.READTHEDOCS_WEBHOOK_TOKEN }}" https://readthedocs.org/api/v2/webhook/egttools/180426/
+          curl -X POST -d "branches=${{ steps.get_branch.outputs.branch }}" -d "token=${{ secrets.READTHEDOCS_WEBHOOK_TOKEN }}" https://readthedocs.org/api/v2/webhook/egttools/180428/
 
   create_release:
     name: Create release
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [ build_sdist, build_wheels ]
+    needs: [sdist, wheels]
 
     steps:
       - name: Collect sdist and wheels
@@ -187,3 +187,10 @@ jobs:
         id: get_version
         run: |
           echo "::set-output name=version::${GITHUB_REF##refs/tags/v}"
+      - name: Upload sdist and wheels to release
+        uses: ncipollo/release-action@v1.8.10
+        with:
+          name: ${{ steps.get_version.outputs.version }}
+          draft: true
+          artifacts: wheelhouse/*
+          token: ${{ secrets.GITHUB_TOKEN }}
