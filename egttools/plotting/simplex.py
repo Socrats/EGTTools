@@ -156,18 +156,21 @@ if __name__ == "__main__":
                   [0, 2, 0],
                   [0, 0, 3]])
 
-    Z = 1000
-    beta = 100
+    Z = 100
+    beta = 1
     nb_strategies = 3
-    evolver = egt.analytical.StochDynamics(3, A, Z)
+    # evolver = egt.analytical.StochDynamics(3, A, Z)
+    # evolver.mu = 1e-3
+    evolver = egt.analytical.replicator_equation
 
 
     def f(x, t):
         # x_int = (Z * x).astype(int)
-        return evolver.full_gradient_selection(x, beta)
+        # return evolver.full_gradient_selection(x, beta)
+        return evolver(x, A)
 
 
-    dynamics = SimplexDynamics(f, discrete=True, pop_size=Z, nb_points=5000)
+    dynamics = SimplexDynamics(f, discrete=False, pop_size=Z, nb_points=5000)
     fig, ax = plt.subplots()
     dynamics.plot_simplex(ax)
     plt.show()

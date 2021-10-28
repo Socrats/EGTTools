@@ -386,7 +386,7 @@ class StochDynamics:
         probabilities = np.outer(probability_selecting_strategy_first, probability_selecting_strategy_second)
         fitness = np.asarray([[self.full_fitness(i, j, population_state) for i in
                                range(len(population_state))] for j in range(len(population_state))])
-        return (probabilities * np.tanh((beta / 2) * fitness)).sum(axis=0)
+        return (probabilities * np.tanh((beta / 2) * fitness)).sum(axis=0) * (1-self.mu) + self.mu
 
     def fixation_probability(self, invader: int, resident: int, beta: float, *args: Optional[list]) -> float:
         """
