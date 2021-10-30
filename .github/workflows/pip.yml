@@ -1,12 +1,17 @@
 name: "Continuous Integration"
 
 on:
-  workflow_dispatch:
   pull_request:
   push:
     branches:
       - master
       - develop
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate debugging enabled'
+        required: false
+        default: false
 
 jobs:
   tests:
