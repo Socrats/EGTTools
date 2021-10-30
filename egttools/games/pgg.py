@@ -19,8 +19,8 @@ from typing import List, Union
 import numpy as np
 from scipy.stats import multivariate_hypergeom
 
-from egttools.numerical import calculate_nb_states, calculate_state, sample_simplex
-from egttools.numerical.games import AbstractGame
+from egttools import calculate_nb_states, calculate_state, sample_simplex
+from . import AbstractGame
 
 
 class PGG(AbstractGame):

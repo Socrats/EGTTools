@@ -20,7 +20,7 @@ import numpy as np
 from scipy.stats import multivariate_hypergeom
 
 from egttools import calculate_nb_states, calculate_state, sample_simplex
-from egttools.games import AbstractGame
+from . import AbstractGame
 
 
 class InformalRiskGame(AbstractGame):

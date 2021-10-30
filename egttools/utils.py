@@ -22,7 +22,7 @@ to find saddle points and plot gradients in 2 player, 2 strategy games.
 import numpy
 import numpy as np
 from typing import Optional, List, Generator
-from egttools.numerical.games import AbstractGame
+from egttools.games import AbstractGame
 
 
 def find_saddle_type_and_gradient_direction(gradient, saddle_points_idx, offset=0.01):

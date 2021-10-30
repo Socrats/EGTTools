@@ -27,7 +27,7 @@ import scipy.sparse
 from scipy.sparse import lil_matrix
 from scipy.stats import hypergeom, multivariate_hypergeom
 from typing import Tuple, Optional
-from egttools.numerical import sample_simplex, calculate_nb_states
+from egttools import sample_simplex, calculate_nb_states
 
 
 def replicator_equation(x: np.ndarray, payoffs: np.ndarray) -> np.ndarray:
