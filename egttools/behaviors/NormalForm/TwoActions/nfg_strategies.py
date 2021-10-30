@@ -1,5 +1,5 @@
-from egttools.numerical.behaviors.NormalForm import AbstractNFGStrategy
-from egttools.numerical import Random
+from .. import AbstractNFGStrategy
+from egttools import Random
 
 import numpy as np
 

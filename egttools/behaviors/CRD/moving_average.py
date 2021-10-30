@@ -1,4 +1,4 @@
-from egttools.numerical.behaviors.CRD import AbstractCRDStrategy
+from . import AbstractCRDStrategy
 
 
 class MovingAverageCRDStrategy(AbstractCRDStrategy):
