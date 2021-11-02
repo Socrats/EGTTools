@@ -84,7 +84,7 @@ jobs:
           echo "GFORTRAN=$(brew --prefix gfortran)" >> $GITHUB_ENV
           brew install openblas
           echo "OPENBLAS=$(brew --prefix openblas)" >> $GITHUB_ENV
-          echo "EGTTOOLS_EXTRA_CMAKE_ARGS="-DSKIP_OPENMP:BOOL=TRUE"
+          echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'" >> $GITHUB_ENV
       - name: Install system dependencies Linux
         if: runner.os == 'Linux'
         run: |
@@ -99,7 +99,7 @@ jobs:
           ren eigen-3.3.9 Eigen3
           move eigen3 "C:/Program Files (x86)/Eigen3"
           echo "Eigen3_DIR='C:/Program Files (x86)/Eigen3'" >> $GITHUB_ENV
-          echo "EGTTOOLS_EXTRA_CMAKE_ARGS="-DSKIP_OPENMP:BOOL=TRUE"
+          echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'" >> $GITHUB_ENV
 
       - name: Install requirements
         run: |
