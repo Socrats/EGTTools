@@ -41,18 +41,19 @@ jobs:
             arch: x64
             release: true
             name-extra: ' (Release)'
-          - runs-on: macos-latest No OpenMP
+          - runs-on: macos-latest
             python: 3.8
             arch: x64
-          - runs-on: macos-latest No OpenMP
+            name-extra: ' No OpenMP'
+          - runs-on: macos-latest
             python: 3.9
             arch: x64
             release: true
-            name-extra: ' (Release)'
-          - runs-on: windows-latest No OpenMP
+            name-extra: ' No OpenMP (Release)'
+          - runs-on: windows-latest
             python: 3.9
             arch: x64
-            name-extra: ' (Release)'
+            name-extra: ' No OpenMP (Release)'
 
     name: Python ${{ matrix.python }}${{ matrix.name-extra }} • ${{ matrix.runs-on }}
     runs-on: ${{ matrix.runs-on }}
@@ -184,7 +185,7 @@ jobs:
       - name: Build
         run: |
           python -m build
-          python -m pip install -e ./
+          python -m pip install .
       - name: Build documentation
         run: |
           cmake --build build --target docs
