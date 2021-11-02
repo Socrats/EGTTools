@@ -51,18 +51,18 @@ jobs:
             release: true
             name-extra: ' No OpenMP (Release)'
           - runs-on: macos-11
-            python: 3.9
+            python: 3.8
             arch: arm64
             release: true
-            name-extra: ' No OpenMP (Release)'
+            name-extra: ' (Release)'
           - runs-on: windows-latest
             python: 3.9
             arch: x64
             name-extra: ' No OpenMP (Release)'
           - runs-on: windows-latest
             python: 3.9
-            arch: amd64
-            name-extra: ' No OpenMP (Release)'
+            arch: x86
+            name-extra: ' (32-bit)'
 
     name: Python ${{ matrix.python }}${{ matrix.name-extra }} • ${{ matrix.runs-on }}
     runs-on: ${{ matrix.runs-on }}
@@ -85,7 +85,7 @@ jobs:
         uses: jwlawson/actions-setup-cmake@v1.8
 
       - name: Install system dependencies macOS arch x64
-        if: runner.os == 'macOS' && runner.arch == 'x64'
+        if: runner.os == 'macOS' && matrix.arch == 'x64'
         run: |
           brew update
           brew install eigen
@@ -96,7 +96,7 @@ jobs:
           echo "OPENBLAS=$(brew --prefix openblas)" >> $GITHUB_ENV
           echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'" >> $GITHUB_ENV
       - name: Install system dependencies macOS arch arm64
-        if: runner.os == 'macOS' && runner.arch == 'arm64'
+        if: runner.os == 'macOS' && matrix.arch == 'arm64'
         run: |
           brew update
           brew install eigen
