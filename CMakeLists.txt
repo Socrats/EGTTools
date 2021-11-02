@@ -18,6 +18,8 @@
 cmake_minimum_required(VERSION 3.17)
 project(egttools LANGUAGES CXX)
 
+#set(SKIP_OPENMP TRUE)
+
 # For additional Find library scripts
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules/")
 
@@ -45,24 +47,31 @@ if (MSVC)
     endif ()
 endif ()
 
-# Necessary for certain MacOX versions to find homebrew OpenMP
 if(APPLE)
+    set(_msg "Checking which MACOSX_DEPLOYMENT_TARGET to use")
+    message(STATUS "${_msg}")
+    set(MACOSX_DEPLOYMENT_TARGET ${CMAKE_OSX_DEPLOYMENT_TARGET})
+    message(STATUS "${_msg} - ${MACOSX_DEPLOYMENT_TARGET}")
+endif()
+
+# Necessary for certain MacOX versions to find homebrew OpenMP
+if (APPLE AND NOT SKIP_OPENMP)
     execute_process(COMMAND brew --prefix libomp OUTPUT_VARIABLE LIBOMP_DIR)
     string(STRIP ${LIBOMP_DIR} LIBOMP_DIR)
 
-    if(CMAKE_C_COMPILER_ID MATCHES "Clang\$")
+    if (CMAKE_C_COMPILER_ID MATCHES "Clang\$")
         set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${LIBOMP_DIR}/include")
         set(OpenMP_C_LIB_NAMES "omp")
         set(OpenMP_omp_LIBRARY ${LIBOMP_DIR}/lib/libomp.a)
-    endif()
+    endif ()
 
-    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang\$")
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang\$")
         set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${LIBOMP_DIR}/include")
         set(OpenMP_CXX_LIB_NAMES "omp")
         set(OpenMP_omp_LIBRARY ${LIBOMP_DIR}/lib/libomp.a)
-    endif()
+    endif ()
 
-endif()
+endif ()
 
 if (NOT WIN32)
     add_definitions(
@@ -82,8 +91,8 @@ if (NOT EIGEN3_FOUND)
     find_package(Eigen3 ${EIGEN_VERSION_REQUIRED} REQUIRED)
     if (NOT EIGEN3_FOUND)
         message(FATAL_ERROR "Please point the environment variable EIGEN3_INCLUDE_DIR to the include directory of your Eigen3 installation.")
-    endif()
-endif()
+    endif ()
+endif ()
 
 if (EIGEN3_FOUND)
     include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
@@ -93,27 +102,27 @@ endif ()
 #include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
 
 # Support for OpenMP parallelization - not on windows
-if (NOT MSVC)
+if (NOT MSVC AND NOT SKIP_OPENMP)
     find_package(OpenMP)
     if (OPENMP_FOUND)
         include_directories(SYSTEM ${OPENMP_INCLUDE_DIR})
         message(STATUS "OpenMP enabled")
-        if(NOT APPLE)
+        if (NOT APPLE)
             SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
             SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -fopenmp")
-        endif()
+        endif ()
     endif ()
 endif ()
 
 # Currently, scikit-build does not support FindPython.
-if(SKBUILD)
+if (SKBUILD)
     set(Python_EXECUTABLE "${PYTHON_EXECUTABLE}")
     set(Python_INCLUDE_DIR "${PYTHON_INCLUDE_DIR}")
     unset(PYTHON_EXECUTABLE)
     unset(PYTHON_INCLUDE_DIR)
     unset(PYTHON_LIBRARY)
     unset(PYTHON_VERSION_STRING)
-endif()
+endif ()
 
 set(Python_FIND_IMPLEMENTATIONS CPython PyPy)
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
@@ -124,6 +133,6 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/src)
 add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
 add_subdirectory(${PROJECT_SOURCE_DIR}/docs)
 
-if(SKBUILD)
+if (SKBUILD)
     install(TARGETS numerical LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX})
-endif()
+endif ()

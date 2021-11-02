@@ -41,14 +41,18 @@ jobs:
             arch: x64
             release: true
             name-extra: ' (Release)'
-#          - runs-on: macos-latest
-#            python: 3.8
-#            arch: x64
-#          - runs-on: macos-latest
-#            python: 3.9
-#            arch: x64
-#            release: true
-#            name-extra: ' (Release)'
+          - runs-on: macos-latest No OpenMP
+            python: 3.8
+            arch: x64
+          - runs-on: macos-latest No OpenMP
+            python: 3.9
+            arch: x64
+            release: true
+            name-extra: ' (Release)'
+          - runs-on: windows-latest No OpenMP
+            python: 3.9
+            arch: x64
+            name-extra: ' (Release)'
 
     name: Python ${{ matrix.python }}${{ matrix.name-extra }} • ${{ matrix.runs-on }}
     runs-on: ${{ matrix.runs-on }}
@@ -73,28 +77,28 @@ jobs:
       - name: Install system dependencies macOS
         if: runner.os == 'macOS'
         run: |
-          wget https://homebrew.bintray.com/bottles/libomp-11.0.0.high_sierra.bottle.tar.gz
-          brew install libomp-11.0.0.high_sierra.bottle.tar.gz
-          export MACOSX_DEPLOYMENT_TARGET=10.13
-          echo "LIBOMP=$(brew --prefix libomp)" >> $GITHUB_ENV
           brew install eigen
           echo "EIGEN=$(brew --prefix eigen)" >> $GITHUB_ENV
           brew install gfortran
           echo "GFORTRAN=$(brew --prefix gfortran)" >> $GITHUB_ENV
           brew install openblas
           echo "OPENBLAS=$(brew --prefix openblas)" >> $GITHUB_ENV
-          export CC=/usr/bin/clang
-          export CXX=/usr/bin/clang++
-          export CPPFLAGS="$CPPFLAGS -Xpreprocessor -fopenmp"
-          export CFLAGS="$CFLAGS -I/usr/local/opt/libomp/include"
-          export CXXFLAGS="$CXXFLAGS -I/usr/local/opt/libomp/include"
-          export LDFLAGS="$LDFLAGS -Wl,-rpath,/usr/local/opt/libomp/lib -L/usr/local/opt/libomp/lib -lomp"
+          echo "EGTTOOLS_EXTRA_CMAKE_ARGS="-DSKIP_OPENMP:BOOL=TRUE"
       - name: Install system dependencies Linux
         if: runner.os == 'Linux'
         run: |
           sudo apt-get install libomp-dev
           sudo apt-get install libeigen3-dev
           echo "Eigen3_DIR='/usr/include/eigen3'" >> $GITHUB_ENV
+      - name: Install Eigen3 windows
+        if: runner.os == 'Windows'
+        run: |
+          curl.exe --output eigen-3.3.9.tar.gz --url https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
+          tar -zxvf eigen-3.3.9.tar.gz
+          ren eigen-3.3.9 Eigen3
+          move eigen3 "C:/Program Files (x86)/Eigen3"
+          echo "Eigen3_DIR='C:/Program Files (x86)/Eigen3'" >> $GITHUB_ENV
+          echo "EGTTOOLS_EXTRA_CMAKE_ARGS="-DSKIP_OPENMP:BOOL=TRUE"
 
       - name: Install requirements
         run: |
