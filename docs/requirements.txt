@@ -12,6 +12,7 @@ ipykernel
 ipywidgets
 nbsphinx
 recommonmark
+docutils <= 0.16
 
 
 -r examples/requirements.txt

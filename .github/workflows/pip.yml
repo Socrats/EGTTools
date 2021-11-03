@@ -50,11 +50,6 @@ jobs:
             arch: x64
             release: true
             name-extra: ' No OpenMP (Release)'
-          - runs-on: macos-11
-            python: 3.8
-            arch: arm64
-            release: true
-            name-extra: ' (Release)'
           - runs-on: windows-latest
             python: 3.9
             arch: x64
@@ -84,7 +79,7 @@ jobs:
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.8
 
-      - name: Install system dependencies macOS arch x64
+      - name: Install system dependencies macOS
         if: runner.os == 'macOS' && matrix.arch == 'x64'
         run: |
           brew update
@@ -94,17 +89,7 @@ jobs:
           echo "GFORTRAN=$(brew --prefix gfortran)" >> $GITHUB_ENV
           brew install openblas
           echo "OPENBLAS=$(brew --prefix openblas)" >> $GITHUB_ENV
-          echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'" >> $GITHUB_ENV
-      - name: Install system dependencies macOS arch arm64
-        if: runner.os == 'macOS' && matrix.arch == 'arm64'
-        run: |
-          brew update
-          brew install eigen
-          echo "EIGEN=$(brew --prefix eigen)" >> $GITHUB_ENV
-          brew install gfortran
-          echo "GFORTRAN=$(brew --prefix gfortran)" >> $GITHUB_ENV
-          brew install openblas
-          echo "OPENBLAS=$(brew --prefix openblas)" >> $GITHUB_ENV
+#          echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'" >> $GITHUB_ENV
           brew install libomp
           echo "LIBOMP=$(brew --prefix libomp)" >> $GITHUB_ENV
       - name: Install system dependencies Linux
@@ -203,8 +188,7 @@ jobs:
       - name: Configure
         shell: bash
         run: |
-          cmake -S . -B build $CMAKE_ARCH -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE -DPython_EXECUTABLE="$(which python)"
-#          cmake -S . -B build -DPython_EXECUTABLE="$(which python)"
+          cmake -S . -B build -DPython_EXECUTABLE="$(which python)"
       - name: Build
         run: |
           python -m build

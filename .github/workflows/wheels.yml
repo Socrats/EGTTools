@@ -81,7 +81,7 @@ jobs:
 
 
   build_wheels:
-    name: Wheels • ${{ matrix.cibw-arch }}
+    name: Wheels • ${{ matrix.cibw-arch }} • Python ${{ matrix.python }}${{ matrix.name-extra }}
     runs-on: ${{ matrix.runs-on }}
 
     strategy:
@@ -91,17 +91,33 @@ jobs:
         include:
           - runs-on: ubuntu-latest
             cibw-arch: manylinux_x86_64
+            python: 3.8
+          - runs-on: ubuntu-latest
+            cibw-arch: manylinux_x86_64
+            python: 3.9
           - runs-on: ubuntu-latest
             cibw-arch: manylinux_i686
+            python: 3.8
+          - runs-on: ubuntu-latest
+            cibw-arch: manylinux_i686
+            python: 3.9
           - runs-on: macos-latest
             cibw-arch: macosx_x86_64
-#          - runs-on: macos-latest
-#            cibw-arch: macosx_arm64
-#          - runs-on: windows-latest
-#            cibw-arch: win_amd64
-#          - runs-on: windows-latest
-#            cibw-arch: win32
-#            python-arch: x86
+            python: 3.8
+          - runs-on: macos-latest
+            cibw-arch: macosx_x86_64
+            python: 3.9
+          - runs-on: macos-latest
+            cibw-arch: macosx_arm64
+            python-arch: arm64
+            python: 3.9
+          - runs-on: windows-latest
+            cibw-arch: win_amd64
+            python: 3.9
+          - runs-on: windows-latest
+            cibw-arch: win32
+            python-arch: x86
+            python: 3.9
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -111,7 +127,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: ${{ matrix.python }}
           architecture: ${{ matrix.python-arch }}
 
       - name: Setup CMake
@@ -128,6 +144,7 @@ jobs:
           CIBW_ARCHS_MACOS: "x86_64"
 #          CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
+          CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3_windows.sh
           CIBW_TEST_COMMAND_MACOS: "echo installed wheel"
           CIBW_TEST_COMMAND_WINDOWS: "echo installed wheel"
           CIBW_TEST_COMMAND_LINUX: "echo installed wheel"
