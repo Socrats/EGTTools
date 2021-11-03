@@ -17,10 +17,10 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
     wget https://homebrew.bintray.com/bottles/libomp-11.0.0.high_sierra.bottle.tar.gz
     brew install libomp-11.0.0.high_sierra.bottle.tar.gz
     export MACOSX_DEPLOYMENT_TARGET=10.9
-    export CIBW_ENVIRONMENT="$CIBW_ENVIRONMENT MACOSX_DEPLOYMENT_TARGET=10.13"
+    export CIBW_ENVIRONMENT="$CIBW_ENVIRONMENT MACOSX_DEPLOYMENT_TARGET=10.9"
   else
     export MACOSX_DEPLOYMENT_TARGET=10.9
-    export CIBW_ENVIRONMENT="$CIBW_ENVIRONMENT MACOSX_DEPLOYMENT_TARGET=10.15"
+    export CIBW_ENVIRONMENT="$CIBW_ENVIRONMENT MACOSX_DEPLOYMENT_TARGET=10.9"
     brew install libomp
   fi
   export CC=/usr/bin/clang
