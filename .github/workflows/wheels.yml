@@ -91,7 +91,7 @@ jobs:
         os: [ windows-latest, ubuntu-latest, macos-latest ]
         python: [ 37, 38, 39 ]
         bitness: [ 32, 64 ]
-        manylinux_image: [ manylinux1, manylinux2010 ]
+        manylinux_image: [ manylinux2010 ]
         include:
           # Run 32 and 64 bit version in parallel for Linux and Windows
           - os: windows-latest
@@ -142,8 +142,8 @@ jobs:
                             CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch == 'macosx_x86_64' && 'x86_64' || matrix.cibw-arch == 'macosx_arm64' && 'arm64' || matrix.cibw-arch == 'macosx_universal2' && '"arm64;x86_64"' || '' }}
                             BUILD_ARCH=${{ matrix.cibw-arch }}
                             CMAKE_ARCH="${{ matrix.cibw-arch == 'win32' && '-A Win32' || '' }}"
-#          CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
-#          CIBW_ARCHS_WINDOWS: "AMD64 x86"
+          CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
+          CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_SKIP: "cp310-*"
           CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
           CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3_windows.sh
