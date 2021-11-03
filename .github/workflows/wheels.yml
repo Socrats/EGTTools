@@ -107,9 +107,9 @@ jobs:
           - runs-on: macos-latest
             cibw-arch: macosx_x86_64
             python: 3.9
-          - runs-on: macos-latest
-            cibw-arch: macosx_universal2
-            python: 3.9
+#          - runs-on: macos-10.15
+#            cibw-arch: macosx_universal2
+#            python: 3.9
           - runs-on: windows-latest
             cibw-arch: win_amd64
             python: 3.9
@@ -130,7 +130,7 @@ jobs:
           architecture: ${{ matrix.python-arch }}
 
       - name: Setup CMake
-        uses: jwlawson/actions-setup-cmake@v1.8
+        uses: jwlawson/actions-setup-cmake@v1.11
 
       - name: Build and test wheels
         env:
@@ -140,9 +140,8 @@ jobs:
                             CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch == 'macosx_x86_64' && 'x86_64' || matrix.cibw-arch == 'macosx_arm64' && 'arm64' || matrix.cibw-arch == 'macosx_universal2' && '"arm64;x86_64"' || '' }}
                             BUILD_ARCH=${{ matrix.cibw-arch }}
                             CMAKE_ARCH="${{ matrix.cibw-arch == 'win32' && '-A Win32' || '' }}"
-          CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
-          CIBW_ARCHS_WINDOWS: "AMD64 x86"
-          CIBW_SKIP: "cp310-*"
+#          CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
+#          CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
           CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3_windows.sh
           CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
