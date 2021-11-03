@@ -88,35 +88,36 @@ jobs:
       # Ensure that a wheel builder finishes even if another fails
       fail-fast: false
       matrix:
+        os: [ windows-latest, ubuntu-latest, macos-latest ]
+        python: [ 37, 38, 39 ]
+        bitness: [ 32, 64 ]
+        manylinux_image: [ manylinux1, manylinux2010 ]
         include:
-          - runs-on: ubuntu-latest
-            cibw-arch: manylinux_x86_64
-            python: 3.8
-          - runs-on: ubuntu-latest
-            cibw-arch: manylinux_x86_64
-            python: 3.9
-          - runs-on: ubuntu-latest
-            cibw-arch: manylinux_i686
-            python: 3.8
-          - runs-on: ubuntu-latest
-            cibw-arch: manylinux_i686
-            python: 3.9
-          - runs-on: macos-latest
-            cibw-arch: macosx_x86_64
-            python: 3.8
-          - runs-on: macos-latest
-            cibw-arch: macosx_x86_64
-            python: 3.9
-#          - runs-on: macos-10.15
-#            cibw-arch: macosx_universal2
-#            python: 3.9
-          - runs-on: windows-latest
-            cibw-arch: win_amd64
-            python: 3.9
-          - runs-on: windows-latest
-            cibw-arch: win32
-            python-arch: x86
-            python: 3.9
+          # Run 32 and 64 bit version in parallel for Linux and Windows
+          - os: windows-latest
+            bitness: 64
+            platform_id: win_amd64
+          - os: windows-latest
+            bitness: 32
+            platform_id: win32
+          - os: ubuntu-latest
+            bitness: 64
+            platform_id: manylinux_x86_64
+          - os: ubuntu-latest
+            bitness: 32
+            platform_id: manylinux_i686
+          - os: macos-latest
+            bitness: 64
+            platform_id: macosx_x86_64
+        exclude:
+          - os: macos-latest
+            bitness: 32
+          # Remove manylinux1 from the windows and osx build matrix since
+          # manylinux_image is not used for these platforms
+          - os: windows-latest
+            manylinux_image: manylinux1
+          - os: macos-latest
+            manylinux_image: manylinux1
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -126,8 +127,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python }}
-          architecture: ${{ matrix.python-arch }}
+          python-version: 3.9
 
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.11
@@ -135,13 +135,16 @@ jobs:
       - name: Build and test wheels
         env:
           CIBW_BUILD_FRONTEND: "build"
-          CIBW_BUILD: "*-${{ matrix.cibw-arch }}"
+          CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
+          CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
+          CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_ENVIRONMENT: CMAKE_BUILD_PARALLEL_LEVEL=2
                             CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch == 'macosx_x86_64' && 'x86_64' || matrix.cibw-arch == 'macosx_arm64' && 'arm64' || matrix.cibw-arch == 'macosx_universal2' && '"arm64;x86_64"' || '' }}
                             BUILD_ARCH=${{ matrix.cibw-arch }}
                             CMAKE_ARCH="${{ matrix.cibw-arch == 'win32' && '-A Win32' || '' }}"
-#          CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
-#          CIBW_ARCHS_WINDOWS: "AMD64 x86"
+          CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
+          CIBW_ARCHS_WINDOWS: "AMD64 x86"
+          CIBW_SKIP: "cp310-*"
           CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
           CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3_windows.sh
           CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
@@ -152,7 +155,7 @@ jobs:
         run: bash build_tools/github/build_wheels.sh
 
       - name: Check built wheels
-        if: startsWith(github.ref, 'refs/heads/docs') != true
+        if: startsWith(github.ref, 'refs/heads/docs') != true || matrix.cibw-arch == 'manylinux_x86_64'
         run: |
           twine check wheelhouse/*
 
