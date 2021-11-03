@@ -80,7 +80,7 @@ jobs:
         uses: jwlawson/actions-setup-cmake@v1.8
 
       - name: Install system dependencies macOS
-        if: runner.os == 'macOS' && matrix.arch == 'x64'
+        if: runner.os == 'macOS'
         run: |
           brew update
           brew install eigen
@@ -89,7 +89,7 @@ jobs:
           echo "GFORTRAN=$(brew --prefix gfortran)" >> $GITHUB_ENV
           brew install openblas
           echo "OPENBLAS=$(brew --prefix openblas)" >> $GITHUB_ENV
-#          echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'" >> $GITHUB_ENV
+          echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'" >> $GITHUB_ENV
           brew install libomp
           echo "LIBOMP=$(brew --prefix libomp)" >> $GITHUB_ENV
       - name: Install system dependencies Linux
