@@ -195,7 +195,7 @@ jobs:
           python -m pip install -e .
       - name: Build documentation
         run: |
-          cmake --build build --target docs
+          python -m sphinx -M html docs _build
       - name: Check links
         run: |
-          cmake --build build --target docs_linkcheck
+          python -m sphinx -M linkcheck docs _build
