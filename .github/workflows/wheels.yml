@@ -108,8 +108,7 @@ jobs:
             cibw-arch: macosx_x86_64
             python: 3.9
           - runs-on: macos-10.15
-            cibw-arch: macosx_arm64
-            python-arch: universal2
+            cibw-arch: universal2
             python: 3.9
           - runs-on: windows-latest
             cibw-arch: win_amd64
