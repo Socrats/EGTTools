@@ -107,9 +107,9 @@ jobs:
           - runs-on: macos-latest
             cibw-arch: macosx_x86_64
             python: 3.9
-          - runs-on: macos-latest
+          - runs-on: macos-10.15
             cibw-arch: macosx_arm64
-            python-arch: arm64
+            python-arch: universal2
             python: 3.9
           - runs-on: windows-latest
             cibw-arch: win_amd64
@@ -145,6 +145,7 @@ jobs:
 #          CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
           CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3_windows.sh
+          CIBW_TEST_SKIP: *_arm64 *_universal2:arm64
           CIBW_TEST_COMMAND_MACOS: "echo installed wheel"
           CIBW_TEST_COMMAND_WINDOWS: "echo installed wheel"
           CIBW_TEST_COMMAND_LINUX: "echo installed wheel"
