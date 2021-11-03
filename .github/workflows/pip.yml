@@ -195,7 +195,7 @@ jobs:
           python -m pip install -e .
       - name: Build documentation
         run: |
-          python -m sphinx -M html docs _build
+          python -m sphinx -M html docs docs/_build
       - name: Check links
         run: |
-          python -m sphinx -M linkcheck docs _build
+          python -m sphinx -M linkcheck docs docs/_build

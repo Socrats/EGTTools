@@ -140,7 +140,7 @@ jobs:
                             CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch == 'macosx_x86_64' && 'x86_64' || matrix.cibw-arch == 'macosx_arm64' && 'arm64' || matrix.cibw-arch == 'macosx_universal2' && '"arm64;x86_64"' || '' }}
                             BUILD_ARCH=${{ matrix.cibw-arch }}
                             CMAKE_ARCH="${{ matrix.cibw-arch == 'win32' && '-A Win32' || '' }}"
-          CIBW_ARCHS_MACOS: "x86_64"
+          CIBW_ARCHS_MACOS: "x86_64 universal2"
 #          CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
           CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3_windows.sh
@@ -152,7 +152,7 @@ jobs:
         run: bash build_tools/github/build_wheels.sh
 
       - name: Check built wheels
-        if: startsWith(github.ref, 'refs/heads/docs') != true || matrix.platform_id == 'manylinux_x86_64'
+        if: startsWith(github.ref, 'refs/heads/docs') != true
         run: |
           twine check wheelhouse/*
 
@@ -161,7 +161,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: wheels
-          path: wheelhouse/*.whl
+          path: wheelhouse/egttools-*.whl
           if-no-files-found: error
 
       - name: Upload wheel for ReadTheDocs
