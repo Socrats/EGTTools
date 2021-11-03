@@ -107,9 +107,9 @@ jobs:
           - runs-on: macos-latest
             cibw-arch: macosx_x86_64
             python: 3.9
-          - runs-on: macos-10.15
-            cibw-arch: universal2
-            python: 3.9
+#          - runs-on: macos-10.15
+#            cibw-arch: universal2
+#            python: 3.9
           - runs-on: windows-latest
             cibw-arch: win_amd64
             python: 3.9

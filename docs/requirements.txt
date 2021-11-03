@@ -12,7 +12,8 @@ ipykernel
 ipywidgets
 nbsphinx
 recommonmark
-docutils <= 0.16
+docutils<= 0.16
+prompt-toolkit>= 3.0.21
 
 
 -r examples/requirements.txt
