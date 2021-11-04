@@ -1,0 +1,11 @@
+[project]
+requires-python = ">=3.7"
+
+[build-system]
+requires = [
+    "setuptools>=42",
+    "wheel",
+    "cmake>=3.18",
+    "scikit_build",
+]
+build-backend = "setuptools.build_meta"

@@ -1,11 +1,43 @@
 include *.md
 include LICENSE
 
-include requirements.txt
+include MANIFEST.in
+include pyproject.toml
+include setup.cfg
+include setup.py
+include .clang-format
+include environment.yml
 
+include CMakeLists.txt
+include requirements.txt
+graft include
+graft src
+graft egttools
+graft egttools/behaviors/CRD
+graft egttools/behaviors/NormalForm
+graft egttools/behaviors/NormalForm/TwoActions
+graft pybind11
 graft tests
+
+include .gitmodules
+
+graft cmake
+graft res
+include pytest.ini
 
 graft docs
 prune docs/_build
+prune _skbuild
 
+# exclude from sdist
+global-exclude __pycache__
 global-exclude *.py[co]
+global-exclude .DS_Store
+global-exclude .ipynb_checkpoints/*
+global-exclude *.so
+exclude pybind11/.git
+exclude build_tools
+recursive-exclude build_tools *
+exclude simulation
+recursive-exclude egttools/simulation *
+exclude egttools/plotting/barplots.py

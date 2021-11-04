@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2020  Elias Fernandez
+# Copyright (c) 2019-2021  Elias Fernandez
 #
 # This file is part of EGTtools.
 #
@@ -15,46 +15,71 @@
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
-from setuptools import setup
+"""
+The code used in here has been adapted from https://github.com/YannickJadoul/Parselmouth/blob/master/setup.py
+"""
+
+import io
+import os
+import re
+import shlex
+import sys
+
+try:
+    from skbuild import setup
+except ImportError:
+    print("Please update pip to pip 10 or greater, or a manually install the PEP 518 requirements in pyproject.toml",
+          file=sys.stderr)
+    raise
+
+
+def patched_windows_platform_init(self):
+    import textwrap
+    from skbuild.platform_specifics.windows import WindowsPlatform, CMakeVisualStudioCommandLineGenerator, \
+        CMakeVisualStudioIDEGenerator
+
+    super(WindowsPlatform, self).__init__()
+
+    self._vs_help = textwrap.dedent(
+        """Building Windows wheels for requires Microsoft 
+        Visual Studio 2017 or 2019: https://visualstudio.microsoft.com/vs/""").strip()
+
+    supported_vs_years = [("2019", "v141"), ("2017", "v141")]
+    for vs_year, vs_toolset in supported_vs_years:
+        self.default_generators.extend([
+            CMakeVisualStudioCommandLineGenerator("Ninja", vs_year, vs_toolset),
+            CMakeVisualStudioIDEGenerator(vs_year, vs_toolset),
+            CMakeVisualStudioCommandLineGenerator("NMake Makefiles", vs_year, vs_toolset),
+            CMakeVisualStudioCommandLineGenerator("NMake Makefiles JOM", vs_year, vs_toolset)
+        ])
+
+
+import skbuild.platform_specifics.windows
+
+skbuild.platform_specifics.windows.WindowsPlatform.__init__ = patched_windows_platform_init
+
+
+def find_version():
+    with io.open(os.path.join(os.path.dirname(__file__), "src", "version.h"), encoding='utf8') as f:
+        version_file = f.read()
+    version_match = re.search(r"^#define EGTTOOLS_VERSION ([0-9a-z.]+)$", version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
+
 
 setup(
-    name='egttools',
-    version='0.1.0',
-    description='Computational tools for studying Game Theoretical problems '
-                'using the Evolutionary Game Theory Framework.',
-    url="https://github.com/Socrats/EGTTools",
-    project_urls={
-        "Bug Tracker": "",
-        "Documentation": "",
-        "Source Code": "https://github.com/Socrats/EGTTools",
-    },
-    author='Elias Fernandez',
-    author_email='elias.fernandez.domingos@vub.be',
-    license='GPLv3',
-    classifiers=[
-        'Development Status :: 3 - Testing/Beta',
-        'Intended Audience :: Developers',
-        'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
-        'Operating System :: MacOS :: MacOS X',
-        'Operating System :: Microsoft :: Windows',
-        'Operating System :: POSIX :: Linux',
-        'Operating System :: Unix',
-        'Programming Language :: C++',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Topic :: Scientific/Engineering',
-        'Topic :: Software Development :: Libraries :: Python Modules',
-    ],
-    keywords=["evolutionary game theory", "social dynamics", "replicator dynamics"],
-    python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*',
-    install_requires=[
-        'numpy>=1.7.0',
-    ],
-    zip_safe=False,
+    version=find_version(),
+    packages=['egttools', 'egttools.analytical', 'egttools.plotting', 'egttools.games',
+              'egttools.behaviors',
+              'egttools.behaviors.CRD', 'egttools.behaviors.NormalForm', 'egttools.behaviors.NormalForm.TwoActions'],
+    package_dir={'egttools': "egttools",
+                 'egttools.analytical': "egttools/analytical",
+                 'egttools.plotting': "egttools/plotting", 'egttools.games': "egttools/games",
+                 'egttools.behaviors': "egttools/behaviors", 'egttools.behaviors.CRD': "egttools/behaviors/CRD",
+                 'egttools.behaviors.NormalForm': "egttools/behaviors/NormalForm",
+                 'egttools.behaviors.NormalForm.TwoActions': "egttools/behaviors/NormalForm/TwoActions"},
+    # py_modules={'utils'},
+    cmake_args=shlex.split(os.environ.get('EGTTOOLS_EXTRA_CMAKE_ARGS', '')),
+    cmake_install_dir="egttools",
 )

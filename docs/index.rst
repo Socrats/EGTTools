@@ -8,19 +8,25 @@
 EGTtools -- Toolbox for Evolutionary Game Theory
 ================================================
 
-**EGTtools** provides a centralized repository with analytical
-and numerical methods to study/model game theoretical problems under the Evolutionary
-Game Theory (EGT) framework.
+**EGTtools** provides a centralized repository with analytical and numerical methods to study/model game theoretical
+problems under the Evolutionary Game Theory (EGT) framework.
 
-This library is implemented both in Python and C++ (with Python bindings) in order to
-provide optimized computational methods that can run in parallel in a reasonable time.
+This library is composed of two parts:
+
+- a set of analytical methods implemented in Python 3
+- a set of computational methods implemented in C++ with (Python 3 bindings)
+
+The second typed is used in cases where the state space is too big to solve analytically, and thus require estimating
+the model parameters through monte-carlo simulations. The C++ implementation provides optimized computational methods
+that can run in parallel in a reasonable time, while Python bindings make the methods easily accecible to a larger range
+of researchers.
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Getting Started
+   :hidden:
 
-   installation
-   examples
+   Home page <self>
+   Examples <examples>
+   API reference <_autosummary/egttools>
 
 Citing EGTtools
 ------------------

@@ -1,0 +1,222 @@
+name: Wheels
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - master
+      - develop
+      - docs
+    tags:
+      - v*
+#  release:
+#    types:
+#      - published
+
+env:
+  CIBW_TEST_COMMAND: pytest
+
+
+jobs:
+  build_sdist:
+    name: Build source distribution (sdist)
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/heads/docs') != true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v1.8
+
+      - name: Install system dependencies macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install libomp
+          echo "LIBOMP=$(brew --prefix libomp)" >> $GITHUB_ENV
+          brew install eigen
+          echo "EIGEN=$(brew --prefix eigen)" >> $GITHUB_ENV
+          brew install gfortran
+          echo "GFORTRAN=$(brew --prefix gfortran)" >> $GITHUB_ENV
+      - name: Install system dependencies Linux
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get install libomp-dev
+          sudo apt-get install libeigen3-dev
+          echo "Eigen3_DIR='/usr/include/eigen3'" >> $GITHUB_ENV
+
+      - name: Install requirements
+        run: |
+          pip install --user check-manifest twine
+
+      - name: Run check-manifest
+        run: |
+          python -m check_manifest
+
+      - name: Build sdist
+        run: |
+          python -m build --sdist --outdir wheelhouse
+
+      - name: Install from sdist
+        run: |
+          pip install --user wheelhouse/*.tar.gz
+
+      - name: Check sdist metadata
+        run: |
+          python -m twine check wheelhouse/*
+
+      - name: Upload sdist
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: wheelhouse/*.tar.gz
+
+
+  build_wheels:
+    name: Build wheel for cp${{ matrix.python }}-${{ matrix.platform_id }}-${{ matrix.manylinux_image }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      # Ensure that a wheel builder finishes even if another fails
+      fail-fast: false
+      matrix:
+        os: [ windows-latest, ubuntu-latest, macos-latest ]
+        python: [ 37, 38, 39 ]
+        bitness: [ 32, 64 ]
+        manylinux_image: [ manylinux2010 ]
+        include:
+          # Run 32 and 64 bit version in parallel for Linux and Windows
+          - os: windows-latest
+            bitness: 64
+            platform_id: win_amd64
+          - os: windows-latest
+            bitness: 32
+            platform_id: win32
+          - os: ubuntu-latest
+            bitness: 64
+            platform_id: manylinux_x86_64
+          - os: ubuntu-latest
+            bitness: 32
+            platform_id: manylinux_i686
+          - os: macos-latest
+            bitness: 64
+            platform_id: macosx_x86_64
+        #          - os: macos-latest
+        #            bitness: 64
+        #            platform_id: macosx_universal2
+        exclude:
+          - os: macos-latest
+            bitness: 32
+          # Remove manylinux1 from the windows and osx build matrix since
+          # manylinux_image is not used for these platforms
+          - os: windows-latest
+            manylinux_image: manylinux1
+          - os: macos-latest
+            manylinux_image: manylinux1
+          - os: macos-latest
+            python: 37
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v1.11
+
+      - name: Build and test wheels
+        env:
+          CIBW_BUILD_FRONTEND: "build"
+          CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
+          CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
+          CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
+          CIBW_ENVIRONMENT: CMAKE_BUILD_PARALLEL_LEVEL=2
+            CMAKE_OSX_ARCHITECTURES=${{ matrix.platform_id == 'macosx_x86_64' && 'x86_64' || matrix.platform_id == 'macosx_arm64' && 'arm64' || matrix.platform_id == 'macosx_universal2' && '"arm64;x86_64"' || '' }}
+            BUILD_ARCH=${{ matrix.platform_id }}
+            CMAKE_ARCH="${{ matrix.platform_id == 'win32' && '-A Win32' || '' }}"
+          CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
+          CIBW_ARCHS_WINDOWS: "AMD64 x86"
+          CIBW_SKIP: "cp310-*"
+          CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
+          CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3_windows.sh
+          CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
+          CIBW_TEST_COMMAND_MACOS: "echo installed wheel"
+          CIBW_TEST_COMMAND_WINDOWS: "echo installed wheel"
+          CIBW_TEST_COMMAND_LINUX: "echo installed wheel"
+          CIBW_BUILD_VERBOSITY: 2
+        run: bash build_tools/github/build_wheels.sh
+
+      #      - name: Check built wheels
+      #        if: startsWith(github.ref, 'refs/heads/docs') != true || matrix.cibw-arch == 'manylinux_x86_64'
+      #        run: |
+      #          twine check wheelhouse/*
+
+      - name: Upload wheels
+        if: startsWith(github.ref, 'refs/heads/docs') != true
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: wheelhouse/egttools-*.whl
+          if-no-files-found: error
+
+      - name: Upload wheel for ReadTheDocs
+        if: |
+          runner.os == 'Linux' && matrix.platform_id == 'manylinux_x86_64' && matrix.python == '38' && startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
+        uses: actions/upload-artifact@v2
+        with:
+          name: rtd-wheel
+          path: wheelhouse/egttools-*-cp38-cp38-manylinux*_x86_64.whl
+          if-no-files-found: error
+
+  trigger_rtd:
+    name: Trigger ReadTheDocs build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
+    needs: [ build_wheels ]
+
+    steps:
+      - name: Get branch name
+        id: get_branch
+        run: |
+          echo "::set-output name=branch::${GITHUB_REF##refs/heads/}"
+      - name: Trigger ReadTheDocs webhook
+        run: |
+          curl -X POST -d "branches=${{ steps.get_branch.outputs.branch }}" -d "token=${{ secrets.READTHEDOCS_WEBHOOK_TOKEN }}" https://readthedocs.org/api/v2/webhook/egttools/180432/
+
+  create_release:
+    name: Create release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [ build_sdist, build_wheels ]
+
+    steps:
+      - name: Collect sdist and wheels
+        uses: actions/download-artifact@v2
+        with:
+          name: wheels
+          path: wheelhouse
+
+      - name: Get release name
+        id: get_version
+        run: |
+          echo "::set-output name=version::${GITHUB_REF##refs/tags/v}"
+      - name: Upload sdist and wheels to release
+        uses: ncipollo/release-action@v1.8.10
+        with:
+          name: ${{ steps.get_version.outputs.version }}
+          draft: true
+          artifacts: wheelhouse/*
+          token: ${{ secrets.GITHUB_TOKEN }}
