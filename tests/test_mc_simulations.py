@@ -38,7 +38,7 @@ def test_normal_form_game_runs(setup_hawk_dove_parameters) -> None:
 
     game = NormalFormGame(1, payoffs)
 
-    assert game.nb_strategies == 2
+    assert game.nb_strategies() == 2
     assert game.nb_rounds == 1
     assert game.type() == "NormalFormGame"
     np.testing.assert_array_equal(game.payoffs(), payoffs)
@@ -63,7 +63,7 @@ def test_pairwise_moran_run(setup_hawk_dove_parameters) -> None:
     evolver = PairwiseMoran(pop_size, game, cache_size)
     result = evolver.run(nb_generations, beta, mu, initial_state)
 
-    assert result.shape == (nb_generations + 1, game.nb_strategies)
+    assert result.shape == (nb_generations + 1, game.nb_strategies())
 
 
 def test_pairwise_moran_stationary_distribution(setup_hawk_dove_parameters) -> None:

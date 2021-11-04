@@ -17,6 +17,6 @@ def test_extend_abstract_game() -> None:
         [0., 0.5, 2.]
     ])
 
-    assert game.nb_strategies == 2
-    assert game.type == "PGG"
-    np.testing.assert_array_equal(game.payoffs, payoffs)
+    assert game.nb_strategies() == 2
+    assert game.type() == "PGG"
+    np.testing.assert_array_equal(game.payoffs(), payoffs)
