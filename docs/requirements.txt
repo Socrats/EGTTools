@@ -13,7 +13,7 @@ ipywidgets
 nbsphinx>=0.8.7
 recommonmark>=0.7.1
 docutils<= 0.16
-prompt-toolkit>= 3.0.21
+prompt-toolkit<3.0.0
 
 
 -r examples/requirements.txt
