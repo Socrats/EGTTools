@@ -109,9 +109,9 @@ jobs:
           - os: macos-latest
             bitness: 64
             platform_id: macosx_x86_64
-          - os: macos-latest
-            bitness: 64
-            platform_id: macosx_universal2
+        #          - os: macos-latest
+        #            bitness: 64
+        #            platform_id: macosx_universal2
         exclude:
           - os: macos-latest
             bitness: 32
