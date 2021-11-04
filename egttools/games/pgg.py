@@ -113,15 +113,12 @@ class PGG(AbstractGame):
         '''
         return string
 
-    @property
     def nb_strategies(self) -> int:
         return self.nb_strategies_
 
-    @property
     def type(self) -> str:
         return "PGG"
 
-    @property
     def payoffs(self) -> np.ndarray:
         return self.payoffs_
 

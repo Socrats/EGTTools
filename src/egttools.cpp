@@ -317,8 +317,8 @@ PYBIND11_MODULE(numerical, m) {
                         The payoff value.
                     )pbdoc",
                  py::arg("strategy"), py::arg("group_composition"))
-            .def_property_readonly("nb_strategies", &egttools::FinitePopulations::AbstractGame::nb_strategies,
-                                   "Number of different strategies playing the game.")
+            .def("nb_strategies", &egttools::FinitePopulations::AbstractGame::nb_strategies,
+                 "Number of different strategies playing the game.")
             .def("save_payoffs", &egttools::FinitePopulations::AbstractGame::save_payoffs,
                  R"pbdoc(
                     Stores the payoff matrix in a txt file.
@@ -565,8 +565,8 @@ PYBIND11_MODULE(numerical, m) {
                  "returns the payoff of a strategy given a strategy pair.", py::arg("strategy"),
                  py::arg("strategy pair"))
             .def("expected_payoffs", &egttools::FinitePopulations::NormalFormGame::expected_payoffs, "returns the expected payoffs of each strategy vs another")
-            .def_property_readonly("nb_strategies", &egttools::FinitePopulations::NormalFormGame::nb_strategies,
-                                   "Number of different strategies which are playing the game.")
+            .def("nb_strategies", &egttools::FinitePopulations::NormalFormGame::nb_strategies,
+                 "Number of different strategies which are playing the game.")
             .def_property_readonly("nb_rounds", &egttools::FinitePopulations::NormalFormGame::nb_rounds,
                                    "Number of rounds of the game.")
             .def_property_readonly("nb_states", &egttools::FinitePopulations::NormalFormGame::nb_states,
@@ -644,7 +644,7 @@ PYBIND11_MODULE(numerical, m) {
                  "returns the payoff of a strategy given a group composition.", py::arg("strategy"),
                  py::arg("strategy pair"))
             .def_property_readonly("group_achievement_per_group", &egttools::FinitePopulations::CRDGame::group_achievements)
-            .def_property_readonly("nb_strategies", &egttools::FinitePopulations::CRDGame::nb_strategies,
+            .def("nb_strategies", &egttools::FinitePopulations::CRDGame::nb_strategies,
                                    "Number of different strategies which are playing the game.")
             .def_property_readonly("endowment", &egttools::FinitePopulations::CRDGame::endowment,
                                    "Initial endowment for all players.")
@@ -737,7 +737,7 @@ PYBIND11_MODULE(numerical, m) {
             .def("payoff", &egttools::FinitePopulations::games::CRDGameTU::payoff,
                  "returns the payoff of a strategy given a group composition.", py::arg("strategy"),
                  py::arg("strategy pair"))
-            .def_property_readonly("nb_strategies", &egttools::FinitePopulations::games::CRDGameTU::nb_strategies,
+            .def("nb_strategies", &egttools::FinitePopulations::games::CRDGameTU::nb_strategies,
                                    "Number of different strategies which are playing the game.")
             .def_property_readonly("endowment", &egttools::FinitePopulations::games::CRDGameTU::endowment,
                                    "Initial endowment for all players.")
