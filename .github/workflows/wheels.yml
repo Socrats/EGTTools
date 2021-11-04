@@ -144,9 +144,9 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_ENVIRONMENT: CMAKE_BUILD_PARALLEL_LEVEL=2
-                            CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch == 'macosx_x86_64' && 'x86_64' || matrix.cibw-arch == 'macosx_arm64' && 'arm64' || matrix.cibw-arch == 'macosx_universal2' && '"arm64;x86_64"' || '' }}
-                            BUILD_ARCH=${{ matrix.cibw-arch }}
-                            CMAKE_ARCH="${{ matrix.cibw-arch == 'win32' && '-A Win32' || '' }}"
+                            CMAKE_OSX_ARCHITECTURES=${{ matrix.platform_id == 'macosx_x86_64' && 'x86_64' || matrix.platform_id == 'macosx_arm64' && 'arm64' || matrix.platform_id == 'macosx_universal2' && '"arm64;x86_64"' || '' }}
+                            BUILD_ARCH=${{ matrix.platform_id }}
+                            CMAKE_ARCH="${{ matrix.platform_id == 'win32' && '-A Win32' || '' }}"
           CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
           CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_SKIP: "cp310-*"
@@ -173,7 +173,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload wheel for ReadTheDocs
-        if: runner.os == 'Linux' && matrix.cibw-arch == 'manylinux_x86_64' && startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
+        if: runner.os == 'Linux' && matrix.platform_id == 'manylinux_x86_64' && startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
         uses: actions/upload-artifact@v2
         with:
           name: rtd-wheelconda
