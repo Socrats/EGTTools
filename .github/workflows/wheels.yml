@@ -177,7 +177,7 @@ jobs:
           runner.os == 'Linux' && matrix.platform_id == 'manylinux_x86_64' && matrix.python == '38' && startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
         uses: actions/upload-artifact@v2
         with:
-          name: rtd-wheelconda
+          name: rtd-wheel
           path: wheelhouse/egttools-*-cp38-cp38-manylinux*_x86_64.whl
           if-no-files-found: error
 

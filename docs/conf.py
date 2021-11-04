@@ -85,7 +85,10 @@ if on_rtd:
     runs = g.get_repo('Socrats/EGTTools').get_workflow("wheels.yml").get_runs(branch=branch)
     artifacts_url = next(r for r in runs if r.head_sha == head_sha).artifacts_url
 
-    archive_download_url = next(artifact for artifact in requests.get(artifacts_url).json()['artifacts'] if artifact['name'] == 'rtd-wheel')['archive_download_url']
+    archive_download_url = \
+        next(artifact for artifact in requests.get(artifacts_url).json()['artifacts'] if
+             artifact['name'] == 'rtd-wheel')[
+            'archive_download_url']
     artifact_bin = io.BytesIO(
         requests.get(archive_download_url, headers={'Authorization': f'token {github_token}'}, stream=True).content)
 
