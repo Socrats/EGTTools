@@ -26,8 +26,12 @@ jobs:
         with:
           repository: "Socrats/EGTtools"
           latest: true
-          fileName: "egttools-*"
+          fileName: "*"
           out-file-path: "dist/"
+      - name: Remove source code tar and zip balls
+        run: |
+          rm dist/EGTTools-*.zip
+          rm dist/EGTTools-*.tar.gz
       - name: Publish package to TestPyPI
         uses: pypa/gh-action-pypi-publish@v1.4.2
         with:
