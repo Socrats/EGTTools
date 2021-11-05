@@ -2,6 +2,11 @@ name: Wheels
 
 on:
   workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate debugging enabled'
+        required: false
+        default: false
   pull_request:
   push:
     branches:
