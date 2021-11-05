@@ -1,4 +1,4 @@
-name: Build MacosX
+name: "Build MacosX"
 
 on:
   workflow_dispatch:
