@@ -110,9 +110,9 @@ jobs:
           - os: macos-latest
             bitness: 64
             platform_id: macosx_x86_64
-        #          - os: macos-latest
-        #            bitness: 64
-        #            platform_id: macosx_universal2
+          - os: macos-latest
+            bitness: 64
+            platform_id: macosx_arm64
         exclude:
           - os: macos-latest
             bitness: 32
@@ -139,6 +139,7 @@ jobs:
         uses: jwlawson/actions-setup-cmake@v1.11
 
       - name: Build and test wheels
+        uses: pypa/cibuildwheel@v2.2.2
         env:
           CIBW_BUILD_FRONTEND: "build"
           CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
@@ -148,7 +149,7 @@ jobs:
             CMAKE_OSX_ARCHITECTURES=${{ matrix.platform_id == 'macosx_x86_64' && 'x86_64' || matrix.platform_id == 'macosx_arm64' && 'arm64' || matrix.platform_id == 'macosx_universal2' && '"arm64;x86_64"' || '' }}
             BUILD_ARCH=${{ matrix.platform_id }}
             CMAKE_ARCH="${{ matrix.platform_id == 'win32' && '-A Win32' || '' }}"
-          CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
+#          CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
           CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_SKIP: "cp310-*"
           CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
