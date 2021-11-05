@@ -58,7 +58,7 @@ jobs:
           echo "CIBW_ENVIRONMENT=$CIBW_ENVIRONMENT_COMMON" >> $GITHUB_ENV
           echo "CIBW_ENVIRONMENT_LINUX=$CIBW_ENVIRONMENT_COMMON PIP_ONLY_BINARY='numpy'" >> $GITHUB_ENV
           echo "CIBW_ENVIRONMENT_MACOS=$CIBW_ENVIRONMENT_COMMON MACOSX_DEPLOYMENT_TARGET=10.15 CMAKE_OSX_ARCHITECTURES=\"$CMAKE_OSX_ARCHITECTURES\"" >> $GITHUB_ENV
-          echo "CIBW_BUILD_VERBOSITY=3" >> >> $GITHUB_ENV
+          echo "CIBW_BUILD_VERBOSITY=3" >> $GITHUB_ENV
 
       - name: Run cibuildwheel
         if: startsWith(github.ref, 'refs/heads/docs') != true
