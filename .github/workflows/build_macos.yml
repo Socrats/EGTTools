@@ -50,16 +50,8 @@ jobs:
           CIBW_BEFORE_BUILD_MACOS: brew update && brew install eigen && brew install libomp && brew install gfortran && brew install openblas
           CIBW_BUILD_VERBOSITY: 3
           CIBW_SKIP: "cp310-*"
-          CIBW_ENVIRONMENT: |
-            CMAKE_BUILD_PARALLEL_LEVEL=2
-            CMAKE_OSX_ARCHITECTURES=${{ matrix.platform_id == 'macosx_x86_64' && 'x86_64' || matrix.platform_id == 'macosx_arm64' && 'arm64' || matrix.platform_id == 'macosx_universal2' && '"arm64;x86_64"' || '' }}
-            BUILD_ARCH=${{ matrix.cibw-arch }}
-          CIBW_ENVIRONMENT_MACOS: |
-            CMAKE_BUILD_PARALLEL_LEVEL=2
-            CMAKE_OSX_ARCHITECTURES=${{ matrix.platform_id == 'macosx_x86_64' && 'x86_64' || matrix.platform_id == 'macosx_arm64' && 'arm64' || matrix.platform_id == 'macosx_universal2' && '"arm64;x86_64"' || '' }}
-            MACOSX_DEPLOYMENT_TARGET=10.15
-            CMAKE_OSX_ARCHITECTURES="$CMAKE_OSX_ARCHITECTURES"
-            BUILD_ARCH=${{ matrix.cibw-arch }}
+          CIBW_ENVIRONMENT: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_OSX_ARCHITECTURES=${{ matrix.platform_id == 'macosx_x86_64' && 'x86_64' || matrix.platform_id == 'macosx_arm64' && 'arm64' || matrix.platform_id == 'macosx_universal2' && '"arm64;x86_64"' || '' }} BUILD_ARCH=${{ matrix.cibw-arch }}
+          CIBW_ENVIRONMENT_MACOS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_OSX_ARCHITECTURES=${{ matrix.platform_id == 'macosx_x86_64' && 'x86_64' || matrix.platform_id == 'macosx_arm64' && 'arm64' || matrix.platform_id == 'macosx_universal2' && '"arm64;x86_64"' || '' }} MACOSX_DEPLOYMENT_TARGET=10.15 CMAKE_OSX_ARCHITECTURES="$CMAKE_OSX_ARCHITECTURES" BUILD_ARCH=${{ matrix.cibw-arch }}
           CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: pytest --pyargs egttools
