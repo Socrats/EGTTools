@@ -17,11 +17,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runs-on: macos-latest
+          - runs-on: macOS-10.15
             cibw-arch: macosx_x86_64
-          - runs-on: macos-latest
+          - runs-on: macOS-10.15
             cibw-arch: macosx_arm64
-          - runs-on: macos-latest
+          - runs-on: macOS-10.15
             cibw-arch: macosx_universal2
 
     name: Wheels • ${{ matrix.cibw-arch }}
