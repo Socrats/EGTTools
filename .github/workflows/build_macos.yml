@@ -1,5 +1,4 @@
 name: "Build MacosX"
-
 on:
   workflow_dispatch:
     inputs:
@@ -7,6 +6,10 @@ on:
         description: 'Run the build with tmate debugging enabled'
         required: false
         default: false
+      macos_build:
+        description: 'Build and test macosX images'
+        default: 'testmacos'
+        required: true
 
 jobs:
   wheels:
