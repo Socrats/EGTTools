@@ -10,6 +10,5 @@ brew install gfortran
 echo "GFORTRAN=$(brew --prefix gfortran)" >> $GITHUB_ENV
 brew install openblas
 echo "OPENBLAS=$(brew --prefix openblas)" >> $GITHUB_ENV
-echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'" >> $GITHUB_ENV
 brew install libomp
 echo "LIBOMP=$(brew --prefix libomp)" >> $GITHUB_ENV
