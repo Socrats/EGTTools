@@ -2,11 +2,6 @@ name: Wheels
 
 on:
   workflow_dispatch:
-    inputs:
-      debug_enabled:
-        description: 'Run the build with tmate debugging enabled'
-        required: false
-        default: false
   pull_request:
   push:
     branches:
@@ -94,7 +89,7 @@ jobs:
       # Ensure that a wheel builder finishes even if another fails
       fail-fast: false
       matrix:
-        os: [ windows-latest, ubuntu-latest, macos-latest, macOS-11]
+        os: [ windows-latest, ubuntu-latest, macos-latest ]
         python: [ 37, 38, 39 ]
         bitness: [ 32, 64 ]
         manylinux_image: [ manylinux2010 ]
@@ -115,12 +110,18 @@ jobs:
           - os: macos-latest
             bitness: 64
             platform_id: macosx_x86_64
-          - os: macOS-11
-            bitness: 64
-            platform_id: macosx_arm64
+        #          - os: macos-latest
+        #            bitness: 64
+        #            platform_id: macosx_universal2
         exclude:
           - os: macos-latest
             bitness: 32
+          # Remove manylinux1 from the windows and osx build matrix since
+          # manylinux_image is not used for these platforms
+          - os: windows-latest
+            manylinux_image: manylinux1
+          - os: macos-latest
+            manylinux_image: manylinux1
           - os: macos-latest
             python: 37
     steps:
@@ -147,7 +148,7 @@ jobs:
             CMAKE_OSX_ARCHITECTURES=${{ matrix.platform_id == 'macosx_x86_64' && 'x86_64' || matrix.platform_id == 'macosx_arm64' && 'arm64' || matrix.platform_id == 'macosx_universal2' && '"arm64;x86_64"' || '' }}
             BUILD_ARCH=${{ matrix.platform_id }}
             CMAKE_ARCH="${{ matrix.platform_id == 'win32' && '-A Win32' || '' }}"
-#          CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
+          CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
           CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_SKIP: "cp310-*"
           CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
