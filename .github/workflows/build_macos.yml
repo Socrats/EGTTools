@@ -1,15 +1,14 @@
-name: "Build MacosX"
+name: Build MacosX
 on:
+  push:
+    branches:
+      - github-ci
   workflow_dispatch:
     inputs:
       debug_enabled:
         description: 'Run the build with tmate debugging enabled'
         required: false
         default: false
-      macos_build:
-        description: 'Build and test macosX images'
-        default: 'testmacos'
-        required: true
 
 jobs:
   wheels:
