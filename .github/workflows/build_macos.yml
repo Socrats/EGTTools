@@ -56,8 +56,8 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_OSX_ARCHITECTURES='x86_64' MACOSX_DEPLOYMENT_TARGET=10.15 BUILD_ARCH=${{ matrix.cibw-arch }}
           CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
           CIBW_TEST_REQUIRES: pytest
-          CIBW_BEFORE_TEST: python -m pip install --upgrade pip
-          CIBW_TEST_COMMAND: pytest --pyargs egttools
+          CIBW_BEFORE_TEST: ls && cp -r EGTTools/tests/ tests/
+          CIBW_TEST_COMMAND: pytest tests
 
       - name: Upload built wheels
         if: startsWith(github.ref, 'refs/heads/docs') != true
