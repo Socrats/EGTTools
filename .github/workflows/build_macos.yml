@@ -65,3 +65,9 @@ jobs:
           name: wheels
           path: wheelhouse/egttools-*.whl
           if-no-files-found: error
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ failure() && github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+        with:
+          limit-access-to-actor: true
