@@ -159,7 +159,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: rtd-wheel
-          path: wheelhouse/egttools-*-cp38-cp38m-manylinux*_x86_64.whl
+          path: wheelhouse/egttools-*-cp38-cp38-manylinux*_x86_64*.whl
           if-no-files-found: error
 
       - name: Setup tmate session
