@@ -131,8 +131,11 @@ def get_payoff_function(strategy_i: int,
         if k > group_size:
             raise Exception("You have indicated a wrong group composition. k must be smaller or equal to group_size.")
         group_composition = np.zeros(shape=(nb_strategies,), dtype=int)
-        group_composition[strategy_i] = k
-        group_composition[strategy_j] = group_size - k
+        if strategy_i != strategy_j:
+            group_composition[strategy_i] = k
+            group_composition[strategy_j] = group_size - k
+        else:
+            group_composition[strategy_i] = group_size
         return game.payoff(strategy_i, group_composition.tolist())
 
     return get_payoff
