@@ -155,7 +155,7 @@ jobs:
 
       - name: Upload wheel for ReadTheDocs
         if: |
-          runner.os == 'Linux' && matrix.platform_id == 'manylinux_x86_64' && matrix.python == '38' && startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
+          runner.os == 'Linux' && matrix.cibw-arch == 'manylinux_x86_64' && matrix.python == '38' && startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
         uses: actions/upload-artifact@v2
         with:
           name: rtd-wheel
