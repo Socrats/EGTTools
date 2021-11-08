@@ -75,9 +75,6 @@ jobs:
 
 
   build_wheels:
-    name: Build wheel for cp${{ matrix.python }}-${{ matrix.platform_id }}-${{ matrix.manylinux_image }}
-    runs-on: ${{ matrix.os }}
-
     strategy:
       # Ensure that a wheel builder finishes even if another fails
       fail-fast: false
@@ -101,6 +98,10 @@ jobs:
             cibw-arch: macosx_arm64
           - runs-on: macos-latest
             cibw-arch: macosx_universal2
+
+    name: Wheels • ${{ matrix.cibw-arch }}
+    runs-on: ${{ matrix.runs-on }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
