@@ -2,6 +2,11 @@ name: Wheels
 
 on:
   workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate debugging enabled'
+        required: false
+        default: false
   pull_request:
   push:
     branches:
@@ -133,6 +138,7 @@ jobs:
           CIBW_ENVIRONMENT_WINDOWS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_ARCH="${{ matrix.platform_id == 'win32' && '-A Win32' || '' }}"
           CIBW_ENVIRONMENT_MACOS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch == 'macosx_x86_64' && 'x86_64' || matrix.cibw-arch == 'macosx_arm64' && 'arm64' || matrix.cibw-arch == 'macosx_universal2' && '"arm64;x86_64"' || '' }} BUILD_ARCH=${{ matrix.cibw-arch }} MACOSX_DEPLOYMENT_TARGET=10.15 BUILD_ARCH=${{ matrix.cibw-arch }} EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'
           CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
+          CIBW_TEST_REQUIRES: pytest
           CIBW_BEFORE_TEST: ls && cd .. && cp -r EGTTools/tests/ /Users/runner/tests/
           CIBW_TEST_COMMAND: pytest tests
           CIBW_BUILD_VERBOSITY: 1
@@ -153,6 +159,12 @@ jobs:
           name: rtd-wheel
           path: wheelhouse/egttools-*-cp38-cp38-manylinux*_x86_64.whl
           if-no-files-found: error
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ failure() && github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+        with:
+          limit-access-to-actor: true
 
   trigger_rtd:
     name: Trigger ReadTheDocs build
