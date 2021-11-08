@@ -1,0 +1,86 @@
+Installation
+============
+
+From PyPi
+------
+
+EGTtools can be installed using PyPi on Linux, macOS, and Windows::
+
+    pip install egttools
+
+To update your installed version to the latest release, add ``-U`` (or ``--upgrade``) to the command::
+
+    pip install -U egttools
+
+.. note::
+
+    Currently, only the Linux build supports OpenMP parallelization for numerical simulations. This should normally be
+    ok for most applications, since numerical simulations are heavy and should be run on High Power Computing (HPC) clusters
+    which normally run Linux distributions. We are investigating how to provide support for OpenMP in both Windows
+    and Mac. In the meantime, if you really want to run numerical simulations on either of the two platforms, you should
+    follow the compilation instructions below and try to link OpenMP for your platform yourself. Please, if you
+    manage to do so, open an issue or a pull request with your solutions.
+
+Build from source
+-----------------
+
+To build `egttools` from source follow the following steps.
+
+To **install all required packages** run::
+
+    python -m venv egttools-env
+    source egttools-env/bin/activate
+    pip install -r requirements.txt
+
+Or with anaconda::
+
+    conda env create -f environment.yml
+    conda activate egttools-env
+
+Also, to make your virtual environment visible to jupyter::
+
+    conda install ipykernel # or pip install ipykernel
+    python -m ipykernel install --user --name=egttools-env
+
+Finally, you can **install EGTtools** in your virtual environment by running::
+
+    python -m pip install <path>
+
+Where ``<path>`` represents the path to the EGTtools folder. If you are running this while inside the EGTtools folder,
+then ``<path>`` is simply ``./``.
+
+If you wish, you may also install EGTtools in **development** mode, this will allow the installation to update with new
+modifications to the package::
+
+    python -m pip install -e <path>
+
+Python distributions
+--------------------
+
+Anaconda
+    If you use the Anaconda distribution of Python, you can use the same ``pip`` command in a terminal of the appropriate Anaconda environment, either activated through the `Anaconda Navigator <https://docs.continuum.io/anaconda/navigator/tutorials/manage-environments/#using-an-environment>`_ or `conda tool <https://conda.io/projects/continuumio-conda/en/latest/user-guide/tasks/manage-environments.html#activating-an-environment>`_.
+
+PyPy
+    Recent versions of PyPy are supported by the `pybind11 project <https://github.com/pybind/pybind11>`_ and should thus also be supported by EGTtools.
+
+Other
+    For other distributions of Python, we are expecting that our package is compatible with the Python versions that are out there and that ``pip`` can handle the installation. If you are using yet another Python distribution, we are definitely interested in hearing about it, so that we can add it to this list!
+
+
+
+Troubleshooting
+---------------
+
+It is possible that you run into more problems when trying to install or use EGTtools. Supporting all of the different Python versions out there is not an easy job, as there are plenty of different platforms and setups.
+
+If you run into problems create a `GitHub issue <https://github.com/Socrats/EGTtools/issues>`_, or write `me <mailto:elias.fernandez.domingos@ulb.be>`_ a quick email. We would be very happy to solve these problems, so that future users can avoid them!
+
+
+Pip version
+^^^^^^^^^^^
+
+If the standard way to install EGTtools results in an error or takes a long time, try updating ``pip`` to the latest version (as ``pip`` needs to be a reasonably recent version to install the binary, precompiled wheels) by running ::
+
+    pip install -U pip
+
+If you do not have ``pip`` installed, you follow these instructions to install pip: https://pip.pypa.io/en/stable/installing/
