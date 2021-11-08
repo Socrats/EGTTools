@@ -154,12 +154,11 @@ jobs:
           if-no-files-found: error
 
       - name: Upload wheel for ReadTheDocs
-        if: |
-          runner.os == 'Linux' && matrix.cibw-arch == 'manylinux_x86_64' && matrix.python == '38' && startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
+        if: runner.os == 'Linux' && matrix.cibw-arch == 'manylinux_x86_64' && startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
         uses: actions/upload-artifact@v2
         with:
           name: rtd-wheel
-          path: wheelhouse/egttools-*-cp38-cp38-manylinux*_x86_64*.whl
+          path: wheelhouse/egttools-*-cp38-cp38-*manylinux2010_x86_64*.whl
           if-no-files-found: error
 
       - name: Setup tmate session
