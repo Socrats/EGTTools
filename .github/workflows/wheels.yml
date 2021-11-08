@@ -121,7 +121,7 @@ jobs:
         uses: pypa/cibuildwheel@v2.2.2
         env:
           CIBW_BUILD_FRONTEND: "build"
-          CIBW_BUILD: "*-${{ matrix.cibw-arch }}"
+          CIBW_BUILD: "cp*-${{ matrix.cibw-arch }}"
           CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
           CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_SKIP: "cp310-*"
