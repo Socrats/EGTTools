@@ -15,11 +15,17 @@ To update your installed version to the latest release, add ``-U`` (or ``--upgra
 .. note::
 
     Currently, only the Linux build supports OpenMP parallelization for numerical simulations. This should normally be
-    ok for most applications, since numerical simulations are heavy and should be run on High Power Computing (HPC) clusters
+    ok for most applications, since numerical simulations are heavy (computationally) and should be run on a
+    High Power Computing (HPC) clusters
     which normally run Linux distributions. We are investigating how to provide support for OpenMP in both Windows
-    and Mac. In the meantime, if you really want to run numerical simulations on either of the two platforms, you should
-    follow the compilation instructions below and try to link OpenMP for your platform yourself. Please, if you
-    manage to do so, open an issue or a pull request with your solutions.
+    and Mac OSX. In the meantime, if you really want to run numerical simulations on either of these two platforms,
+    you should follow the compilation instructions below and try to link OpenMP for your platform yourself.
+    Please, if you manage to do so, open an issue or a pull request with your solutions.
+
+.. warning::
+
+    The arm64 and universal2::arm64 have not been tested upstream on CI, so please report any issues or bugs you
+    may encounter.
 
 Build from source
 -----------------
@@ -71,16 +77,24 @@ Other
 Troubleshooting
 ---------------
 
-It is possible that you run into more problems when trying to install or use EGTtools. Supporting all of the different Python versions out there is not an easy job, as there are plenty of different platforms and setups.
+It is possible that you run into problems when trying to install or use EGTtools. This may happen because
+you are running on a different platform or configuration than what we have listed, or simply because we have
+not considered your particular scenario/environment.
 
-If you run into problems create a `GitHub issue <https://github.com/Socrats/EGTtools/issues>`_, or write `me <mailto:elias.fernandez.domingos@ulb.be>`_ a quick email. We would be very happy to solve these problems, so that future users can avoid them!
+If this is the case, and you do run into problems,
+please create a `GitHub issue <https://github.com/Socrats/EGTtools/issues>`_,
+or write `me <mailto:elias.fernandez.domingos@ulb.be>`_ a quick email.
+We would be very happy to solve these problems, so that future users can avoid them and we can expand the use of our
+library.
 
 
 Pip version
 ^^^^^^^^^^^
 
-If the standard way to install EGTtools results in an error or takes a long time, try updating ``pip`` to the latest version (as ``pip`` needs to be a reasonably recent version to install the binary, precompiled wheels) by running ::
+If the standard way to install EGTtools results in an error or takes a long time,
+try updating ``pip`` to the latest version by running ::
 
-    pip install -U pip
+    pip install --upgrade pip
 
-If you do not have ``pip`` installed, you follow these instructions to install pip: https://pip.pypa.io/en/stable/installing/
+If you do not have ``pip`` installed, you can follow these instructions to
+install pip: https://pip.pypa.io/en/stable/installing/
