@@ -140,7 +140,7 @@ jobs:
           CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
           CIBW_TEST_REQUIRES: pytest
           CIBW_BEFORE_TEST: cp -r tests/ ../tests/ && cd .. && ls
-          CIBW_TEST_COMMAND: pytest tests/
+          CIBW_TEST_COMMAND: pytest $(python3 -c "from pathlib import Path; print('{}/tests/'.format(Path('.').absolute())
           CIBW_BUILD_VERBOSITY: 1
 
       - name: Upload wheels
