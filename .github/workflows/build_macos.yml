@@ -53,7 +53,7 @@ jobs:
           CIBW_BUILD_VERBOSITY: 3
           CIBW_SKIP: "cp310-*"
           CIBW_ENVIRONMENT: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_OSX_ARCHITECTURES=${{ matrix.platform_id == 'macosx_x86_64' && 'x86_64' || matrix.platform_id == 'macosx_arm64' && 'arm64' || matrix.platform_id == 'macosx_universal2' && '"arm64;x86_64"' || '' }} BUILD_ARCH=${{ matrix.cibw-arch }}
-          CIBW_ENVIRONMENT_MACOS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_OSX_ARCHITECTURES='x86_64' MACOSX_DEPLOYMENT_TARGET=10.15 BUILD_ARCH=${{ matrix.cibw-arch }}
+          CIBW_ENVIRONMENT_MACOS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_OSX_ARCHITECTURES='x86_64' MACOSX_DEPLOYMENT_TARGET=10.15 BUILD_ARCH=${{ matrix.cibw-arch }} EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'
           CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
           CIBW_TEST_REQUIRES: pytest
           CIBW_BEFORE_TEST: cd .. && cp -r EGTTools/tests/ /Users/runner/tests/
