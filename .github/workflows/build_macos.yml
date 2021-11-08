@@ -7,9 +7,6 @@ on:
         description: 'Run the build with tmate debugging enabled'
         required: false
         default: false
-  push:
-    branches:
-      - github-ci
 
 jobs:
   wheels:
