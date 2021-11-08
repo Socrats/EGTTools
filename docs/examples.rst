@@ -8,6 +8,7 @@ The following examples give an idea of how to use EGTtools to model social dynam
 
     examples/hawk_dove_dynamics
     examples/normal_form_game_mc_simulations
+    examples/plot_invasion_diagram
 
 
 Projects using EGTtools
