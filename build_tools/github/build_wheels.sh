@@ -14,14 +14,13 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
   # sure to update the MACOSX_DEPLOYMENT_TARGET environment variable in
   # wheels.yml accordingly.
   if [[ "$BUILD_ARCH" == "macosx_x86_64"  ]]; then
-    wget https://homebrew.bintray.com/bottles/libomp-11.0.0.high_sierra.bottle.tar.gz
-    brew install libomp-11.0.0.high_sierra.bottle.tar.gz
-    export MACOSX_DEPLOYMENT_TARGET=10.13
-    export CIBW_ENVIRONMENT="$CIBW_ENVIRONMENT MACOSX_DEPLOYMENT_TARGET=10.13"
-  else
+    brew install libomp
     export MACOSX_DEPLOYMENT_TARGET=10.15
     export CIBW_ENVIRONMENT="$CIBW_ENVIRONMENT MACOSX_DEPLOYMENT_TARGET=10.15"
+  else
     brew install libomp
+    export MACOSX_DEPLOYMENT_TARGET=11
+    export CIBW_ENVIRONMENT="$CIBW_ENVIRONMENT MACOSX_DEPLOYMENT_TARGET=11.0"
   fi
   export CC=/usr/bin/clang
   export CXX=/usr/bin/clang++

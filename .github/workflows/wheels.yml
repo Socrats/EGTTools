@@ -2,22 +2,20 @@ name: Wheels
 
 on:
   workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate debugging enabled'
+        required: false
+        default: false
   pull_request:
   push:
     branches:
       - master
-      - develop
       - stable
+      - actions*
       - docs
     tags:
       - v*
-#  release:
-#    types:
-#      - published
-
-env:
-  CIBW_TEST_COMMAND: pytest
-
 
 jobs:
   build_sdist:
@@ -82,48 +80,31 @@ jobs:
 
 
   build_wheels:
-    name: Build wheel for cp${{ matrix.python }}-${{ matrix.platform_id }}-${{ matrix.manylinux_image }}
-    runs-on: ${{ matrix.os }}
-
     strategy:
       # Ensure that a wheel builder finishes even if another fails
       fail-fast: false
       matrix:
-        os: [ windows-latest, ubuntu-latest, macos-latest ]
-        python: [ 37, 38, 39 ]
-        bitness: [ 32, 64 ]
-        manylinux_image: [ manylinux2010 ]
         include:
           # Run 32 and 64 bit version in parallel for Linux and Windows
-          - os: windows-latest
-            bitness: 64
-            platform_id: win_amd64
-          - os: windows-latest
-            bitness: 32
-            platform_id: win32
-          - os: ubuntu-latest
-            bitness: 64
-            platform_id: manylinux_x86_64
-          - os: ubuntu-latest
-            bitness: 32
-            platform_id: manylinux_i686
-          - os: macos-latest
-            bitness: 64
-            platform_id: macosx_x86_64
-        #          - os: macos-latest
-        #            bitness: 64
-        #            platform_id: macosx_universal2
-        exclude:
-          - os: macos-latest
-            bitness: 32
-          # Remove manylinux1 from the windows and osx build matrix since
-          # manylinux_image is not used for these platforms
-          - os: windows-latest
-            manylinux_image: manylinux1
-          - os: macos-latest
-            manylinux_image: manylinux1
-          - os: macos-latest
-            python: 37
+          - runs-on: windows-latest
+            cibw-arch: win_amd64
+          - runs-on: windows-latest
+            cibw-arch: win32
+            python-arch: x86
+          - runs-on: ubuntu-latest
+            cibw-arch: manylinux_x86_64
+          - runs-on: ubuntu-latest
+            cibw-arch: manylinux_i686
+          - runs-on: macos-latest
+            cibw-arch: macosx_x86_64
+          - runs-on: macos-latest
+            cibw-arch: macosx_arm64
+          - runs-on: macos-latest
+            cibw-arch: macosx_universal2
+
+    name: Wheels • ${{ matrix.cibw-arch }}
+    runs-on: ${{ matrix.runs-on }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -134,36 +115,33 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
+          architecture: ${{ matrix.python-arch }}
 
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.11
 
       - name: Build and test wheels
+        uses: pypa/cibuildwheel@v2.2.2
         env:
           CIBW_BUILD_FRONTEND: "build"
-          CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
-          CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
-          CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
-          CIBW_ENVIRONMENT: CMAKE_BUILD_PARALLEL_LEVEL=2
-            CMAKE_OSX_ARCHITECTURES=${{ matrix.platform_id == 'macosx_x86_64' && 'x86_64' || matrix.platform_id == 'macosx_arm64' && 'arm64' || matrix.platform_id == 'macosx_universal2' && '"arm64;x86_64"' || '' }}
-            BUILD_ARCH=${{ matrix.platform_id }}
-            CMAKE_ARCH="${{ matrix.platform_id == 'win32' && '-A Win32' || '' }}"
+          CIBW_BUILD: "cp*-${{ matrix.cibw-arch }}"
           CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
           CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_SKIP: "cp310-*"
+          CIBW_BEFORE_ALL: pip install --upgrade pip
+          CIBW_BEFORE_BUILD_MACOS: brew install eigen && brew install libomp && brew install gfortran && brew install openblas
           CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
           CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3_windows.sh
+          CIBW_ENVIRONMENT: CMAKE_BUILD_PARALLEL_LEVEL=2
+          CIBW_ENVIRONMENT_WINDOWS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_ARCH="${{ matrix.platform_id == 'win32' && '-A Win32' || '' }}"
+          CIBW_ENVIRONMENT_MACOS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch == 'macosx_x86_64' && 'x86_64' || matrix.cibw-arch == 'macosx_arm64' && 'arm64' || matrix.cibw-arch == 'macosx_universal2' && '"arm64;x86_64"' || '' }} BUILD_ARCH=${{ matrix.cibw-arch }} MACOSX_DEPLOYMENT_TARGET=10.15 BUILD_ARCH=${{ matrix.cibw-arch }} EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'
           CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
-          CIBW_TEST_COMMAND_MACOS: "echo installed wheel"
-          CIBW_TEST_COMMAND_WINDOWS: "echo installed wheel"
-          CIBW_TEST_COMMAND_LINUX: "echo installed wheel"
-          CIBW_BUILD_VERBOSITY: 2
-        run: bash build_tools/github/build_wheels.sh
-
-      #      - name: Check built wheels
-      #        if: startsWith(github.ref, 'refs/heads/docs') != true || matrix.cibw-arch == 'manylinux_x86_64'
-      #        run: |
-      #          twine check wheelhouse/*
+          CIBW_TEST_REQUIRES: pytest
+          CIBW_BEFORE_TEST_MACOS: cd .. && cp -r EGTTools/tests/ /Users/runner/tests/
+          CIBW_BEFORE_TEST_WINDOWS: cd .. && cp -r EGTTools/tests/ c:\tests\
+          CIBW_BEFORE_TEST_LINUX: cp -r tests/ /root/tests/ && cd ..
+          CIBW_TEST_COMMAND: pytest tests
+          CIBW_BUILD_VERBOSITY: 1
 
       - name: Upload wheels
         if: startsWith(github.ref, 'refs/heads/docs') != true
@@ -174,13 +152,18 @@ jobs:
           if-no-files-found: error
 
       - name: Upload wheel for ReadTheDocs
-        if: |
-          runner.os == 'Linux' && matrix.platform_id == 'manylinux_x86_64' && matrix.python == '38' && startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
+        if: runner.os == 'Linux' && matrix.cibw-arch == 'manylinux_x86_64' && startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
         uses: actions/upload-artifact@v2
         with:
           name: rtd-wheel
-          path: wheelhouse/egttools-*-cp38-cp38-manylinux*_x86_64.whl
+          path: wheelhouse/egttools-*-cp38-cp38-*manylinux2010_x86_64*.whl
           if-no-files-found: error
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ failure() && github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+        with:
+          limit-access-to-actor: true
 
   trigger_rtd:
     name: Trigger ReadTheDocs build

@@ -54,7 +54,7 @@ namespace stubs {
         }
 
         /* Trampoline (need one for each virtual function) */
-        double calculate_fitness(const size_t &player_type, const size_t &pop_size,
+        double calculate_fitness(const int &player_type, const size_t &pop_size,
                                  const Eigen::Ref<const egttools::VectorXui> &strategies) override {
             PYBIND11_OVERRIDE_PURE(
                     double,                                    /* Return type */
@@ -106,7 +106,7 @@ namespace stubs {
         }
 
         /* Trampoline (need one for each virtual function) */
-        [[nodiscard]] double payoff(size_t strategy,
+        [[nodiscard]] double payoff(int strategy,
                                     const egttools::FinitePopulations::StrategyCounts &group_composition) const override {
             PYBIND11_OVERRIDE_PURE(
                     double,                                    /* Return type */
@@ -133,7 +133,7 @@ namespace stubs {
         using egttools::FinitePopulations::behaviors::AbstractNFGStrategy::AbstractNFGStrategy;
 
         /* Trampoline (need one for each virtual function) */
-        size_t get_action(size_t time_step, size_t action_prev) override {
+        int get_action(size_t time_step, int action_prev) override {
             PYBIND11_OVERRIDE_PURE(
                     size_t,                                                      /* Return type */
                     egttools::FinitePopulations::behaviors::AbstractNFGStrategy, /* Parent class */

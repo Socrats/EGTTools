@@ -645,7 +645,7 @@ PYBIND11_MODULE(numerical, m) {
                  py::arg("strategy pair"))
             .def_property_readonly("group_achievement_per_group", &egttools::FinitePopulations::CRDGame::group_achievements)
             .def("nb_strategies", &egttools::FinitePopulations::CRDGame::nb_strategies,
-                                   "Number of different strategies which are playing the game.")
+                 "Number of different strategies which are playing the game.")
             .def_property_readonly("endowment", &egttools::FinitePopulations::CRDGame::endowment,
                                    "Initial endowment for all players.")
             .def_property_readonly("target", &egttools::FinitePopulations::CRDGame::target,
@@ -738,7 +738,7 @@ PYBIND11_MODULE(numerical, m) {
                  "returns the payoff of a strategy given a group composition.", py::arg("strategy"),
                  py::arg("strategy pair"))
             .def("nb_strategies", &egttools::FinitePopulations::games::CRDGameTU::nb_strategies,
-                                   "Number of different strategies which are playing the game.")
+                 "Number of different strategies which are playing the game.")
             .def_property_readonly("endowment", &egttools::FinitePopulations::games::CRDGameTU::endowment,
                                    "Initial endowment for all players.")
             .def_property_readonly("target", &egttools::FinitePopulations::games::CRDGameTU::target,
@@ -1397,24 +1397,24 @@ PYBIND11_MODULE(numerical, m) {
                  "evolves the strategies for a maximum of nb_generations", py::arg("nb_generations"), py::arg("beta"),
                  py::arg("mu"), py::arg("init_state"))
             .def("run",
-                 static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(size_t, double,
+                 static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int, double,
                                                                            const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
                  "runs the moran process with social imitation and returns a matrix with all the states the system went through",
                  py::arg("nb_generations"),
                  py::arg("beta"),
                  py::arg("init_state"))
             .def("run",
-                 static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(size_t, double, double,
+                 static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int, double, double,
                                                                            const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
                  "runs the moran process with social imitation and returns a matrix with all the states the system went through",
                  py::arg("nb_generations"),
                  py::arg("beta"),
                  py::arg("mu"),
                  py::arg("init_state"))
-            .def("fixation_probability", &PairwiseComparison::fixationProbability,
+            .def("fixation_probability", &PairwiseComparison::estimate_fixation_probability,
                  "Estimates the fixation probability of an strategy in the population.",
                  py::arg("mutant"), py::arg("resident"), py::arg("nb_runs"), py::arg("nb_generations"), py::arg("beta"))
-            .def("stationary_distribution", &PairwiseComparison::stationaryDistribution,
+            .def("stationary_distribution", &PairwiseComparison::estimate_stationary_distribution,
                  py::call_guard<py::gil_scoped_release>(),
                  "Estimates the stationary distribution of the population of strategies given the game.",
                  py::arg("nb_runs"), py::arg("nb_generations"), py::arg("transitory"), py::arg("beta"), py::arg("mu"))
@@ -1430,7 +1430,7 @@ PYBIND11_MODULE(numerical, m) {
                 This method directly estimates how frequent each strategy is in the population, without calculating
                 the stationary distribution as an intermediary step. You should use this method when the number
                 of states of the system is bigger than MAX_LONG_INT, since it would not be possible to index the states
-                in this case, and stationaryDistribution and estimate_stationary_distribution_sparse would run into an
+                in this case, and estimate_stationary_distribution and estimate_stationary_distribution_sparse would run into an
                 overflow error.
 
                 Parameters

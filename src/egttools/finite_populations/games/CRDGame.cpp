@@ -105,7 +105,7 @@ const egttools::FinitePopulations::GroupPayoffs &egttools::FinitePopulations::CR
     return expected_payoffs_;
 }
 
-double egttools::FinitePopulations::CRDGame::calculate_fitness(const size_t &player_type, const size_t &pop_size,
+double egttools::FinitePopulations::CRDGame::calculate_fitness(const int &player_type, const size_t &pop_size,
                                                                const Eigen::Ref<const VectorXui> &strategies) {
     // This function assumes that the strategy counts given in @param strategies does not include
     // the player with @param player_type strategy.
@@ -160,8 +160,8 @@ const egttools::FinitePopulations::GroupPayoffs &egttools::FinitePopulations::CR
 }
 
 double
-egttools::FinitePopulations::CRDGame::payoff(size_t strategy, const egttools::FinitePopulations::StrategyCounts &group_composition) const {
-    if (strategy > static_cast<size_t>(nb_strategies_))
+egttools::FinitePopulations::CRDGame::payoff(int strategy, const egttools::FinitePopulations::StrategyCounts &group_composition) const {
+    if (strategy > nb_strategies_)
         throw std::invalid_argument(
                 "you must specify a valid index for the strategy [0, " + std::to_string(nb_strategies_) +
                 ")");

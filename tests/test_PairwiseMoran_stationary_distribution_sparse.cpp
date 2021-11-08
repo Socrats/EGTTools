@@ -21,7 +21,7 @@ int main() {
 
     egttools::FinitePopulations::NFGStrategyVector strategies;
     size_t pop_size = 100;
-    size_t nb_rounds = 1;
+    int nb_rounds = 1;
     egttools::Matrix2D payoff_matrix(2, 2);
     payoff_matrix << -0.5, 2, 0, 0;
 

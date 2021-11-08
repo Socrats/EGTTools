@@ -15,7 +15,7 @@ int main() {
     // First we define a vector of possible behaviors
     long nb_strategies = 2;
     size_t pop_size = 100;
-    size_t nb_rounds = 1;
+    int nb_rounds = 1;
     egttools::VectorXui init_state(nb_strategies);
     egttools::Matrix2D payoff_matrix(2, 2);
     payoff_matrix << -0.5, 2, 0, 0;

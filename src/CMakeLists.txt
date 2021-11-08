@@ -42,7 +42,9 @@ set_target_properties(numerical PROPERTIES
 
 target_include_directories(numerical SYSTEM INTERFACE ${CMAKE_SOURCE_DIR})
 
-target_link_libraries(numerical)
 if (OPENMP_FOUND)
+    message("-- linking OpenMP to target numerical")
     target_link_libraries(numerical PRIVATE OpenMP::OpenMP_CXX)
+else ()
+    target_link_libraries(numerical)
 endif ()

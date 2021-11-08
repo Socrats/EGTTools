@@ -36,7 +36,7 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
      */
     class Cooperator : public AbstractNFGStrategy {
     public:
-        size_t get_action(size_t time_step, size_t action_prev) final;
+        int get_action(size_t time_step, int action_prev) final;
         std::string type() final;
         bool is_stochastic() final;
     };
@@ -45,7 +45,7 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
      */
     class Defector : public AbstractNFGStrategy {
     public:
-        size_t get_action(size_t time_step, size_t action_prev) final;
+        int get_action(size_t time_step, int action_prev) final;
         std::string type() final;
         bool is_stochastic() final;
     };
@@ -56,11 +56,11 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
     public:
         RandomPlayer();
 
-        size_t get_action(size_t time_step, size_t action_prev) final;
+        int get_action(size_t time_step, int action_prev) final;
         std::string type() final;
         bool is_stochastic() final;
 
-        std::uniform_int_distribution<size_t> rand_int_;
+        std::uniform_int_distribution<int> rand_int_;
     };
 
     /**
@@ -68,7 +68,7 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
      */
     class TitForTat : public AbstractNFGStrategy {
     public:
-        size_t get_action(size_t time_step, size_t action_prev) final;
+        int get_action(size_t time_step, int action_prev) final;
         std::string type() final;
         bool is_stochastic() final;
     };
@@ -77,7 +77,7 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
      */
     class SuspiciousTFT : public AbstractNFGStrategy {
     public:
-        size_t get_action(size_t time_step, size_t action_prev) final;
+        int get_action(size_t time_step, int action_prev) final;
         std::string type() final;
         bool is_stochastic() final;
     };
@@ -92,7 +92,7 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
     public:
         GenerousTFT(double reward, double punishment, double temptation, double sucker);
 
-        size_t get_action(size_t time_step, size_t action_prev) final;
+        int get_action(size_t time_step, int action_prev) final;
         std::string type() final;
         bool is_stochastic() final;
 
@@ -108,12 +108,12 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
      */
     class GradualTFT : public AbstractNFGStrategy {
     public:
-        size_t get_action(size_t time_step, size_t action_prev) final;
+        int get_action(size_t time_step, int action_prev) final;
         std::string type() final;
         bool is_stochastic() final;
 
-        size_t defection_string_ = 0;
-        size_t cooperation_string_ = 0;
+        int defection_string_ = 0;
+        int cooperation_string_ = 0;
     };
     /**
      * Imitates opponent as in TFT, but makes mistakes
@@ -123,7 +123,7 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
     public:
         explicit ImperfectTFT(double error_probability);
 
-        size_t get_action(size_t time_step, size_t action_prev) final;
+        int get_action(size_t time_step, int action_prev) final;
         std::string type() final;
         bool is_stochastic() final;
 
@@ -135,22 +135,22 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
      */
     class TFTT : public AbstractNFGStrategy {
     public:
-        size_t get_action(size_t time_step, size_t action_prev) final;
+        int get_action(size_t time_step, int action_prev) final;
         std::string type() final;
         bool is_stochastic() final;
 
-        size_t action_memory_ = 1;
+        int action_memory_ = 1;
     };
     /**
      * @brief Defects twice if defected
      */
     class TTFT : public AbstractNFGStrategy {
     public:
-        size_t get_action(size_t time_step, size_t action_prev) final;
+        int get_action(size_t time_step, int action_prev) final;
         std::string type() final;
         bool is_stochastic() final;
 
-        size_t defection_counter_ = 0;// starts with cooperation
+        int defection_counter_ = 0;// starts with cooperation
     };
     /**
      * @brief Also known as Trigger
@@ -159,11 +159,11 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
      */
     class GRIM : public AbstractNFGStrategy {
     public:
-        size_t get_action(size_t time_step, size_t action_prev) final;
+        int get_action(size_t time_step, int action_prev) final;
         std::string type() final;
         bool is_stochastic() final;
 
-        size_t action_ = 1;
+        int action_ = 1;
     };
     /**
      * @brief win-stay loose-shift
@@ -172,11 +172,11 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
      */
     class Pavlov : public AbstractNFGStrategy {
     public:
-        size_t get_action(size_t time_step, size_t action_prev) final;
+        int get_action(size_t time_step, int action_prev) final;
         std::string type() final;
         bool is_stochastic() final;
 
-        size_t action_memory_ = 1;
+        int action_memory_ = 1;
     };
 
     /**
@@ -188,17 +188,17 @@ namespace egttools::FinitePopulations::behaviors::twoActions {
     public:
         explicit ActionInertia(double epsilon, double p);
 
-        size_t get_action(size_t time_step, size_t action_prev) final;
+        int get_action(size_t time_step, int action_prev) final;
         std::string type() final;
         bool is_stochastic() final;
 
         double epsilon_, p_;
-        size_t action_ = 1;
+        int action_ = 1;
 
         std::uniform_real_distribution<double> rand_double_;
     };
 
-    enum NFActions : size_t {
+    enum NFActions : int {
         DEFECT,
         COOPERATE
     };

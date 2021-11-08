@@ -67,7 +67,7 @@ namespace egttools::FinitePopulations {
          * @return a fitness value
          */
         virtual double
-        calculate_fitness(const size_t &player_type, const size_t &pop_size,
+        calculate_fitness(const int &player_type, const size_t &pop_size,
                           const Eigen::Ref<const VectorXui> &strategies) = 0;
 
         [[nodiscard]] virtual size_t nb_strategies() const = 0;
@@ -98,7 +98,7 @@ namespace egttools::FinitePopulations {
          * @param group_composition : vector with the group composition
          * @return the payoff value
          */
-        [[nodiscard]] virtual double payoff(size_t strategy, const egttools::FinitePopulations::StrategyCounts &group_composition) const = 0;
+        [[nodiscard]] virtual double payoff(int strategy, const egttools::FinitePopulations::StrategyCounts &group_composition) const = 0;
 
         /**
          * @brief stores the payoff matrix in a txt file

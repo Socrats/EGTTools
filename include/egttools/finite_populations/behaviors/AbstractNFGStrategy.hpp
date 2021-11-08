@@ -40,7 +40,7 @@ namespace egttools::FinitePopulations::behaviors {
          * @param action_prev : previous action of the opponent
          * @return the action decided by the strategy
          */
-        virtual size_t get_action(size_t time_step, size_t action_prev) = 0;
+        virtual int get_action(size_t time_step, int action_prev) = 0;
         /**
          *
          * @return a string that indicates the strategy type

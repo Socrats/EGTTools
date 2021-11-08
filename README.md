@@ -54,7 +54,26 @@ git clone --recurse-submodules -j8 https://github.com/Socrats/EGTTools.git
 
 ## Installation
 
-Currently, the only way to install EGTtools is by compiling the source code.
+### With pip
+
+You can install `egttools` directly from PyPi with: 
+
+```bash
+pip install egttools
+```
+
+Currently, only the Linux build supports OpenMP parallelization for numerical simulations. This should normally be
+ok for most applications, since numerical simulations are heavy and should be run on High Power Computing (HPC) clusters
+which normally run Linux distributions. 
+
+We are investigating how to provide support for OpenMP in both Windows
+and Mac. In the meantime, if you really want to run numerical simulations on either of the two platforms, you should
+follow the compilation instructions below and try to link OpenMP for your platform yourself. Please, if you
+manage to do so, open an issue or a pull request with your solutions.
+
+### Build from source
+
+To build `egttools` from source follow the following steps.
 
 To **install all required packages** run:
 
@@ -101,6 +120,10 @@ evolutionary dynamics in a (2-person, 2-actions, one-shot) Hawk-Dove game.
 
 The [Numerical example](docs/examples/normal_form_game_mc_simulations.ipynb) is a jupyter notebook which analyses
 through numerical simulations the evolutionary dynamics in a (2-person, 2-actions, one-shot) Hawk-Dove game.
+
+The [Invasion example](docs/examples/PlotInvasionDiagram.ipynb) is a jupyter notebook calculates the fixation
+probabilities and stationary distribution of a Normal Form Game with 5 strategies and then plots an invasion
+diagram.
 
 For example, assuming the following payoff matrix:
 

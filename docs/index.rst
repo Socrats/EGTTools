@@ -25,6 +25,7 @@ of researchers.
    :hidden:
 
    Home page <self>
+   Installation <installation>
    Examples <examples>
    API reference <_autosummary/egttools>
 
