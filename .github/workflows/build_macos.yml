@@ -54,7 +54,7 @@ jobs:
           CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
           CIBW_TEST_REQUIRES: pytest
           CIBW_BEFORE_TEST: cp -r tests/ ${workspaceFolder}/tests/ && cd ..
-          CIBW_TEST_COMMAND: pytest tests/ ${workspaceFolder}/tests/
+          CIBW_TEST_COMMAND: pytest tests/ ${workspaceFolder}/tests/ --rootdir=${workspaceFolder}
 
       - name: Upload built wheels
         if: startsWith(github.ref, 'refs/heads/docs') != true
