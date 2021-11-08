@@ -11,13 +11,6 @@ on:
       - docs
     tags:
       - v*
-#  release:
-#    types:
-#      - published
-
-env:
-  CIBW_TEST_COMMAND: pytest
-
 
 jobs:
   build_sdist:
@@ -89,41 +82,25 @@ jobs:
       # Ensure that a wheel builder finishes even if another fails
       fail-fast: false
       matrix:
-        os: [ windows-latest, ubuntu-latest, macos-latest ]
-        python: [ 37, 38, 39 ]
-        bitness: [ 32, 64 ]
-        manylinux_image: [ manylinux2010 ]
         include:
           # Run 32 and 64 bit version in parallel for Linux and Windows
-          - os: windows-latest
-            bitness: 64
-            platform_id: win_amd64
-          - os: windows-latest
-            bitness: 32
-            platform_id: win32
-          - os: ubuntu-latest
-            bitness: 64
-            platform_id: manylinux_x86_64
-          - os: ubuntu-latest
-            bitness: 32
-            platform_id: manylinux_i686
-          - os: macos-latest
-            bitness: 64
-            platform_id: macosx_x86_64
-        #          - os: macos-latest
-        #            bitness: 64
-        #            platform_id: macosx_universal2
-        exclude:
-          - os: macos-latest
-            bitness: 32
-          # Remove manylinux1 from the windows and osx build matrix since
-          # manylinux_image is not used for these platforms
-          - os: windows-latest
-            manylinux_image: manylinux1
-          - os: macos-latest
-            manylinux_image: manylinux1
-          - os: macos-latest
-            python: 37
+          - runs-on: windows-latest
+            cibw-arch: win_amd64
+          - runs-on: windows-latest
+            cibw-arch: win32
+            python-arch: x86
+          - runs-on: ubuntu-latest
+            cibw-arch: manylinux_x86_64
+          - runs-on: ubuntu-latest
+            cibw-arch: manylinux_i686
+          - runs-on: macos-latest
+            cibw-arch: macosx_x86_64
+          - runs-on: macos-latest
+            cibw-arch: macosx_x86_64
+          - runs-on: macos-latest
+            cibw-arch: macosx_arm64
+          - runs-on: macos-latest
+            cibw-arch: macosx_universal2
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -134,36 +111,30 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
+          architecture: ${{ matrix.python-arch }}
 
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.11
 
       - name: Build and test wheels
+        uses: pypa/cibuildwheel@v2.2.2
         env:
           CIBW_BUILD_FRONTEND: "build"
-          CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
-          CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
-          CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
-          CIBW_ENVIRONMENT: CMAKE_BUILD_PARALLEL_LEVEL=2
-            CMAKE_OSX_ARCHITECTURES=${{ matrix.platform_id == 'macosx_x86_64' && 'x86_64' || matrix.platform_id == 'macosx_arm64' && 'arm64' || matrix.platform_id == 'macosx_universal2' && '"arm64;x86_64"' || '' }}
+          CIBW_BUILD: "*-${{ matrix.cibw-arch }}"
+          CIBW_ENVIRONMENT: |
+            CMAKE_BUILD_PARALLEL_LEVEL=2 |
+            CMAKE_OSX_ARCHITECTURES=${{ matrix.platform_id == 'macosx_x86_64' && 'x86_64' || matrix.platform_id == 'macosx_arm64' && 'arm64' || matrix.platform_id == 'macosx_universal2' && '"arm64;x86_64"' || '' }} |
             BUILD_ARCH=${{ matrix.platform_id }}
             CMAKE_ARCH="${{ matrix.platform_id == 'win32' && '-A Win32' || '' }}"
+          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.15 CMAKE_OSX_ARCHITECTURES="$CMAKE_OSX_ARCHITECTURES"
           CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
           CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_SKIP: "cp310-*"
           CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
           CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3_windows.sh
+          CIBW_BEFORE_BUILD_MACOS: brew update && brew install eigen && brew install libomp && brew install gfortran && brew install openblas
           CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
-          CIBW_TEST_COMMAND_MACOS: "echo installed wheel"
-          CIBW_TEST_COMMAND_WINDOWS: "echo installed wheel"
-          CIBW_TEST_COMMAND_LINUX: "echo installed wheel"
           CIBW_BUILD_VERBOSITY: 2
-        run: bash build_tools/github/build_wheels.sh
-
-      #      - name: Check built wheels
-      #        if: startsWith(github.ref, 'refs/heads/docs') != true || matrix.cibw-arch == 'manylinux_x86_64'
-      #        run: |
-      #          twine check wheelhouse/*
 
       - name: Upload wheels
         if: startsWith(github.ref, 'refs/heads/docs') != true

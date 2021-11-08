@@ -195,7 +195,7 @@ namespace egttools {
      */
     template<typename T>
     T starsBars(T stars, T bins) {
-        return egttools::binomialCoeff(stars + bins - 1, stars);
+        return egttools::binomialCoeff<T>(stars + bins - 1, stars);
     }
 
 }// namespace egttools

@@ -61,9 +61,9 @@ namespace egttools::FinitePopulations {
         * @param nb_rounds : number of rounds of the game.
         * @param payoff_matrix : Eigen matrix containing the payoffs.
         */
-        NormalFormGame(size_t nb_rounds, const Eigen::Ref<const Matrix2D> &payoff_matrix);
+        NormalFormGame(int64_t nb_rounds, const Eigen::Ref<const Matrix2D> &payoff_matrix);
 
-        NormalFormGame(size_t nb_rounds, const Eigen::Ref<const Matrix2D> &payoff_matrix, const NFGStrategyVector &strategies);
+        NormalFormGame(int64_t nb_rounds, const Eigen::Ref<const Matrix2D> &payoff_matrix, const NFGStrategyVector &strategies);
 
         //        NormalFormGame(size_t nb_rounds, const Eigen::Ref<const Matrix2D> &payoff_matrix, const std::vector<std::string> strategies);
 
@@ -91,7 +91,7 @@ namespace egttools::FinitePopulations {
         const GroupPayoffs &calculate_payoffs() override;
 
         double
-        calculate_fitness(const size_t &player_type, const size_t &pop_size,
+        calculate_fitness(const int &player_type, const size_t &pop_size,
                           const Eigen::Ref<const VectorXui> &strategies) override;
 
         /**
@@ -110,14 +110,14 @@ namespace egttools::FinitePopulations {
         [[nodiscard]] std::string type() const override;
         [[nodiscard]] const GroupPayoffs &payoffs() const override;
         [[nodiscard]] const Matrix2D &expected_payoffs() const;
-        [[nodiscard]] double payoff(size_t strategy, const egttools::FinitePopulations::StrategyCounts &group_composition) const override;
+        [[nodiscard]] double payoff(int strategy, const egttools::FinitePopulations::StrategyCounts &group_composition) const override;
         [[nodiscard]] const NFGStrategyVector &strategies() const;
         void save_payoffs(std::string file_name) const override;
 
         // setters
 
     protected:
-        size_t nb_rounds_, nb_strategies_, nb_states_;
+        int64_t nb_rounds_, nb_strategies_, nb_states_;
         Matrix2D payoffs_, expected_payoffs_, coop_level_;
         NFGStrategyVector strategies_;
 
@@ -126,7 +126,7 @@ namespace egttools::FinitePopulations {
         * @param s1 : strategy 1
         * @param s2 : strategy 2
         */
-        void _update_cooperation_and_payoffs(size_t s1, size_t s2);
+        void _update_cooperation_and_payoffs(int s1, int s2);
     };
 
 }// namespace egttools::FinitePopulations

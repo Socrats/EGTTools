@@ -20,7 +20,7 @@ int main() {
 
     egttools::FinitePopulations::NFGStrategyVector strategies;
     size_t pop_size = 100;
-    size_t nb_rounds = 1;
+    int nb_rounds = 1;
     egttools::Matrix2D payoff_matrix(2, 2);
     payoff_matrix << -0.5, 2, 0, 0;
 
@@ -54,7 +54,7 @@ int main() {
 
     auto start = high_resolution_clock::now();
 
-    auto dist = smProcess.stationaryDistribution(1, 1000000, 1000, 1, 1e-3);
+    auto dist = smProcess.estimate_stationary_distribution(2, 1000000, 1000, 1, 1e-3);
 
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);

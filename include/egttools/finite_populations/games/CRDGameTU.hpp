@@ -57,7 +57,7 @@ namespace egttools::FinitePopulations::games {
         const GroupPayoffs &calculate_payoffs() override;
 
         double
-        calculate_fitness(const size_t &player_type, const size_t &pop_size,
+        calculate_fitness(const int &player_type, const size_t &pop_size,
                           const Eigen::Ref<const VectorXui> &strategies) override;
 
         /**
@@ -156,7 +156,7 @@ namespace egttools::FinitePopulations::games {
 
         [[nodiscard]] const GroupPayoffs &payoffs() const override;
 
-        [[nodiscard]] double payoff(size_t strategy, const egttools::FinitePopulations::StrategyCounts &group_composition) const override;
+        [[nodiscard]] double payoff(int strategy, const egttools::FinitePopulations::StrategyCounts &group_composition) const override;
 
         void save_payoffs(std::string file_name) const override;
 

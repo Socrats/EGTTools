@@ -19,6 +19,9 @@
 #ifndef EGTTOOLS_DATA_HPP
 #define EGTTOOLS_DATA_HPP
 
+#include <egttools/Types.h>
+
+#include <utility>
 #include <vector>
 
 namespace egttools::DataStructures {
@@ -34,6 +37,6 @@ namespace egttools::DataStructures {
                   std::vector<std::string> &headers,
                   std::vector<std::string> &column_types);
     };
-}
+}// namespace egttools::DataStructures
 
 #endif//EGTTOOLS_DATA_HPP

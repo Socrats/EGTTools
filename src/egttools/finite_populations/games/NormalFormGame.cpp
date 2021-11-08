@@ -18,17 +18,16 @@
 
 #include <egttools/finite_populations/games/NormalFormGame.h>
 
-egttools::FinitePopulations::NormalFormGame::NormalFormGame(size_t nb_rounds,
+egttools::FinitePopulations::NormalFormGame::NormalFormGame(int64_t nb_rounds,
                                                             const Eigen::Ref<const Matrix2D> &payoff_matrix)
     : nb_rounds_(nb_rounds),
-      payoffs_(
-              payoff_matrix) {
+      payoffs_(payoff_matrix) {
 
     // First we check how many strategies will be in the game
     // We consider only 2 for now (Cooperate and Defect)
     nb_strategies_ = 2;
     // nb_states_ will give the amount of game combinations (between) strategies that can happen
-    nb_states_ = egttools::starsBars<size_t>(2, nb_strategies_);
+    nb_states_ = egttools::starsBars<int64_t>(2, nb_strategies_);
     // Calculate the number of possible states
     expected_payoffs_ = Matrix2D::Zero(nb_strategies_, nb_strategies_);
     coop_level_ = Matrix2D::Zero(nb_strategies_, nb_strategies_);
@@ -42,18 +41,18 @@ egttools::FinitePopulations::NormalFormGame::NormalFormGame(size_t nb_rounds,
     strategies_ = egttools::FinitePopulations::NFGStrategyVector();
 }
 
-egttools::FinitePopulations::NormalFormGame::NormalFormGame(size_t nb_rounds,
+egttools::FinitePopulations::NormalFormGame::NormalFormGame(int64_t nb_rounds,
                                                             const Eigen::Ref<const Matrix2D> &payoff_matrix,
-                                                            const egttools::FinitePopulations::NFGStrategyVector & strategies)
+                                                            const egttools::FinitePopulations::NFGStrategyVector &strategies)
     : nb_rounds_(nb_rounds),
       payoffs_(payoff_matrix),
       strategies_(strategies) {
 
     // First we check how many strategies will be in the game
-    nb_strategies_ = strategies.size();
+    nb_strategies_ = static_cast<int64_t>(strategies.size());
     // nb_states_ will give the amount of game combinations (between) strategies that can happen
     // The first argument represents the pairwise interactions
-    nb_states_ = egttools::starsBars<size_t>(2, nb_strategies_);
+    nb_states_ = egttools::starsBars<int64_t>(2, nb_strategies_);
     // Calculate the number of possible states
     expected_payoffs_ = Matrix2D::Zero(nb_strategies_, nb_strategies_);
     coop_level_ = Matrix2D::Zero(nb_strategies_, nb_strategies_);
@@ -64,11 +63,11 @@ egttools::FinitePopulations::NormalFormGame::NormalFormGame(size_t nb_rounds,
 
 void egttools::FinitePopulations::NormalFormGame::play(const egttools::FinitePopulations::StrategyCounts &group_composition,
                                                        egttools::FinitePopulations::PayoffVector &game_payoffs) {
-    size_t action1, action1_prev = 0, action2 = 0;
+    int action1, action1_prev = 0, action2 = 0;
     // Initialize payoffs
     for (auto &value : game_payoffs) value = 0;
 
-    for (size_t i = 0; i < nb_rounds_; ++i) {
+    for (int64_t i = 0; i < nb_rounds_; ++i) {
         // For now since we will consider only C and D as strategies, we will pre-calculate all actions since they
         // correspond with the strategies
         action1 = strategies_[group_composition[0]]->get_action(i, action2);
@@ -77,17 +76,17 @@ void egttools::FinitePopulations::NormalFormGame::play(const egttools::FinitePop
         game_payoffs[0] += payoffs_(action1, action2);
         game_payoffs[1] += payoffs_(action2, action1);
     }
-    game_payoffs[0] /= nb_rounds_;
-    game_payoffs[1] /= nb_rounds_;
+    game_payoffs[0] /= static_cast<double>(nb_rounds_);
+    game_payoffs[1] /= static_cast<double>(nb_rounds_);
 }
 
 const egttools::FinitePopulations::GroupPayoffs &egttools::FinitePopulations::NormalFormGame::calculate_payoffs() {
-    size_t s1, s2;
+    int s1, s2;
 
     // For every possible pair combination, run the game and store the payoff of each strategy
-    for (size_t i = 0; i < nb_strategies_; ++i) {
+    for (int i = 0; i < nb_strategies_; ++i) {
         s1 = i;
-        for (size_t j = i; j < nb_strategies_; ++j) {
+        for (int j = i; j < nb_strategies_; ++j) {
             // Update group composition from current
             s2 = j;
 
@@ -99,7 +98,7 @@ const egttools::FinitePopulations::GroupPayoffs &egttools::FinitePopulations::No
     return expected_payoffs_;
 }
 
-double egttools::FinitePopulations::NormalFormGame::calculate_fitness(const size_t &player_type,
+double egttools::FinitePopulations::NormalFormGame::calculate_fitness(const int &player_type,
                                                                       const size_t &pop_size,
                                                                       const Eigen::Ref<const VectorXui> &strategies) {
     // This function assumes that the strategy counts given in @param strategies does not include
@@ -110,8 +109,8 @@ double egttools::FinitePopulations::NormalFormGame::calculate_fitness(const size
     // Given that we are only considering 2 player games, the fitness is simply the
     // expected payoff of each strategy * the probability of finding that strategy in the
     // population
-    for (size_t i = 0; i < nb_strategies_; ++i) {
-        fitness += expected_payoffs_(player_type, i) * (strategies(i) / static_cast<double>(divider));
+    for (int i = 0; i < nb_strategies_; ++i) {
+        fitness += expected_payoffs_(player_type, i) * (static_cast<double>(strategies(i)) / static_cast<double>(divider));
     }
 
     return fitness;
@@ -127,16 +126,16 @@ double egttools::FinitePopulations::NormalFormGame::calculate_cooperation_level(
     // So for each strategy pair we will count the level of cooperation, and then check
     // how likely each game pair is given the population state
     // For every possible pair combination, run the game and store the payoff of each strategy
-    for (size_t i = 0; i < nb_strategies_; ++i) {
-        for (size_t j = i; j < nb_strategies_; ++j) {
+    for (int i = 0; i < nb_strategies_; ++i) {
+        for (int j = i; j < nb_strategies_; ++j) {
             if (i == j)// prob A1 * prob A2
-                prob = (population_state(i) / pop_size_double) *
+                prob = (static_cast<double>(population_state(i)) / pop_size_double) *
                        (static_cast<double>(population_state(i) - 1) / pop_minus_one);
             else// (prob A1 * prob B2) + (prob B1 * prob A2)
-                prob = ((population_state(i) / pop_size_double) *
-                        (population_state(j) / pop_minus_one)) +
-                       ((population_state(j) / pop_size_double) *
-                        (population_state(i) / pop_minus_one));
+                prob = ((static_cast<double>(population_state(i)) / pop_size_double) *
+                        (static_cast<double>(population_state(j)) / pop_minus_one)) +
+                       ((static_cast<double>(population_state(j)) / pop_size_double) *
+                        (static_cast<double>(population_state(i)) / pop_minus_one));
             coop_level += prob * (coop_level_(i, j) + coop_level_(j, i)) / 2;
         }
     }
@@ -172,13 +171,13 @@ const egttools::Matrix2D &egttools::FinitePopulations::NormalFormGame::expected_
     return expected_payoffs_;
 }
 
-double egttools::FinitePopulations::NormalFormGame::payoff(size_t strategy,
+double egttools::FinitePopulations::NormalFormGame::payoff(int strategy,
                                                            const egttools::FinitePopulations::StrategyCounts &group_composition) const {
-    if (strategy > nb_strategies_)
+    if (strategy > static_cast<int>(nb_strategies_))
         throw std::invalid_argument(
                 "you must specify a valid index for the strategy [0, " + std::to_string(nb_strategies_) +
                 ")");
-    return expected_payoffs_(group_composition[0], group_composition[1]);
+    return expected_payoffs_(static_cast<int>(group_composition[0]), static_cast<int>(group_composition[1]));
 }
 
 const egttools::FinitePopulations::NFGStrategyVector &egttools::FinitePopulations::NormalFormGame::strategies() const {
@@ -202,10 +201,10 @@ void egttools::FinitePopulations::NormalFormGame::save_payoffs(std::string file_
     }
 }
 
-void egttools::FinitePopulations::NormalFormGame::_update_cooperation_and_payoffs(size_t s1, size_t s2) {
+void egttools::FinitePopulations::NormalFormGame::_update_cooperation_and_payoffs(int s1, int s2) {
     // Initialize payoffs
     size_t coop1 = 0, coop2 = 0;
-    size_t action1, action1_prev = 0, action2 = 0;
+    int action1, action1_prev = 0, action2 = 0;
     int div;
 
     // Check if any of the strategies is stochastic, in which case repeat the loop 10000 times (for good statistics)
@@ -215,8 +214,8 @@ void egttools::FinitePopulations::NormalFormGame::_update_cooperation_and_payoff
     // First we play the game
     if (is_stochastic) {
         div = static_cast<int>(nb_rounds_) * 10000;
-        for (int j=0; j < 10000; ++j) {
-            for (size_t i = 0; i < nb_rounds_; ++i) {
+        for (int j = 0; j < 10000; ++j) {
+            for (int i = 0; i < nb_rounds_; ++i) {
                 action1 = strategies_[s1]->get_action(i, action2);
                 action2 = strategies_[s2]->get_action(i, action1_prev);
                 action1_prev = action1;
@@ -230,7 +229,7 @@ void egttools::FinitePopulations::NormalFormGame::_update_cooperation_and_payoff
         }
     } else {
         div = static_cast<int>(nb_rounds_);
-        for (size_t i = 0; i < nb_rounds_; ++i) {
+        for (int i = 0; i < nb_rounds_; ++i) {
             action1 = strategies_[s1]->get_action(i, action2);
             action2 = strategies_[s2]->get_action(i, action1_prev);
             action1_prev = action1;
