@@ -27,6 +27,22 @@ To update your installed version to the latest release, add ``-U`` (or ``--upgra
     The arm64 and universal2::arm64 have not been tested upstream on CI, so please report any issues or bugs you
     may encounter.
 
+.. warning::
+
+    For Apple M1 (arm64) you should install using ``pip install egttools --no-deps`` so that pip does not
+    install the dependencies of the package. This is necessary since there is no Scipy wheel for architecture arm64
+    available on PyPi yet.
+    To install the package dependencies you should create a virtual environment
+    with `miniforge <https://github.com/conda-forge/miniforge>`_. Once you have miniforge installed you can do the
+    following (assuming that you are in the base miniforge environment)::
+
+        conda create -n egtenv python=3.9
+        conda activate egtenv
+        conda install numpy
+        conda install scipy
+        conda install matplotlib
+        conda install networkx
+
 Build from source
 -----------------
 

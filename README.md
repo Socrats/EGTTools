@@ -56,20 +56,35 @@ git clone --recurse-submodules -j8 https://github.com/Socrats/EGTTools.git
 
 ### With pip
 
-You can install `egttools` directly from PyPi with: 
+You can install `egttools` directly from PyPi with:
 
 ```bash
 pip install egttools
 ```
 
-Currently, only the Linux build supports OpenMP parallelization for numerical simulations. This should normally be
-ok for most applications, since numerical simulations are heavy and should be run on High Power Computing (HPC) clusters
-which normally run Linux distributions. 
+Currently, only the Linux build supports OpenMP parallelization for numerical simulations. This should normally be ok
+for most applications, since numerical simulations are heavy and should be run on High Power Computing (HPC) clusters
+which normally run Linux distributions.
 
-We are investigating how to provide support for OpenMP in both Windows
-and Mac. In the meantime, if you really want to run numerical simulations on either of the two platforms, you should
-follow the compilation instructions below and try to link OpenMP for your platform yourself. Please, if you
-manage to do so, open an issue or a pull request with your solutions.
+We are investigating how to provide support for OpenMP in both Windows and Mac. In the meantime, if you really want to
+run numerical simulations on either of the two platforms, you should follow the compilation instructions below and try
+to link OpenMP for your platform yourself. Please, if you manage to do so, open an issue or a pull request with your
+solutions.
+
+**Note**: For Apple M1 (arm64) you should install using ```pip install egttools --no-deps``` so that pip does not
+install the dependencies of the package. You should then install these dependencies through a virtual environment
+created with [miniforge](https://github.com/conda-forge/miniforge) (see [Caveats](#caveats) for more information on why
+this is necessary). Once you have miniforge installed you can do the following (assuming that you are in the base
+miniforge environment):
+
+```bash
+conda create -n egtenv python=3.9
+conda activate egtenv
+conda install numpy
+conda install scipy
+conda install matplotlib
+conda install networkx
+```
 
 ### Build from source
 
@@ -121,9 +136,8 @@ evolutionary dynamics in a (2-person, 2-actions, one-shot) Hawk-Dove game.
 The [Numerical example](docs/examples/normal_form_game_mc_simulations.ipynb) is a jupyter notebook which analyses
 through numerical simulations the evolutionary dynamics in a (2-person, 2-actions, one-shot) Hawk-Dove game.
 
-The [Invasion example](docs/examples/PlotInvasionDiagram.ipynb) is a jupyter notebook calculates the fixation
-probabilities and stationary distribution of a Normal Form Game with 5 strategies and then plots an invasion
-diagram.
+The [Invasion example](docs/examples/plot_invasion_diagram.ipynb) is a jupyter notebook calculates the fixation
+probabilities and stationary distribution of a Normal Form Game with 5 strategies and then plots an invasion diagram.
 
 For example, assuming the following payoff matrix:
 
@@ -279,8 +293,9 @@ You can find more information in the [ReadTheDocs](https://egttools.readthedocs.
 
 4. You **must** have Eigen 3.3.* installed.
 
-5. You **do not** need any of the above if you install EGTtools through ```pip install egttools```. This will soon be an
-   option.
+5. You **do not** need any of the above if you install EGTtools through ```pip install egttools --no-deps```. However,
+   on Apple M1 (arm64) you still need to install the dependencies through miniforge, since only there you can find a
+   scipy wheel that supports this architecture.
 
 ## Citing
 
