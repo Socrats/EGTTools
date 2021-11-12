@@ -481,7 +481,7 @@ class StochDynamics:
         -------
         Tuple[numpy.ndarray[numpy.float64[m,m]], numpy.ndarray[numpy.float64[m,m]]]
             This method returns a tuple with the transition matrix as first element, and
-            the matrix of fixation probabilities as second element.
+            the matrix of fixation probabilities * population_size as second element.
         """
         transitions = np.zeros((self.nb_strategies, self.nb_strategies))
         fixprobs = np.zeros((self.nb_strategies, self.nb_strategies))
