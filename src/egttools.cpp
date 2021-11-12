@@ -501,7 +501,8 @@ PYBIND11_MODULE(numerical, m) {
                         See Also
                         --------
                         egttools.numerical.calculate_state, egttools.numerical.sample_simplex,
-                        egttools.numerical.calculate_nb_states, egttools.numerical.PairwiseMoran.stationary_distribution_sparse
+                        egttools.numerical.calculate_nb_states, egttools.numerical.PairwiseMoran.estimate_stationary_distribution
+                        egttools.numerical.calculate_nb_states, egttools.numerical.PairwiseMoran.estimate_stationary_distribution_sparse
                         )pbdoc",
           py::arg("pop_size"), py::arg("nb_strategies"), py::arg("stationary_distribution"));
 
@@ -1411,14 +1412,14 @@ PYBIND11_MODULE(numerical, m) {
                  py::arg("beta"),
                  py::arg("mu"),
                  py::arg("init_state"))
-            .def("fixation_probability", &PairwiseComparison::estimate_fixation_probability,
+            .def("estimate_fixation_probability", &PairwiseComparison::estimate_fixation_probability,
                  "Estimates the fixation probability of an strategy in the population.",
                  py::arg("mutant"), py::arg("resident"), py::arg("nb_runs"), py::arg("nb_generations"), py::arg("beta"))
-            .def("stationary_distribution", &PairwiseComparison::estimate_stationary_distribution,
+            .def("estimate_stationary_distribution", &PairwiseComparison::estimate_stationary_distribution,
                  py::call_guard<py::gil_scoped_release>(),
                  "Estimates the stationary distribution of the population of strategies given the game.",
                  py::arg("nb_runs"), py::arg("nb_generations"), py::arg("transitory"), py::arg("beta"), py::arg("mu"))
-            .def("stationary_distribution_sparse", &PairwiseComparison::estimate_stationary_distribution_sparse,
+            .def("estimate_stationary_distribution_sparse", &PairwiseComparison::estimate_stationary_distribution_sparse,
                  py::call_guard<py::gil_scoped_release>(),
                  "Estimates the stationary distribution of the population of strategies given the game.",
                  py::arg("nb_runs"), py::arg("nb_generations"), py::arg("transitory"), py::arg("beta"), py::arg("mu"))
@@ -1457,8 +1458,8 @@ PYBIND11_MODULE(numerical, m) {
 
                 See Also
                 --------
-                egttools.numerical.PairwiseMoran.stationary_distribution,
-                egttools.numerical.PairwiseMoran.stationary_distribution_sparse
+                egttools.numerical.PairwiseMoran.estimate_stationary_distribution,
+                egttools.numerical.PairwiseMoran.estimate_stationary_distribution_sparse
                 )pbdoc",
                  py::arg("nb_runs"), py::arg("nb_generations"), py::arg("transitory"), py::arg("beta"), py::arg("mu"))
             .def_property_readonly("nb_strategies", &PairwiseComparison::nb_strategies, "Number of strategies in the population.")
