@@ -1,8 +1,3 @@
-"""
-The `behaviors.pgg_behaviors` submodule contains strategies which can
-be used with `egttools.games.pgg` game.
-"""
-
 # Copyright (c) 2019-2021  Elias Fernandez
 #
 # This file is part of EGTtools.
@@ -19,6 +14,11 @@ be used with `egttools.games.pgg` game.
 #
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
+
+"""
+The `behaviors.pgg_behaviors` submodule contains strategies which can
+be used with `egttools.games.pgg` game.
+"""
 
 from typing import List
 
