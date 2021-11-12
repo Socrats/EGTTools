@@ -5,8 +5,11 @@ from sys import platform
 
 import numpy as np
 
-from egttools.numerical import Random, PairwiseMoran
-from egttools.numerical.games import NormalFormGame
+egt = pytest.importorskip("egttools")
+
+Random = egt.Random
+PairwiseMoran = egt.numerical.PairwiseMoran
+NormalFormGame = egt.games.NormalFormGame
 
 
 @pytest.fixture

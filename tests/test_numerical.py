@@ -15,7 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
-import egttools
+import pytest
+
+egttools = pytest.importorskip("egttools")
 
 
 def test_calculate_nb_states():
