@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2020  Elias Fernandez
+# Copyright (c) 2019-2021  Elias Fernandez
 #
 # This file is part of EGTtools.
 #
@@ -14,6 +14,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
+
+"""Helper function to visualize evolutionary dynamics"""
+
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
