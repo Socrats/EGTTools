@@ -13,6 +13,7 @@ include requirements.txt
 graft include
 graft src
 graft egttools
+graft egttools/behaviors
 graft egttools/behaviors/CRD
 graft egttools/behaviors/NormalForm
 graft egttools/behaviors/NormalForm/TwoActions
