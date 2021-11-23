@@ -64,10 +64,12 @@ class StochDynamics:
     ----------
     nb_strategies : int
                 number of strategies in the population
-    pop_size : int
-            population size
     payoffs : numpy.ndarray[numpy.float64[m,m]]
             payoff matrix indicating the payoff of each strategy (rows) against each other (columns)
+    pop_size : int
+            population size
+    group_size : int
+            group size
     mu : float
         mutation probability
 
