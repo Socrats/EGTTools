@@ -18,6 +18,34 @@
 
 #include <egttools/finite_populations/behaviors/NFGStrategies.hpp>
 
+
+int egttools::FinitePopulations::behaviors::twoActions::Detective::get_action(size_t time_step, int action_prev) {
+    if ((time_step == 0) || (time_step == 2) || (time_step==3)) {
+        return COOPERATE;
+    } else if (time_step == 1) {
+        return DEFECT;
+    }
+    else{
+        if (action_prev == DEFECT)
+            if (time_step==4){
+                return COOPERATE
+            }
+            else{
+                return DEFECT
+            }
+        else{
+            return DEFECT
+        }
+    }   
+     
+}
+std::string egttools::FinitePopulations::behaviors::twoActions::Detective::type() {
+    return "NFGStrategies::Detective";
+}
+bool egttools::FinitePopulations::behaviors::twoActions::Cooperator::is_stochastic() {
+    return false;
+}
+
 int egttools::FinitePopulations::behaviors::twoActions::Cooperator::get_action(size_t time_step, int action_prev) {
     UNUSED(time_step);
     UNUSED(action_prev);
