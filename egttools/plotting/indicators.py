@@ -169,6 +169,8 @@ def draw_stationary_distribution(strategies: List[str], drift: float, fixation_p
     >>> plt.axis('off')
     >>> plt.show() # display
     """
+    fixation_probabilities_normalized = fixation_probabilities / drift
+
     used_strategies = [strategy for i, strategy in enumerate(strategies) if
                        (stationary_distribution[i] > min_strategy_frequency)]
 
@@ -190,12 +192,12 @@ def draw_stationary_distribution(strategies: List[str], drift: float, fixation_p
 
     for j in range(q):
         for i in range(q):
-            if fixation_probabilities[used_strategies_idx[i], used_strategies_idx[j]] >= drift:
+            if fixation_probabilities_normalized[used_strategies_idx[i], used_strategies_idx[j]] >= 1:
                 G.add_edge(used_strategies[i], used_strategies[j],
-                           weight=fixation_probabilities[used_strategies_idx[i], used_strategies_idx[j]])
+                           weight=fixation_probabilities_normalized[used_strategies_idx[i], used_strategies_idx[j]])
 
     eselect = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] > 1.0]
-    eselect_labels = dict(((u, v), float("{0:.2f}".format(d['weight'])))
+    eselect_labels = dict(((u, v), r"{0:.2f}$\rho_N$".format(d['weight']))
                           for (u, v, d) in G.edges(data=True) if d['weight'] > 1.0)
     edrift = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] == 1.0]
 
