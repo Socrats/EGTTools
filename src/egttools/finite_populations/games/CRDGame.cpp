@@ -30,7 +30,7 @@ egttools::FinitePopulations::CRDGame::CRDGame(int endowment, int threshold, int 
     calculate_success_per_group_composition();
 }
 
-
+// TODO: It might be necessary to change this whole class to use floats
 void egttools::FinitePopulations::CRDGame::play(const egttools::FinitePopulations::StrategyCounts &group_composition,
                                                 PayoffVector &game_payoffs) {
     int prev_donation = 0, current_donation = 0;
@@ -53,8 +53,8 @@ void egttools::FinitePopulations::CRDGame::play(const egttools::FinitePopulation
                 if (game_payoffs[j] >= actions(j)) {
                     game_payoffs[j] -= actions(j);
                     current_donation += static_cast<int>(group_composition[j]) * actions(j);
-                } else { // If not enough, contribute what is left of the endowment
-                    current_donation += static_cast<int>(group_composition[j]) * game_payoffs[j];
+                } else {// If not enough, contribute what is left of the endowment
+                    current_donation += static_cast<int>(group_composition[j]) * static_cast<int>(game_payoffs[j]);
                     game_payoffs[j] = 0;
                 }
             }
@@ -76,7 +76,7 @@ std::string egttools::FinitePopulations::CRDGame::toString() const {
 }
 
 std::string egttools::FinitePopulations::CRDGame::type() const {
-    return "egttools::FinitePopulations::CRDGame";
+    return "egttools.games.CRDGame";
 }
 
 size_t egttools::FinitePopulations::CRDGame::nb_strategies() const {
@@ -369,15 +369,15 @@ const egttools::MatrixXui2D &egttools::FinitePopulations::CRDGame::contribution_
     return c_behaviors_;
 }
 
-size_t egttools::FinitePopulations::CRDGame::target() const {
+int egttools::FinitePopulations::CRDGame::target() const {
     return threshold_;
 }
 
-size_t egttools::FinitePopulations::CRDGame::endowment() const {
+int egttools::FinitePopulations::CRDGame::endowment() const {
     return endowment_;
 }
 
-size_t egttools::FinitePopulations::CRDGame::nb_rounds() const {
+int egttools::FinitePopulations::CRDGame::nb_rounds() const {
     return nb_rounds_;
 }
 

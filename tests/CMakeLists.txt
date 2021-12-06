@@ -30,6 +30,7 @@ add_library(egttoolsNumerical
         ../src/egttools/finite_populations/games/NormalFormGame.cpp
         ../src/egttools/finite_populations/games/CRDGame.cpp
         ../src/egttools/finite_populations/games/CRDGameTU.cpp
+        ../src/egttools/finite_populations/games/OneShotCRD.cpp
         ../src/egttools/finite_populations/behaviors/NFGStrategies.cpp
         ../src/egttools/finite_populations/behaviors/CRDStrategies.cpp
         )
@@ -74,6 +75,9 @@ target_link_libraries(testCRDGame egttoolsNumerical)
 
 add_executable(testCRDTUGame test_crd_tu_game.cpp)
 target_link_libraries(testCRDTUGame egttoolsNumerical)
+
+add_executable(testOneShotCRDGame test_oneshotcrd_game.cpp)
+target_link_libraries(testOneShotCRDGame egttoolsNumerical)
 
 add_executable(testTimingUncertainty test_timing_uncertainty.cpp)
 target_link_libraries(testTimingUncertainty egttoolsNumerical)

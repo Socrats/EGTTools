@@ -35,11 +35,11 @@ class PGG(AbstractGame):
         self.payoffs_ = np.zeros(shape=(self.nb_strategies_, self.nb_states_), dtype=np.float64)
         self.calculate_payoffs()
 
-    def play(self, group_composiiton: Union[List[int], np.ndarray], game_payoffs: np.ndarray) -> None:
+    def play(self, group_composition: Union[List[int], np.ndarray], game_payoffs: np.ndarray) -> None:
         # Gather contributions
         contributions = 0.0
         non_zero = []
-        for i, strategy_count in enumerate(group_composiiton):
+        for i, strategy_count in enumerate(group_composition):
             if strategy_count == 0:
                 continue
             else:
@@ -95,7 +95,7 @@ class PGG(AbstractGame):
             # Estimate probability of the current group composition
             if group_composition[player_strategy] > 0:
                 group_composition[player_strategy] -= 1
-                fitness += self.payoffs[player_strategy, i] * rv.pmf(x=group_composition)
+                fitness += self.payoffs_[player_strategy, i] * rv.pmf(x=group_composition)
 
         return fitness
 

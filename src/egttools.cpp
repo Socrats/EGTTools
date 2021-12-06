@@ -667,38 +667,43 @@ PYBIND11_MODULE(numerical, m) {
     py::class_<egttools::FinitePopulations::games::CRDGameTU, egttools::FinitePopulations::AbstractGame>(mGames, "CRDGameTU")
             .def(py::init(&egttools::init_crd_tu_game_from_python_list),
                  R"pbdoc(
-                    Collective Risk Dilemma. This allows you to define any number of strategies by passing them
-                    as a list. All strategies must be of type AbstractCRDStrategy *.
+                    This class implements a One-Shot Collective Risk Dilemma.
 
-                    The CRD dilemma implemented here follows the description of:
-                    Milinski, M., Sommerfeld, R. D., Krambeck, H.-J., Reed, F. A.,
-                    & Marotzke, J. (2008). The collective-risk social dilemma and the prevention of simulated
-                    dangerous climate change. Proceedings of the National Academy of Sciences of the United States of America, 105(7),
-                    2291–2294. https://doi.org/10.1073/pnas.0709546105
+                    This N-player game was first introduced in "Santos, F. C., & Pacheco, J. M. (2011).
+                    Risk of collective failure provides an escape from the tragedy of the commons.
+                    Proceedings of the National Academy of Sciences of the United States of America, 108(26), 10421–10425.".
+
+                    The game consists of a group of size ``group_size`` (N) which can be composed of
+                    Cooperators (Cs) who will contribute a fraction ``cost`` (c) of their
+                    ``endowment`` (b) to the public good. And of Defectors (Ds) who contribute 0.
+
+                    If the total contribution of the group is equal or surpasses the collective target Mcb,
+                    with M being the ``min_nb_cooperators``, then all participants will receive as payoff
+                    their remaining endowment. Which is, Cs receive b - cb and Ds receive b. Otherwise, all
+                    participants receive 0 endowment with a probability equal to ``risk`` (r), and will
+                    keep their endowment with probability 1-r. This means that each group must have at least
+                    M Cs for the collective target to be achieved.
 
                     Parameters
                     ----------
-                    endowment : int
-                        Initial endowment for all players.
-                    threshold : int
-                        Collective target that the group must reach.
-                    min_rounds : int
-                        Minimum number of rounds of the game.
-                    group_size : int
-                        Size of the group that will play the CRD.
+                    endowment : float
+                        The initial endowment (b) received by all participants
+                    cost : float
+                        The fraction of the endowment that Cooperators contribute to the public good.
+                        This value must be in the interval [0, 1]
                     risk : float
-                        The probability that all members will lose their remaining endowment if the threshold is not achieved.
-                    tu : egttools.distributions.TimingUncertainty
-                        Timing uncertainty object which can output the total number of rounds of the game according
-                        to pre-defined distribution (by default it uses a geometric distribution).
-                    strategies : List[egttools.behaviors.AbstractCRDStrategy]
-                        A list containing references of AbstractCRDStrategy strategies (or child classes).
+                        The risk that all members of the group will lose their remaining endowment if the
+                        collective target is not achieved.
+                    group_size : int
+                        The size of the group (N)
+                    min_nb_cooperators : int
+                        The minimum number of cooperators (M) required to reach the collective target.
+                        In other words, the collective target is reached if the collective effort is
+                        at least Mcb. This value must be in the discrete interval [[0, N]].
 
                     See Also
                     --------
-                    egttools.games.AbstractGame
-                    egttools.games.NormalFormGame
-                    egttools.games.CRDGame
+                    egttools.games.CRDGame, egttools.games.CRDGameTU
                     )pbdoc",
                  py::arg("endowment"),
                  py::arg("threshold"),
@@ -707,13 +712,56 @@ PYBIND11_MODULE(numerical, m) {
                  py::arg("risk"),
                  py::arg("tu"),
                  py::arg("strategies"), py::return_value_policy::reference_internal)
-            .def("play", &egttools::FinitePopulations::games::CRDGameTU::play)
+            .def("play", &egttools::FinitePopulations::games::CRDGameTU::play,
+                 R"pbdoc(
+                    Plays the One-shop CRD and update the game_payoffs given the group_composition.
+
+                    We always assume that strategy 0 is D and strategy 1 is C.
+
+                    The payoffs of Defectors and Cooperators are described by the following equations:
+
+                    .. math::
+                        \\Pi_{D}(k) = b{\\theta(k-M)+ (1-r)[1 - \\theta(k-M)]}
+
+                        \\Pi_{C}(k) = \\Pi_{D}(k) - cb
+
+                        \\text{where } \\theta(x) = 0 \\text{if } x < 0 \\text{ and 1 otherwise.}
+
+                    Parameters
+                    ----------
+                    group_composition : Union[List[int], numpy.ndarray]
+                        A list or array containing the counts of how many members of each strategy are
+                        present in the group.
+                    game_payoffs: numpy.ndarray
+                        A vector in which the payoffs of the game will be stored.
+                    )pbdoc")
             .def("calculate_payoffs", &egttools::FinitePopulations::games::CRDGameTU::calculate_payoffs,
-                 "updates the internal payoff and coop_level matrices by calculating the payoff of each strategy "
-                 "given any possible strategy pair")
+                 R"pbdoc(
+                    Calculates the payoffs of every strategy in each possible group composition.
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        A matrix containing the payoff of each strategy in every possible group composition.
+                    )pbdoc")
             .def("calculate_fitness", &egttools::FinitePopulations::games::CRDGameTU::calculate_fitness,
-                 "calculates the fitness of an individual of a given strategy given a population state."
-                 "It always assumes that the population state does not contain the current individual",
+                 R"pbdoc(
+                    Calculates the fitness of a strategy given a population state.
+
+                    Parameters
+                    ----------
+                    player_type : int
+                        The index of the strategy whose fitness will be calculated.
+                    pop_size : int
+                        The size of the population (Z).
+                    population_state : numpy.ndarray
+                        A vector containing the counts of each strategy in the population.
+
+                    Returns
+                    -------
+                    float
+                        The fitness of the strategy in the current population state.
+                    )pbdoc",
                  py::arg("player_strategy"),
                  py::arg("pop_size"), py::arg("population_state"))
             .def("calculate_population_group_achievement", &egttools::FinitePopulations::games::CRDGameTU::calculate_population_group_achievement,
@@ -755,6 +803,82 @@ PYBIND11_MODULE(numerical, m) {
             .def_property_readonly("strategies", &egttools::FinitePopulations::games::CRDGameTU::strategies,
                                    "A list with pointers to the strategies that are playing the game.")
             .def("save_payoffs", &egttools::FinitePopulations::games::CRDGameTU::save_payoffs,
+                 "Saves the payoff matrix in a txt file.");
+
+    py::class_<egttools::FinitePopulations::OneShotCRD, egttools::FinitePopulations::AbstractGame>(mGames, "OneShotCRD")
+            .def(py::init<double, double, double, int, int>(),
+                 R"pbdoc(
+                    Collective Risk Dilemma. This allows you to define any number of strategies by passing them
+                    as a list. All strategies must be of type AbstractCRDStrategy *.
+
+                    The CRD dilemma implemented here follows the description of:
+                    Milinski, M., Sommerfeld, R. D., Krambeck, H.-J., Reed, F. A.,
+                    & Marotzke, J. (2008). The collective-risk social dilemma and the prevention of simulated
+                    dangerous climate change. Proceedings of the National Academy of Sciences of the United States of America, 105(7),
+                    2291–2294. https://doi.org/10.1073/pnas.0709546105
+
+                    Parameters
+                    ----------
+                    endowment : int
+                        Initial endowment for all players.
+                    threshold : int
+                        Collective target that the group must reach.
+                    nb_rounds : int
+                        Number of rounds of the game.
+                    group_size : int
+                        Size of the group that will play the CRD.
+                    risk : float
+                        The probability that all members will lose their remaining endowment if the threshold is not achieved.
+                    strategies : List[egttools.behaviors.AbstractCRDStrategy]
+                        A list containing references of AbstractCRDStrategy strategies (or child classes).
+
+                    See Also
+                    --------
+                    egttools.games.AbstractGame
+                    egttools.games.NormalFormGame
+                    )pbdoc",
+                 py::arg("endowment"),
+                 py::arg("cost"),
+                 py::arg("risk"),
+                 py::arg("group_size"),
+                 py::arg("min_nb_cooperators"), py::return_value_policy::reference_internal)
+            .def("play", &egttools::FinitePopulations::OneShotCRD::play)
+            .def("calculate_payoffs", &egttools::FinitePopulations::OneShotCRD::calculate_payoffs,
+                 "updates the internal payoff and coop_level matrices by calculating the payoff of each strategy "
+                 "given any possible strategy pair")
+            .def("calculate_fitness", &egttools::FinitePopulations::OneShotCRD::calculate_fitness,
+                 "calculates the fitness of an individual of a given strategy given a population state."
+                 "It always assumes that the population state does not contain the current individual",
+                 py::arg("player_strategy"),
+                 py::arg("pop_size"), py::arg("population_state"))
+            .def("calculate_population_group_achievement", &egttools::FinitePopulations::OneShotCRD::calculate_population_group_achievement,
+                 "calculates the group achievement in the population at a given state.",
+                 py::arg("population_size"), py::arg("population_state"))
+            .def("calculate_group_achievement", &egttools::FinitePopulations::OneShotCRD::calculate_group_achievement,
+                 "calculates the group achievement for a given stationary distribution.",
+                 py::arg("population_size"), py::arg("stationary_distribution"))
+            .def("__str__", &egttools::FinitePopulations::OneShotCRD::toString)
+            .def("type", &egttools::FinitePopulations::OneShotCRD::type)
+            .def("payoffs", &egttools::FinitePopulations::OneShotCRD::payoffs, "returns the expected payoffs of each strategy vs each possible game state")
+            .def("payoff", &egttools::FinitePopulations::OneShotCRD::payoff,
+                 "returns the payoff of a strategy given a group composition.", py::arg("strategy"),
+                 py::arg("strategy pair"))
+            .def_property_readonly("group_achievement_per_group", &egttools::FinitePopulations::OneShotCRD::group_achievements)
+            .def("nb_strategies", &egttools::FinitePopulations::OneShotCRD::nb_strategies,
+                 "Number of different strategies which are playing the game.")
+            .def_property_readonly("endowment", &egttools::FinitePopulations::OneShotCRD::endowment,
+                                   "Initial endowment for all players.")
+            .def_property_readonly("min_nb_cooperators", &egttools::FinitePopulations::OneShotCRD::min_nb_cooperators,
+                                   "Minimum number of cooperators to reach the target.")
+            .def_property_readonly("group_size", &egttools::FinitePopulations::OneShotCRD::group_size,
+                                   "Size of the group which will play the game.")
+            .def_property_readonly("risk", &egttools::FinitePopulations::OneShotCRD::risk,
+                                   "Probability that all players will lose their remaining endowment if the target si not achieved.")
+            .def_property_readonly("cost", &egttools::FinitePopulations::OneShotCRD::cost,
+                                   "Cost of cooperation.")
+            .def_property_readonly("nb_states", &egttools::FinitePopulations::OneShotCRD::nb_group_compositions,
+                                   "Number of combinations of Cs and Ds that can be matched in the game.")
+            .def("save_payoffs", &egttools::FinitePopulations::OneShotCRD::save_payoffs,
                  "Saves the payoff matrix in a txt file.");
 
     py::class_<egttools::FinitePopulations::behaviors::AbstractNFGStrategy, stubs::PyAbstractNFGStrategy>(mNF, "AbstractNFGStrategy")
@@ -1350,7 +1474,10 @@ PYBIND11_MODULE(numerical, m) {
 
                 See Also
                 --------
-                egttools.behaviors.AbstractGame,
+                egttools.behaviors.CRD.AbstractCRDStrategy
+                egttools.games.AbstractGame,
+                egttools.games.CRDGame,
+                egttools.games.CRDGameTU
                 )pbdoc",
                  py::arg("personal_threshold"), py::arg("initial_action"),
                  py::arg("action_above"), py::arg("action_equal"), py::arg("action_below"))
@@ -1375,8 +1502,11 @@ PYBIND11_MODULE(numerical, m) {
 
                 See Also
                 --------
-                egttools.behaviors.AbstractGame,
-                egttools.games.AbstractGame, egttools.behaviors.NormalForm.TwoActions.Cooperator,
+                egttools.behaviors.CRD.AbstractCRDStrategy
+                egttools.games.AbstractGame,
+                egttools.games.CRDGame,
+                egttools.games.CRDGameTU,
+                egttools.behaviors.NormalForm.TwoActions.Cooperator,
                 egttools.behaviors.NormalForm.TwoActions.Defector, egttools.behaviors.NormalForm.TwoActions.Random,
                 egttools.behaviors.NormalForm.TwoActions.TFT, egttools.behaviors.NormalForm.TwoActions.SuspiciousTFT,
                 egttools.behaviors.NormalForm.TwoActions.GenerousTFT, egttools.behaviors.NormalForm.TwoActions.GradualTFT,

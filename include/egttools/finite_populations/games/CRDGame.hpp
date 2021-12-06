@@ -128,11 +128,11 @@ namespace egttools::FinitePopulations {
         calculate_polarization_success(size_t pop_size, const Eigen::Ref<const Vector> &stationary_distribution);
 
         // getters
-        [[nodiscard]] size_t endowment() const;
+        [[nodiscard]] int endowment() const;
 
-        [[nodiscard]] size_t target() const;
+        [[nodiscard]] int target() const;
 
-        [[nodiscard]] size_t nb_rounds() const;
+        [[nodiscard]] int nb_rounds() const;
 
         [[nodiscard]] size_t group_size() const;
 
