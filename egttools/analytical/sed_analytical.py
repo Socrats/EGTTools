@@ -270,9 +270,16 @@ class StochDynamics:
         Tuple[numpy.typing.ArrayLike, numpy.typing.ArrayLike]
             tuple(probability of increasing the number of invaders, probability of decreasing)
         """
-        fitness_diff = self.fitness(k, invader, resident, *args)
-        increase = (((self.Z - k) / float(self.Z)) * (k / float(self.Z - 1))) * StochDynamics.fermi(-beta, fitness_diff)
-        decrease = ((k / float(self.Z)) * ((self.Z - k) / float(self.Z - 1))) * StochDynamics.fermi(beta, fitness_diff)
+        if (k == self.Z) or (k == 0):
+            increase = 0
+            decrease = 0
+        else:
+            fitness_diff = self.fitness(k, invader, resident, *args)
+            increase = (((self.Z - k) / float(self.Z)) * (k / float(self.Z - 1))) * StochDynamics.fermi(-beta,
+                                                                                                        fitness_diff)
+
+            decrease = ((k / float(self.Z)) * ((self.Z - k) / float(self.Z - 1))) * StochDynamics.fermi(beta,
+                                                                                                        fitness_diff)
         return np.clip(increase, 0., 1.), np.clip(decrease, 0., 1.)
 
     def prob_increase_decrease_with_mutation(self, k: int, invader: int, resident: int, beta: float,
@@ -363,8 +370,13 @@ class StochDynamics:
         float
             The gradient of selection.
         """
-        return ((self.Z - k) / float(self.Z)) * (k / float(self.Z - 1)) * np.tanh(
-            (beta / 2) * self.fitness(k, invader, resident, *args))
+        if k == 0:
+            return 0
+        elif k == self.Z:
+            return 0
+        else:
+            return ((self.Z - k) / float(self.Z)) * (k / float(self.Z - 1)) * np.tanh(
+                (beta / 2) * self.fitness(k, invader, resident, *args))
 
     def full_gradient_selection(self, population_state: np.ndarray, beta: float) -> np.ndarray:
         """
@@ -388,7 +400,7 @@ class StochDynamics:
         probabilities = np.outer(probability_selecting_strategy_first, probability_selecting_strategy_second)
         fitness = np.asarray([[self.full_fitness(i, j, population_state) for i in
                                range(len(population_state))] for j in range(len(population_state))])
-        return (probabilities * np.tanh((beta / 2) * fitness)).sum(axis=0) * (1-self.mu) + self.mu
+        return (probabilities * np.tanh((beta / 2) * fitness)).sum(axis=0) * (1 - self.mu) + self.mu
 
     def fixation_probability(self, invader: int, resident: int, beta: float, *args: Optional[list]) -> float:
         """
@@ -428,6 +440,7 @@ class StochDynamics:
 
         return 1.0 / (1.0 + phi)
 
+    # TODO: transform this function so that it builds a matrix for all possible states
     def calculate_full_transition_matrix(self, beta: float, *args: Optional[list]) -> scipy.sparse.lil_matrix:
         """
         Returns the full transition matrix in sparse representation.
@@ -498,7 +511,7 @@ class StochDynamics:
                     transitions[first, second] = tmp
                     transitions[first, first] = transitions[first, first] - tmp
 
-        return np.nan_to_num(transitions.transpose(), copy=False), np.nan_to_num(fixprobs, copy=False)
+        return transitions.transpose(), fixprobs
 
     def calculate_stationary_distribution(self, beta: float, *args: Optional[list]) -> np.ndarray:
         """
@@ -516,10 +529,10 @@ class StochDynamics:
         numpy.ndarray
             A vector containing the stationary distribution
         """
-        if self.mu == 0:
-            t, f = self.transition_and_fixation_matrix(beta, *args)
+        if self.mu > 0:
+            t = self.calculate_full_transition_matrix(beta, *args).toarray()
         else:
-            t = np.nan_to_num(self.calculate_full_transition_matrix(beta, *args).toarray())
+            t, f = self.transition_and_fixation_matrix(beta, *args)
 
         # calculate stationary distributions using eigenvalues and eigenvectors
         w, v = np.linalg.eig(t)
