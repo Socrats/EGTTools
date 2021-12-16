@@ -22,6 +22,8 @@
 #include <egttools/finite_populations/behaviors/AbstractNFGStrategy.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 
+namespace py = pybind11;
+
 namespace stubs {
 
     using PayoffVector = egttools::FinitePopulations::PayoffVector;
@@ -35,6 +37,9 @@ namespace stubs {
         /* Trampoline (need one for each virtual function) */
         void play(const egttools::FinitePopulations::StrategyCounts &group_composition,
                   PayoffVector &game_payoffs) override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
             PYBIND11_OVERRIDE_PURE(
                     void,                                      /* Return type */
                     egttools::FinitePopulations::AbstractGame, /* Parent class */
@@ -45,6 +50,9 @@ namespace stubs {
 
         /* Trampoline (need one for each virtual function) */
         const GroupPayoffs &calculate_payoffs() override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
             PYBIND11_OVERRIDE_PURE(
                     GroupPayoffs &,                            /* Return type */
                     egttools::FinitePopulations::AbstractGame, /* Parent class */
@@ -56,6 +64,9 @@ namespace stubs {
         /* Trampoline (need one for each virtual function) */
         double calculate_fitness(const int &player_type, const size_t &pop_size,
                                  const Eigen::Ref<const egttools::VectorXui> &strategies) override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
             PYBIND11_OVERRIDE_PURE(
                     double,                                    /* Return type */
                     egttools::FinitePopulations::AbstractGame, /* Parent class */
@@ -66,6 +77,9 @@ namespace stubs {
 
         /* Trampoline (need one for each virtual function) */
         [[nodiscard]] size_t nb_strategies() const override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
             PYBIND11_OVERRIDE_PURE(
                     size_t,                                    /* Return type */
                     egttools::FinitePopulations::AbstractGame, /* Parent class */
@@ -76,6 +90,9 @@ namespace stubs {
 
         /* Trampoline (need one for each virtual function) */
         [[nodiscard]] std::string toString() const override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
             PYBIND11_OVERRIDE_PURE_NAME(
                     std::string,                               /* Return type */
                     egttools::FinitePopulations::AbstractGame, /* Parent class */
@@ -87,6 +104,9 @@ namespace stubs {
 
         /* Trampoline (need one for each virtual function) */
         [[nodiscard]] std::string type() const override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
             PYBIND11_OVERRIDE_PURE(
                     std::string,                               /* Return type */
                     egttools::FinitePopulations::AbstractGame, /* Parent class */
@@ -97,6 +117,9 @@ namespace stubs {
 
         /* Trampoline (need one for each virtual function) */
         [[nodiscard]] const GroupPayoffs &payoffs() const override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
             PYBIND11_OVERRIDE_PURE(
                     GroupPayoffs &,                            /* Return type */
                     egttools::FinitePopulations::AbstractGame, /* Parent class */
@@ -108,6 +131,9 @@ namespace stubs {
         /* Trampoline (need one for each virtual function) */
         [[nodiscard]] double payoff(int strategy,
                                     const egttools::FinitePopulations::StrategyCounts &group_composition) const override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
             PYBIND11_OVERRIDE_PURE(
                     double,                                    /* Return type */
                     egttools::FinitePopulations::AbstractGame, /* Parent class */
@@ -118,6 +144,9 @@ namespace stubs {
 
         /* Trampoline (need one for each virtual function) */
         void save_payoffs(std::string file_name) const override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
             PYBIND11_OVERRIDE_PURE(
                     void,                                      /* Return type */
                     egttools::FinitePopulations::AbstractGame, /* Parent class */
@@ -134,6 +163,9 @@ namespace stubs {
 
         /* Trampoline (need one for each virtual function) */
         int get_action(size_t time_step, int action_prev) override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
             PYBIND11_OVERRIDE_PURE(
                     size_t,                                                      /* Return type */
                     egttools::FinitePopulations::behaviors::AbstractNFGStrategy, /* Parent class */
@@ -144,6 +176,9 @@ namespace stubs {
 
         /* Trampoline (need one for each virtual function) */
         std::string type() override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
             PYBIND11_OVERRIDE_PURE(
                     std::string,                                                 /* Return type */
                     egttools::FinitePopulations::behaviors::AbstractNFGStrategy, /* Parent class */
@@ -154,6 +189,9 @@ namespace stubs {
 
         /* Trampoline (need one for each virtual function) */
         bool is_stochastic() override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
             PYBIND11_OVERRIDE_PURE(
                     bool,                                                        /* Return type */
                     egttools::FinitePopulations::behaviors::AbstractNFGStrategy, /* Parent class */
@@ -170,6 +208,9 @@ namespace stubs {
 
         /* Trampoline (need one for each virtual function) */
         int get_action(size_t time_step, int action_prev) override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
             PYBIND11_OVERRIDE_PURE(
                     int,                                                         /* Return type */
                     egttools::FinitePopulations::behaviors::AbstractCRDStrategy, /* Parent class */
@@ -180,6 +221,9 @@ namespace stubs {
 
         /* Trampoline (need one for each virtual function) */
         std::string type() override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
             PYBIND11_OVERRIDE_PURE(
                     std::string,                                                 /* Return type */
                     egttools::FinitePopulations::behaviors::AbstractCRDStrategy, /* Parent class */
