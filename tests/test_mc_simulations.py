@@ -88,7 +88,7 @@ def test_pairwise_moran_stationary_distribution(setup_hawk_dove_parameters) -> N
     nb_states = pop_size + 1
 
     evolver = PairwiseMoran(pop_size, game, cache_size)
-    dist = evolver.stationary_distribution(runs, nb_generations, transitory, beta, mu)
+    dist = evolver.estimate_stationary_distribution(runs, nb_generations, transitory, beta, mu)
     assert dist.shape == (nb_states,)
 
 
@@ -111,5 +111,5 @@ def test_pairwise_moran_stationary_distribution_sparse(setup_hawk_dove_parameter
     nb_states = pop_size + 1
 
     evolver = PairwiseMoran(pop_size, game, cache_size)
-    dist = evolver.stationary_distribution_sparse(runs, nb_generations, transitory, beta, mu)
+    dist = evolver.estimate_stationary_distribution_sparse(runs, nb_generations, transitory, beta, mu)
     assert dist.shape == (1, nb_states)
