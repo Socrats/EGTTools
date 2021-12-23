@@ -1,3 +1,22 @@
+# Copyright (c) 2019-2021  Elias Fernandez
+#
+# This file is part of EGTtools.
+#
+# EGTtools is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# EGTtools is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
+
+"""Plots a 2-dimensional simplex in a cartesian plane."""
+
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 import numpy as np
@@ -84,7 +103,7 @@ class Simplex2D:
     def draw_gradients(self, arrowsize: Optional[float] = 2,
                        arrowstyle: Optional[str] = 'fancy',
                        color: Optional[Union[str, Tuple[int, int, int]]] = None, density: Optional[float] = 1,
-                       linewidth: Optional[float] = 1.5) -> SelfSimplex2D:
+                       linewidth: Optional[float] = 1.5, cmap='viridis') -> SelfSimplex2D:
         if self.Ux is None or self.Uy is None:
             raise Exception("Please call Simplex.apply_simplex_boundaries_to_gradients first")
 
@@ -98,6 +117,7 @@ class Simplex2D:
                                          color=colors,
                                          density=density,
                                          linewidth=linewidth,
+                                         cmap=cmap
                                          )
         return self
 
@@ -148,6 +168,26 @@ class Simplex2D:
             # noinspection PyTypeChecker
             v = barycentric_to_xy_coordinates(x, self.corners)
             self.ax.plot(v[:, 0], v[:, 1], color, ms=ms, zorder=zorder)
+
+        return self
+
+    def draw_trajectory_from_points(self, f: Callable[[np.ndarray, int], np.ndarray], points: List[np.ndarray],
+                                    trajectory_length: Optional[int] = 15, step: Optional[float] = 0.1,
+                                    color: Optional[Union[str, Tuple[int, int, int]]] = 'k',
+                                    linewidth: Optional[float] = 0.5, zorder: Optional[int] = 0,
+                                    draw_arrow: Optional[bool] = False, arrowstyle: Optional[str] = 'fancy',
+                                    arrowsize: Optional[int] = 50,
+                                    position: Optional[int] = None,
+                                    arrowdirection: Optional[str] = 'right') -> SelfSimplex2D:
+        for i, point in enumerate(points):
+            x = odeint(f, point, np.arange(0, trajectory_length, step), full_output=False)
+
+            # noinspection PyTypeChecker
+            v = barycentric_to_xy_coordinates(x, self.corners)
+            line = self.ax.plot(v[:, 0], v[:, 1], color, linewidth=linewidth, zorder=zorder)[0]
+            if draw_arrow:
+                add_arrow(line, size=arrowsize, arrowstyle=arrowstyle, position=position,
+                          direction=arrowdirection)
 
         return self
 
