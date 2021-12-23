@@ -41,17 +41,13 @@ set_target_properties(egttoolsNumerical PROPERTIES
         CXX_EXTENSIONS FALSE
 #        INTERPROCEDURAL_OPTIMIZATION ${LTO_SUPPORTED}
 #        POSITION_INDEPENDENT_CODE TRUE
-        # Fixing "ld: warning: direct access in function '...' from file '...' to global weak symbol '...' from file '...' means the weak symbol cannot
-        # be overridden at runtime. This was likely caused by different translation units being compiled with different visibility settings."
+#         Fixing "ld: warning: direct access in function '...' from file '...' to global weak symbol '...' from file '...' means the weak symbol cannot
+#         be overridden at runtime. This was likely caused by different translation units being compiled with different visibility settings."
 #        C_VISIBILITY_PRESET hidden
 #        CXX_VISIBILITY_PRESET hidden
         )
 
-#if (OPENMP_FOUND)
-#    target_link_libraries(egttoolsNumerical PRIVATE OpenMP::OpenMP_CXX)
-#else()
 target_link_libraries(egttoolsNumerical)
-#endif ()
 
 add_executable(testPMrun test_PairwiseMoran_run.cpp)
 #set_target_properties(testPM PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${LTO_SUPPORTED})
@@ -60,6 +56,9 @@ target_link_libraries(testPMrun egttoolsNumerical)
 add_executable(testPMBstationary_distribution_sparse test_PairwiseMoran_stationary_distribution_sparse.cpp)
 #set_target_properties(testPM PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${LTO_SUPPORTED})
 target_link_libraries(testPMBstationary_distribution_sparse egttoolsNumerical)
+#if (OPENMP_FOUND)
+#    target_link_libraries(testPMBstationary_distribution_sparse OpenMP::OpenMP_CXX)
+#endif ()
 
 add_executable(testPMBstationary_distribution_dense test_PairwiseMoran_stationary_distribution_dense.cpp)
 #set_target_properties(testPM PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${LTO_SUPPORTED})
