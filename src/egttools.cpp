@@ -28,7 +28,7 @@ using PairwiseComparison = egttools::FinitePopulations::PairwiseMoran<egttools::
 
 namespace egttools {
 
-    std::string call_get_action(const py::list &strategies, size_t time_step, size_t action) {
+    std::string call_get_action(const py::list &strategies, size_t time_step, int action) {
         std::stringstream result;
         result << "(";
         for (py::handle strategy : strategies) {
