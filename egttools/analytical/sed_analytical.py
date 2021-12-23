@@ -157,7 +157,11 @@ class StochDynamics:
         """
         In a population of x i-strategists and (Z-x) j strategists, where players
         interact in group of 'group_size' participants this function
-        returns the average payoff of strategies i and j.
+        returns the average payoff of strategies i and j. This function expects
+        that
+
+        .. math::
+            x\in[1,Z-1]
 
         Parameters
         ----------
@@ -176,7 +180,7 @@ class StochDynamics:
             float
             Returns the difference in fitness between strategy i and j
         """
-        k_array = np.arange(0, self.N, dtype=np.int32)
+        k_array = np.arange(0, self.N, dtype=np.int64)
         i_pmf = hypergeom(self.Z - 1, x - 1, self.N - 1).pmf(k_array)
         j_pmf = hypergeom(self.Z - 1, x, self.N - 1).pmf(k_array)
 
