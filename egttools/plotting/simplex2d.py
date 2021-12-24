@@ -135,7 +135,7 @@ class Simplex2D:
     def draw_gradients(self, arrowsize: Optional[float] = 2,
                        arrowstyle: Optional[str] = 'fancy',
                        color: Optional[Union[str, Tuple[int, int, int]]] = None, density: Optional[float] = 1,
-                       linewidth: Optional[float] = 1.5, cmap='viridis') -> SelfSimplex2D:
+                       linewidth: Optional[float] = 1.5, cmap='viridis', zorder: int = 0) -> SelfSimplex2D:
         if self.Ux is None or self.Uy is None:
             raise Exception("Please call Simplex.apply_simplex_boundaries_to_gradients first")
 
@@ -149,7 +149,8 @@ class Simplex2D:
                                          color=colors,
                                          density=density,
                                          linewidth=linewidth,
-                                         cmap=cmap
+                                         cmap=cmap,
+                                         zorder=zorder
                                          )
         return self
 
