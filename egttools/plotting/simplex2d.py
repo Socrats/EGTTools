@@ -25,8 +25,9 @@ from scipy.integrate import odeint
 from matplotlib.patches import Circle
 from typing import Optional, Tuple, List, Union, Callable, TypeVar
 from numpy.typing import ArrayLike
-from egttools.numerical import sample_unit_simplex
-from egttools.plotting.helpers import barycentric_to_xy_coordinates, perturb_state, add_arrow
+from egttools.numerical import (sample_unit_simplex, sample_simplex, calculate_nb_states, )
+from egttools.plotting.helpers import (barycentric_to_xy_coordinates, perturb_state, add_arrow,
+                                       perturb_state_discrete, )
 
 top_corner = np.sqrt(3) / 2
 side_slope = np.sqrt(3)
@@ -44,7 +45,36 @@ class Simplex2D:
     refiner = tri.UniformTriRefiner(triangle)
     trimesh = refiner.refine_triangulation(subdiv=5)
 
-    def __init__(self, nb_points: Optional[int] = 1000):
+    def __init__(self, nb_points: Optional[int] = 1000, discrete: Optional[bool] = False,
+                 size: Optional[Union[int, None]] = None):
+        """
+        This class offers utility methods to plot gradients and equilibrium points on a 2-simplex (triangle).
+
+        The plotting is always done on the unit simplex for convenience. At the moment no rotations are
+        implemented, but we plan to add this feature, so that the triangle can be rotated before the plot.
+
+        We discern between continuous and discrete dynamics. The main reason is that this class' objective
+        is to plot evolutionary dynamics on a simplex. When we are working with the replicator equation
+        it is straightforward to calculate all the gradients on the unit simplex. However, when working
+        with finite populations using the social learning model (social imitation), we are actually working
+        with a simplex with size equivalent to the population size (so all the dimensions of the simplex must
+        sum to `Z`) and we only consider discrete (integer) values inside the simplex (the population may
+        only have integer individuals). Of course this can be translated into frequencies, which gets us
+        back to the unit simplex, but it is not so simple to transform any value between 0-1 sampled with
+        numpy.linspace to a discrete value.
+
+        Therefore, for the discrete case, will will sample directly discrete points in barycentric
+        coordinates and only then, translate them into cartesian cooordinates.
+
+        Parameters
+        ----------
+        nb_points : int
+            number of points for which to calculate the gradients
+        discrete : bool
+            indicates whether we are in the continuous or discrete case
+        size : int
+            if we are in the discrete case, indicates the size of the simplex
+        """
         self.nb_points = nb_points
         self.Ux = None
         self.Uy = None
@@ -54,6 +84,8 @@ class Simplex2D:
         self.X, self.Y = np.meshgrid(x, y)
         self.figure = None
         self.ax = None
+        self.discrete = discrete
+        self.size = size
 
     def add_axis(self, figsize: Optional[Tuple[int, int]] = (10, 8), ax: Optional[plt.axis] = None) -> SelfSimplex2D:
         if ax is not None:
@@ -162,12 +194,24 @@ class Simplex2D:
                           trajectory_length: Optional[int] = 15, step: Optional[float] = 0.01,
                           color: Optional[Union[str, Tuple[int, int, int]]] = 'whitesmoke',
                           ms: Optional[float] = 0.5, zorder: Optional[int] = 0) -> SelfSimplex2D:
-        for _ in range(nb_trajectories):
-            u = sample_unit_simplex(3)
-            x = odeint(f, u, np.arange(0, trajectory_length, step), full_output=False)
-            # noinspection PyTypeChecker
-            v = barycentric_to_xy_coordinates(x, self.corners)
-            self.ax.plot(v[:, 0], v[:, 1], color, ms=ms, zorder=zorder)
+        if self.discrete:
+            nb_states = calculate_nb_states(self.size, 3)
+            if nb_trajectories > nb_states:
+                nb_trajectories = nb_states
+            initial_points = np.random.choice(range(nb_states), size=nb_trajectories, replace=False)
+            for point in initial_points:
+                u = sample_simplex(point, self.size, 3)
+                x = odeint(f, u, np.arange(0, trajectory_length, step), full_output=False)
+                # noinspection PyTypeChecker
+                v = barycentric_to_xy_coordinates(x / self.size, self.corners)
+                self.ax.plot(v[:, 0], v[:, 1], color, ms=ms, zorder=zorder)
+        else:
+            for _ in range(nb_trajectories):
+                u = sample_unit_simplex(3)
+                x = odeint(f, u, np.arange(0, trajectory_length, step), full_output=False)
+                # noinspection PyTypeChecker
+                v = barycentric_to_xy_coordinates(x, self.corners)
+                self.ax.plot(v[:, 0], v[:, 1], color, ms=ms, zorder=zorder)
 
         return self
 
@@ -194,24 +238,45 @@ class Simplex2D:
     def draw_trajectory_from_roots(self, f: Callable[[np.ndarray, int], np.ndarray], roots: List[np.ndarray],
                                    stability: List[np.ndarray],
                                    trajectory_length: Optional[int] = 15, step: Optional[float] = 0.1,
+                                   perturbation: Optional[Union[int, float]] = 0.01,
                                    color: Optional[Union[str, Tuple[int, int, int]]] = 'k',
                                    linewidth: Optional[float] = 0.5, zorder: Optional[int] = 0,
                                    draw_arrow: Optional[bool] = False, arrowstyle: Optional[str] = 'fancy',
                                    arrowsize: Optional[int] = 50,
                                    position: Optional[int] = None,
                                    arrowdirection: Optional[str] = 'right') -> SelfSimplex2D:
-        for i, stationary_point in enumerate(roots):
-            if stability[i]:  # we don't plot arrows starting at stable points
-                continue
-            states = perturb_state(stationary_point)
-            for state in states:
-                x = odeint(f, state, np.arange(0, trajectory_length, step), full_output=False)
+        if self.discrete:
+            if type(perturbation) is float:
+                perturbation = 1
 
-                # noinspection PyTypeChecker
-                v = barycentric_to_xy_coordinates(x, self.corners)
-                line = self.ax.plot(v[:, 0], v[:, 1], color, linewidth=linewidth, zorder=zorder)[0]
-                if draw_arrow:
-                    add_arrow(line, size=arrowsize, arrowstyle=arrowstyle, position=position, direction=arrowdirection)
+            for i, stationary_point in enumerate(roots):
+                if stability[i]:  # we don't plot arrows starting at stable points
+                    continue
+                stationary_point_discrete = (stationary_point * self.size)
+                states = perturb_state_discrete(stationary_point_discrete, self.size, perturbation=perturbation)
+                for state in states:
+                    x = odeint(f, state, np.arange(0, trajectory_length, step), full_output=False)
+
+                    # noinspection PyTypeChecker
+                    v = barycentric_to_xy_coordinates(x / self.size, self.corners)
+                    line = self.ax.plot(v[:, 0], v[:, 1], color, linewidth=linewidth, zorder=zorder)[0]
+                    if draw_arrow:
+                        add_arrow(line, size=arrowsize, arrowstyle=arrowstyle, position=position,
+                                  direction=arrowdirection)
+        else:
+            for i, stationary_point in enumerate(roots):
+                if stability[i]:  # we don't plot arrows starting at stable points
+                    continue
+                states = perturb_state(stationary_point, perturbation=perturbation)
+                for state in states:
+                    x = odeint(f, state, np.arange(0, trajectory_length, step), full_output=False)
+
+                    # noinspection PyTypeChecker
+                    v = barycentric_to_xy_coordinates(x, self.corners)
+                    line = self.ax.plot(v[:, 0], v[:, 1], color, linewidth=linewidth, zorder=zorder)[0]
+                    if draw_arrow:
+                        add_arrow(line, size=arrowsize, arrowstyle=arrowstyle, position=position,
+                                  direction=arrowdirection)
 
         return self
 
@@ -220,11 +285,24 @@ class Simplex2D:
                             s: Optional[Union[float, ArrayLike]] = 0.1,
                             color: Optional[Union[str, Tuple[int, int, int]]] = 'whitesmoke',
                             marker: Optional[str] = '.', zorder: Optional[int] = 0) -> SelfSimplex2D:
-        for _ in range(nb_trajectories):
-            u = sample_unit_simplex(3)
-            x = odeint(f, u, np.arange(0, trajectory_length, step), full_output=False)
-            # noinspection PyTypeChecker
-            v = barycentric_to_xy_coordinates(x, self.corners)
-            self.ax.scatter(v[:, 0], v[:, 1], s, color=color, marker=marker, zorder=zorder)
+
+        if self.discrete:
+            nb_states = calculate_nb_states(self.size, 3)
+            if nb_trajectories > nb_states:
+                nb_trajectories = nb_states
+            initial_points = np.random.choice(range(nb_states), size=nb_trajectories, replace=False)
+            for point in initial_points:
+                u = sample_simplex(point, self.size, 3)
+                x = odeint(f, u, np.arange(0, trajectory_length, step), full_output=False)
+                # noinspection PyTypeChecker
+                v = barycentric_to_xy_coordinates(x / self.size, self.corners)
+                self.ax.scatter(v[:, 0], v[:, 1], s, color=color, marker=marker, zorder=zorder)
+        else:
+            for _ in range(nb_trajectories):
+                u = sample_unit_simplex(3)
+                x = odeint(f, u, np.arange(0, trajectory_length, step), full_output=False)
+                # noinspection PyTypeChecker
+                v = barycentric_to_xy_coordinates(x, self.corners)
+                self.ax.scatter(v[:, 0], v[:, 1], s, color=color, marker=marker, zorder=zorder)
 
         return self

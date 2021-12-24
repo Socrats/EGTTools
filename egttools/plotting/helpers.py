@@ -6,6 +6,7 @@ from typing import Tuple, List, Callable, Optional, Union
 import numpy
 import numpy as np
 from scipy.optimize import root
+from egttools.numerical import calculate_nb_states, sample_simplex
 
 
 def simplex_iterator(scale, boundary=True):
@@ -177,8 +178,10 @@ def calculate_stability(roots: List[np.ndarray], f: Callable[[np.ndarray], np.nd
 def calculate_stationary_points(x: np.ndarray, y: np.ndarray, corners: np.ndarray,
                                 f: Callable[[np.ndarray], np.ndarray],
                                 border: Optional[int] = 5,
-                                delta: Optional[float] = 1e-12) -> Tuple[List[np.ndarray], List[np.ndarray]]:
+                                delta: Optional[float] = 1e-12,
+                                atol: Optional[float] = 1e-7) -> Tuple[List[np.ndarray], List[np.ndarray]]:
     """
+    Finds the roots of f, given a number of points.
 
     Parameters
     ----------
@@ -188,6 +191,7 @@ def calculate_stationary_points(x: np.ndarray, y: np.ndarray, corners: np.ndarra
     f
     border
     delta
+    atol
 
     Returns
     -------
@@ -198,17 +202,73 @@ def calculate_stationary_points(x: np.ndarray, y: np.ndarray, corners: np.ndarra
         start = xy_to_barycentric_coordinates(x, y, corners)
         sol = root(f, start, method="hybr")  # ,xtol=1.49012e-10,maxfev=1000
         if sol.success:
-            # check if FP is in simplex
-            if not np.isclose(np.sum(sol.x), 1., atol=1.e-3):
-                continue
-            if not np.all((sol.x > -delta) & (sol.x < 1 + delta)):  # only if fp in simplex
-                continue
-
-            # only add new fixed points to list
-            if not np.array([np.allclose(sol.x, x, atol=1e-7) for x in roots]).any():
-                roots.append(sol.x)
+            v = sol.x
+            if check_if_point_in_unit_simplex(v, delta):
+                # only add new fixed points to list
+                if not np.array([np.allclose(v, x, atol=atol) for x in roots]).any():
+                    roots.append(v)
 
     return roots, [barycentric_to_xy_coordinates(x, corners) for x in roots]
+
+
+def find_roots_in_discrete_barycentric_coordinates(f: Callable[[np.ndarray], np.ndarray],
+                                                   simplex_size: int,
+                                                   nb_edge_points: Optional[int] = None,
+                                                   nb_interior_points: Optional[int] = 1000,
+                                                   delta: Optional[float] = 1e-12,
+                                                   atol: Optional[float] = 1e-3) -> List[np.ndarray]:
+    roots = []
+
+    if nb_edge_points is None:
+        nb_edge_points = simplex_size
+
+    # We first test values along the edges
+    values = np.linspace(0, simplex_size, nb_edge_points, )
+    point = np.zeros(shape=(3,), dtype=np.int64)
+    for value in values:
+        for i in range(3):
+            point[i] = value
+            point[(i + 1) % 3] = simplex_size - value
+            point[(i + 2) % 3] = 0
+
+            sol = root(f, point, method="hybr")  # ,xtol=1.49012e-10,maxfev=1000
+            if sol.success:
+                v = sol.x / simplex_size
+                if check_if_point_in_unit_simplex(v, delta):
+                    # only add new fixed points to list
+                    if not np.array([np.allclose(v, x, atol=atol) for x in roots]).any():
+                        roots.append(v)
+
+    # finally we can explore values inside the simplex
+    nb_states = calculate_nb_states(simplex_size, 3)
+
+    if nb_interior_points > nb_states:
+        nb_interior_points = nb_states
+    initial_points = np.random.choice(range(nb_states), size=nb_interior_points, replace=False)
+
+    for i in initial_points:
+        point = sample_simplex(i, simplex_size, 3)
+        if np.any(np.isclose(point, 0., atol=1e-7)):
+            continue
+        sol = root(f, point, method="hybr")  # ,xtol=1.49012e-10,maxfev=1000
+        if sol.success:
+            v = sol.x / simplex_size
+            if check_if_point_in_unit_simplex(v, delta):
+                # only add new fixed points to list
+                if not np.array([np.allclose(v, x, atol=atol) for x in roots]).any():
+                    roots.append(v)
+
+    return roots
+
+
+def check_if_point_in_unit_simplex(point: np.ndarray, delta: Optional[float] = 1e-12) -> bool:
+    if not np.isclose(np.sum(point), 1., atol=1.e-2):
+        return False
+
+    if not np.all((point > -delta) & (point < 1 + delta)):  # only if fp in simplex
+        return False
+
+    return True
 
 
 def perturb_state(state: Union[Tuple[float, float, float], np.ndarray],
@@ -262,6 +322,75 @@ def perturb_state(state: Union[Tuple[float, float, float], np.ndarray],
             tmp = state.copy()
 
             if tmp[i] <= 1. - perturbation:
+                tmp[i] += perturbation
+                if tmp[(i + 1) % 3] >= perturbation:
+                    tmp[(i + 1) % 3] -= perturbation
+                else:
+                    tmp[(i + 2) % 3] -= perturbation
+                new_states.append(tmp)
+
+    return new_states
+
+
+def perturb_state_discrete(state: Union[Tuple[float, float, float], np.ndarray],
+                           size: int,
+                           perturbation: Optional[int] = 1) -> List[np.ndarray]:
+    """
+    Produces a number of points in the simplex close to the state.
+
+    If the sate is a vertex or in an edge, the perturbation is only made
+    across the edges (we don't look for points in the interior of the simplex).
+
+    Parameters
+    ----------
+    state
+    size
+    perturbation
+
+    Returns
+    -------
+    List[numpy.array]
+        A list of points (in barycentric coordinates) which are close to the state in the simplex.
+    """
+    new_states = []
+    point_location, indexes = find_where_point_is_in_simplex(state)
+    # first we check where the point is
+
+    if point_location == 0:
+        # If the point is a vertex, then we only perturb across that axis
+        tmp1 = state.copy()
+        tmp1[indexes[0]] -= perturbation
+        tmp1[(indexes[0] + 1) % 3] += perturbation
+        new_states.append(tmp1)
+        tmp2 = state.copy()
+        tmp2[indexes[0]] -= perturbation
+        tmp2[(indexes[0] + 2) % 3] += perturbation
+        new_states.append(tmp2)
+    elif point_location == 1:
+        # If the point in an edge, we will produce 2 points
+        if state[indexes[0]] >= perturbation:
+            tmp1 = state.copy()
+            if tmp1.sum() < size:
+                tmp1[indexes[0]] += size - tmp1.sum()
+            tmp1[indexes[0]] -= perturbation
+            tmp1[indexes[1]] += perturbation
+            new_states.append(tmp1)
+        if state[indexes[1]] >= perturbation:
+            tmp2 = state.copy()
+            if tmp2.sum() < size:
+                tmp2[indexes[0]] += size - tmp2.sum()
+            tmp2[indexes[0]] += perturbation
+            tmp2[indexes[1]] -= perturbation
+            new_states.append(tmp2)
+    else:
+        # if the point is in the interior of the simplex, we will
+        # produce 3 points, each in the direction of a vertex
+        for i in range(len(state)):
+            tmp = state.copy()
+            if tmp.sum() < size:
+                tmp[0] += size - tmp.sum()
+
+            if tmp[i] + perturbation <= size:
                 tmp[i] += perturbation
                 if tmp[(i + 1) % 3] >= perturbation:
                     tmp[(i + 1) % 3] -= perturbation
