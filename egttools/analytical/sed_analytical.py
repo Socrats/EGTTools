@@ -23,11 +23,12 @@ populations on 2-player games.
 
 import numpy as np
 import numpy.typing as npt
-import scipy.sparse
+from scipy.linalg import schur, eigvals
 from scipy.sparse import lil_matrix
 from scipy.stats import hypergeom, multivariate_hypergeom
+from itertools import permutations
 from typing import Tuple, Optional
-from egttools import sample_simplex, calculate_nb_states
+from egttools import sample_simplex, calculate_nb_states, calculate_state
 
 
 def replicator_equation(x: np.ndarray, payoffs: np.ndarray) -> np.ndarray:
@@ -315,42 +316,6 @@ class StochDynamics:
         p_less = ((1 - self.mu) * p_less) + (self.mu * (k / self.Z))
         return p_plus, p_less
 
-    def full_prob_increase_decrease_with_mutation(self, population_state: np.ndarray, beta: float) -> np.ndarray:
-        """
-        Calculates the probabilities of increasing/decreasing the frequency of a strategy in each possible population
-        state.
-
-        Parameters
-        ----------
-        population_state : numpy.ndarray[numpy.int64[m,1]]
-                           structure of unsigned integers containing the
-                           counts of each strategy in the population
-        beta : float
-               intensity of selection
-
-        Returns
-        -------
-        numpy.ndarray[np.float64[m,m]]
-            Returns an ndarray matrix with the probabilities of increasing/decreasing one individual adopting
-            a given strategy in the current population state.
-            All possible new state transition probabilities are returned.
-
-            e.g., given the population state (34, 33, 33) which represents a population of size 100 with 3
-            strategies - obviously the population state may be represented with a 2D tuple (34, 33) - then
-            there are 6 possible changes to the population: (35, 32, 33), (35, 33, 32), (33, 34, 33),
-            (33, 33, 34), (34, 34, 32), (34, 32, 34).
-        """
-        transitions = np.zeros(shape=(2 * self.nb_strategies, 2 * self.nb_strategies))
-        for i in range(self.nb_strategies):
-            # If count of strategy < Z we calculate the probability of increasing
-            if population_state[i] < self.Z:
-                # calculate p_increase
-                pass
-            if population_state[i] > 0:
-                # calculate p_decrease
-                pass
-        return transitions
-
     def gradient_selection(self, k: int, invader: int, resident: int, beta: float, *args: Optional[list]) -> float:
         """
         Calculates the gradient of selection given an invader and a resident strategy.
@@ -444,8 +409,7 @@ class StochDynamics:
 
         return 1.0 / (1.0 + phi)
 
-    # TODO: transform this function so that it builds a matrix for all possible states
-    def calculate_full_transition_matrix(self, beta: float, *args: Optional[list]) -> scipy.sparse.lil_matrix:
+    def calculate_full_transition_matrix(self, beta: float, *args: Optional[list]) -> lil_matrix:
         """
         Returns the full transition matrix in sparse representation.
 
@@ -462,21 +426,42 @@ class StochDynamics:
         scipy.sparse.lil_matrix
             The full transition matrix between the two strategies in sparse format.
         """
-        transitions = lil_matrix((self.Z + 1, self.Z + 1), dtype=np.float64)
-        # Case of 0:
-        transitions[0, 1] = self.mu
-        transitions[0, 0] = 1. - self.mu
+        nb_states = calculate_nb_states(self.Z, self.nb_strategies)
 
-        # Case of Z:
-        transitions[self.Z, self.Z - 1] = self.mu
-        transitions[self.Z, self.Z] = 1. - self.mu
+        transitions = lil_matrix((nb_states, nb_states), dtype=np.float64)
+        possible_transitions = [1, -1]
+        for i in range(self.nb_strategies - 2):
+            possible_transitions.append(0)
 
-        # Rest of transitions
-        for i in range(1, self.Z):
-            p_plus, p_minus = self.prob_increase_decrease_with_mutation(i, 0, 1, beta, *args)
-            transitions[i, i + 1] = p_plus
-            transitions[i, i - 1] = p_minus
-            transitions[i, i] = 1. - (p_plus + p_minus)
+        for i in range(nb_states):
+            total_prob = 0.
+            current_state = sample_simplex(i, self.Z, self.nb_strategies)
+            # calculate probability of transitioning from current_tate to next_state
+            for permutation in permutations(possible_transitions):
+                # get new state
+                new_state = current_state + permutation
+                if (new_state < 0).any() or (new_state > self.Z).any():
+                    continue
+
+                # now we calculate the transition probability
+                increase = np.where(np.array(permutation) == 1)[0][0]
+                decrease = np.where(np.array(permutation) == -1)[0][0]
+                fitness_diff = self.full_fitness(increase, decrease, current_state)
+                # Probability that the individual that will die is selected and that the individual that
+                # will be imitated is selected times the probability of imitation
+                prob = (current_state[decrease] / self.Z) * (
+                        current_state[increase] / float(self.Z - 1)) * StochDynamics.fermi(-beta, fitness_diff)
+                # The probability that there will not be a mutation event times the probability of the transition
+                # plus the probability that if there is a mutation event, the dying strategy is selected
+                # times the probability that it mutates into the increasing strategy
+                prob = ((1 - self.mu) * prob) + (
+                        self.mu * (current_state[decrease] / self.Z) * (1 / (self.nb_strategies - 1)))
+                total_prob += prob
+
+                new_state_index = calculate_state(self.Z, new_state)
+                transitions[i, new_state_index] = prob
+
+            transitions[i, i] = 1. - total_prob
 
         return transitions.transpose()
 
@@ -536,12 +521,15 @@ class StochDynamics:
         if self.mu > 0:
             t = self.calculate_full_transition_matrix(beta, *args).toarray()
         else:
-            t, f = self.transition_and_fixation_matrix(beta, *args)
+            t, _ = self.transition_and_fixation_matrix(beta, *args)
 
         # calculate stationary distributions using eigenvalues and eigenvectors
-        w, v = np.linalg.eig(t)
-        j_stationary = np.argmin(abs(w - 1.0))  # look for the element closest to 1 in the list of eigenvalues
-        p_stationary = abs(v[:, j_stationary].real)  # the, is essential to access the matrix by column
-        p_stationary /= p_stationary.sum()  # normalize
+        # noinspection PyTupleAssignmentBalance
+        schur_form, eigenvectors = schur(t)
+        eigenvalues = eigvals(schur_form)
+        # eigenvalues, eigenvectors = eig(t, left=False, right=True)
+        index_stationary = np.argmin(
+            abs(eigenvalues - 1.0))  # look for the element closest to 1 in the list of eigenvalues
+        sd = abs(eigenvectors[:, index_stationary].T.real)  # it is essential to access the matrix by column
 
-        return p_stationary
+        return sd / sd.sum()

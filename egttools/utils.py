@@ -19,9 +19,9 @@
 This python module contains some utility functions
 to find saddle points and plot gradients in 2 player, 2 strategy games.
 """
-import numpy
 import numpy as np
-from typing import Optional, List, Generator
+from scipy.linalg import schur, eigvals
+from typing import Optional, List, Generator, Union
 from egttools.games import AbstractGame
 
 
@@ -142,7 +142,7 @@ def get_payoff_function(strategy_i: int,
 
 
 def transform_payoffs_to_pairwise(nb_strategies: int,
-                                  game: AbstractGame) -> numpy.ndarray:
+                                  game: AbstractGame) -> np.ndarray:
     """
     This function transform a payoff matrix in full format to a pairwise format.
 
@@ -193,14 +193,15 @@ def calculate_stationary_distribution(transition_matrix: np.ndarray) -> np.ndarr
 
     """
     # calculate stationary distributions using eigenvalues and eigenvectors
-    w, v = np.linalg.eig(transition_matrix)
-    j_stationary = np.argmin(abs(w - 1.0))  # look for the element closest to 1 in the list of eigenvalues
-    sd = abs(v[:, j_stationary].real)  # the, is essential to access the matrix by column
-    sd /= sd.sum()  # normalize
-    return sd
+    # noinspection PyTupleAssignmentBalance
+    schur_form, eigenvectors = schur(transition_matrix)
+    eigenvalues = eigvals(schur_form)
+    index_stationary = np.argmin(abs(eigenvalues - 1.0))  # look for the element closest to 1 in the list of eigenvalues
+    sd = abs(eigenvectors[:, index_stationary].real)  # it is essential to access the matrix by column
+    return sd / sd.sum()  # normalize
 
 
-def combine(values: List, length: int) -> Generator:
+def combine(values: List[Union[int, str]], length: int) -> Generator:
     """
     Outputs a generator that will generate an ordered list
     with the possible combinations of values with length.
@@ -239,3 +240,28 @@ def combine(values: List, length: int) -> Generator:
         for j in range(length):
             output[j] = values[(i // len(values) ** j) % len(values)]
         yield output
+
+
+def calculate_nb_unique_combinations(slots_per_bin: Union[List[int], np.ndarray]) -> int:
+    """
+    Calculates the number of unique combinations given the required number
+    of elements of each group, which should be given in List format in the
+    `slots_per_bin` parameter.
+
+    Parameters
+    ----------
+    slots_per_bin: Union[List[int], np.ndarray]
+        The list should contain the required number of elements of each group
+        that should be combined in a tuple of length sum(slots_per_bin).
+
+    Returns
+    -------
+    int
+        The total number of unique combinations of the groups in the available slots.
+
+    """
+    total_slots = np.sum(slots_per_bin)
+
+    divider = np.prod([np.math.factorial(x) for x in slots_per_bin])
+
+    return np.math.factorial(total_slots) // divider
