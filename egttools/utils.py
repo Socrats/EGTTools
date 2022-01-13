@@ -197,7 +197,7 @@ def calculate_stationary_distribution(transition_matrix: np.ndarray) -> np.ndarr
     schur_form, eigenvectors = schur(transition_matrix)
     eigenvalues = eigvals(schur_form)
     index_stationary = np.argmin(abs(eigenvalues - 1.0))  # look for the element closest to 1 in the list of eigenvalues
-    sd = abs(eigenvectors[:, index_stationary].real)  # it is essential to access the matrix by column
+    sd = abs(eigenvectors[:, index_stationary].T.real)  # it is essential to access the matrix by column
     return sd / sd.sum()  # normalize
 
 
