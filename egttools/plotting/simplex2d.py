@@ -16,7 +16,7 @@
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
 """Plots a 2-dimensional simplex in a cartesian plane."""
-
+import matplotlib.colors
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 import numpy as np
@@ -86,6 +86,17 @@ class Simplex2D:
         self.ax = None
         self.discrete = discrete
         self.size = size
+
+        if discrete:
+            self.nb_states = calculate_nb_states(self.size, 3)
+            xy_coords = []
+
+            for i in range(self.nb_states):
+                state = sample_simplex(i, size, 3)
+                xy_coords.append(barycentric_to_xy_coordinates(state / size, self.corners))
+            xy_coords = np.asarray(xy_coords)
+
+            self.triangle_discrete = tri.Triangulation(xy_coords[:, 0].flatten(), xy_coords[:, 1].flatten())
 
     def add_axis(self, figsize: Optional[Tuple[int, int]] = (10, 8), ax: Optional[plt.axis] = None) -> SelfSimplex2D:
         if ax is not None:
@@ -196,10 +207,9 @@ class Simplex2D:
                           color: Optional[Union[str, Tuple[int, int, int]]] = 'whitesmoke',
                           ms: Optional[float] = 0.5, zorder: Optional[int] = 0) -> SelfSimplex2D:
         if self.discrete:
-            nb_states = calculate_nb_states(self.size, 3)
-            if nb_trajectories > nb_states:
-                nb_trajectories = nb_states
-            initial_points = np.random.choice(range(nb_states), size=nb_trajectories, replace=False)
+            if nb_trajectories > self.nb_states:
+                nb_trajectories = self.nb_states
+            initial_points = np.random.choice(range(self.nb_states), size=nb_trajectories, replace=False)
             for point in initial_points:
                 u = sample_simplex(point, self.size, 3)
                 x = odeint(f, u, np.arange(0, trajectory_length, step), full_output=False)
@@ -257,7 +267,14 @@ class Simplex2D:
                 states = perturb_state_discrete(stationary_point_discrete, self.size, perturbation=perturbation)
                 for state in states:
                     x = odeint(f, state, np.arange(0, trajectory_length, step), full_output=False)
-
+                    # check if point is outside simplex
+                    # noinspection PyUnresolvedReferences
+                    tmp_check = np.where(~np.isclose(x.sum(axis=1) / self.size, 1., atol=1e-2))[0]
+                    if len(tmp_check) > 0:
+                        last_inside = np.min(tmp_check)
+                        if last_inside == 0:
+                            continue
+                        x = x[:last_inside]
                     # noinspection PyTypeChecker
                     v = barycentric_to_xy_coordinates(x / self.size, self.corners)
                     line = self.ax.plot(v[:, 0], v[:, 1], color, linewidth=linewidth, zorder=zorder)[0]
@@ -288,10 +305,9 @@ class Simplex2D:
                             marker: Optional[str] = '.', zorder: Optional[int] = 0) -> SelfSimplex2D:
 
         if self.discrete:
-            nb_states = calculate_nb_states(self.size, 3)
-            if nb_trajectories > nb_states:
-                nb_trajectories = nb_states
-            initial_points = np.random.choice(range(nb_states), size=nb_trajectories, replace=False)
+            if nb_trajectories > self.nb_states:
+                nb_trajectories = self.nb_states
+            initial_points = np.random.choice(range(self.nb_states), size=nb_trajectories, replace=False)
             for point in initial_points:
                 u = sample_simplex(point, self.size, 3)
                 x = odeint(f, u, np.arange(0, trajectory_length, step), full_output=False)
@@ -305,5 +321,35 @@ class Simplex2D:
                 # noinspection PyTypeChecker
                 v = barycentric_to_xy_coordinates(x, self.corners)
                 self.ax.scatter(v[:, 0], v[:, 1], s, color=color, marker=marker, zorder=zorder)
+
+        return self
+
+    def draw_stationary_distribution(self, stationary_distribution: np.ndarray,
+                                     cmap: Union[str, matplotlib.colors.Colormap] = 'binary',
+                                     shading: str = 'gouraud',
+                                     alpha: float = 1., edgecolors: str = 'grey', vmin=None, vmax=None, zorder=0,
+                                     colorbar=True,
+                                     aspect: Optional[float] = 10,
+                                     anchor: Optional[Tuple[float, float]] = (-0.5, 0.5),
+                                     panchor: Optional[Tuple[float, float]] = (0, 0),
+                                     shrink: Optional[float] = 0.6,
+                                     label: Optional[str] = 'stationary distribution',
+                                     label_rotation: Optional[int] = 270,
+                                     label_fontsize: Optional[int] = 16,
+                                     labelpad: Optional[float] = 20):
+        if not self.discrete:
+            raise Exception("The stationary distribution only exists in Finite populations modeled as a Markov Chain.")
+
+        if shading != 'flat' and shading != 'gouraud':
+            raise Exception("Shading can only the be 'flat' or 'gouraud'")
+
+        sd_plot = self.ax.tripcolor(self.triangle_discrete, stationary_distribution, cmap=cmap, shading=shading,
+                                    alpha=alpha, edgecolor=edgecolors,
+                                    vmin=vmin, vmax=vmax,
+                                    zorder=zorder)
+
+        if colorbar:
+            cbar = plt.colorbar(sd_plot, aspect=aspect, anchor=anchor, panchor=panchor, shrink=shrink)
+            cbar.set_label(label, rotation=label_rotation, fontsize=label_fontsize, labelpad=labelpad)
 
         return self

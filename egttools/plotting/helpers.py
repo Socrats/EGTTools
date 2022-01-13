@@ -3,7 +3,6 @@ Helper functions for producing plots on simplexes
 """
 from typing import Tuple, List, Callable, Optional, Union
 
-import numpy
 import numpy as np
 from scipy.optimize import root
 from egttools.numerical import calculate_nb_states, sample_simplex
