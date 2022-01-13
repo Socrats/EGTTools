@@ -26,6 +26,7 @@ import numpy.typing as npt
 from scipy.linalg import schur, eigvals
 from scipy.sparse import lil_matrix
 from scipy.stats import hypergeom, multivariate_hypergeom
+from functools import lru_cache
 from itertools import permutations
 from typing import Tuple, Optional
 from egttools import sample_simplex, calculate_nb_states, calculate_state
@@ -95,6 +96,7 @@ class StochDynamics:
             self.fitness = self.fitness_pair
             self.full_fitness = self.full_fitness_difference_pairwise
 
+    @lru_cache
     def fitness_pair(self, x: int, i: int, j: int, *args: Optional[list]) -> float:
         """
         Calculates the fitness of strategy i versus strategy j, in
@@ -154,6 +156,7 @@ class StochDynamics:
 
         return (fitness_i - fitness_j) / (self.Z - 1)
 
+    @lru_cache
     def fitness_group(self, x: int, i: int, j: int, *args: Optional[list]) -> float:
         """
         In a population of x i-strategists and (Z-x) j strategists, where players
@@ -370,6 +373,33 @@ class StochDynamics:
         fitness = np.asarray([[self.full_fitness(i, j, population_state) for i in
                                range(len(population_state))] for j in range(len(population_state))])
         return (probabilities * np.tanh((beta / 2) * fitness)).sum(axis=0) * (1 - self.mu) + self.mu
+
+    def full_gradient_selection_without_mutation(self, population_state: np.ndarray, beta: float) -> np.ndarray:
+        """
+        Calculates the gradient of selection for an invading strategy, given a population state. It does
+        not take into account mutation.
+
+        Parameters
+        ----------
+        population_state : numpy.ndarray[np.int64[m,1]]
+            structure of unsigned integers containing the
+            counts of each strategy in the population
+        beta : float
+            intensity of selection
+
+        Returns
+        -------
+        numpy.ndarray[numpy.float64[m,m]]
+            Matrix indicating the likelihood of change in the population given an starting point.
+        """
+
+        probability_selecting_strategy_first = population_state / self.Z
+        probability_selecting_strategy_second = population_state / (self.Z - 1)
+        probabilities = np.outer(probability_selecting_strategy_first, probability_selecting_strategy_second)
+        fitness = np.asarray([[self.full_fitness(i, j, population_state) for i in
+                               range(len(population_state))] for j in range(len(population_state))])
+
+        return (probabilities * np.tanh((beta / 2) * fitness)).sum(axis=0)
 
     def fixation_probability(self, invader: int, resident: int, beta: float, *args: Optional[list]) -> float:
         """
