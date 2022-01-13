@@ -41,6 +41,7 @@ def simplex_iterator(scale, boundary=True):
 def xy_to_barycentric_coordinates(x: Union[float, np.ndarray], y: Union[float, np.ndarray],
                                   corners: np.ndarray) -> np.ndarray:
     """
+    Transforms cartesian into barycentric coordinates.
 
     Parameters
     ----------
@@ -55,6 +56,14 @@ def xy_to_barycentric_coordinates(x: Union[float, np.ndarray], y: Union[float, n
     -------
     numpy.ndarray
         The transformmation of the coordinates into barycentric.
+
+    Examples
+    --------
+    >>> from egttools.plotting import Simplex2D
+    >>> simplex = Simplex2D()
+    >>> cartesian_coords = np.array([0.2, 0.])
+    >>> xy_to_barycentric_coordinates(cartesian_coords[0], cartesian_coords[1], simplex.corners)
+    [out]   array([0.2, 0. ])
     """
     corner_x = corners.T[0]
     corner_y = corners.T[1]
@@ -73,20 +82,40 @@ def xy_to_barycentric_coordinates(x: Union[float, np.ndarray], y: Union[float, n
 
 
 def barycentric_to_xy_coordinates(point_barycentric: np.ndarray, corners: np.ndarray) -> np.ndarray:
+    """
+    Transforms barycentric into cartesian coordinates.
+
+    Parameters
+    ----------
+    point_barycentric: numpy.ndarray
+        An array containing the 3 barycentric coordinates.
+    corners: numpy.ndarray
+        An matrix containing the cartesian coordinates of the corners of the triangle that represents the 2-simplex.
+
+    Returns
+    -------
+    numpy.ndarray
+        An array containing the cartesian coordinates of the input point.
+    """
     return (corners.T @ point_barycentric.T).T
 
 
 def calculate_stability(roots: List[np.ndarray], f: Callable[[np.ndarray], np.ndarray]) -> List[bool]:
     """
+    Calculates the stability of the roots. It will return a list indicating whether each root
+    is or not stable.
 
     Parameters
     ----------
-    roots
-    f
+    roots: numpy.ndarray
+        A list or arrays which contain the barycentric coordinates of the roots.
+    f: Callable[[np.ndarray], np.ndarray]
+        A function which computes the gradient at any point in the simplex.
 
     Returns
     -------
-
+    List[bool]
+        A list of booleans indicating whether each root is or not stable.
     """
     stability = []
     for stationary_point in roots:
@@ -180,21 +209,31 @@ def calculate_stationary_points(x: np.ndarray, y: np.ndarray, corners: np.ndarra
                                 delta: Optional[float] = 1e-12,
                                 atol: Optional[float] = 1e-7) -> Tuple[List[np.ndarray], List[np.ndarray]]:
     """
-    Finds the roots of f, given a number of points.
+    Finds the roots of f (the points where the gradient is 0), given a number of points.
 
     Parameters
     ----------
-    x
-    y
-    corners
-    f
-    border
-    delta
-    atol
+    x: numpy.ndarray
+        x (cartesian) coordinates of the points for which to look for the gradients.
+    y: numpy.ndarray
+        y (cartesian) coordinates of the points for which to look for the gradients.
+    corners: numpy.ndarray
+        A matrix containing the cartesian coordinates of the vertices of the triangle that forms the 2-simplex.
+    f: Callable[[np.ndarray], np.ndarray]
+        A function that calculates the gradient at any point in the simplex.
+    border: int
+        Indicates how close to the simplex borders should we look for the gradients. This allows to avoid
+        boundary problems.
+    delta: float
+        tolerance for considering points outside the simplex.
+    atol: float
+        tolerance for considering that two roots are equal.
 
     Returns
     -------
-
+    Tuple[List[np.ndarray], List[np.ndarray]]
+        A list with the barycentric coordinates of all the roots that were found and another list with
+        the cartesian coordinates.
     """
     roots = []
     for x, y in zip(x[border:-border], y[border:-border]):
@@ -216,6 +255,34 @@ def find_roots_in_discrete_barycentric_coordinates(f: Callable[[np.ndarray], np.
                                                    nb_interior_points: Optional[int] = 1000,
                                                    delta: Optional[float] = 1e-12,
                                                    atol: Optional[float] = 1e-3) -> List[np.ndarray]:
+    """
+    Searches for the roots inside the simplex and returns them in barycentric coordinates.
+
+    Parameters
+    ----------
+    f: Callable[[np.ndarray], np.ndarray]
+        A function that calculates the gradient of any point inside the simplex.
+    simplex_size : int
+        Discrete size of the edges of the simplex. This should correspond to the size of the finite population
+        in Moran dynamics.
+    nb_edge_points: int
+        Can be used to explore more points than the existing simplex size.
+    nb_interior_points: int
+        Number of points to explore inside the simplex.
+    delta: float
+        Tolerance to consider a point outside the unit simplex.
+    atol: float
+        Tolerance to consider two roots to be equal.
+
+    Returns
+    -------
+    List[np.ndarray]
+        A list with the barycentric coordinates of the roots.
+
+    See Also
+    --------
+    egttools.plotting.helpers.calculate_stationary_points
+    """
     roots = []
 
     if nb_edge_points is None:
@@ -261,6 +328,22 @@ def find_roots_in_discrete_barycentric_coordinates(f: Callable[[np.ndarray], np.
 
 
 def check_if_point_in_unit_simplex(point: np.ndarray, delta: Optional[float] = 1e-12) -> bool:
+    """
+    Checks if a point (in barycentric coordinates) is inside the unit simplex.
+
+    Parameters
+    ----------
+    point: numpy.ndarray
+        The barycentric coordinates of the point.
+    delta: float
+        Tolerance to consider a point outside the unit simplex.
+
+    Returns
+    -------
+    bool
+        Whether the point is inside the unit simplex.
+
+    """
     if not np.isclose(np.sum(point), 1., atol=1.e-2):
         return False
 
@@ -280,8 +363,10 @@ def perturb_state(state: Union[Tuple[float, float, float], np.ndarray],
 
     Parameters
     ----------
-    state
-    perturbation
+    state: Union[Tuple[float, float, float], np.ndarray]
+        Barycentric coordinates of a point inside the simplex.
+    perturbation: float
+        The amount of perturbation to apply to the point.
 
     Returns
     -------
@@ -342,9 +427,13 @@ def perturb_state_discrete(state: Union[Tuple[float, float, float], np.ndarray],
 
     Parameters
     ----------
-    state
-    size
-    perturbation
+    state: Union[Tuple[float, float, float], np.ndarray]
+        The barycentric coordinates of a point inside the simplex.
+    size: int
+        The size of the edges of the simplex. This should coincide with the size of the finite population
+        in Moran dynamics.
+    perturbation: int
+        The amount of perturbation to apply to the point.
 
     Returns
     -------
