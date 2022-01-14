@@ -20,6 +20,22 @@ from . import AbstractCRDStrategy
 
 class MovingAverageCRDStrategy(AbstractCRDStrategy):
     def __init__(self, a0: int, aa: int, am: int, ab: int, group_size: int):
+        """
+        A CRD strategy which adapts in function of a moving average of the contributions of the rest of the group.
+
+        Parameters
+        ----------
+        a0: int
+            how much to contribute in the initial round.
+        aa: int
+            how much to contribute when you have contributed above the average of the group in the previous round.
+        am: int
+            how much to contribute when you have contributed equal to the average of the group in the previous round.
+        ab: int
+            how much to contribute when you have contributed below the average of the group in the previous round.
+        group_size: int
+            Size of the group.
+        """
         super().__init__()
         self.a0_ = a0
         self.aa_ = aa
