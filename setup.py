@@ -73,7 +73,9 @@ setup(
     packages=['egttools', 'egttools.analytical', 'egttools.plotting', 'egttools.games',
               'egttools.behaviors',
               'egttools.behaviors.CRD', 'egttools.behaviors.NormalForm', 'egttools.behaviors.NormalForm.TwoActions',
-              'egttools.helpers'
+              'egttools.helpers',
+              'egttools.distributions',
+              'egttools.datastructures'
               ],
     package_dir={'egttools': "egttools",
                  'egttools.analytical': "egttools/analytical",
@@ -81,7 +83,9 @@ setup(
                  'egttools.behaviors': "egttools/behaviors", 'egttools.behaviors.CRD': "egttools/behaviors/CRD",
                  'egttools.behaviors.NormalForm': "egttools/behaviors/NormalForm",
                  'egttools.behaviors.NormalForm.TwoActions': "egttools/behaviors/NormalForm/TwoActions",
-                 'egttools.helpers': "egttools/helpers"
+                 'egttools.helpers': "egttools/helpers",
+                 'egttools.distributions': "egttools/distributions",
+                 'egttools.datastructures': "egttools/datastructures"
                  },
     # py_modules={'utils'},
     cmake_args=shlex.split(os.environ.get('EGTTOOLS_EXTRA_CMAKE_ARGS', '')),

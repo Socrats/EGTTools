@@ -203,7 +203,7 @@ PYBIND11_MODULE(numerical, m) {
     auto mData = m.def_submodule("DataStructures");
     auto mDistributions = m.def_submodule("distributions");
 
-    mGames.attr("__init__") = py::str("The `egttools.numerical.game` submodule contains the available games.");
+    mGames.attr("__init__") = py::str("The `egttools.numerical.games` submodule contains the available games.");
     mBehaviors.attr("__init__") = py::str("The `egttools.numerical.behaviors` submodule contains the available strategies to evolve.");
     mNF.attr("__init__") = py::str("The `egttools.numerical.behaviors.NormalForm` submodule contains the strategies for normal form games.");
     mCRD.attr("__init__") = py::str("The `egttools.numerical.behaviors.CRD` submodule contains the strategies for the CRD.");
@@ -1543,6 +1543,7 @@ PYBIND11_MODULE(numerical, m) {
                  py::arg("mu"),
                  py::arg("init_state"))
             .def("estimate_fixation_probability", &PairwiseComparison::estimate_fixation_probability,
+                 py::call_guard<py::gil_scoped_release>(),
                  "Estimates the fixation probability of an strategy in the population.",
                  py::arg("mutant"), py::arg("resident"), py::arg("nb_runs"), py::arg("nb_generations"), py::arg("beta"))
             .def("estimate_stationary_distribution", &PairwiseComparison::estimate_stationary_distribution,
