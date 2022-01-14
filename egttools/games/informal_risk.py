@@ -26,6 +26,8 @@ from . import AbstractGame
 class InformalRiskGame(AbstractGame):
     def __init__(self, group_size: int, cost: float, multiplying_factor: float, strategies: List) -> None:
         """
+        Game of informal risk sharing.
+
         This game has been taken from the model introduced in
 
         ```Santos, F. P., Pacheco, J. M., Santos, F. C., & Levin, S. A. (2021).
