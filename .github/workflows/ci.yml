@@ -196,4 +196,4 @@ jobs:
           python -m sphinx -M html docs docs/_build -vv
       - name: Check links
         run: |
-          python -m sphinx -M linkcheck docs docs/_build
+          python -m sphinx -M linkcheck docs docs/_build -vv
