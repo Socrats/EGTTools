@@ -20,21 +20,23 @@ This python module contains some utility functions
 to find saddle points and plot gradients in 2 player, 2 strategy games.
 """
 import numpy as np
-from scipy.linalg import schur, eigvals, eig
-from typing import Optional, List, Generator, Union
+from scipy.linalg import schur, eigvals
+from typing import Optional, List, Generator, Union, Callable
 from egttools.games import AbstractGame
 
 
-def find_saddle_type_and_gradient_direction(gradient, saddle_points_idx, offset=0.01):
+def find_saddle_type_and_gradient_direction(gradient: Union[List[float], np.ndarray],
+                                            saddle_points_idx: Union[List[int], np.ndarray],
+                                            offset: float = 0.01):
     """
     Finds whether a saddle point is stable or not. And defines the direction of the
     gradient among stable and unstable points.
 
     Parameters
     ----------
-    gradient : {List[float], numpy.ndarray[float]}
+    gradient : Union[List[float], numpy.ndarray[numpy.float64[1,m]]]
         array containing the gradient of selection for all states of the population
-    saddle_points_idx : {List[int], numpy.ndarray[int]}
+    saddle_points_idx : Union[List[int], numpy.ndarray[numpy.int64[1,m]]]
         array containing the saddle points indices
     offset : float
         offset for the gradient_directions, so that arrows don't overlap with point
@@ -80,7 +82,7 @@ def find_saddle_type_and_gradient_direction(gradient, saddle_points_idx, offset=
 def get_payoff_function(strategy_i: int,
                         strategy_j: int,
                         nb_strategies: int,
-                        game: AbstractGame) -> object:
+                        game: AbstractGame) -> Callable[[int, int, Optional[List]], float]:
     """
     Returns a function which gives the payoff of strategy i against strategy j.
 
@@ -96,17 +98,17 @@ def get_payoff_function(strategy_i: int,
     nb_strategies : int
         Total number of strategies in the population.
     game: egttools.games.AbstractGame
-        A game object which contains the method `payoff` which returns the payoff of
+        A game object which contains the method `egttools.games.AbstractGame.payoff` which returns the payoff of
         a strategy given a group composition.
 
     Returns
     -------
-    object
+    Callable[[int, int, Optional[List]], float]
         A function which will return the payoff of strategy i
         given k individuals of strategy i and group_size - k j strategists.
     """
 
-    def get_payoff(k: int, group_size: int, *args: Optional) -> float:
+    def get_payoff(k: int, group_size: int, *args: Optional[List]) -> float:
         """
         Returns the payoff given k individuals of strategy i and group_size - k j strategists.
 
@@ -119,7 +121,7 @@ def get_payoff_function(strategy_i: int,
             Number of players adopting strategy i in the group.
         group_size: int
             Total size of the group.
-        args: Optional
+        args: Optional[List]
             Extra arguments which may be required ot calculate the payoff
 
         Returns
@@ -161,7 +163,7 @@ def transform_payoffs_to_pairwise(nb_strategies: int,
     nb_strategies : int
         Number of strategies in the population
     game : egttools.games.AbstractGame
-        A game object which contains the method `payoff` which returns the payoff of
+        A game object which implements the method `egttools.games.AbstractGame.payoff` which returns the payoff of
         a strategy given a group composition.
 
     Returns
@@ -200,10 +202,7 @@ def calculate_stationary_distribution(transition_matrix: np.ndarray) -> np.ndarr
 
     """
     # calculate stationary distributions using eigenvalues and eigenvectors
-    # noinspection PyTupleAssignmentBalance
-    # schur_form, eigenvectors = schur(transition_matrix)
-    # eigenvalues = eigvals(schur_form)
-    eigenvalues, eigenvectors = eig(transition_matrix, left=False, right=True)
+    eigenvalues, eigenvectors = np.eig(transition_matrix)
     index_stationary = np.argmin(abs(eigenvalues - 1.0))  # look for the element closest to 1 in the list of eigenvalues
     sd = abs(eigenvectors[:, index_stationary].T.real)  # it is essential to access the matrix by column
     return sd / sd.sum()  # normalize
@@ -284,11 +283,11 @@ def calculate_nb_unique_combinations(slots_per_bin: Union[List[int], np.ndarray]
     """
     Calculates the number of unique combinations given the required number
     of elements of each group, which should be given in List format in the
-    `slots_per_bin` parameter.
+    slots_per_bin parameter.
 
     Parameters
     ----------
-    slots_per_bin: Union[List[int], np.ndarray]
+    slots_per_bin: Union[List[int], numpy.ndarray]
         The list should contain the required number of elements of each group
         that should be combined in a tuple of length sum(slots_per_bin).
 
