@@ -160,8 +160,7 @@ nitpick_ignore = [('py:class', 'pybind11_builtins.pybind11_object'),
                   ('py:class', 'numpy.complex128'),
                   ('py:obj', 'List'),
                   ('py:class', 'm'),
-                  ('py:class', '1'),
-                  ('py:class', 'egttools.numerical.behaviors.CRD')]
+                  ('py:class', '1')]
 
 if on_rtd:
     branch_or_tag = branch or 'v{}'.format(release)
