@@ -63,7 +63,7 @@ def xy_to_barycentric_coordinates(x: Union[float, np.ndarray], y: Union[float, n
     >>> simplex = Simplex2D()
     >>> cartesian_coords = np.array([0.2, 0.])
     >>> xy_to_barycentric_coordinates(cartesian_coords[0], cartesian_coords[1], simplex.corners)
-    [out]   array([0.2, 0. ])
+    array([0.2, 0. ])
     """
     corner_x = corners.T[0]
     corner_y = corners.T[1]
@@ -363,14 +363,14 @@ def perturb_state(state: Union[Tuple[float, float, float], np.ndarray],
 
     Parameters
     ----------
-    state: Union[Tuple[float, float, float], np.ndarray]
+    state: Union[Tuple[float, float, float], numpy.ndarray]
         Barycentric coordinates of a point inside the simplex.
     perturbation: float
         The amount of perturbation to apply to the point.
 
     Returns
     -------
-    List[numpy.array]
+    List[numpy.ndarray]
         A list of points (in barycentric coordinates) which are close to the state in the simplex.
     """
     new_states = []
