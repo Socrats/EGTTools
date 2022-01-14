@@ -23,7 +23,6 @@ populations on 2-player games.
 
 import numpy as np
 import numpy.typing as npt
-from scipy.linalg import schur, eigvals
 from scipy.sparse import lil_matrix
 from scipy.stats import hypergeom, multivariate_hypergeom
 from functools import lru_cache
@@ -537,6 +536,8 @@ class StochDynamics:
         Calculates the stationary distribution of the monomorphic states is mu = 0 (SML).
         Otherwise, it calculates the stationary distribution including all possible population states.
 
+        This function is recommended only for Hermitian transition matrices.
+
         Parameters
         ----------
         beta : float
@@ -554,12 +555,9 @@ class StochDynamics:
             t, _ = self.transition_and_fixation_matrix(beta, *args)
 
         # calculate stationary distributions using eigenvalues and eigenvectors
-        # noinspection PyTupleAssignmentBalance
-        schur_form, eigenvectors = schur(t)
-        eigenvalues = eigvals(schur_form)
-        # eigenvalues, eigenvectors = eig(t, left=False, right=True)
+        eigenvalues, eigenvectors = np.linalg.eig(t)
         index_stationary = np.argmin(
             abs(eigenvalues - 1.0))  # look for the element closest to 1 in the list of eigenvalues
-        sd = abs(eigenvectors[:, index_stationary].T.real)  # it is essential to access the matrix by column
+        sd = abs(eigenvectors[:, index_stationary].real)  # it is essential to access the matrix by column
 
         return sd / sd.sum()
