@@ -19,12 +19,29 @@ from typing import List, Union
 import numpy as np
 from scipy.stats import multivariate_hypergeom
 
+import egttools.behaviors.pgg_behaviors
 from egttools import calculate_nb_states, calculate_state, sample_simplex
 from . import AbstractGame
 
 
 class PGG(AbstractGame):
-    def __init__(self, group_size: int, cost: float, multiplying_factor: float, strategies: List) -> None:
+    def __init__(self, group_size: int, cost: float, multiplying_factor: float,
+                 strategies: List[egttools.behaviors.pgg_behaviors.PGGOneShotStrategy]) -> None:
+        """
+        Classical Public Goods game with only 2 possible contributions (o or cost).
+
+        Parameters
+        ----------
+        group_size: int
+            Size of the group playing the game.
+        cost: float
+            Cost of cooperation.
+        multiplying_factor: float
+            The sum of contributions to the public good is multiplied by this factor before being divided equally
+            among all players.
+        strategies: List[egttools.behaviors.pgg_behaviors.PGGOneShotStrategy]
+            A list of strategies that will play the game.
+        """
         AbstractGame.__init__(self)
         self.group_size_ = group_size
         self.c_ = cost
