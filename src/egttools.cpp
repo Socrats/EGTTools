@@ -601,7 +601,7 @@ PYBIND11_MODULE(numerical, m) {
                         Size of the group that will play the CRD.
                     risk : float
                         The probability that all members will lose their remaining endowment if the threshold is not achieved.
-                    strategies : List[egttools.behaviors.AbstractCRDStrategy]
+                    strategies : List[egttools.behaviors.CRD.AbstractCRDStrategy]
                         A list containing references of AbstractCRDStrategy strategies (or child classes).
 
                     See Also
@@ -829,7 +829,7 @@ PYBIND11_MODULE(numerical, m) {
                         Size of the group that will play the CRD.
                     risk : float
                         The probability that all members will lose their remaining endowment if the threshold is not achieved.
-                    strategies : List[egttools.behaviors.AbstractCRDStrategy]
+                    strategies : List[egttools.behaviors.CRD.AbstractCRDStrategy]
                         A list containing references of AbstractCRDStrategy strategies (or child classes).
 
                     See Also
