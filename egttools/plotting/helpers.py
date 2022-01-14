@@ -8,27 +8,28 @@ from scipy.optimize import root
 from egttools.numerical import calculate_nb_states, sample_simplex
 
 
-def simplex_iterator(scale, boundary=True):
+def simplex_iterator(scale: int, boundary: bool = True) -> Tuple[int, int, int]:
     """
     Systematically iterates through a lattice of points on the 2-simplex.
+
     Parameters
     ----------
-    scale: Int
+    scale: int
         The normalized scale of the simplex, i.e. N such that points (x,y,z)
         satisify x + y + z == N
-    boundary: bool, True
+    boundary: bool
         Include the boundary points (tuples where at least one
         coordinate is zero)
     Yields
     ------
-    3-tuples, There are binom(n+2, 2) points (the triangular
-    number for scale + 1, less 3*(scale+1) if boundary=False
+    Tuple[int, int, int]
+        3-tuples, There are binom(n+2, 2) points (the triangular
+        number for scale + 1, less 3*(scale+1) if boundary=False
 
     Citing
-    ----
+    ------
     This function has been copied from: https://github.com/marcharper/python-ternary/blob/master/ternary/helpers.py
     """
-
     start = 0
     if not boundary:
         start = 1
@@ -109,7 +110,7 @@ def calculate_stability(roots: List[np.ndarray], f: Callable[[np.ndarray], np.nd
     ----------
     roots: numpy.ndarray
         A list or arrays which contain the barycentric coordinates of the roots.
-    f: Callable[[np.ndarray], np.ndarray]
+    f: Callable[[numpy.ndarray], numpy.ndarray]
         A function which computes the gradient at any point in the simplex.
 
     Returns
@@ -219,7 +220,7 @@ def calculate_stationary_points(x: np.ndarray, y: np.ndarray, corners: np.ndarra
         y (cartesian) coordinates of the points for which to look for the gradients.
     corners: numpy.ndarray
         A matrix containing the cartesian coordinates of the vertices of the triangle that forms the 2-simplex.
-    f: Callable[[np.ndarray], np.ndarray]
+    f: Callable[[numpy.ndarray], numpy.ndarray]
         A function that calculates the gradient at any point in the simplex.
     border: int
         Indicates how close to the simplex borders should we look for the gradients. This allows to avoid
@@ -231,7 +232,7 @@ def calculate_stationary_points(x: np.ndarray, y: np.ndarray, corners: np.ndarra
 
     Returns
     -------
-    Tuple[List[np.ndarray], List[np.ndarray]]
+    Tuple[List[numpy.ndarray], List[numpy.ndarray]]
         A list with the barycentric coordinates of all the roots that were found and another list with
         the cartesian coordinates.
     """
@@ -260,7 +261,7 @@ def find_roots_in_discrete_barycentric_coordinates(f: Callable[[np.ndarray], np.
 
     Parameters
     ----------
-    f: Callable[[np.ndarray], np.ndarray]
+    f: Callable[[numpy.ndarray], numpy.ndarray]
         A function that calculates the gradient of any point inside the simplex.
     simplex_size : int
         Discrete size of the edges of the simplex. This should correspond to the size of the finite population
@@ -276,7 +277,7 @@ def find_roots_in_discrete_barycentric_coordinates(f: Callable[[np.ndarray], np.
 
     Returns
     -------
-    List[np.ndarray]
+    List[numpy.ndarray]
         A list with the barycentric coordinates of the roots.
 
     See Also
@@ -427,7 +428,7 @@ def perturb_state_discrete(state: Union[Tuple[float, float, float], np.ndarray],
 
     Parameters
     ----------
-    state: Union[Tuple[float, float, float], np.ndarray]
+    state: Union[Tuple[float, float, float], numpy.ndarray]
         The barycentric coordinates of a point inside the simplex.
     size: int
         The size of the edges of the simplex. This should coincide with the size of the finite population
@@ -437,7 +438,7 @@ def perturb_state_discrete(state: Union[Tuple[float, float, float], np.ndarray],
 
     Returns
     -------
-    List[numpy.array]
+    List[numpy.ndarray]
         A list of points (in barycentric coordinates) which are close to the state in the simplex.
     """
     new_states = []
@@ -535,7 +536,7 @@ def find_where_point_is_in_simplex(point: np.ndarray) -> Tuple[int, np.ndarray]:
 
     Parameters
     ----------
-    point : numpy.nparray
+    point : numpy.ndarray
         The barycentric coordinates of the point
 
     Returns

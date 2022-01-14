@@ -160,6 +160,7 @@ nitpick_ignore = [('py:class', 'pybind11_builtins.pybind11_object'),
                   ('py:class', 'numpy.complex128'),
                   ('py:obj', 'List'),
                   ('py:class', 'm'),
+                  ('py:class', 'n'),
                   ('py:class', '1')]
 
 if on_rtd:
