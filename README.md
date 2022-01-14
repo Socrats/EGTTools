@@ -139,6 +139,9 @@ through numerical simulations the evolutionary dynamics in a (2-person, 2-action
 The [Invasion example](docs/examples/plot_invasion_diagram.ipynb) is a jupyter notebook calculates the fixation
 probabilities and stationary distribution of a Normal Form Game with 5 strategies and then plots an invasion diagram.
 
+The [Plot 2 Simplex](docs/examples/plot_simplex.ipynb) is a jupyter notebook that shows how to use EGTtools to plot the
+evolutionary dynamics in a 2 Simplex (a triangle), both for infinite and finite populations.
+
 For example, assuming the following payoff matrix:
 
 ![A=\begin{pmatrix} -0.5 & 2 \\ 0 & 0 \end{pmatrix}](https://latex.codecogs.com/gif.latex?A=\begin{pmatrix}&space;-0.5&space;&&space;2&space;\\\\&space;0&space;&&space;0&space;\end{pmatrix})
@@ -268,6 +271,72 @@ ax.set_xscale('log')
 ```
 
 ![Comparison numerical analytical](docs/images/hawk_dove_indep_runs.png)
+
+### Plotting the dynamics in a 2 Simplex
+
+EGTtools can also be used to visualize the evolutionary dynamics in a 2 Simplex. In the example bellow, we first
+instantiate the Simplex2D class. It will generate a grid that can be used for plotting. We then calculate the gradient
+of selection for every point in the grid. The method `Simplex2D.apply_simplex_boundaries_to_gradients` will
+make sure that only the points inside the unit simplex are plotted.
+
+```python
+import numpy as np
+from egttools.plotting.helpers import (xy_to_barycentric_coordinates,
+                                       calculate_stationary_points, calculate_stability)
+from egttools.helpers.vectorized import (vectorized_replicator_equation,
+                                         vectorized_barycentric_to_xy_coordinates)
+from egttools.analytical import replicator_equation
+from egttools.plotting import Simplex2D
+
+simplex = Simplex2D()
+
+payoffs = np.array([[1, 0, 0],
+                    [0, 2, 0],
+                    [0, 0, 3]])
+
+v = np.asarray(xy_to_barycentric_coordinates(simplex.X, simplex.Y, simplex.corners))
+results = vectorized_replicator_equation(v, payoffs)
+xy_results = vectorized_barycentric_to_xy_coordinates(results, simplex.corners)
+Ux = xy_results[:, :, 0].astype(np.float64)
+Uy = xy_results[:, :, 1].astype(np.float64)
+calculate_gradients = lambda u: replicator_equation(u, payoffs)
+roots, roots_xy = calculate_stationary_points(simplex.trimesh.x, simplex.trimesh.y,
+                                              simplex.corners, calculate_gradients)
+stability = calculate_stability(roots, calculate_gradients)
+type_labels = ['A', 'B', 'C']
+```
+
+Finally, once we have calculated the gradients `Ux` and `Uy`, we can plot a simplex with:
+
+```python
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots(figsize=(10, 8))
+plot = (simplex.add_axis(ax=ax)
+        .apply_simplex_boundaries_to_gradients(Ux, Uy)
+        .draw_triangle()
+        .draw_gradients(zorder=0)
+        .add_colorbar()
+        .draw_stationary_points(roots_xy, stability)
+        .add_vertex_labels(type_labels)
+        .draw_trajectory_from_roots(lambda u, t: replicator_equation(u, payoffs),
+                                    roots,
+                                    stability,
+                                    trajectory_length=15,
+                                    linewidth=1,
+                                    step=0.01,
+                                    color='k', draw_arrow=True,
+                                    arrowdirection='right',
+                                    arrowsize=30, zorder=4, arrowstyle='fancy')
+        .draw_scatter_shadow(lambda u, t: replicator_equation(u, payoffs),
+                             300, color='gray',
+                             marker='.', s=0.1, zorder=0)
+```
+
+![2 Simplex dynamics in infinite populations](docs/images/simplex_example_infinite_pop_1.png)
+
+The same can be done for finite populations, with the added possibility to plot the stationary distribution
+inside the triangle (see [this notebook](docs/examples/plot_simplex.ipynb) for a more in depth example).
 
 ## Documentation
 
