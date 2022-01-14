@@ -721,11 +721,11 @@ PYBIND11_MODULE(numerical, m) {
                     The payoffs of Defectors and Cooperators are described by the following equations:
 
                     .. math::
-                        \\Pi_{D}(k) = b{\\theta(k-M)+ (1-r)[1 - \\theta(k-M)]}
+                        \Pi_{D}(k) = b\{\theta(k-M)+ (1-r)[1 - \theta(k-M)]\}
 
-                        \\Pi_{C}(k) = \\Pi_{D}(k) - cb
+                        \Pi_{C}(k) = \Pi_{D}(k) - cb
 
-                        \\text{where } \\theta(x) = 0 \\text{if } x < 0 \\text{ and 1 otherwise.}
+                        \text{where } \theta(x) = 0 \text{if } x < 0 \text{ and 1 otherwise.}
 
                     Parameters
                     ----------
