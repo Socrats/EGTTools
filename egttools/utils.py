@@ -20,7 +20,7 @@ This python module contains some utility functions
 to find saddle points and plot gradients in 2 player, 2 strategy games.
 """
 import numpy as np
-from scipy.linalg import schur, eigvals
+from scipy.linalg import schur, eigvals, eig
 from typing import Optional, List, Generator, Union
 from egttools.games import AbstractGame
 
@@ -179,6 +179,9 @@ def calculate_stationary_distribution(transition_matrix: np.ndarray) -> np.ndarr
     """
     Calculates stationary distribution from a transition matrix of Markov chain.
 
+    The use of this function is not recommended if the matrix is non-Hermitian. Please use
+    calculate_stationary_distribution_non_hermitian instead in this case.
+
     The stationary distribution is the normalized eigenvector associated with the eigenvalue 1
 
     Parameters
@@ -190,6 +193,41 @@ def calculate_stationary_distribution(transition_matrix: np.ndarray) -> np.ndarr
     -------
     numpy.ndarray
         A 1-dimensional vector containing the stationary distribution
+
+    See Also
+    --------
+    egttools.utils.calculate_stationary_distribution_non_hermitian
+
+    """
+    # calculate stationary distributions using eigenvalues and eigenvectors
+    # noinspection PyTupleAssignmentBalance
+    # schur_form, eigenvectors = schur(transition_matrix)
+    # eigenvalues = eigvals(schur_form)
+    eigenvalues, eigenvectors = eig(transition_matrix, left=False, right=True)
+    index_stationary = np.argmin(abs(eigenvalues - 1.0))  # look for the element closest to 1 in the list of eigenvalues
+    sd = abs(eigenvectors[:, index_stationary].T.real)  # it is essential to access the matrix by column
+    return sd / sd.sum()  # normalize
+
+
+def calculate_stationary_distribution_non_hermitian(transition_matrix: np.ndarray) -> np.ndarray:
+    """
+    Calculates stationary distribution from a transition matrix of Markov chain which is not hermitian.
+
+    The stationary distribution is the normalized eigenvector associated with the eigenvalue 1
+
+    Parameters
+    ----------
+    transition_matrix : numpy.ndarray
+        A 2 dimensional transition matrix
+
+    Returns
+    -------
+    numpy.ndarray
+        A 1-dimensional vector containing the stationary distribution
+
+    See Also
+    --------
+    egttools.utils.calculate_stationary_distribution
 
     """
     # calculate stationary distributions using eigenvalues and eigenvectors
