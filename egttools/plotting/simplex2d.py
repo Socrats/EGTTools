@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
-"""Plots a 2-dimensional simplex in a cartesian plane."""
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
@@ -48,6 +47,8 @@ class Simplex2D:
     def __init__(self, nb_points: Optional[int] = 1000, discrete: Optional[bool] = False,
                  size: Optional[Union[int, None]] = None):
         """
+        Plots a 2-dimensional simplex in a cartesian plane.
+
         This class offers utility methods to plot gradients and equilibrium points on a 2-simplex (triangle).
 
         The plotting is always done on the unit simplex for convenience. At the moment no rotations are
@@ -74,6 +75,75 @@ class Simplex2D:
             indicates whether we are in the continuous or discrete case
         size : int
             if we are in the discrete case, indicates the size of the simplex
+
+        See Also
+        --------
+        egttools.plotting.plot_gradient,
+        egttools.plotting.draw_stationary_distribution,
+        egttools.analytical.replicator_equation,
+        egttools.analytical.StochDynamics
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import matplotlib.pyplot as plt
+        >>> from egttools.plotting.helpers import (xy_to_barycentric_coordinates, calculate_stationary_points,
+            ... calculate_stability)
+        >>> from egttools.helpers.vectorized import (vectorized_replicator_equation,
+            ... vectorized_barycentric_to_xy_coordinates)
+        >>> from egttools.analytical import replicator_equation
+        >>> simplex = Simplex2D()
+        >>> payoffs = np.array([[1, 0, 0],
+            ...        [0, 2, 0],
+            ...        [0, 0, 3]])
+        >>> v = np.asarray(xy_to_barycentric_coordinates(simplex.X, simplex.Y, simplex.corners))
+        >>> results = vectorized_replicator_equation(v, payoffs)
+        >>> xy_results = vectorized_barycentric_to_xy_coordinates(results, simplex.corners)
+        >>> Ux = xy_results[:, :, 0].astype(np.float64)
+        >>> Uy = xy_results[:, :, 1].astype(np.float64)
+        >>> calculate_gradients = lambda u: replicator_equation(u, payoffs)
+        >>> roots, roots_xy = calculate_stationary_points(simplex.trimesh.x, simplex.trimesh.y,
+            ... simplex.corners, calculate_gradients)
+        >>> stability = calculate_stability(roots, calculate_gradients)
+        >>> type_labels = ['A', 'B', 'C']
+        >>> fig, ax = plt.subplots(figsize=(10,8))
+        >>> plot = (simplex.add_axis(ax=ax)
+            ...            .apply_simplex_boundaries_to_gradients(Ux, Uy)
+            ...            .draw_triangle()
+            ...            .draw_gradients(zorder=0)
+            ...            .add_colorbar()
+            ...            .draw_stationary_points(roots_xy, stability)
+            ...            .add_vertex_labels(type_labels)
+            ...            .draw_trajectory_from_roots(lambda u, t: replicator_equation(u, payoffs),
+            ...                                        roots,
+            ...                                        stability,
+            ...                                        trajectory_length=15,
+            ...                                        linewidth=1,
+            ...                                        step=0.01,
+            ...                                        color='k', draw_arrow=True, arrowdirection='right',
+            ...                                        arrowsize=30, zorder=4, arrowstyle='fancy')
+            ...            .draw_scatter_shadow(lambda u, t: replicator_equation(u, payoffs), 300, color='gray',
+            ...                                 marker='.', s=0.1, zorder=0)
+
+        .. image:: ../images/simplex_example_infinite_pop_1.png
+
+        >>> plot = (simplex.add_axis(ax=ax)
+            ...            .apply_simplex_boundaries_to_gradients(Ux, Uy)
+            ...            .draw_triangle()
+            ...            .draw_stationary_points(roots_xy, stability)
+            ...            .add_vertex_labels(type_labels)
+            ...            .draw_trajectory_from_roots(lambda u, t: replicator_equation(u, payoffs),
+            ...                                        roots,
+            ...                                        stability,
+            ...                                        trajectory_length=15,
+            ...                                        linewidth=1,
+            ...                                        step=0.01,
+            ...                                        color='k', draw_arrow=True, arrowdirection='right',
+            ...                                        arrowsize=30, zorder=4, arrowstyle='fancy')
+            ...            .draw_scatter_shadow(lambda u, t: replicator_equation(u, payoffs), 300, color='gray',
+            ...                                 marker='.', s=0.1, zorder=0)
+
+        .. image:: ../images/simplex_example_infinite_pop_2.png
         """
         self.nb_points = nb_points
         self.Ux = None
@@ -99,6 +169,21 @@ class Simplex2D:
             self.triangle_discrete = tri.Triangulation(xy_coords[:, 0].flatten(), xy_coords[:, 1].flatten())
 
     def add_axis(self, figsize: Optional[Tuple[int, int]] = (10, 8), ax: Optional[plt.axis] = None) -> SelfSimplex2D:
+        """
+        Creates or stores a new axis inside the class.
+
+        Parameters
+        ----------
+        figsize: Optional[Tuple[int, int]]
+            The size of the figure. This argument is only used if no ax is given.
+        ax: Optional[matplotlib.pyplot.axis]
+            If given, the axis will be stored inside the object. Otherwise, a new axis will be created.
+
+        Returns
+        -------
+        Simplex2D
+            The class object.
+        """
         if ax is not None:
             self.ax = ax
         else:
@@ -107,6 +192,14 @@ class Simplex2D:
         return self
 
     def get_figure_and_axis(self) -> Tuple[plt.figure, plt.axis]:
+        """
+        Returns the stored figure and axis.
+
+        Returns
+        -------
+        Tuple[matplotlib.pyplot.figure, matplotlib.pyplot.axis]
+            The figure and axis stored in the current object.
+        """
         return self.figure, self.ax
 
     def apply_simplex_boundaries_to_gradients(self, u: np.ndarray, v: np.ndarray) -> SelfSimplex2D:
@@ -123,7 +216,8 @@ class Simplex2D:
             The Y component of the gradients
         Returns
         -------
-
+        Simplex2D
+            A reference to the class object.
         """
         self.Ux = u.copy()
         self.Uy = v.copy()
@@ -139,14 +233,57 @@ class Simplex2D:
 
         return self
 
-    def draw_triangle(self, color: str = 'k', linewidth: int = 2) -> SelfSimplex2D:
+    def draw_triangle(self, color: Optional[str] = 'k', linewidth: Optional[int] = 2) -> SelfSimplex2D:
+        """
+        Draws the borders of a triangle enclosing the 2-simplex.
+
+        Parameters
+        ----------
+        color: Optional[str]
+            The color of the borders of the triangle.
+        linewidth: Optional[int]
+            The width of the borders of the triangle.
+
+        Returns
+        -------
+        Simplex2D
+            A refernece to the class object.
+        """
         self.ax.triplot(self.triangle, color=color, linewidth=linewidth)
         return self
 
     def draw_gradients(self, arrowsize: Optional[float] = 2,
                        arrowstyle: Optional[str] = 'fancy',
                        color: Optional[Union[str, Tuple[int, int, int]]] = None, density: Optional[float] = 1,
-                       linewidth: Optional[float] = 1.5, cmap='viridis', zorder: int = 0) -> SelfSimplex2D:
+                       linewidth: Optional[float] = 1.5,
+                       cmap: Optional[Union[str, matplotlib.colors.Colormap]] = 'viridis',
+                       zorder: Optional[int] = 0) -> SelfSimplex2D:
+        """
+        Draws the gradients inside the unit simplex using a streamplot.
+
+        Parameters
+        ----------
+        arrowsize: Optional[float]
+            The size of the arrows of the gradients
+        arrowstyle: Optional[str]
+            The style of the arrows. See matplotlib arrowstyles.
+        color: Optional[Union[str, Tuple[int, int, int]]]
+            The color of the arrows. If no color is given, it will be generated as a function of the gradients.
+        density: Optional[float]
+            The density of arrows (how many arrows) to plot.
+        linewidth: Optional[float]
+            The width of the arrows.
+        cmap: Optional[Union[str, matplotlib.colors.Colormap]]
+            The color map to be used.
+        zorder: Optional[int]
+            The order in which the gradients should appear in the plot (above or below other elements).
+
+        Returns
+        -------
+        Simplex2D
+            A reference to the class object.
+
+        """
         if self.Ux is None or self.Uy is None:
             raise Exception("Please call Simplex.apply_simplex_boundaries_to_gradients first")
 
@@ -173,6 +310,35 @@ class Simplex2D:
                      label_rotation: Optional[int] = 270,
                      label_fontsize: Optional[int] = 16,
                      labelpad: Optional[float] = 20) -> SelfSimplex2D:
+        """
+        Adds a color bar to indicate the meaning of the colors of the plotted gradients.
+        This should only be used if the gradients were plotted and the colors have been drawn in function
+        of the strength of the gradient.
+
+        Parameters
+        ----------
+        aspect: Optional[float]
+            Aspect ration of the color bar.
+        anchor: Optional[Tuple[float, float]]
+            Anchor point for the color bar.
+        panchor: Optional[Tuple[float, float]]
+        shrink: Optional[float]
+            Ration for shrinking the color bar.
+        label: Optional[str]
+            Label for the color bar.
+        label_rotation: Optional[int]
+            Rotation of the label.
+        label_fontsize: Optional[int]
+            Font size of the label.
+        labelpad: Optional[float]
+            How much padding should be added to the label.
+
+        Returns
+        -------
+        Simplex2D
+            A reference to the class object.
+
+        """
         cbar = plt.colorbar(self.stream.lines, aspect=aspect, anchor=anchor, panchor=panchor, shrink=shrink)
         cbar.set_label(label, rotation=label_rotation, fontsize=label_fontsize, labelpad=labelpad)
 
@@ -180,6 +346,26 @@ class Simplex2D:
 
     def draw_stationary_points(self, roots: List[Union[Tuple[float, float], np.ndarray]], stability: List[bool],
                                zorder: Optional[int] = 5, linewidth: Optional[float] = 3) -> SelfSimplex2D:
+        """
+        Draws the black circles for stable points and white circles for unstable ones.
+
+        Parameters
+        ----------
+        roots: List[Union[Tuple[float, float], numpy.ndarray]]
+            A list of arrays (or tuples) containing the cartesian coordinates of the roots.
+        stability: List[bool]
+            A list of boolean values indicating whether the root is stable.
+        zorder: Optional[int]
+            Indicates in which order these points should appear in the figure (above or below other plots).
+        linewidth: Optional[float]
+            Width of the border of the circles that represents the roots.
+
+        Returns
+        -------
+        Simplex2D
+            A reference to the class object.
+
+        """
         for i, stationary_point in enumerate(roots):
             if stability[i]:
                 facecolor = 'k'
@@ -189,10 +375,33 @@ class Simplex2D:
                                       edgecolor='k', facecolor=facecolor, zorder=zorder, linewidth=linewidth))
         return self
 
-    def add_vertex_labels(self, labels=Union[Tuple[str, str, str], List[str]], epsilon_bottom: Optional[float] = 0.05,
+    def add_vertex_labels(self, labels: Union[Tuple[str, str, str], List[str]], epsilon_bottom: Optional[float] = 0.05,
                           epsilon_top: Optional[float] = 0.05,
                           fontsize: Optional[float] = 16,
                           horizontalalignment: Optional[str] = 'center') -> SelfSimplex2D:
+        """
+        Adds labels to the vertices of the triangle that represents the 2-simplex.
+
+        Parameters
+        ----------
+        labels: Union[Tuple[str, str, str], List[str]]
+            A tuple or a list containing 3 strings that give name to the vertices of the triangle. The order is
+            bottom left corner, top corner, bottom right corner.
+        epsilon_bottom: Optional[float]
+            How much separation should the label have from the bottom vertices
+        epsilon_top: Optional[float]
+            How much separation should the label have from the top vertex.
+        fontsize: Optional[float]
+            Font size for the labels.
+        horizontalalignment: Optional[str]
+            Horizontal alignment for the label text.
+
+        Returns
+        -------
+        Simplex2D
+            A reference to the current object.
+
+        """
         self.ax.annotate(labels[0], self.corners[0], xytext=self.corners[0] + np.array([-epsilon_bottom, 0.0]),
                          horizontalalignment=horizontalalignment, va='center', fontsize=fontsize)
         self.ax.annotate(labels[1], self.corners[1], xytext=self.corners[1] + np.array([0.0, epsilon_top + 0.02]),
@@ -206,6 +415,33 @@ class Simplex2D:
                           trajectory_length: Optional[int] = 15, step: Optional[float] = 0.01,
                           color: Optional[Union[str, Tuple[int, int, int]]] = 'whitesmoke',
                           ms: Optional[float] = 0.5, zorder: Optional[int] = 0) -> SelfSimplex2D:
+        """
+        Draws trajectories inside the unit simplex starting from random initial points.
+
+        Parameters
+        ----------
+        f: Callable[[np.ndarray, int], np.ndarray]
+            Function that can calculate the gradient at any point in the simplex.
+        nb_trajectories: int
+            Number of trajectories to draw.
+        trajectory_length: Optional[int]
+            Length of the trajectory. This is used to calculate the amount of points odeint should calculate.
+        step: Optional[float]
+            The step size in time to get to the maximum trajectory length. Together with trajectory_length
+            this indicates the amount of points odeint should calculate.
+        color: Optional[Union[str, Tuple[int, int, int]]]
+            The color of the points of the trajectory.
+        ms: Optional[float]
+            The size of the points.
+        zorder: Optional[int]
+            The order in which this plot should appear in the figure (above or bellow other plots).
+
+        Returns
+        -------
+        Simplex2D
+            A reference to the current object.
+
+        """
         if self.discrete:
             if nb_trajectories > self.nb_states:
                 nb_trajectories = self.nb_states
@@ -234,6 +470,44 @@ class Simplex2D:
                                     arrowsize: Optional[int] = 50,
                                     position: Optional[int] = None,
                                     arrowdirection: Optional[str] = 'right') -> SelfSimplex2D:
+        """
+        Draws trajectories inside the unit simplex starting from the indicated points.
+
+        Parameters
+        ----------
+        f: Callable[[np.ndarray, int], np.ndarray]
+            Function that can calculate the gradient at any point in the simplex.
+        points: List[np.ndarray[np.float64[3,m]]
+            A list of points in barycentric coordinates from which the trajectories should start.
+        trajectory_length: Optional[int]
+            Length of the trajectory. This is used to calculate the amount of points odeint should calculate.
+        step: Optional[float]
+            The step size in time to get to the maximum trajectory length. Together with trajectory_length
+            this indicates the amount of points odeint should calculate.
+        color: Optional[Union[str, Tuple[int, int, int]]]
+            The color of the points of the trajectory.
+        linewidth: Optional[float] = 0.5
+            Width of the line to be plot.
+        zorder: Optional[int]
+            The order in which this plot should appear in the figure (above or bellow other plots).
+        draw_arrow: Optional[bool]
+            Indicates whether to draw an arrow along the trajectory.
+        arrowstyle: Optional[str]
+            Indicates the style of the arrow to be plotted.
+        arrowsize: Optional[int]
+            The size of the arrow.
+        position: Optional[int]
+            Where should the arrow be pltoted.
+        arrowdirection: Optional[str]
+            Indicates whether the arrow should be plotted in the direction of the advancing trajectory (right) or
+            the opposite.
+
+        Returns
+        -------
+        Simplex2D
+            A reference to the current object.
+        """
+
         for i, point in enumerate(points):
             x = odeint(f, point, np.arange(0, trajectory_length, step), full_output=False)
 
@@ -247,7 +521,7 @@ class Simplex2D:
         return self
 
     def draw_trajectory_from_roots(self, f: Callable[[np.ndarray, int], np.ndarray], roots: List[np.ndarray],
-                                   stability: List[np.ndarray],
+                                   stability: List[bool],
                                    trajectory_length: Optional[int] = 15, step: Optional[float] = 0.1,
                                    perturbation: Optional[Union[int, float]] = 0.01,
                                    color: Optional[Union[str, Tuple[int, int, int]]] = 'k',
@@ -256,6 +530,48 @@ class Simplex2D:
                                    arrowsize: Optional[int] = 50,
                                    position: Optional[int] = None,
                                    arrowdirection: Optional[str] = 'right') -> SelfSimplex2D:
+        """
+        Draws trajectories inside the unit simplex starting from the stationary points.
+
+        Parameters
+        ----------
+        f: Callable[[np.ndarray, int], np.ndarray]
+            Function that can calculate the gradient at any point in the simplex.
+        roots: List[np.ndarray[np.float64[3,m]]
+            A list of points in barycentric coordinates from which the trajectories should start.
+        stability: List[bool]
+            Indicates whether the root is a stable or unstable point.
+        trajectory_length: Optional[int]
+            Length of the trajectory. This is used to calculate the amount of points odeint should calculate.
+        step: Optional[float]
+            The step size in time to get to the maximum trajectory length. Together with trajectory_length
+            this indicates the amount of points odeint should calculate.
+        perturbation: Optional[Union[int, float]]
+            Indicates how much perturbation should be applied to the root to start drawing the trajectory.
+            If no perturbation is applied, since the gradient is 0, the system will never leave the root.
+        color: Optional[Union[str, Tuple[int, int, int]]]
+            The color of the points of the trajectory.
+        linewidth: Optional[float] = 0.5
+            Width of the line to be plot.
+        zorder: Optional[int]
+            The order in which this plot should appear in the figure (above or bellow other plots).
+        draw_arrow: Optional[bool]
+            Indicates whether to draw an arrow along the trajectory.
+        arrowstyle: Optional[str]
+            Indicates the style of the arrow to be plotted.
+        arrowsize: Optional[int]
+            The size of the arrow.
+        position: Optional[int]
+            Where should the arrow be pltoted.
+        arrowdirection: Optional[str]
+            Indicates whether the arrow should be plotted in the direction of the advancing trajectory (right) or
+            the opposite.
+
+        Returns
+        -------
+        Simplex2D
+            A reference to the current object.
+        """
         if self.discrete:
             if type(perturbation) is float:
                 perturbation = 1
@@ -303,6 +619,36 @@ class Simplex2D:
                             s: Optional[Union[float, ArrayLike]] = 0.1,
                             color: Optional[Union[str, Tuple[int, int, int]]] = 'whitesmoke',
                             marker: Optional[str] = '.', zorder: Optional[int] = 0) -> SelfSimplex2D:
+        """
+        Draws a series of point which follows trajectories in the simplex starting from random points.
+
+        The visual effect is as if there were shadows in the direction of the gradient.
+
+        Parameters
+        ----------
+        f: Callable[[np.ndarray, int], np.ndarray]
+            Function that can calculate the gradient at any point in the simplex.
+        nb_trajectories: int
+            Number of trajectories to draw.
+        trajectory_length: Optional[int]
+            Length of the trajectory. This is used to calculate the amount of points odeint should calculate.
+        step: Optional[float]
+            The step size in time to get to the maximum trajectory length. Together with trajectory_length
+            this indicates the amount of points odeint should calculate.
+        s: Optional[Union[str, Tuple[int, int, int]]]
+            Size of the points.
+        color: Optional[Union[str, Tuple[int, int, int]]]
+            The color of the points of the trajectory.
+        marker: Optional[str]
+            Style of the points to be drawn. See matplotlib markers.
+        zorder: Optional[int]
+            The order in which this plot should appear in the figure (above or bellow other plots).
+
+        Returns
+        -------
+        Simplex2D
+            A reference to the current object.
+        """
 
         if self.discrete:
             if nb_trajectories > self.nb_states:
@@ -325,10 +671,12 @@ class Simplex2D:
         return self
 
     def draw_stationary_distribution(self, stationary_distribution: np.ndarray,
-                                     cmap: Union[str, matplotlib.colors.Colormap] = 'binary',
-                                     shading: str = 'gouraud',
-                                     alpha: float = 1., edgecolors: str = 'grey', vmin=None, vmax=None, zorder=0,
-                                     colorbar=True,
+                                     cmap: Optional[Union[str, matplotlib.colors.Colormap]] = 'binary',
+                                     shading: Optional[str] = 'gouraud',
+                                     alpha: Optional[float] = 1., edgecolors: Optional[str] = 'grey',
+                                     vmin: Optional[float] = None, vmax: Optional[float] = None,
+                                     zorder: Optional[int] = 0,
+                                     colorbar: Optional[bool] = True,
                                      aspect: Optional[float] = 10,
                                      anchor: Optional[Tuple[float, float]] = (-0.5, 0.5),
                                      panchor: Optional[Tuple[float, float]] = (0, 0),
@@ -337,6 +685,53 @@ class Simplex2D:
                                      label_rotation: Optional[int] = 270,
                                      label_fontsize: Optional[int] = 16,
                                      labelpad: Optional[float] = 20):
+        """
+        Draws the stationary distribution inside the simplex using a matplotlib.pyplot.tripcolor
+
+        Parameters
+        ----------
+        stationary_distribution: numpy.ndarray
+            An array containing the values of the stationary distribution. The order of these points
+            must follow the order given by egttools.sample_simplex when iterating from 0-nb_states.
+        cmap: Optional[Union[str, matplotlib.colors.Colormap]]
+            Color map to be used.
+        shading: Optional[str]
+            Type of shading to be used in the plot. Can be either "gouraud" or "flat".
+        alpha: Optional[float]
+            The level of transparency.
+        edgecolors: Optional[str]
+            The colors of the edges of the triangular grid.
+        vmin: Optional[flaot]
+            The minimum value to take into account for the color range to plot.
+        vmax: Optional[float]
+            The maximum value to take into account for the color range to plot.
+        zorder: Optional[int]
+            The order in which this plot should appear in the figure (above or bellow other plots).
+        colorbar: Optional[bool] = True
+            Indicates whether to add a color bar to the plot.
+        aspect: Optional[float]
+            The aspect ration of the color bar.
+        anchor: Optional[Tuple[float, float]]
+            The anchor of the color bar.
+        panchor: Optional[Tuple[float, float]]
+            The panchor of the colorbar
+        shrink: Optional[float]
+            Ratio of shrinking the color bar.
+        label: Optional[str]
+            Label of the color bar.
+        label_rotation: Optional[int]
+            Rotation of the label.
+        label_fontsize: Optional[int]
+            Font size of the label.
+        labelpad: Optional[float]
+            How much padding should be added to the label.
+
+
+        Returns
+        -------
+        Simplex2D
+            A reference to the current object
+        """
         if not self.discrete:
             raise Exception("The stationary distribution only exists in Finite populations modeled as a Markov Chain.")
 
