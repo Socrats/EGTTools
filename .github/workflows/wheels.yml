@@ -121,7 +121,7 @@ jobs:
         uses: jwlawson/actions-setup-cmake@v1.11
 
       - name: Build and test wheels
-        uses: pypa/cibuildwheel@v2.2.2
+        uses: pypa/cibuildwheel@v2.3.0
         env:
           CIBW_BUILD_FRONTEND: "build"
           CIBW_BUILD: "cp*-${{ matrix.cibw-arch }}"
@@ -156,7 +156,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: rtd-wheel
-          path: wheelhouse/egttools-*-cp38-cp38-*manylinux2010_x86_64*.whl
+          path: wheelhouse/egttools-*-cp38-cp38-*manylinux2014_x86_64*.whl
           if-no-files-found: error
 
       - name: Setup tmate session
@@ -198,7 +198,7 @@ jobs:
         run: |
           echo "::set-output name=version::${GITHUB_REF##refs/tags/v}"
       - name: Upload sdist and wheels to release
-        uses: ncipollo/release-action@v1.8.10
+        uses: ncipollo/release-action@v1.9.0
         with:
           name: ${{ steps.get_version.outputs.version }}
           draft: true
