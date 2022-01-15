@@ -296,7 +296,15 @@ PYBIND11_MODULE(numerical, m) {
                  py::arg("player_type"), py::arg("pop_size"), py::arg("strategies"))
             .def("__str__", &egttools::FinitePopulations::AbstractGame::toString)
             .def("type", &egttools::FinitePopulations::AbstractGame::type, "returns the type of game.")
-            .def("payoffs", &egttools::FinitePopulations::AbstractGame::payoffs, "returns the payoff matrix of the game.")
+            .def("payoffs", &egttools::FinitePopulations::AbstractGame::payoffs,
+                 R"pbdoc(
+                    Returns the payoff matrix of the game.
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        The payoff matrix.
+                    )pbdoc")
             .def("payoff", &egttools::FinitePopulations::AbstractGame::payoff,
                  R"pbdoc(
                     Returns the payoff of a strategy given a group composition.
@@ -511,7 +519,7 @@ PYBIND11_MODULE(numerical, m) {
                  R"pbdoc(
                     Normal Form Game. This constructor assumes that there are only two possible strategies and two possible actions.
 
-                    This method will run the game using the players and player types defined in :param group_composition,
+                    This class will run the game using the players and player types defined in :param group_composition,
                     and will update the vector :param game_payoffs with the resulting payoff of each player.
 
                     Parameters
@@ -523,7 +531,10 @@ PYBIND11_MODULE(numerical, m) {
 
                     See Also
                     --------
-                    egttools.games.AbstractGame
+                    egttools.games.AbstractGame,
+                    egttools.games.CRDGame,
+                    egttools.games.CRDGameTU,
+                    egttools.behaviors.NormalForm.TwoActions
                     )pbdoc",
                  py::arg("nb_rounds"),
                  py::arg("payoff_matrix"))
@@ -547,24 +558,110 @@ PYBIND11_MODULE(numerical, m) {
                     )pbdoc",
                  py::arg("nb_rounds"),
                  py::arg("payoff_matrix"), py::arg("strategies"), py::return_value_policy::reference_internal)
-            .def("play", &egttools::FinitePopulations::NormalFormGame::play)
+            .def("play", &egttools::FinitePopulations::NormalFormGame::play,
+                 R"pbdoc(
+                    Updates the vector of payoffs with the payoffs of each player after playing the game.
+
+                    This method will run the game using the players and player types defined in :param group_composition,
+                    and will update the vector :param game_payoffs with the resulting payoff of each player.
+
+                    Parameters
+                    ----------
+                    group_composition : List[int]
+                        A list with counts of the number of players of each strategy in the group.
+                    game_payoffs : List[float]
+                        A list used as container for the payoffs of each player
+                    )pbdoc",
+                 py::arg("group_composition"), py::arg("game_payoffs"))
             .def("calculate_payoffs", &egttools::FinitePopulations::NormalFormGame::calculate_payoffs,
-                 "updates the internal payoff and coop_level matrices by calculating the payoff of each strategy "
-                 "given any possible strategy pair")
+                 R"pbdoc(
+                    Estimates the payoffs for each strategy and returns the values in a matrix.
+                    Each row of the matrix represents a strategy and each column a game state.
+                    E.g., in case of a 2 player game, each entry a_ij gives the payoff for strategy
+                    i against strategy j. In case of a group game, each entry a_ij gives the payoff
+                    of strategy i for game state j, which represents the group composition.
+
+                    This method also updates a matrix that stores the cooperation level of each strategy
+                    against any other.
+
+                    Returns
+                    -------
+                    numpy.ndarray[numpy.float64[m, n]]
+                        A matrix with the expected payoffs for each strategy given each possible game
+                        state.
+                    )pbdoc")
             .def("calculate_fitness", &egttools::FinitePopulations::NormalFormGame::calculate_fitness,
-                 "calculates the fitness of an individual of a given strategy given a population state."
-                 "It always assumes that the population state does not contain the current individual",
+                 R"pbdoc(
+                    Estimates the fitness for a player_type in the population with state :param strategies.
+
+                    This function assumes that the player with strategy player_type is not included in
+                    the vector of strategy counts strategies.
+
+                    Parameters
+                    ----------
+                    player_type : int
+                        The index of the strategy used by the player.
+                    pop_size : int
+                        The size of the population.
+                    strategies : numpy.ndarray[numpy.uint64[m, 1]]
+                        A vector of counts of each strategy. The current state of the population.
+
+                    Returns
+                    -------
+                    float
+                        The fitness of the strategy in the population state given by strategies.
+                    )pbdoc",
                  py::arg("player_strategy"),
-                 py::arg("pop_size"), py::arg("population_state"))
+                 py::arg("population_size"), py::arg("population_state"))
             .def("calculate_cooperation_rate", &egttools::FinitePopulations::NormalFormGame::calculate_cooperation_level,
-                 "calculates the rate/level of cooperation in the population at a given state.",
+                 R"pbdoc(
+                    Calculates the rate/level of cooperation in the population at a given population state.
+
+                    Parameters
+                    ----------
+                    population_size : int
+                        The size of the population.
+                    population_state : numpy.ndarray[numpy.uint64[m, 1]]
+                        A vector of counts of each strategy in the population.
+                        The current state of the population.
+
+                    Returns
+                    -------
+                    float
+                        The level of cooperation at the population_state.
+                    )pbdoc",
                  py::arg("population_size"), py::arg("population_state"))
             .def("__str__", &egttools::FinitePopulations::NormalFormGame::toString)
             .def("type", &egttools::FinitePopulations::NormalFormGame::type)
-            .def("payoffs", &egttools::FinitePopulations::NormalFormGame::payoffs)
+            .def("payoffs", &egttools::FinitePopulations::NormalFormGame::payoffs,
+                 R"pbdoc(
+                    Returns the payoff matrix of the game.
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        The payoff matrix.
+                    )pbdoc")
             .def("payoff", &egttools::FinitePopulations::NormalFormGame::payoff,
-                 "returns the payoff of a strategy given a strategy pair.", py::arg("strategy"),
-                 py::arg("strategy pair"))
+                 R"pbdoc(
+                    Returns the payoff of a strategy given a strategy pair.
+
+                    If the group composition does not include the strategy, the payoff should be zero.
+
+                    Parameters
+                    ----------
+                    strategy : int
+                        The index of the strategy used by the player.
+                    strategy_pair : List[int]
+                        List with the group composition. The structure of this list
+                        depends on the particular implementation of this abstract method.
+
+                    Returns
+                    -------
+                    float
+                        The payoff value.
+                    )pbdoc", py::arg("strategy"),
+                 py::arg("strategy_pair"))
             .def("expected_payoffs", &egttools::FinitePopulations::NormalFormGame::expected_payoffs, "returns the expected payoffs of each strategy vs another")
             .def("nb_strategies", &egttools::FinitePopulations::NormalFormGame::nb_strategies,
                  "Number of different strategies which are playing the game.")
@@ -575,7 +672,14 @@ PYBIND11_MODULE(numerical, m) {
             .def_property_readonly("strategies", &egttools::FinitePopulations::NormalFormGame::strategies,
                                    "A list with pointers to the strategies that are playing the game.")
             .def("save_payoffs", &egttools::FinitePopulations::NormalFormGame::save_payoffs,
-                 "Saves the payoff matrix in a txt file.");
+                 R"pbdoc(
+                    Stores the payoff matrix in a txt file.
+
+                    Parameters
+                    ----------
+                    file_name : str
+                        Name of the file in which the data will be stored.
+                    )pbdoc");
 
     py::class_<egttools::FinitePopulations::CRDGame, egttools::FinitePopulations::AbstractGame>(mGames, "CRDGame")
             .def(py::init(&egttools::init_crd_game_from_python_list),
@@ -616,13 +720,57 @@ PYBIND11_MODULE(numerical, m) {
                  py::arg("group_size"),
                  py::arg("risk"),
                  py::arg("strategies"), py::return_value_policy::reference_internal)
-            .def("play", &egttools::FinitePopulations::CRDGame::play)
+            .def("play", &egttools::FinitePopulations::CRDGame::play,
+                 R"pbdoc(
+                    Updates the vector of payoffs with the payoffs of each player after playing the game.
+
+                    This method will run the game using the players and player types defined in :param group_composition,
+                    and will update the vector :param game_payoffs with the resulting payoff of each player.
+
+                    Parameters
+                    ----------
+                    group_composition : List[int]
+                        A list with counts of the number of players of each strategy in the group.
+                    game_payoffs : List[float]
+                        A list used as container for the payoffs of each player
+                    )pbdoc")
             .def("calculate_payoffs", &egttools::FinitePopulations::CRDGame::calculate_payoffs,
-                 "updates the internal payoff and coop_level matrices by calculating the payoff of each strategy "
-                 "given any possible strategy pair")
+                 R"pbdoc(
+                    Estimates the payoffs for each strategy and returns the values in a matrix.
+                    Each row of the matrix represents a strategy and each column a game state.
+                    Therefore, each entry a_ij gives the payoff
+                    of strategy i for game state j, which represents the group composition.
+
+                    It also updates the coop_level matrices by calculating level of cooperation
+                    at any given population state
+
+                    Returns
+                    -------
+                    numpy.ndarray[numpy.float64[m, n]]
+                        A matrix with the expected payoffs for each strategy given each possible game
+                        state.
+                    )pbdoc")
             .def("calculate_fitness", &egttools::FinitePopulations::CRDGame::calculate_fitness,
-                 "calculates the fitness of an individual of a given strategy given a population state."
-                 "It always assumes that the population state does not contain the current individual",
+                 R"pbdoc(
+                    Estimates the fitness for a player_type in the population with state :param strategies.
+
+                    This function assumes that the player with strategy player_type is not included in
+                    the vector of strategy counts strategies.
+
+                    Parameters
+                    ----------
+                    player_strategy : int
+                        The index of the strategy used by the player.
+                    pop_size : int
+                        The size of the population.
+                    population_state : numpy.ndarray[numpy.uint64[m, 1]]
+                        A vector of counts of each strategy. The current state of the population.
+
+                    Returns
+                    -------
+                    float
+                        The fitness of the strategy in the population state given by strategies.
+                    )pbdoc",
                  py::arg("player_strategy"),
                  py::arg("pop_size"), py::arg("population_state"))
             .def("calculate_population_group_achievement", &egttools::FinitePopulations::CRDGame::calculate_population_group_achievement,
@@ -641,10 +789,36 @@ PYBIND11_MODULE(numerical, m) {
                  py::arg("population_size"), py::arg("population_state"))
             .def("__str__", &egttools::FinitePopulations::CRDGame::toString)
             .def("type", &egttools::FinitePopulations::CRDGame::type)
-            .def("payoffs", &egttools::FinitePopulations::CRDGame::payoffs, "returns the expected payoffs of each strategy vs each possible game state")
+            .def("payoffs", &egttools::FinitePopulations::CRDGame::payoffs,
+                 R"pbdoc(
+                    Returns the expected payoffs of each strategy vs each possible game state.
+
+                    Returns
+                    -------
+                    numpy.ndarray[np.float64[m,n]]
+                        The payoff matrix.
+                    )pbdoc")
             .def("payoff", &egttools::FinitePopulations::CRDGame::payoff,
-                 "returns the payoff of a strategy given a group composition.", py::arg("strategy"),
-                 py::arg("strategy pair"))
+                 R"pbdoc(
+                    Returns the payoff of a strategy given a group composition.
+
+                    If the group composition does not include the strategy, the payoff should be zero.
+
+                    Parameters
+                    ----------
+                    strategy : int
+                        The index of the strategy used by the player.
+                    group_composition : List[int]
+                        List with the group composition. The structure of this list
+                        depends on the particular implementation of this abstract method.
+
+                    Returns
+                    -------
+                    float
+                        The payoff value.
+                    )pbdoc",
+                 py::arg("strategy"),
+                 py::arg("group_composition"))
             .def_property_readonly("group_achievement_per_group", &egttools::FinitePopulations::CRDGame::group_achievements)
             .def("nb_strategies", &egttools::FinitePopulations::CRDGame::nb_strategies,
                  "Number of different strategies which are playing the game.")
