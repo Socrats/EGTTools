@@ -5,7 +5,7 @@ authors:
     given-names: "Elias"
     orcid: "https://orcid.org/0000-0002-4717-7984"
 title: "EGTtools"
-version: 0.1.7-dev1
+version: v0.1.8
 date-released: 2022-15-01
 url: "https://github.com/Socrats/EGTTools"
 license: GPL-3.0-or-later
