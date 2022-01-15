@@ -1,4 +1,5 @@
 include *.md
+include CITATION.cff
 include LICENSE
 
 include MANIFEST.in
@@ -7,7 +8,6 @@ include setup.cfg
 include setup.py
 include .clang-format
 include environment.yml
-include CITATION.cff
 
 include CMakeLists.txt
 include requirements.txt
