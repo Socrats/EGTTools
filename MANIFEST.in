@@ -7,6 +7,7 @@ include setup.cfg
 include setup.py
 include .clang-format
 include environment.yml
+include CITATION.cff
 
 include CMakeLists.txt
 include requirements.txt
