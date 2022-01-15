@@ -25,7 +25,6 @@ import numpy as np
 import numpy.typing as npt
 from scipy.sparse import lil_matrix
 from scipy.stats import hypergeom, multivariate_hypergeom
-from functools import lru_cache
 from itertools import permutations
 from typing import Tuple, Optional
 from egttools import sample_simplex, calculate_nb_states, calculate_state
@@ -95,7 +94,6 @@ class StochDynamics:
             self.fitness = self.fitness_pair
             self.full_fitness = self.full_fitness_difference_pairwise
 
-    @lru_cache
     def fitness_pair(self, x: int, i: int, j: int, *args: Optional[list]) -> float:
         """
         Calculates the fitness of strategy i versus strategy j, in
@@ -155,7 +153,6 @@ class StochDynamics:
 
         return (fitness_i - fitness_j) / (self.Z - 1)
 
-    @lru_cache
     def fitness_group(self, x: int, i: int, j: int, *args: Optional[list]) -> float:
         """
         In a population of x i-strategists and (Z-x) j strategists, where players
