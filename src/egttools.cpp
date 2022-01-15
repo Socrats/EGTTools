@@ -606,8 +606,9 @@ PYBIND11_MODULE(numerical, m) {
 
                     See Also
                     --------
-                    egttools.games.AbstractGame
-                    egttools.games.NormalFormGame
+                    egttools.games.AbstractGame,
+                    egttools.games.NormalFormGame,
+                    egttools.behaviors.CRD.AbstractCRDStrategy
                     )pbdoc",
                  py::arg("endowment"),
                  py::arg("threshold"),
