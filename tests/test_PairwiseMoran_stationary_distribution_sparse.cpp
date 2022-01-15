@@ -57,7 +57,7 @@ int main() {
 
     auto start = high_resolution_clock::now();
 
-    auto dist = smProcess.estimate_stationary_distribution_sparse(1, 1000000, 1000, 10, 1e-3);
+    auto dist = smProcess.estimate_stationary_distribution_sparse(5, 1000000, 1000, 10, 1e-3);
 
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
