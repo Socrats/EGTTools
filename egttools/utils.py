@@ -202,7 +202,7 @@ def calculate_stationary_distribution(transition_matrix: np.ndarray) -> np.ndarr
 
     """
     # calculate stationary distributions using eigenvalues and eigenvectors
-    eigenvalues, eigenvectors = np.eig(transition_matrix)
+    eigenvalues, eigenvectors = np.linalg.eig(transition_matrix)
     index_stationary = np.argmin(abs(eigenvalues - 1.0))  # look for the element closest to 1 in the list of eigenvalues
     sd = abs(eigenvectors[:, index_stationary].T.real)  # it is essential to access the matrix by column
     return sd / sd.sum()  # normalize
