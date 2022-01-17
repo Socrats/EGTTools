@@ -26,7 +26,8 @@ from typing import Optional, Tuple, List, Union, Callable, TypeVar
 from numpy.typing import ArrayLike
 from egttools.numerical import (sample_unit_simplex, sample_simplex, calculate_nb_states, )
 from egttools.plotting.helpers import (barycentric_to_xy_coordinates, perturb_state, add_arrow,
-                                       perturb_state_discrete, )
+                                       perturb_state_discrete, find_where_point_is_in_simplex,
+                                       xy_to_barycentric_coordinates)
 
 top_corner = np.sqrt(3) / 2
 side_slope = np.sqrt(3)
@@ -156,6 +157,7 @@ class Simplex2D:
         self.ax = None
         self.discrete = discrete
         self.size = size
+        self.random_drift_edges = []
 
         if discrete:
             self.nb_states = calculate_nb_states(self.size, 3)
@@ -189,6 +191,25 @@ class Simplex2D:
         else:
             self.figure, self.ax = plt.subplots(figsize=figsize)
 
+        return self
+
+    def add_edges_with_random_drift(self, random_drift_edges: List[Tuple[int, int]]) -> SelfSimplex2D:
+        """
+        Adds information to the class about which edges have random drift.
+
+        This will be used to avoid plotting a lot equilibria alongside an edge.
+
+        Parameters
+        ----------
+        random_drift_edges: List[Tuple[int, int]]
+            A list of tuples which indicate the (undirected) edges in which there is random drift.
+
+        Returns
+        -------
+        Simplex2D
+            The class object.
+        """
+        self.random_drift_edges = random_drift_edges
         return self
 
     def get_figure_and_axis(self) -> Tuple[plt.figure, plt.axis]:
@@ -233,7 +254,8 @@ class Simplex2D:
 
         return self
 
-    def draw_triangle(self, color: Optional[str] = 'k', linewidth: Optional[int] = 2) -> SelfSimplex2D:
+    def draw_triangle(self, color: Optional[str] = 'k', linewidth: Optional[int] = 2,
+                      linewidth_random_drift: Optional[int] = 4) -> SelfSimplex2D:
         """
         Draws the borders of a triangle enclosing the 2-simplex.
 
@@ -243,6 +265,8 @@ class Simplex2D:
             The color of the borders of the triangle.
         linewidth: Optional[int]
             The width of the borders of the triangle.
+        linewidth_random_drift: Optional[int]
+            The width of the dashed line that represents the edges with random drift.
 
         Returns
         -------
@@ -250,6 +274,10 @@ class Simplex2D:
             A refernece to the class object.
         """
         self.ax.triplot(self.triangle, color=color, linewidth=linewidth)
+        for edge in self.random_drift_edges:
+            self.ax.plot([self.corners[edge[0], 0], self.corners[edge[1], 0]],
+                         [self.corners[edge[0], 1], self.corners[edge[1], 1]], lw=linewidth_random_drift,
+                         linestyle='dashed', color=color)
         return self
 
     def draw_gradients(self, arrowsize: Optional[float] = 2,
@@ -345,7 +373,8 @@ class Simplex2D:
         return self
 
     def draw_stationary_points(self, roots: List[Union[Tuple[float, float], np.ndarray]], stability: List[bool],
-                               zorder: Optional[int] = 5, linewidth: Optional[float] = 3) -> SelfSimplex2D:
+                               zorder: Optional[int] = 5, linewidth: Optional[float] = 3,
+                               atol: Optional[float] = 1e-7) -> SelfSimplex2D:
         """
         Draws the black circles for stable points and white circles for unstable ones.
 
@@ -359,6 +388,8 @@ class Simplex2D:
             Indicates in which order these points should appear in the figure (above or below other plots).
         linewidth: Optional[float]
             Width of the border of the circles that represents the roots.
+        atol: Optional[float]
+            Tolerance to consider a value equal to 0. Used to check if a point is on an edge.
 
         Returns
         -------
@@ -367,6 +398,14 @@ class Simplex2D:
 
         """
         for i, stationary_point in enumerate(roots):
+            point = xy_to_barycentric_coordinates(stationary_point[0], stationary_point[1], self.corners)
+            place, _ = find_where_point_is_in_simplex(point)
+            if place == 1:
+                # First let's check if stationary point is in an edge with random drift
+                if np.isclose([point[3 - np.sum(edge)] for edge in self.random_drift_edges], 0.,
+                              atol=atol).any():
+                    continue
+
             if stability[i]:
                 facecolor = 'k'
             else:
@@ -529,7 +568,8 @@ class Simplex2D:
                                    draw_arrow: Optional[bool] = False, arrowstyle: Optional[str] = 'fancy',
                                    arrowsize: Optional[int] = 50,
                                    position: Optional[int] = None,
-                                   arrowdirection: Optional[str] = 'right') -> SelfSimplex2D:
+                                   arrowdirection: Optional[str] = 'right',
+                                   atol: Optional[float] = 1e-7) -> SelfSimplex2D:
         """
         Draws trajectories inside the unit simplex starting from the stationary points.
 
@@ -566,6 +606,8 @@ class Simplex2D:
         arrowdirection: Optional[str]
             Indicates whether the arrow should be plotted in the direction of the advancing trajectory (right) or
             the opposite.
+        atol: Optional[float]
+            Tolerance to consider a value equal to 0. Used to check if a point is on an edge of the simplex.
 
         Returns
         -------
@@ -577,6 +619,10 @@ class Simplex2D:
                 perturbation = 1
 
             for i, stationary_point in enumerate(roots):
+                # First let's check if stationary point is in an edge with random drift
+                if np.isclose([stationary_point[3 - np.sum(edge)] for edge in self.random_drift_edges], 0.,
+                              atol=atol).any():
+                    continue
                 if stability[i]:  # we don't plot arrows starting at stable points
                     continue
                 stationary_point_discrete = (stationary_point * self.size)
@@ -599,6 +645,10 @@ class Simplex2D:
                                   direction=arrowdirection)
         else:
             for i, stationary_point in enumerate(roots):
+                # First let's check if stationary point is in an edge with random drift
+                if np.isclose([stationary_point[3 - np.sum(edge)] for edge in self.random_drift_edges], 0.,
+                              atol=atol).any():
+                    continue
                 if stability[i]:  # we don't plot arrows starting at stable points
                     continue
                 states = perturb_state(stationary_point, perturbation=perturbation)
