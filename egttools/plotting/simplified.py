@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
+"""Simplified plotting functions"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -84,6 +86,7 @@ def plot_moran_dynamics_in_simplex(payoff_matrix: np.ndarray,
         Tuple[Simplex2D, Callable[[np.ndarray, int], np.ndarray], List[np.ndarray], List[np.ndarray], List[
             bool], StochDynamics]:
     """
+    Helper function to simplified the plotting of the moran dynamics in a 2 Simplex.
 
     Parameters
     ----------
