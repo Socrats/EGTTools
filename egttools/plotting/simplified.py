@@ -53,8 +53,10 @@ def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray, atol: Optiona
 
     Returns
     -------
-    Simplex2D
-        The simplex object which can be used to add more features to the plot.
+    A tuple with the simplex object which can be used to add more features to the plot, the function that
+    can be used to calculate gradients and should be passed to `Simplex2D.draw_trajectory_from_roots` and
+    `Simplex2D.draw_scatter_shadow`, a list of the roots in barycentric coordinates, a list of the roots in
+    cartesian coordinates and a list of booleans indicating whether the roots are stable.
 
     """
     simplex = Simplex2D()
@@ -109,8 +111,10 @@ def plot_moran_dynamics_in_simplex(payoff_matrix: np.ndarray,
 
     Returns
     -------
-    Simplex2D
-        The simplex object which can be used to add more features to the plot.
+    A tuple with the simplex object which can be used to add more features to the plot, the function that
+    can be used to calculate gradients and should be passed to `Simplex2D.draw_trajectory_from_roots` and
+    `Simplex2D.draw_scatter_shadow`, a list of the roots in barycentric coordinates, a list of the roots in
+    cartesian coordinates and a list of booleans indicating whether the roots are stable.
     """
     simplex = Simplex2D(discrete=True, size=population_size, nb_points=population_size + 1)
     simplex.add_axis(figsize, ax)
