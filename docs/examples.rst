@@ -10,6 +10,7 @@ The following examples give an idea of how to use EGTtools to model social dynam
     examples/normal_form_game_mc_simulations
     examples/plot_invasion_diagram
     examples/plot_simplex
+    examples/plot_simplex_simplified
 
 
 Projects using EGTtools

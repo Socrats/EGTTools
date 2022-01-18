@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021  Elias Fernandez
+# Copyright (c) 2019-2022  Elias Fernandez
 #
 # This file is part of EGTtools.
 #
@@ -29,13 +29,12 @@ from egttools.plotting.helpers import (barycentric_to_xy_coordinates, perturb_st
                                        perturb_state_discrete, find_where_point_is_in_simplex,
                                        xy_to_barycentric_coordinates)
 
-top_corner = np.sqrt(3) / 2
-side_slope = np.sqrt(3)
-
 SelfSimplex2D = TypeVar("SelfSimplex2D", bound="Simplex2D")
 
 
 class Simplex2D:
+    top_corner = np.sqrt(3) / 2
+    side_slope = np.sqrt(3)
     corners = np.array([
         [0, 0],
         [1 / 2, top_corner],
@@ -243,13 +242,13 @@ class Simplex2D:
         self.Ux = u.copy()
         self.Uy = v.copy()
 
-        self.Ux = np.where(self.X >= self.Y / side_slope, self.Ux, np.nan)
-        self.Ux = np.where(self.Y <= -side_slope * self.X + side_slope, self.Ux, np.nan)
-        self.Ux = np.where(self.Y <= top_corner, self.Ux, np.nan)
+        self.Ux = np.where(self.X >= self.Y / self.side_slope, self.Ux, np.nan)
+        self.Ux = np.where(self.Y <= -self.side_slope * self.X + self.side_slope, self.Ux, np.nan)
+        self.Ux = np.where(self.Y <= self.top_corner, self.Ux, np.nan)
         self.Ux = np.where(self.Y > 0, self.Ux, np.nan)
-        self.Uy = np.where(self.X >= self.Y / side_slope, self.Uy, np.nan)
-        self.Uy = np.where(self.Y <= -side_slope * self.X + side_slope, self.Uy, np.nan)
-        self.Uy = np.where(self.Y <= top_corner, self.Uy, np.nan)
+        self.Uy = np.where(self.X >= self.Y / self.side_slope, self.Uy, np.nan)
+        self.Uy = np.where(self.Y <= -self.side_slope * self.X + self.side_slope, self.Uy, np.nan)
+        self.Uy = np.where(self.Y <= self.top_corner, self.Uy, np.nan)
         self.Uy = np.where(self.Y > 0, self.Uy, np.nan)
 
         return self

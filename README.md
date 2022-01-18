@@ -274,52 +274,32 @@ ax.set_xscale('log')
 
 ### Plotting the dynamics in a 2 Simplex
 
-EGTtools can also be used to visualize the evolutionary dynamics in a 2 Simplex. In the example bellow, we first
-instantiate the Simplex2D class. It will generate a grid that can be used for plotting. We then calculate the gradient
-of selection for every point in the grid. The method `Simplex2D.apply_simplex_boundaries_to_gradients` will
-make sure that only the points inside the unit simplex are plotted.
+EGTtools can also be used to visualize the evolutionary dynamics in a 2 Simplex. In the example bellow, we use the
+`egttools.plotting.plot_replicator_dynamics_in_simplex` which calculates the gradients on a simplex given an initial
+payoff matrix and returns a `egttools.plotting.Simplex2D` object which can be used to plot the 2 Simplex.
 
 ```python
 import numpy as np
-from egttools.plotting.helpers import (xy_to_barycentric_coordinates,
-                                       calculate_stationary_points, calculate_stability)
-from egttools.helpers.vectorized import (vectorized_replicator_equation,
-                                         vectorized_barycentric_to_xy_coordinates)
-from egttools.analytical import replicator_equation
-from egttools.plotting import Simplex2D
-
-simplex = Simplex2D()
+import matplotlib.pyplot as plt
+from egttools.plotting import plot_replicator_dynamics_in_simplex
 
 payoffs = np.array([[1, 0, 0],
                     [0, 2, 0],
                     [0, 0, 3]])
-
-v = np.asarray(xy_to_barycentric_coordinates(simplex.X, simplex.Y, simplex.corners))
-results = vectorized_replicator_equation(v, payoffs)
-xy_results = vectorized_barycentric_to_xy_coordinates(results, simplex.corners)
-Ux = xy_results[:, :, 0].astype(np.float64)
-Uy = xy_results[:, :, 1].astype(np.float64)
-calculate_gradients = lambda u: replicator_equation(u, payoffs)
-roots, roots_xy = calculate_stationary_points(simplex.trimesh.x, simplex.trimesh.y,
-                                              simplex.corners, calculate_gradients)
-stability = calculate_stability(roots, calculate_gradients)
 type_labels = ['A', 'B', 'C']
-```
-
-Finally, once we have calculated the gradients `Ux` and `Uy`, we can plot a simplex with:
-
-```python
-import matplotlib.pyplot as plt
 
 fig, ax = plt.subplots(figsize=(10, 8))
+
+simplex, gradient_function, \
+    roots, roots_xy, stability = plot_replicator_dynamics_in_simplex(payoffs, ax=ax)
+
 plot = (simplex.add_axis(ax=ax)
-        .apply_simplex_boundaries_to_gradients(Ux, Uy)
         .draw_triangle()
         .draw_gradients(zorder=0)
         .add_colorbar()
-        .draw_stationary_points(roots_xy, stability)
         .add_vertex_labels(type_labels)
-        .draw_trajectory_from_roots(lambda u, t: replicator_equation(u, payoffs),
+        .draw_stationary_points(roots_xy, stability)
+        .draw_trajectory_from_roots(gradient_function,
                                     roots,
                                     stability,
                                     trajectory_length=15,
@@ -328,15 +308,23 @@ plot = (simplex.add_axis(ax=ax)
                                     color='k', draw_arrow=True,
                                     arrowdirection='right',
                                     arrowsize=30, zorder=4, arrowstyle='fancy')
-        .draw_scatter_shadow(lambda u, t: replicator_equation(u, payoffs),
-                             300, color='gray',
-                             marker='.', s=0.1, zorder=0)
+        .draw_scatter_shadow(gradient_function, 300, color='gray', marker='.', s=0.1, zorder=0)
+        )
+
+ax.axis('off')
+ax.set_aspect('equal')
+
+plt.xlim((-.05, 1.05))
+plt.ylim((-.02, simplex.top_corner + 0.05))
+plt.show()
 ```
 
 ![2 Simplex dynamics in infinite populations](docs/images/simplex_example_infinite_pop_1.png)
 
-The same can be done for finite populations, with the added possibility to plot the stationary distribution
-inside the triangle (see [this notebook](docs/examples/plot_simplex.ipynb) for a more in depth example).
+The same can be done for finite populations, with the added possibility to plot the stationary distribution inside the
+triangle (see [simplex plotting](docs/examples/plot_simplex.ipynb)
+and [simplified simplex plotting](docs/examples/plot_simplex_simplified.ipynb)
+for a more in depth examples).
 
 ## Documentation
 
