@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres
 to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.9-patch2] - 26-01-2022
+
+### Fixed
+
+- This release fixes an issue with a modulo operation that was causing an index error when calculating stability for
+  plotting dynamics on a simplex.
+
+## [0.1.9-patch1] - 19-01-2022
+
+### Fixed
+
+- This release fixes an issue with CITATION.cff which prevented zenodo from publishing a new doi.
+
 ## [0.1.9] - 18-01-2022
 
 ### Added
