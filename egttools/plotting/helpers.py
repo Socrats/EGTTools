@@ -182,7 +182,7 @@ def calculate_stability(roots: List[np.ndarray], f: Callable[[np.ndarray], np.nd
                         if grad[vertex] > 0.:
                             unstable = True
                             break
-                        tmp[vertex + 1 % 3] += 0.1
+                        tmp[(vertex + 1) % 3] += 0.1
                     tmp[vertex] -= 0.1
                 if stationary_point[vertex] - 0.1 >= 0.:
                     tmp[vertex] -= 0.1
