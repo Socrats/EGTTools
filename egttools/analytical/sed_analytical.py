@@ -219,15 +219,15 @@ class StochDynamics:
 
         fitness_i, fitness_j = 0., 0.
         for state_index in range(self.nb_group_combinations):
-            group = sample_simplex(i, self.N, self.nb_strategies)
+            group = sample_simplex(state_index, self.N, self.nb_strategies)
             if group[i] > 0:
                 group[i] -= 1
                 fitness_i += self.payoffs[i, state_index] * rv_i.pmf(x=group)
                 group[i] += 1
             if group[j] > 0:
-                group[i] -= 1
+                group[j] -= 1
                 fitness_j += self.payoffs[j, state_index] * rv_j.pmf(x=group)
-                group[i] += 1
+                group[j] += 1
 
         return fitness_i - fitness_j
 
@@ -368,6 +368,7 @@ class StochDynamics:
         probabilities = np.outer(probability_selecting_strategy_first, probability_selecting_strategy_second)
         fitness = np.asarray([[self.full_fitness(i, j, population_state) for i in
                                range(len(population_state))] for j in range(len(population_state))])
+        fitness[np.isnan(fitness)] = 0
         return (probabilities * np.tanh((beta / 2) * fitness)).sum(axis=0) * (1 - self.mu) + self.mu
 
     def full_gradient_selection_without_mutation(self, population_state: np.ndarray, beta: float) -> np.ndarray:
@@ -394,6 +395,7 @@ class StochDynamics:
         probabilities = np.outer(probability_selecting_strategy_first, probability_selecting_strategy_second)
         fitness = np.asarray([[self.full_fitness(i, j, population_state) for i in
                                range(len(population_state))] for j in range(len(population_state))])
+        fitness[np.isnan(fitness)] = 0
 
         return (probabilities * np.tanh((beta / 2) * fitness)).sum(axis=0)
 
