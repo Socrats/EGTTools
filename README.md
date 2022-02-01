@@ -5,6 +5,7 @@
 [![DOI](https://zenodo.org/badge/242180332.svg)](https://zenodo.org/badge/latestdoi/242180332)
 [![Documentation Status](https://readthedocs.org/projects/egttools/badge/?version=latest)](https://egttools.readthedocs.io/en/latest/?badge=latest)
 [![Build](https://github.com/Socrats/EGTTools/actions/workflows/ci.yml/badge.svg)](https://github.com/Socrats/EGTTools/actions/workflows/ci.yml) [![Join the chat at https://gitter.im/EGTTools/community](https://badges.gitter.im/EGTTools/community.svg)](https://gitter.im/EGTTools/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Socrats/EGTTools/HEAD?labpath=docs%2Fexamples)
 
 **EGTtools** provides a centralized repository with analytical and numerical methods to study/model game theoretical
 problems under the Evolutionary Game Theory (EGT) framework.
