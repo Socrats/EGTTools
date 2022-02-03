@@ -143,6 +143,9 @@ probabilities and stationary distribution of a Normal Form Game with 5 strategie
 The [Plot 2 Simplex](docs/examples/plot_simplex.ipynb) is a jupyter notebook that shows how to use EGTtools to plot the
 evolutionary dynamics in a 2 Simplex (a triangle), both for infinite and finite populations.
 
+You can also check all these notebooks and a bit more on
+this [tutorial repository](https://github.com/Socrats/egt-tutorial)
+
 For example, assuming the following payoff matrix:
 
 ![A=\begin{pmatrix} -0.5 & 2 \\ 0 & 0 \end{pmatrix}](https://latex.codecogs.com/gif.latex?A=\begin{pmatrix}&space;-0.5&space;&&space;2&space;\\\\&space;0&space;&&space;0&space;\end{pmatrix})
@@ -291,8 +294,8 @@ type_labels = ['A', 'B', 'C']
 
 fig, ax = plt.subplots(figsize=(10, 8))
 
-simplex, gradient_function, \
-    roots, roots_xy, stability = plot_replicator_dynamics_in_simplex(payoffs, ax=ax)
+simplex, gradient_function,
+roots, roots_xy, stability = plot_replicator_dynamics_in_simplex(payoffs, ax=ax)
 
 plot = (simplex.add_axis(ax=ax)
         .draw_triangle()
