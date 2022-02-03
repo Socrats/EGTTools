@@ -18,3 +18,6 @@ Projects using EGTtools
 
 The `EvoCRD <https://github.com/Socrats/EvoCRD>`_ provide an example of use of EGTtools do
 model dynamics in the Collective Risk Dilemma.
+
+You can also find all these examples and a bit more `here <https://github.com/Socrats/egt-tutorial>`_ or launch
+the notebooks with `Binder <https://mybinder.org/v2/gh/Socrats/egt-tutorial/HEAD>`_.

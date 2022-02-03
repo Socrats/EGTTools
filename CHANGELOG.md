@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres
 to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.9-patch3] - 03-02-2022
+
+### Added
+
+- Added `gitter` chat and `binder` launch.
+
+### Fixed
+
+- Added missing `seaborn` dependency. This dependency is only needed to be able to automatically generate colorblind
+  colors to plot the invasion diagram, so it might be dropped in the future. But, for the moments, it provides the
+  easiest way to do this.
+
+### Changed
+
+- Updated docs and notebooks to use the latest `egttools` API.
+
 ## [0.1.9-patch2] - 26-01-2022
 
 ### Fixed

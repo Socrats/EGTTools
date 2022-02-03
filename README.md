@@ -4,7 +4,8 @@
 
 [![DOI](https://zenodo.org/badge/242180332.svg)](https://zenodo.org/badge/latestdoi/242180332)
 [![Documentation Status](https://readthedocs.org/projects/egttools/badge/?version=latest)](https://egttools.readthedocs.io/en/latest/?badge=latest)
-[![Build](https://github.com/Socrats/EGTTools/actions/workflows/ci.yml/badge.svg)](https://github.com/Socrats/EGTTools/actions/workflows/ci.yml)
+[![Build](https://github.com/Socrats/EGTTools/actions/workflows/ci.yml/badge.svg)](https://github.com/Socrats/EGTTools/actions/workflows/ci.yml) [![Join the chat at https://gitter.im/EGTTools/community](https://badges.gitter.im/EGTTools/community.svg)](https://gitter.im/EGTTools/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Socrats/EGTTools/HEAD?labpath=docs%2Fexamples)
 
 **EGTtools** provides a centralized repository with analytical and numerical methods to study/model game theoretical
 problems under the Evolutionary Game Theory (EGT) framework.
@@ -84,6 +85,7 @@ conda install numpy
 conda install scipy
 conda install matplotlib
 conda install networkx
+conda install seaborn
 ```
 
 ### Build from source
@@ -141,6 +143,9 @@ probabilities and stationary distribution of a Normal Form Game with 5 strategie
 
 The [Plot 2 Simplex](docs/examples/plot_simplex.ipynb) is a jupyter notebook that shows how to use EGTtools to plot the
 evolutionary dynamics in a 2 Simplex (a triangle), both for infinite and finite populations.
+
+You can also check all these notebooks and a bit more on
+this [tutorial repository](https://github.com/Socrats/egt-tutorial)
 
 For example, assuming the following payoff matrix:
 
@@ -290,8 +295,8 @@ type_labels = ['A', 'B', 'C']
 
 fig, ax = plt.subplots(figsize=(10, 8))
 
-simplex, gradient_function, \
-    roots, roots_xy, stability = plot_replicator_dynamics_in_simplex(payoffs, ax=ax)
+simplex, gradient_function,
+roots, roots_xy, stability = plot_replicator_dynamics_in_simplex(payoffs, ax=ax)
 
 plot = (simplex.add_axis(ax=ax)
         .draw_triangle()
