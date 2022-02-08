@@ -19,6 +19,8 @@
 This python module contains some utility functions
 to find saddle points and plot gradients in 2 player, 2 strategy games.
 """
+from warnings import warn
+
 import numpy as np
 from scipy.linalg import schur, eigvals
 from typing import Optional, List, Generator, Union, Callable
@@ -201,6 +203,13 @@ def calculate_stationary_distribution(transition_matrix: np.ndarray) -> np.ndarr
     egttools.utils.calculate_stationary_distribution_non_hermitian
 
     """
+    # Check if there is any transition with value 1 - this would mean that the game is degenerate
+    if np.isclose(transition_matrix, 1., atol=1e-11).any():
+        warn(
+            "Some of the entries in the transition matrix are close to 1 (with a tolerance of 1e-11). "
+            "This could result in more than one eigenvalue of magnitute 1 "
+            "(the Markov Chain is degenerate), so please be careful when analysing the results.", RuntimeWarning)
+
     # calculate stationary distributions using eigenvalues and eigenvectors
     eigenvalues, eigenvectors = np.linalg.eig(transition_matrix)
     index_stationary = np.argmin(abs(eigenvalues - 1.0))  # look for the element closest to 1 in the list of eigenvalues
@@ -229,6 +238,13 @@ def calculate_stationary_distribution_non_hermitian(transition_matrix: np.ndarra
     egttools.utils.calculate_stationary_distribution
 
     """
+    # Check if there is any transition with value 1 - this would mean that the game is degenerate
+    if np.isclose(transition_matrix, 1., atol=1e-11).any():
+        warn(
+            "Some of the entries in the transition matrix are close to 1 (with a tolerance of 1e-11). "
+            "This could result in more than one eigenvalue of magnitute 1 "
+            "(the Markov Chain is degenerate), so please be careful when analysing the results.", RuntimeWarning)
+
     # calculate stationary distributions using eigenvalues and eigenvectors
     # noinspection PyTupleAssignmentBalance
     schur_form, eigenvectors = schur(transition_matrix)

@@ -27,6 +27,7 @@ from scipy.sparse import lil_matrix
 from scipy.stats import hypergeom, multivariate_hypergeom
 from itertools import permutations
 from typing import Tuple, Optional
+from warnings import warn
 from egttools import sample_simplex, calculate_nb_states, calculate_state
 
 
@@ -552,6 +553,13 @@ class StochDynamics:
             t = self.calculate_full_transition_matrix(beta, *args).toarray()
         else:
             t, _ = self.transition_and_fixation_matrix(beta, *args)
+
+        # Check if there is any transition with value 1 - this would mean that the game is degenerate
+        if np.isclose(t, 1., atol=1e-11).any():
+            warn(
+                "Some of the entries in the transition matrix are close to 1 (with a tolerance of 1e-11). "
+                "This could result in more than one eigenvalue of magnitute 1 "
+                "(the Markov Chain is degenerate), so please be careful when analysing the results.", RuntimeWarning)
 
         # calculate stationary distributions using eigenvalues and eigenvectors
         eigenvalues, eigenvectors = np.linalg.eig(t)
