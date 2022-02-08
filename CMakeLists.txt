@@ -80,7 +80,8 @@ if (APPLE AND NOT SKIP_OPENMP)
         endif()
     endif()
 
-    set(LIBOMP_DIR ${CONDA_PREFIX}/lib)
+    set(LIBOMP_DIR $ENV{CONDA_PREFIX}/lib)
+    message(STATUS "LIBOMP_DIR=${LIBOMP_DIR}")
 
     if (CMAKE_C_COMPILER_ID MATCHES "Clang\$")
         set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${LIBOMP_DIR}/include")
