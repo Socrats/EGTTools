@@ -61,6 +61,7 @@ endif()
 # Necessary for certain MacOX versions to find homebrew OpenMP
 if (APPLE AND NOT SKIP_OPENMP)
     message("-- Try to install OpenMP")
+    message(STATUS "BUILD_ARCH=${BUILD_ARCH}")
     if ("${BUILD_ARCH}" MATCHES "macosx_x86_64|macosx_universal2")
         message("-- TEST")
         set(OPENMP_URL "https://anaconda.org/conda-forge/llvm-openmp/11.1.0/download/osx-64/llvm-openmp-11.1.0-hda6cdc1_1.tar.bz2")
