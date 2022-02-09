@@ -65,7 +65,7 @@ if (APPLE AND NOT SKIP_OPENMP)
     if ("$ENV{BUILD_ARCH}" MATCHES "macosx_x86_64|macosx_universal2")
         message(STATUS "Using ANACONDA OpenMP")
         set(OPENMP_URL "https://anaconda.org/conda-forge/llvm-openmp/11.1.0/download/osx-64/llvm-openmp-11.1.0-hda6cdc1_1.tar.bz2")
-        execute_process(COMMAND conda install OPENMP_URL)
+        execute_process(COMMAND conda install ${OPENMP_URL})
         set(LIBOMP_DIR $ENV{CONDA_PREFIX})
 
         if (CMAKE_C_COMPILER_ID MATCHES "Clang\$")
