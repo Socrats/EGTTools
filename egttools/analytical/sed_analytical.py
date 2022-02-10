@@ -95,6 +95,28 @@ class StochDynamics:
             self.fitness = self.fitness_pair
             self.full_fitness = self.full_fitness_difference_pairwise
 
+    def update_population_size(self, pop_size: int):
+        self.Z = pop_size
+        self.nb_states_population = calculate_nb_states(pop_size, self.nb_strategies)
+
+    def update_group_size(self, group_size: int):
+        self.N = group_size
+        self.nb_group_combinations = calculate_nb_states(group_size, self.nb_strategies)
+        if group_size > 2:  # pairwise game
+            self.fitness = self.fitness_group
+            self.full_fitness = self.full_fitness_difference_group
+        else:  # group game
+            self.fitness = self.fitness_pair
+            self.full_fitness = self.full_fitness_difference_pairwise
+
+    def update_payoffs(self, payoffs: np.ndarray, nb_strategies: int = None):
+        if nb_strategies is None:
+            if payoffs.shape[0] != self.nb_strategies:
+                raise Exception("The number of rows of the payoff matrix must be equal to the number of strategies.")
+        else:
+            self.nb_strategies = nb_strategies
+        self.payoffs = payoffs
+
     def fitness_pair(self, x: int, i: int, j: int, *args: Optional[list]) -> float:
         """
         Calculates the fitness of strategy i versus strategy j, in
