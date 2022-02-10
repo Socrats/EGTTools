@@ -96,10 +96,24 @@ class StochDynamics:
             self.full_fitness = self.full_fitness_difference_pairwise
 
     def update_population_size(self, pop_size: int):
+        """
+        Updates the size of the population and the number of possible population states.
+
+        Parameters
+        ----------
+        pop_size: New population size
+        """
         self.Z = pop_size
         self.nb_states_population = calculate_nb_states(pop_size, self.nb_strategies)
 
     def update_group_size(self, group_size: int):
+        """
+        Updates the groups size of the game (and the methods used to compute the fitness)
+
+        Parameters
+        ----------
+        group_size: new group size
+        """
         self.N = group_size
         self.nb_group_combinations = calculate_nb_states(group_size, self.nb_strategies)
         if group_size > 2:  # pairwise game
@@ -109,7 +123,16 @@ class StochDynamics:
             self.fitness = self.fitness_pair
             self.full_fitness = self.full_fitness_difference_pairwise
 
-    def update_payoffs(self, payoffs: np.ndarray, nb_strategies: int = None):
+    def update_payoffs(self, payoffs: np.ndarray, nb_strategies: Optional[int] = None):
+        """
+        Updates the payoff matrix
+
+        Parameters
+        ----------
+        payoffs: payoff matrix
+        nb_strategies: total number of strategies (optional). If not indicated, then the new payoff
+                       matrix must have the same dimensions as the previous one
+        """
         if nb_strategies is None:
             if payoffs.shape[0] != self.nb_strategies:
                 raise Exception("The number of rows of the payoff matrix must be equal to the number of strategies.")
