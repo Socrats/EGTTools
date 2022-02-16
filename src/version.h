@@ -18,6 +18,6 @@
 #ifndef EGTTOOLS_VERSION_H
 #define EGTTOOLS_VERSION_H
 
-#define EGTTOOLS_VERSION 0.1.9.patch4
+#define EGTTOOLS_VERSION 0.1.9.patch5
 
 #endif//EGTTOOLS_VERSION_H

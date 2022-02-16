@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres
 to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.9-patch5] - 16-02-2022
+
+### Fixed
+
+- Fixed wrong version tag on git.
+
 ## [0.1.9-patch4] - 16-02-2022
 
 ## Fixed
