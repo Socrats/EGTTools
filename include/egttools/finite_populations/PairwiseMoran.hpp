@@ -630,7 +630,7 @@ namespace egttools::FinitePopulations {
         std::geometric_distribution<size_t> geometric(mu);
 
 #pragma omp parallel for reduction(+ \
-                                   : sdist) default(none) private(geometric) shared(nb_runs, nb_generations, transitory, beta, mu)
+                                   : sdist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu)
         for (size_t i = 0; i < nb_runs; ++i) {
             // Random generators - each thread should have its own generator
             std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
@@ -680,16 +680,16 @@ namespace egttools::FinitePopulations {
                 if (homogeneous) {
                     k = geometric(generator);
                     // Update state count by k steps
-                    sdist(static_cast<int>(current_state)) += k + 1;
+                    sdist(static_cast<int64_t>(current_state)) += k + 1;
                     mutate_(generator, birth, idx_homo);
 
-                    strategies(static_cast<int>(birth)) += 1;
+                    strategies(static_cast<int64_t>(birth)) += 1;
                     strategies(idx_homo) -= 1;
 
                     // Update state count by 1 step
                     current_state = egttools::FinitePopulations::calculate_state(_pop_size, strategies);
                     // and now update distribution after mutation
-                    ++sdist(static_cast<int>(current_state));
+                    ++sdist(static_cast<int64_t>(current_state));
                     homogeneous = false;
 
                     // Update state count by k steps
@@ -703,7 +703,7 @@ namespace egttools::FinitePopulations {
                                  strategies, cache, generator);
                     // Update state count by k steps
                     current_state = egttools::FinitePopulations::calculate_state(_pop_size, strategies);
-                    ++sdist(static_cast<int>(current_state));
+                    ++sdist(static_cast<int64_t>(current_state));
                 }
             }
         }
@@ -721,7 +721,7 @@ namespace egttools::FinitePopulations {
         std::geometric_distribution<size_t> geometric(mu);
 
 #pragma omp parallel for reduction(+ \
-                                   : sdist) default(none) private(geometric) shared(nb_runs, nb_generations, transitory, beta, mu)
+                                   : sdist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu)
         for (size_t i = 0; i < nb_runs; ++i) {
             // Random generators - each thread should have its own generator
             std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
@@ -815,7 +815,7 @@ namespace egttools::FinitePopulations {
         std::geometric_distribution<size_t> geometric(mu);
 
 #pragma omp parallel for reduction(+ \
-                                   : strategy_dist) default(none) private(geometric) shared(nb_runs, nb_generations, transitory, beta, mu)
+                                   : strategy_dist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu)
         for (size_t i = 0; i < nb_runs; ++i) {
 
             // Random generators - each thread should have its own generator

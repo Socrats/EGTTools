@@ -537,7 +537,7 @@ PYBIND11_MODULE(numerical, m) {
                     egttools.behaviors.NormalForm.TwoActions
                     )pbdoc",
                  py::arg("nb_rounds"),
-                 py::arg("payoff_matrix"))
+                 py::arg("payoff_matrix"), py::return_value_policy::reference_internal)
             .def(py::init(&egttools::init_normal_form_game_from_python_list),
                  R"pbdoc(
                     Normal Form Game. This constructor allows you to define any number of strategies
@@ -641,7 +641,7 @@ PYBIND11_MODULE(numerical, m) {
                     -------
                     numpy.ndarray
                         The payoff matrix.
-                    )pbdoc")
+                    )pbdoc", py::return_value_policy::reference_internal)
             .def("payoff", &egttools::FinitePopulations::NormalFormGame::payoff,
                  R"pbdoc(
                     Returns the payoff of a strategy given a strategy pair.
@@ -662,7 +662,7 @@ PYBIND11_MODULE(numerical, m) {
                         The payoff value.
                     )pbdoc", py::arg("strategy"),
                  py::arg("strategy_pair"))
-            .def("expected_payoffs", &egttools::FinitePopulations::NormalFormGame::expected_payoffs, "returns the expected payoffs of each strategy vs another")
+            .def("expected_payoffs", &egttools::FinitePopulations::NormalFormGame::expected_payoffs, "returns the expected payoffs of each strategy vs another", py::return_value_policy::reference_internal)
             .def("nb_strategies", &egttools::FinitePopulations::NormalFormGame::nb_strategies,
                  "Number of different strategies which are playing the game.")
             .def_property_readonly("nb_rounds", &egttools::FinitePopulations::NormalFormGame::nb_rounds,
