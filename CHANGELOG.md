@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres
 to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.9-patch6] - 16-02-2022
+
+### Fixed
+
+- Fixed error on version formatting, it should be `0.1.9.dev6` instead of `0.1.9.patch6`.
+
 ## [0.1.9-patch5] - 16-02-2022
 
 ### Fixed
