@@ -24,6 +24,10 @@ def test_openmp_simulations():
     assert game.type() == 'NormalFormGame'
 
     evolver = egt.numerical.PairwiseMoran(Z, game, 1000)
-    dist = evolver.estimate_stationary_distribution_sparse(1, 100000, 1000, 1, 1e-3)
+    dist = evolver.estimate_stationary_distribution_sparse(10, 100000, 1000, 1, 1e-3)
 
-    assert dist.toarray().shape == (1, Z+1)
+    assert dist.toarray().shape == (1, Z + 1)
+
+
+if __name__ == "__main__":
+    test_openmp_simulations()

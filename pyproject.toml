@@ -3,7 +3,7 @@ requires-python = ">=3.7"
 
 [build-system]
 requires = [
-    "setuptools>=42",
+    "setuptools>=44",
     "wheel",
     "cmake>=3.18",
     "scikit_build",

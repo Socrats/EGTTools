@@ -27,6 +27,7 @@ from scipy.sparse import lil_matrix
 from scipy.stats import hypergeom, multivariate_hypergeom
 from itertools import permutations
 from typing import Tuple, Optional
+from warnings import warn
 from egttools import sample_simplex, calculate_nb_states, calculate_state
 
 
@@ -93,6 +94,51 @@ class StochDynamics:
         else:  # group game
             self.fitness = self.fitness_pair
             self.full_fitness = self.full_fitness_difference_pairwise
+
+    def update_population_size(self, pop_size: int):
+        """
+        Updates the size of the population and the number of possible population states.
+
+        Parameters
+        ----------
+        pop_size: New population size
+        """
+        self.Z = pop_size
+        self.nb_states_population = calculate_nb_states(pop_size, self.nb_strategies)
+
+    def update_group_size(self, group_size: int):
+        """
+        Updates the groups size of the game (and the methods used to compute the fitness)
+
+        Parameters
+        ----------
+        group_size: new group size
+        """
+        self.N = group_size
+        self.nb_group_combinations = calculate_nb_states(group_size, self.nb_strategies)
+        if group_size > 2:  # pairwise game
+            self.fitness = self.fitness_group
+            self.full_fitness = self.full_fitness_difference_group
+        else:  # group game
+            self.fitness = self.fitness_pair
+            self.full_fitness = self.full_fitness_difference_pairwise
+
+    def update_payoffs(self, payoffs: np.ndarray, nb_strategies: Optional[int] = None):
+        """
+        Updates the payoff matrix
+
+        Parameters
+        ----------
+        payoffs: payoff matrix
+        nb_strategies: total number of strategies (optional). If not indicated, then the new payoff
+                       matrix must have the same dimensions as the previous one
+        """
+        if nb_strategies is None:
+            if payoffs.shape[0] != self.nb_strategies:
+                raise Exception("The number of rows of the payoff matrix must be equal to the number of strategies.")
+        else:
+            self.nb_strategies = nb_strategies
+        self.payoffs = payoffs
 
     def fitness_pair(self, x: int, i: int, j: int, *args: Optional[list]) -> float:
         """
@@ -219,15 +265,15 @@ class StochDynamics:
 
         fitness_i, fitness_j = 0., 0.
         for state_index in range(self.nb_group_combinations):
-            group = sample_simplex(i, self.N, self.nb_strategies)
+            group = sample_simplex(state_index, self.N, self.nb_strategies)
             if group[i] > 0:
                 group[i] -= 1
                 fitness_i += self.payoffs[i, state_index] * rv_i.pmf(x=group)
                 group[i] += 1
             if group[j] > 0:
-                group[i] -= 1
+                group[j] -= 1
                 fitness_j += self.payoffs[j, state_index] * rv_j.pmf(x=group)
-                group[i] += 1
+                group[j] += 1
 
         return fitness_i - fitness_j
 
@@ -368,6 +414,7 @@ class StochDynamics:
         probabilities = np.outer(probability_selecting_strategy_first, probability_selecting_strategy_second)
         fitness = np.asarray([[self.full_fitness(i, j, population_state) for i in
                                range(len(population_state))] for j in range(len(population_state))])
+        fitness[np.isnan(fitness)] = 0
         return (probabilities * np.tanh((beta / 2) * fitness)).sum(axis=0) * (1 - self.mu) + self.mu
 
     def full_gradient_selection_without_mutation(self, population_state: np.ndarray, beta: float) -> np.ndarray:
@@ -394,6 +441,7 @@ class StochDynamics:
         probabilities = np.outer(probability_selecting_strategy_first, probability_selecting_strategy_second)
         fitness = np.asarray([[self.full_fitness(i, j, population_state) for i in
                                range(len(population_state))] for j in range(len(population_state))])
+        fitness[np.isnan(fitness)] = 0
 
         return (probabilities * np.tanh((beta / 2) * fitness)).sum(axis=0)
 
@@ -550,6 +598,13 @@ class StochDynamics:
             t = self.calculate_full_transition_matrix(beta, *args).toarray()
         else:
             t, _ = self.transition_and_fixation_matrix(beta, *args)
+
+        # Check if there is any transition with value 1 - this would mean that the game is degenerate
+        if np.isclose(t, 1., atol=1e-11).any():
+            warn(
+                "Some of the entries in the transition matrix are close to 1 (with a tolerance of 1e-11). "
+                "This could result in more than one eigenvalue of magnitute 1 "
+                "(the Markov Chain is degenerate), so please be careful when analysing the results.", RuntimeWarning)
 
         # calculate stationary distributions using eigenvalues and eigenvectors
         eigenvalues, eigenvectors = np.linalg.eig(t)

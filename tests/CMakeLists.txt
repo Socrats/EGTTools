@@ -47,7 +47,11 @@ set_target_properties(egttoolsNumerical PROPERTIES
 #        CXX_VISIBILITY_PRESET hidden
         )
 
+#if (OPENMP_FOUND)
+#    target_link_libraries(egttoolsNumerical OpenMP::OpenMP_CXX)
+#else ()
 target_link_libraries(egttoolsNumerical)
+#endif()
 
 add_executable(testPMrun test_PairwiseMoran_run.cpp)
 #set_target_properties(testPM PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${LTO_SUPPORTED})

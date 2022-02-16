@@ -16,7 +16,7 @@
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
 """Simplified plotting functions"""
-
+import egttools.games
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -29,6 +29,7 @@ from egttools.analytical import (replicator_equation, StochDynamics)
 from egttools.analytical.utils import check_if_there_is_random_drift
 from egttools.helpers.vectorized import (vectorized_replicator_equation, vectorized_barycentric_to_xy_coordinates)
 from egttools.plotting import Simplex2D
+from egttools.utils import transform_payoffs_to_pairwise
 
 
 def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray, atol: Optional[float] = 1e-7,
@@ -78,9 +79,10 @@ def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray, atol: Optiona
     return simplex, lambda u, t: replicator_equation(u, payoff_matrix), roots, roots_xy, stability
 
 
-def plot_moran_dynamics_in_simplex(payoff_matrix: np.ndarray,
-                                   population_size: int,
+def plot_moran_dynamics_in_simplex(population_size: int,
                                    beta: float,
+                                   payoff_matrix: np.ndarray = None,
+                                   game: egttools.games.AbstractGame = None,
                                    group_size: Optional[int] = 2,
                                    atol: Optional[float] = 1e-7,
                                    figsize: Optional[Tuple[int, int]] = (10, 8),
@@ -92,13 +94,15 @@ def plot_moran_dynamics_in_simplex(payoff_matrix: np.ndarray,
 
     Parameters
     ----------
-    payoff_matrix:
-        The square payoff matrix. Group games are still unsupported in the replicator dynamics. This feature will
-        soon be added.
     population_size:
         Size of the finite population.
     beta:
         Intensity of selection.
+    payoff_matrix:
+        The square payoff matrix. Group games are still unsupported in the replicator dynamics. This feature will
+        soon be added.
+    game:
+        Game that should contain a set of payoff matrices
     group_size:
         Size of the group. By default we assume that interactions are pairwise (the group size is 2).
     atol:
@@ -116,10 +120,19 @@ def plot_moran_dynamics_in_simplex(payoff_matrix: np.ndarray,
     `Simplex2D.draw_scatter_shadow`, a list of the roots in barycentric coordinates, a list of the roots in
     cartesian coordinates and a list of booleans indicating whether the roots are stable.
     """
+    if (group_size == 2) and payoff_matrix is None:
+        raise Exception("You need to define a payoff matrix for pairwise games.")
+
     simplex = Simplex2D(discrete=True, size=population_size, nb_points=population_size + 1)
     simplex.add_axis(figsize, ax)
 
-    random_drift = check_if_there_is_random_drift(payoff_matrix=payoff_matrix, population_size=population_size,
+    if group_size > 2:
+        payoffs = transform_payoffs_to_pairwise(game.payoffs().shape[0], game)
+        payoff_matrix = game.payoffs()
+    else:
+        payoffs = payoff_matrix
+
+    random_drift = check_if_there_is_random_drift(payoff_matrix=payoffs, population_size=population_size,
                                                   group_size=group_size, beta=beta, atol=atol)
     simplex.add_edges_with_random_drift(random_drift)
 
@@ -127,8 +140,12 @@ def plot_moran_dynamics_in_simplex(payoff_matrix: np.ndarray,
     v_int = np.floor(v * population_size).astype(np.int64)
 
     evolver = StochDynamics(nb_strategies=3, payoffs=payoff_matrix, pop_size=population_size, group_size=group_size)
-    result = np.asarray([[evolver.full_gradient_selection(v_int[:, i, j], beta) for j in range(v_int.shape[2])] for i in
-                         range(v_int.shape[1])]).swapaxes(0, 1).swapaxes(0, 2)
+    result = np.zeros(shape=(v_int.shape[1], v_int.shape[2], 3))
+    for i in range(v_int.shape[1]):
+        for j in range(v_int.shape[2]):
+            result[i, j, :] = evolver.full_gradient_selection_without_mutation(v_int[:, i, j], beta)
+
+    result = result.swapaxes(0, 1).swapaxes(0, 2)
     xy_results = vectorized_barycentric_to_xy_coordinates(result, simplex.corners)
 
     Ux = xy_results[:, :, 0].astype(np.float64)
@@ -137,7 +154,7 @@ def plot_moran_dynamics_in_simplex(payoff_matrix: np.ndarray,
     simplex.apply_simplex_boundaries_to_gradients(Ux, Uy)
 
     roots = find_roots_in_discrete_barycentric_coordinates(
-        lambda u: population_size * evolver.full_gradient_selection(u, beta), population_size,
+        lambda u: population_size * evolver.full_gradient_selection_without_mutation(u, beta), population_size,
         nb_interior_points=calculate_nb_states(population_size,
                                                3),
         atol=1e-1)
@@ -147,3 +164,80 @@ def plot_moran_dynamics_in_simplex(payoff_matrix: np.ndarray,
     return (simplex,
             lambda u, t: population_size * evolver.full_gradient_selection_without_mutation(u, beta),
             roots, roots_xy, stability, evolver)
+
+
+def plot_moran_dynamics_in_simplex_without_roots(population_size: int,
+                                                 beta: float,
+                                                 payoff_matrix: np.ndarray = None,
+                                                 game: egttools.games.AbstractGame = None,
+                                                 group_size: Optional[int] = 2,
+                                                 atol: Optional[float] = 1e-7,
+                                                 figsize: Optional[Tuple[int, int]] = (10, 8),
+                                                 ax: Optional[plt.axis] = None) -> \
+        Tuple[Simplex2D, Callable[[np.ndarray, int], np.ndarray], StochDynamics]:
+    """
+    Helper function to simplified the plotting of the moran dynamics in a 2 Simplex.
+
+    Parameters
+    ----------
+    population_size:
+        Size of the finite population.
+    beta:
+        Intensity of selection.
+    payoff_matrix:
+        The square payoff matrix. Group games are still unsupported in the replicator dynamics. This feature will
+        soon be added.
+    game:
+        Game that should contain a set of payoff matrices
+    group_size:
+        Size of the group. By default we assume that interactions are pairwise (the group size is 2).
+    atol:
+        Tolerance to consider a value equal to zero. This is used to check if an edge has random drift. By default
+        the tolerance is 1e-7.
+    figsize:
+        Size of the figure. This parameter is only used if the ax parameter is not defined.
+    ax:
+        A matplotlib figure axis.
+
+    Returns
+    -------
+    A tuple with the simplex object which can be used to add more features to the plot, the function that
+    can be used to calculate gradients and should be passed to `Simplex2D.draw_trajectory_from_roots` and
+    `Simplex2D.draw_scatter_shadow`, a list of the roots in barycentric coordinates, a list of the roots in
+    cartesian coordinates and a list of booleans indicating whether the roots are stable.
+    """
+    if (group_size == 2) and payoff_matrix is None:
+        raise Exception("You need to define a payoff matrix for pairwise games.")
+
+    simplex = Simplex2D(discrete=True, size=population_size, nb_points=population_size + 1)
+    simplex.add_axis(figsize, ax)
+
+    if group_size > 2:
+        payoffs = transform_payoffs_to_pairwise(game.payoffs().shape[0], game)
+        payoff_matrix = game.payoffs()
+    else:
+        payoffs = payoff_matrix
+
+    random_drift = check_if_there_is_random_drift(payoff_matrix=payoffs, population_size=population_size,
+                                                  group_size=group_size, beta=beta, atol=atol)
+    simplex.add_edges_with_random_drift(random_drift)
+
+    v = np.asarray(xy_to_barycentric_coordinates(simplex.X, simplex.Y, simplex.corners))
+    v_int = np.floor(v * population_size).astype(np.int64)
+
+    evolver = StochDynamics(nb_strategies=3, payoffs=payoff_matrix, pop_size=population_size, group_size=group_size)
+    result = np.zeros(shape=(v_int.shape[1], v_int.shape[2], 3))
+    for i in range(v_int.shape[1]):
+        for j in range(v_int.shape[2]):
+            if v_int[:, i, j].sum() <= population_size:
+                result[i, j, :] = evolver.full_gradient_selection_without_mutation(v_int[:, i, j], beta)
+
+    result = result.swapaxes(0, 1).swapaxes(0, 2)
+    xy_results = vectorized_barycentric_to_xy_coordinates(result, simplex.corners)
+
+    Ux = xy_results[:, :, 0].astype(np.float64)
+    Uy = xy_results[:, :, 1].astype(np.float64)
+
+    simplex.apply_simplex_boundaries_to_gradients(Ux, Uy)
+
+    return simplex, lambda u, t: population_size * evolver.full_gradient_selection_without_mutation(u, beta), evolver
