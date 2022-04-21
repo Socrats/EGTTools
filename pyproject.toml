@@ -3,6 +3,6 @@ requires = [
     "setuptools>=44",
     "wheel",
     "cmake>=3.18",
-    "scikit_build",
+    "scikit-build==0.13.1",
 ]
 build-backend = "setuptools.build_meta"
