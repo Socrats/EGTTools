@@ -3,11 +3,12 @@
 # Toolbox for Evolutionary Game Theory
 
 [![PyPI version](https://badge.fury.io/py/egttools.svg)](https://badge.fury.io/py/egttools)
-[![PyPI Downloads](https://img.shields.io/pypi/dm/egttools.svg?label=PyPI%20downloads)](https://pypi.org/project/egttools/)
 [![Documentation Status](https://readthedocs.org/projects/egttools/badge/?version=latest)](https://egttools.readthedocs.io/en/latest/?badge=latest)
 [![Build](https://github.com/Socrats/EGTTools/actions/workflows/ci.yml/badge.svg)](https://github.com/Socrats/EGTTools/actions/workflows/ci.yml) [![Join the chat at https://gitter.im/EGTTools/community](https://badges.gitter.im/EGTTools/community.svg)](https://gitter.im/EGTTools/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Socrats/EGTTools/HEAD?labpath=docs%2Fexamples)
 [![DOI](https://zenodo.org/badge/242180332.svg)](https://zenodo.org/badge/latestdoi/242180332)
+
+[comment]: <> ([![PyPI Downloads]&#40;https://img.shields.io/pypi/dm/egttools.svg?label=PyPI%20downloads&#41;]&#40;https://pypi.org/project/egttools/&#41;)
 
 **EGTtools** provides a centralized repository with analytical and numerical methods to study/model game theoretical
 problems under the Evolutionary Game Theory (EGT) framework.
@@ -119,7 +120,9 @@ python -m ipykernel install --user --name=egttools-env
 Finally, you can **install EGTtools** in your virtual environment by running:
 
 ```bash
-python -m pip install <path>
+pip install build
+cd <path>
+python -m build
 ```
 
 Where ```<path>``` represents the path to the EGTtools folder. If you are running this while inside the EGTtools folder,
