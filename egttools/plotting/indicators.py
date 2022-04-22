@@ -89,6 +89,9 @@ def draw_stationary_distribution(strategies: List[str], drift: float, fixation_p
                                  font_size_node_labels: Optional[int] = 18,
                                  font_size_edge_labels: Optional[int] = 14,
                                  font_size_sd_labels: Optional[int] = 12,
+                                 display_node_labels: Optional[bool] = True,
+                                 display_edge_labels: Optional[bool] = True,
+                                 display_sd_labels: Optional[bool] = True,
                                  edge_width: Optional[int] = 2,
                                  figsize: Optional[Tuple[int, int]] = (10, 10),
                                  dpi: Optional[int] = 150,
@@ -119,6 +122,12 @@ def draw_stationary_distribution(strategies: List[str], drift: float, fixation_p
         Font size of the labels displayed in each edge (which contain the fixation probabilities).
     font_size_sd_labels : Optional[int]
         Font size of the labels displayed beside each node containing the value of the stationary distribution.
+    display_node_labels :
+        Indicates wether the node labels should be displayed.
+    display_edge_labels :
+        Indicates wether the edge labels should be displayed.
+    display_sd_labels :
+        Indicates whether the stationary distribution labels should be displayed.
     edge_width : Optional[int]
         Width of the edge line.
     figsize : Optional[Tuple[int, int]]
@@ -228,11 +237,13 @@ def draw_stationary_distribution(strategies: List[str], drift: float, fixation_p
                            arrows=False, ax=ax)
 
     # node labels
-    nx.draw_networkx_labels(G, pos, {strat: strat[:max_displayed_label_letters] for strat in used_strategies},
-                            font_size=font_size_node_labels, font_weight='bold', font_color='black', ax=ax)
+    if display_node_labels:
+        nx.draw_networkx_labels(G, pos, {strat: strat[:max_displayed_label_letters] for strat in used_strategies},
+                                font_size=font_size_node_labels, font_weight='bold', font_color='black', ax=ax)
 
     # edge labels
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=eselect_labels, font_size=font_size_edge_labels, ax=ax)
+    if display_edge_labels:
+        nx.draw_networkx_edge_labels(G, pos, edge_labels=eselect_labels, font_size=font_size_edge_labels, ax=ax)
 
     for i, (key, value) in enumerate(pos.items()):
         x, y = value
@@ -240,7 +251,8 @@ def draw_stationary_distribution(strategies: List[str], drift: float, fixation_p
             value = 0.15
         else:
             value = - 0.2
-        ax.text(x, y + value, s="{0:.2f}".format(stationary_distribution[used_strategies_idx[i]]),
-                horizontalalignment='center', fontsize=font_size_sd_labels)
+        if display_sd_labels:
+            ax.text(x, y + value, s="{0:.2f}".format(stationary_distribution[used_strategies_idx[i]]),
+                    horizontalalignment='center', fontsize=font_size_sd_labels)
 
     return G
