@@ -353,6 +353,18 @@ namespace egttools::FinitePopulations {
     VectorXui
     PairwiseMoran<Cache>::evolve(size_t nb_generations, double beta, double mu,
                                  const Eigen::Ref<const VectorXui> &init_state) {
+
+        // Check that there is the length of init_state is the same as the number of strategies
+        if (init_state.size() != _nb_strategies) {
+            throw std::invalid_argument(
+                    "The length of the initial state array must be the number of strategies " + std::to_string(_nb_strategies));
+        }
+        // Check that the initial state is valid
+        if (init_state.sum() != _pop_size) {
+            throw std::invalid_argument(
+                    "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(_pop_size));
+        }
+
         VectorXui strategies(_nb_strategies);
         // Initialise strategies from init_state
         strategies.array() = init_state;
@@ -391,6 +403,17 @@ namespace egttools::FinitePopulations {
         // This method runs a Moran process with pairwise comparison
         // using the fermi rule and no mutation
 
+        // Check that there is the length of init_state is the same as the number of strategies
+        if (strategies.size() != _nb_strategies) {
+            throw std::invalid_argument(
+                    "The length of the initial state array must be the number of strategies " + std::to_string(_nb_strategies));
+        }
+        // Check that the initial state is valid
+        if (strategies.sum() != _pop_size) {
+            throw std::invalid_argument(
+                    "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(_pop_size));
+        }
+
         int die, birth, strategy_p1 = 0, strategy_p2 = 0;
 
         // Check if initial state is already homogeneous, in which case return
@@ -414,6 +437,18 @@ namespace egttools::FinitePopulations {
     VectorXui
     PairwiseMoran<Cache>::evolve(size_t nb_generations, double beta, double mu,
                                  const Eigen::Ref<const VectorXui> &init_state, std::mt19937_64 &generator) {
+
+        // Check that there is the length of init_state is the same as the number of strategies
+        if (init_state.size() != _nb_strategies) {
+            throw std::invalid_argument(
+                    "The length of the initial state array must be the number of strategies " + std::to_string(_nb_strategies));
+        }
+        // Check that the initial state is valid
+        if (init_state.sum() != _pop_size) {
+            throw std::invalid_argument(
+                    "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(_pop_size));
+        }
+
         VectorXui strategies(_nb_strategies);
         // Initialise strategies from init_state
         strategies.array() = init_state;
@@ -448,6 +483,18 @@ namespace egttools::FinitePopulations {
     template<class Cache>
     MatrixXui2D PairwiseMoran<Cache>::run(int nb_generations, double beta, double mu,
                                           const Eigen::Ref<const egttools::VectorXui> &init_state) {
+
+        // Check that there is the length of init_state is the same as the number of strategies
+        if (init_state.size() != _nb_strategies) {
+            throw std::invalid_argument(
+                    "The length of the initial state array must be the number of strategies " + std::to_string(_nb_strategies));
+        }
+        // Check that the initial state is valid
+        if (init_state.sum() != _pop_size) {
+            throw std::invalid_argument(
+                    "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(_pop_size));
+        }
+
         int die, birth, strategy_p1 = 0, strategy_p2 = 0;
         MatrixXui2D states = MatrixXui2D::Zero(nb_generations + 1, _nb_strategies);
         VectorXui strategies(_nb_strategies);
@@ -511,6 +558,18 @@ namespace egttools::FinitePopulations {
     template<class Cache>
     MatrixXui2D PairwiseMoran<Cache>::run(int nb_generations, double beta,
                                           const Eigen::Ref<const egttools::VectorXui> &init_state) {
+
+        // Check that there is the length of init_state is the same as the number of strategies
+        if (init_state.size() != _nb_strategies) {
+            throw std::invalid_argument(
+                    "The length of the initial state array must be the number of strategies " + std::to_string(_nb_strategies));
+        }
+        // Check that the initial state is valid
+        if (init_state.sum() != _pop_size) {
+            throw std::invalid_argument(
+                    "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(_pop_size));
+        }
+
         int die, birth, strategy_p1 = 0, strategy_p2 = 0, current_generation = 1;
         MatrixXui2D states = MatrixXui2D::Zero(nb_generations + 1, _nb_strategies);
         VectorXui strategies(_nb_strategies);
