@@ -291,10 +291,12 @@ def check_replicator_stability_pairwise_games(stationary_points: List[numpy.ndar
     for point in stationary_points:
         # now we check the stability of the roots using the jacobian
         eigenvalues = eigvals(jacobian(point))
-        if (eigenvalues.real <= atol).all():  # stable point
+        if (eigenvalues.real < -atol).all():  # stable point
             stability.append(1)
         elif (eigenvalues.real > atol).any():  # unstable point
             stability.append(-1)
+        elif len(eigenvalues.real[eigenvalues.real < -atol]) > 0:
+            stability.append(1)
         else:  # saddle point
             # This is probably wrong, but let's first assume that if we reach here, the point is a saddle
             stability.append(0)
