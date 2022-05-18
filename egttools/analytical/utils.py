@@ -14,14 +14,34 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
-
+import numpy
 import numpy as np
-from typing import Tuple, List, Optional
+from scipy.optimize import root
+from scipy.linalg import eigvals
+from typing import Tuple, List, Optional, Callable
 from .sed_analytical import StochDynamics, replicator_equation
+from egttools.numerical import sample_unit_simplex
 
 
 def get_pairwise_gradient_from_replicator(i: int, j: int, x: float, nb_strategies: int, payoffs: np.ndarray,
                                           freq_array: Optional[np.ndarray] = None) -> float:
+    """
+    Calculate the gradient for strategy/type `i` at the edges of the simplex (when there are
+    only two strategies in the population `i` and `j`).
+
+    Parameters
+    ----------
+    i: index of the strategy whose gradient we wish to calculate
+    j: index of the other strategy present in the population
+    x: frequency of i type
+    nb_strategies: total number of strategies in the population
+    payoffs: payoff matrix that defines the expected  payoff of any give strategy against each other
+    freq_array: optional vector to store the frequencies of each strategy in the population
+
+    Returns
+    -------
+    The gradient of strategy i.
+    """
     if freq_array is None:
         freq_array = np.zeros(shape=(nb_strategies,))
     else:
@@ -114,3 +134,173 @@ def check_if_there_is_random_drift(payoff_matrix: np.ndarray,
                 solutions.append((row_strategy, col_strategy))
 
     return solutions
+
+
+def find_roots_and_stability(f: Callable[[np.ndarray], np.ndarray], nb_strategies: int, atol: Optional[float] = 1e-12,
+                             nb_random_restarts: Optional[int] = 1) -> Tuple[List[np.array], List[int]]:
+    roots = []
+    stability = []
+    for i in range(nb_random_restarts):
+        state = sample_unit_simplex(nb_strategies)
+        sol = root(f, state, method="hybr")  # ,xtol=1.49012e-10,maxfev=1000
+
+        if sol.success:
+            v = sol.x
+            if check_if_point_in_unit_simplex(v, atol):
+                # only add new fixed points to list
+                if not np.array([np.allclose(v, x, atol=atol) for x in roots]).any():
+                    roots.append(v)
+                    # now we check the stability of the roots using the jacobian
+                    eigenvalues = eigvals(sol.fjac)
+                    if (eigenvalues.real < 0).all():
+                        stability.append(1)
+                    elif (eigenvalues.real > 0).any():
+                        stability.append(-1)
+                    else:
+                        # This is probably wrong, but let's first assume that if we reach here, the point is a saddle
+                        stability.append(0)
+                        # # we need to check the hessian matrix to find out if the point is a saddle
+                        # eigenvalues, _ = np.linalg.eig(sol.hess)
+                        # if (eigenvalues > 0).any() and (eigenvalues < 0).any():
+                        #     stability.append(0)
+    return roots, stability
+
+
+def check_if_point_in_unit_simplex(point: np.ndarray, delta: Optional[float] = 1e-12) -> bool:
+    """
+    Checks if a point (in barycentric coordinates) is inside the unit simplex.
+
+    Parameters
+    ----------
+    point: numpy.ndarray
+        The barycentric coordinates of the point.
+    delta: float
+        Tolerance to consider a point outside the unit simplex.
+
+    Returns
+    -------
+    bool
+        Whether the point is inside the unit simplex.
+
+    """
+    if not np.isclose(np.sum(point), 1., atol=1.e-2):
+        return False
+
+    if not np.all((point > -delta) & (point < 1 + delta)):  # only if fp in simplex
+        return False
+
+    return True
+
+
+def calculate_gradients(population_states: np.ndarray,
+                        gradient_function: Callable[[np.ndarray], np.ndarray]) -> np.ndarray:
+    """
+    Calculates the gradients of selection of each of the states given in `population_states`.
+    Parameters
+    ----------
+    population_states: A numpy array of shape (m,n) where n is the number of strategies in the population and
+                       m the number of states for which the gradient should be calculated.
+    gradient_function: A function which accepts a vector of shape (n,) containing the frequencies of each
+                       strategy/type in the population, and returns another vector of shape (n,) containing
+                       the gradient for each strategy.
+
+    Returns
+    -------
+    A numpy array of shape (m,n) containing the gradients for each of the input states given in `population_states`.
+    """
+    return np.array([gradient_function(population_states[i]) for i in range(population_states.shape[0])])
+
+
+def find_roots(gradient_function: Callable[[np.ndarray], np.ndarray],
+               nb_strategies: int, nb_initial_random_points: Optional[int] = 3,
+               atol: Optional[float] = 1e-7, tol_close_points: Optional[float] = 1e-4,
+               method: Optional[str] = 'hybr') -> List[np.ndarray]:
+    """
+
+    Parameters
+    ----------
+    gradient_function: function that returns a numpy.ndarray with the gradient of every strategy/type given a
+                       current population state.
+    nb_strategies: number of strategies/types present in the population.
+    nb_initial_random_points: number of random points to use as initial states for the root function. These are
+                              additional to the vertex of the simplex.
+    atol: tolerance for considering that a point is in the simplex.
+    tol_close_points: tolerance for considering that two points are equal.
+    method: one of the options described in `scipy.optimize.root`
+            (see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.root.html)
+
+    Returns
+    -------
+    A list of tuples with the identified roots/stationary points.
+    """
+    # we test all the vertex of the simplex and some random initial points
+    initial_states = [[0 if i != j else 1 for i in range(nb_strategies)] for j in range(nb_strategies)]
+    for i in range(nb_initial_random_points):
+        initial_states.append(sample_unit_simplex(nb_strategies))
+
+    initial_states = np.asarray(initial_states)
+
+    roots = []
+
+    for initial_state in initial_states:
+        sol = root(gradient_function, initial_state, method=method, jac=False)
+
+        if sol.success:
+            v = sol.x
+            if check_if_point_in_unit_simplex(v, atol):
+                # only add new fixed points to list
+                if not np.array([np.allclose(v, x, atol=tol_close_points) for x in roots]).any():
+                    roots.append(v)
+
+    return roots
+
+
+def check_replicator_stability_pairwise_games(stationary_points: List[numpy.ndarray], payoff_matrix: numpy.ndarray,
+                                              atol: float = 1e-4) -> \
+        List[int]:
+    """
+
+    Parameters
+    ----------
+    stationary_points: a list of stationary points (represented as numpy.ndarray)
+    payoff_matrix: a payoff matrix represented as a numpy.ndarray
+    atol: tolerance to consider a value zero
+
+    Returns
+    -------
+    A list of integers indicating the stability of the stationary points for the replicator equation:
+    1 - stable
+    -1 - unstable
+    0 - saddle
+    """
+
+    def fitness(i: int, x: np.ndarray):
+        return np.dot(payoff_matrix, x)[i]
+
+    # First we build a Jacobian matrix
+    def jacobian(x: numpy.ndarray):
+        ax = np.dot(payoff_matrix, x)
+        avg_fitness = np.dot(x, ax)
+        jac = [[x[i] * (payoff_matrix[i, j] - np.dot(x, payoff_matrix[:, j])) if i != j else (
+                fitness(i, x) - avg_fitness + x[i] * (payoff_matrix[i, i] - np.dot(x, payoff_matrix[:, i]))) for i in
+                range(len(x))] for j in range(len(x))]
+        return np.asarray(jac)
+
+    stability = []
+
+    for point in stationary_points:
+        # now we check the stability of the roots using the jacobian
+        eigenvalues = eigvals(jacobian(point))
+        if (eigenvalues.real <= atol).all():  # stable point
+            stability.append(1)
+        elif (eigenvalues.real > atol).any():  # unstable point
+            stability.append(-1)
+        else:  # saddle point
+            # This is probably wrong, but let's first assume that if we reach here, the point is a saddle
+            stability.append(0)
+            # # we need to check the hessian matrix to find out if the point is a saddle
+            # eigenvalues, _ = np.linalg.eig(sol.hess)
+            # if (eigenvalues > 0).any() and (eigenvalues < 0).any():
+            #     stability.append(0)
+
+    return stability
