@@ -355,7 +355,7 @@ namespace egttools::FinitePopulations {
                                  const Eigen::Ref<const VectorXui> &init_state) {
 
         // Check that there is the length of init_state is the same as the number of strategies
-        if (init_state.size() != _nb_strategies) {
+        if (init_state.size() != static_cast<int>(_nb_strategies)) {
             throw std::invalid_argument(
                     "The length of the initial state array must be the number of strategies " + std::to_string(_nb_strategies));
         }
@@ -404,7 +404,7 @@ namespace egttools::FinitePopulations {
         // using the fermi rule and no mutation
 
         // Check that there is the length of init_state is the same as the number of strategies
-        if (strategies.size() != _nb_strategies) {
+        if (strategies.size() != static_cast<int>(_nb_strategies)) {
             throw std::invalid_argument(
                     "The length of the initial state array must be the number of strategies " + std::to_string(_nb_strategies));
         }
@@ -439,7 +439,7 @@ namespace egttools::FinitePopulations {
                                  const Eigen::Ref<const VectorXui> &init_state, std::mt19937_64 &generator) {
 
         // Check that there is the length of init_state is the same as the number of strategies
-        if (init_state.size() != _nb_strategies) {
+        if (init_state.size() != static_cast<int>(_nb_strategies)) {
             throw std::invalid_argument(
                     "The length of the initial state array must be the number of strategies " + std::to_string(_nb_strategies));
         }
@@ -485,7 +485,7 @@ namespace egttools::FinitePopulations {
                                           const Eigen::Ref<const egttools::VectorXui> &init_state) {
 
         // Check that there is the length of init_state is the same as the number of strategies
-        if (init_state.size() != _nb_strategies) {
+        if (init_state.size() != static_cast<int>(_nb_strategies)) {
             throw std::invalid_argument(
                     "The length of the initial state array must be the number of strategies " + std::to_string(_nb_strategies));
         }
@@ -560,7 +560,7 @@ namespace egttools::FinitePopulations {
                                           const Eigen::Ref<const egttools::VectorXui> &init_state) {
 
         // Check that there is the length of init_state is the same as the number of strategies
-        if (init_state.size() != _nb_strategies) {
+        if (init_state.size() != static_cast<int>(_nb_strategies)) {
             throw std::invalid_argument(
                     "The length of the initial state array must be the number of strategies " + std::to_string(_nb_strategies));
         }
