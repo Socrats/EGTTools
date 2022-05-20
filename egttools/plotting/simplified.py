@@ -20,13 +20,13 @@ import egttools.games
 import matplotlib.pyplot as plt
 import numpy as np
 
-from typing import Optional, Tuple, Callable, List
+from typing import Optional, Tuple, Callable, List, Union
 from egttools.numerical import (calculate_nb_states, )
 from egttools.plotting.helpers import (barycentric_to_xy_coordinates,
                                        xy_to_barycentric_coordinates, calculate_stationary_points, calculate_stability,
                                        find_roots_in_discrete_barycentric_coordinates)
 from egttools.analytical import (replicator_equation, StochDynamics)
-from egttools.analytical.utils import check_if_there_is_random_drift
+from egttools.analytical.utils import check_if_there_is_random_drift, check_replicator_stability_pairwise_games
 from egttools.helpers.vectorized import (vectorized_replicator_equation, vectorized_barycentric_to_xy_coordinates)
 from egttools.plotting import Simplex2D
 from egttools.utils import transform_payoffs_to_pairwise
@@ -34,8 +34,11 @@ from egttools.utils import transform_payoffs_to_pairwise
 
 def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray, atol: Optional[float] = 1e-7,
                                         figsize: Optional[Tuple[int, int]] = (10, 8),
-                                        ax: Optional[plt.axis] = None) -> \
-        Tuple[Simplex2D, Callable[[np.ndarray, int], np.ndarray], List[np.ndarray], List[np.ndarray], List[bool]]:
+                                        ax: Optional[plt.axis] = None) -> Tuple[Simplex2D,
+                                                                                Callable[[np.ndarray, int], np.ndarray],
+                                                                                List[np.ndarray],
+                                                                                List[np.ndarray],
+                                                                                List[int]]:
     """
     Helper function to simplified the plotting of the replicator dynamics in a 2 Simplex.
 
@@ -57,7 +60,7 @@ def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray, atol: Optiona
     A tuple with the simplex object which can be used to add more features to the plot, the function that
     can be used to calculate gradients and should be passed to `Simplex2D.draw_trajectory_from_roots` and
     `Simplex2D.draw_scatter_shadow`, a list of the roots in barycentric coordinates, a list of the roots in
-    cartesian coordinates and a list of booleans indicating whether the roots are stable.
+    cartesian coordinates and a list of booleans or integers indicating whether the roots are stable.
 
     """
     simplex = Simplex2D()
@@ -74,7 +77,9 @@ def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray, atol: Optiona
     simplex.apply_simplex_boundaries_to_gradients(Ux, Uy)
     roots, roots_xy = calculate_stationary_points(simplex.trimesh.x, simplex.trimesh.y, simplex.corners,
                                                   lambda u: replicator_equation(u, payoff_matrix))
-    stability = calculate_stability(roots, lambda u: replicator_equation(u, payoff_matrix))
+    # stability = calculate_stability(roots, lambda u: replicator_equation(u, payoff_matrix))
+
+    stability = check_replicator_stability_pairwise_games(roots, payoff_matrix)
 
     return simplex, lambda u, t: replicator_equation(u, payoff_matrix), roots, roots_xy, stability
 

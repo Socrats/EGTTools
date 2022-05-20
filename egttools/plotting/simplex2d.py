@@ -371,7 +371,8 @@ class Simplex2D:
 
         return self
 
-    def draw_stationary_points(self, roots: List[Union[Tuple[float, float], np.ndarray]], stability: List[bool],
+    def draw_stationary_points(self, roots: List[Union[Tuple[float, float], np.ndarray]],
+                               stability: Union[List[bool], List[int]],
                                zorder: Optional[int] = 5, linewidth: Optional[float] = 3,
                                atol: Optional[float] = 1e-7) -> SelfSimplex2D:
         """
@@ -379,15 +380,16 @@ class Simplex2D:
 
         Parameters
         ----------
-        roots: List[Union[Tuple[float, float], numpy.ndarray]]
+        roots:
             A list of arrays (or tuples) containing the cartesian coordinates of the roots.
-        stability: List[bool]
-            A list of boolean values indicating whether the root is stable.
-        zorder: Optional[int]
+        stability:
+            A list of boolean or integer values indicating whether the root is stable. If there are integer values
+            -1 - unstable, 0 - saddle, 1 - stable.
+        zorder:
             Indicates in which order these points should appear in the figure (above or below other plots).
-        linewidth: Optional[float]
+        linewidth:
             Width of the border of the circles that represents the roots.
-        atol: Optional[float]
+        atol:
             Tolerance to consider a value equal to 0. Used to check if a point is on an edge.
 
         Returns
@@ -405,10 +407,12 @@ class Simplex2D:
                               atol=atol).any():
                     continue
 
-            if stability[i]:
+            if stability[i] == 1:
                 facecolor = 'k'
-            else:
+            elif stability[i] == -1:
                 facecolor = 'white'
+            else:
+                facecolor = 'grey'
             self.ax.add_artist(Circle(stationary_point, 0.015,
                                       edgecolor='k', facecolor=facecolor, zorder=zorder, linewidth=linewidth))
         return self
@@ -648,7 +652,7 @@ class Simplex2D:
                 if np.isclose([stationary_point[3 - np.sum(edge)] for edge in self.random_drift_edges], 0.,
                               atol=atol).any():
                     continue
-                if stability[i]:  # we don't plot arrows starting at stable points
+                if stability[i] == 1:  # we don't plot arrows starting at stable points
                     continue
                 states = perturb_state(stationary_point, perturbation=perturbation)
                 for state in states:

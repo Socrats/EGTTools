@@ -256,8 +256,7 @@ def find_roots(gradient_function: Callable[[np.ndarray], np.ndarray],
 
 
 def check_replicator_stability_pairwise_games(stationary_points: List[numpy.ndarray], payoff_matrix: numpy.ndarray,
-                                              atol: float = 1e-4) -> \
-        List[int]:
+                                              atol: float = 1e-4) -> List[int]:
     """
 
     Parameters
@@ -268,10 +267,11 @@ def check_replicator_stability_pairwise_games(stationary_points: List[numpy.ndar
 
     Returns
     -------
-    A list of integers indicating the stability of the stationary points for the replicator equation:
-    1 - stable
-    -1 - unstable
-    0 - saddle
+    List[int]
+        A list of integers indicating the stability of the stationary points for the replicator equation:
+        1 - stable
+        -1 - unstable
+        0 - saddle
     """
 
     def fitness(i: int, x: np.ndarray):
