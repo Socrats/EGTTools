@@ -66,7 +66,25 @@ class StochDynamics:
     nb_strategies : int
                 number of strategies in the population
     payoffs : numpy.ndarray[numpy.float64[m,m]]
-            payoff matrix indicating the payoff of each strategy (rows) against each other (columns)
+            Payoff matrix indicating the payoff of each strategy (rows) against each other (columns).
+            When analyzing an N-player game (group_size > 2) the structure of the matrix is a bit more involved, and
+            we can have 2 options for structuring the payoff matrix:
+
+            1) If we consider a simplified version of the system with a reduced Markov Chain which only contains
+            the states at the edges of the simplex (the Small Mutation Limit - SML), then, we can assume that, at most,
+            there will be 2 strategies in a group at any given moment. In this case, StochDynamics expects
+            a square matrix of size nb_strategies x nb_strategies, in which each entry is a function that takes
+            2 positional arguments k and group_size, and an optional *args argument, and will return the expected payoff
+            of the row strategy A in a group with k A strategists and group_size - k
+            B strategists (the column strategy). For all the elements in the diagonal, only 1 strategy should be present
+            in the group, thus, this function should always return the same value, i.e., the payoff of a row strategy
+            when all individuals in the group adopt the same strategy. See below for an example.
+
+            2) If we want to consider the full Markov Chain composed of all possible states in the simplex, then
+            the payoff matrix should be of the shape nb_strategies x nb_group_configurations, where the number
+            of group configurations can be calculated using `egttools.calculate_nb_states(group_size, nb_strategies)`.
+            Moreover, the mapping between group configurations and integer indexes must be done using
+            `egttools.sample_simplex(index, group_size, nb_strategies)`. See below for an example
     pop_size : int
             population size
     group_size : int
@@ -78,6 +96,34 @@ class StochDynamics:
     --------
     egttools.numerical.PairwiseMoran
     egttools.analytical.replicator_equation
+
+    Examples
+    --------
+    Example of the payoff matrix for case 1) mu = 0:
+        >>> def get_payoff_A_vs_B(k, group_size, *args):
+        ...     pre_computed_payoffs = [4, 5, 2, ..., 4] # the size of this list should be group_size + 1
+        ...     return pre_computed_payoffs[k]
+        >>> def get_payoff_B_vs_A(k, group_size, *args):
+        ...     pre_computed_payoffs = [0, 2, 1, ..., 0] # the size of this list should be group_size + 1
+        ...     return pre_computed_payoffs[k]
+        >>> def get_payoff_A_vs_A(k, group_size, *args):
+        ...     pre_computed_payoffs = [1, 1, 1, ..., 1] # the size of this list should be group_size + 1
+        ...     return pre_computed_payoffs[k]
+        >>> def get_payoff_B_vs_B(k, group_size, *args):
+        ...     pre_computed_payoffs = [0, 0, 0, ..., 0] # the size of this list should be group_size + 1
+        ...     return pre_computed_payoffs[k]
+        >>> payoff_matrix = np.array([
+        ...     [get_payoff_A_vs_A, get_payoff_A_vs_B],
+        ...     [get_payoff_B_vs_A, get_payoff_B_vs_B]
+        ...     ])
+
+    Example of payoff matrix for case 2) full markov chain (mu > 0):
+        >>> nb_group_combinations = egttools.calculate_nb_states(group_size, nb_strategies)
+        >>> payoff_matrix = np.zeros(shape=(nb_strategies, nb_group_combinations))
+        >>> for group_configuration_index in range(nb_group_combinations):
+        ...     for strategy in range(nb_strategies):
+        ...         group_configuration = egttools.sample_simplex(group_configuration_index, group_size, nb_strategies)
+        ...         payoff_matrix[strategy, group_configuration_index] = get_payoff(strategy, group_configuration)
     """
 
     def __init__(self, nb_strategies: int, payoffs: np.ndarray, pop_size: int, group_size=2, mu=0) -> None:
@@ -450,6 +496,8 @@ class StochDynamics:
         Function for calculating the fixation_probability probability of the invader
         in a population of residents.
 
+        TODO: Requires more testing!
+
         Parameters
         ----------
         invader : int
@@ -475,6 +523,9 @@ class StochDynamics:
         prod = 1.
         for i in range(1, self.Z):
             p_plus, p_minus = self.prob_increase_decrease(i, invader, resident, beta, *args)
+            # this is necessary to avoid divisions by zero
+            if np.isclose(p_plus, 0., atol=1e-12) and not np.isclose(p_plus, p_minus):
+                return 0.
             prod *= p_minus / p_plus
             phi += prod
             # We can approximate by zero if phi is too big
@@ -603,7 +654,7 @@ class StochDynamics:
         if np.isclose(t, 1., atol=1e-11).any():
             warn(
                 "Some of the entries in the transition matrix are close to 1 (with a tolerance of 1e-11). "
-                "This could result in more than one eigenvalue of magnitute 1 "
+                "This could result in more than one eigenvalue of magnitude 1 "
                 "(the Markov Chain is degenerate), so please be careful when analysing the results.", RuntimeWarning)
 
         # calculate stationary distributions using eigenvalues and eigenvectors
