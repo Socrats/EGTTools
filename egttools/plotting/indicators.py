@@ -156,16 +156,19 @@ def plot_gradients(gradients: numpy.ndarray, fig_title: Optional[str] = None,
 
             if (sorted_stability[i] == -1) and (sorted_stability[i - 1] == 1):
                 G.add_edge(i, i - 1)
-            elif (sorted_stability[i] == 1) and (sorted_stability[i - 1] == -1):
-                G.add_edge(i - 1, i)
-            elif (sorted_stability[i] == 1) and (sorted_stability[i - 1] == 0):
-                G.add_edge(i - 1, i)
+            elif (sorted_stability[i] == -1) and (sorted_stability[i - 1] == 0):
+                G.add_edge(i, i - 1)
+            elif (sorted_stability[i] == -1) and (sorted_stability[i - 1] == -1):
+                G.add_edge(i, i - 1)
+                G.add_edge(i - 1, -1)
             elif (sorted_stability[i] == 0) and (sorted_stability[i - 1] == 1):
                 G.add_edge(i, i - 1)
             elif (sorted_stability[i] == 0) and (sorted_stability[i - 1] == -1):
                 G.add_edge(i - 1, i)
-            elif (sorted_stability[i] == -1) and (sorted_stability[i - 1] == -1):
-                G.add_edge(i, i - 1)
+            elif (sorted_stability[i] == 1) and (sorted_stability[i - 1] == -1):
+                G.add_edge(i - 1, i)
+            elif (sorted_stability[i] == 1) and (sorted_stability[i - 1] == 0):
+                G.add_edge(i - 1, i)
 
         def get_color(x):
             if x == -1:
