@@ -8,7 +8,7 @@
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Socrats/EGTTools/HEAD?labpath=docs%2Fexamples)
 [![DOI](https://zenodo.org/badge/242180332.svg)](https://zenodo.org/badge/latestdoi/242180332)
 
-[comment]: <> ([![PyPI Downloads]&#40;https://img.shields.io/pypi/dm/egttools.svg?label=PyPI%20downloads&#41;]&#40;https://pypi.org/project/egttools/&#41;)
+[//]: # ([![PyPI Downloads]&#40;https://img.shields.io/pypi/dm/egttools.svg?label=PyPI%20downloads&#41;]&#40;https://pypi.org/project/egttools/&#41;)
 
 **EGTtools** provides a centralized repository with analytical and numerical methods to study/model game theoretical
 problems under the Evolutionary Game Theory (EGT) framework.
