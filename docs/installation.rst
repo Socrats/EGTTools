@@ -66,7 +66,9 @@ Also, to make your virtual environment visible to jupyter::
 
 Finally, you can **install EGTtools** in your virtual environment by running::
 
-    python -m pip install <path>
+    pip install build
+    cd <path>
+    python -m build
 
 Where ``<path>`` represents the path to the EGTtools folder. If you are running this while inside the EGTtools folder,
 then ``<path>`` is simply ``./``.
