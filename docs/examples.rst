@@ -11,6 +11,7 @@ The following examples give an idea of how to use EGTtools to model social dynam
     examples/plot_invasion_diagram
     examples/plot_simplex
     examples/plot_simplex_simplified
+    examples/examples_of_use
 
 
 Projects using EGTtools
