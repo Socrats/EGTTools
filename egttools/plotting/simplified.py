@@ -20,7 +20,7 @@ import egttools.games
 import matplotlib.pyplot as plt
 import numpy as np
 
-from typing import Optional, Tuple, Callable, List, Union
+from typing import Optional, Tuple, Callable, List
 from egttools.numerical import (calculate_nb_states, )
 from egttools.plotting.helpers import (barycentric_to_xy_coordinates,
                                        xy_to_barycentric_coordinates, calculate_stationary_points, calculate_stability,

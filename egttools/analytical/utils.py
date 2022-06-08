@@ -31,16 +31,24 @@ def get_pairwise_gradient_from_replicator(i: int, j: int, x: float, nb_strategie
 
     Parameters
     ----------
-    i: index of the strategy whose gradient we wish to calculate
-    j: index of the other strategy present in the population
-    x: frequency of i type
-    nb_strategies: total number of strategies in the population
-    payoffs: payoff matrix that defines the expected  payoff of any give strategy against each other
-    freq_array: optional vector to store the frequencies of each strategy in the population
+    i: int
+        index of the strategy whose gradient we wish to calculate
+    j: int
+        index of the other strategy present in the population
+    x: float
+        frequency of i type
+    nb_strategies: int
+        total number of strategies in the population
+    payoffs: numpy.ndarray
+        payoff matrix that defines the expected  payoff of any give strategy against each other
+    freq_array: Optional[numpy.ndarray]
+        optional vector to store the frequencies of each strategy in the population
 
     Returns
     -------
-    The gradient of strategy i.
+    float
+        The gradient of strategy i.
+
     """
     if freq_array is None:
         freq_array = np.zeros(shape=(nb_strategies,))
@@ -55,10 +63,10 @@ def get_pairwise_gradient_from_replicator(i: int, j: int, x: float, nb_strategie
 
 def check_if_there_is_random_drift(payoff_matrix: np.ndarray,
                                    population_size: Optional[int] = None,
-                                   group_size: Optional[int] = 2,
+                                   group_size: int = 2,
                                    beta: Optional[float] = None,
-                                   nb_points: Optional[int] = 10,
-                                   atol: Optional[float] = 1e-7
+                                   nb_points: int = 10,
+                                   atol: float = 1e-7
                                    ) -> List[Tuple[int, int]]:
     """
     Checks if there is random drift along the edge between two strategies in the simplex.
@@ -77,23 +85,24 @@ def check_if_there_is_random_drift(payoff_matrix: np.ndarray,
         The size of the population. If this value is not given, we assume that
         we calculate the dynamics in infinite populations using the replicator_equation.
 
-    group_size: Optional[int]
+    group_size: int
         The size of the group. If you specify population size, you should also specify this value. By default we assume
         that the game is pairwise.
 
     beta: Optional[float]
         The intensity of selection.If you specify population size, you should also specify this value.
 
-    nb_points: Optional[int]
+    nb_points: int
         Number of points for which to check the gradient. It is 10 by default.
 
-    atol: Optional[float]
+    atol: float
         Tolerance to consider a value zero
 
     Returns
     -------
     List[Tuple[int, int]]
         A list of tuples indicating the undirected edged where there should be random drift.
+
     """
     # To check if there is random drift, the transition probabilities should be zero
 
@@ -136,8 +145,31 @@ def check_if_there_is_random_drift(payoff_matrix: np.ndarray,
     return solutions
 
 
-def find_roots_and_stability(f: Callable[[np.ndarray], np.ndarray], nb_strategies: int, atol: Optional[float] = 1e-12,
-                             nb_random_restarts: Optional[int] = 1) -> Tuple[List[np.array], List[int]]:
+def find_roots_and_stability(f: Callable[[np.ndarray], np.ndarray], nb_strategies: int, atol: float = 1e-12,
+                             nb_random_restarts: int = 1) -> Tuple[List[np.array], List[int]]:
+    """
+    Searches for the roots of the differential equation `f` and calculates the stability based
+    on an estimate of the Jacobian. This estimate is often imprecise which leads to wrong results.
+
+    Parameters
+    ----------
+    f: Callable[[np.ndarray], np.ndarray]
+        The differential equation implemented as a function.
+    nb_strategies: int
+        the number of strategies of the system.
+    atol: float
+        the tolerance to consider a value equal to zero.
+    nb_random_restarts: int
+        number of times the root function will be restarted at a random initial point.
+        This is used to increase the likelihood that all roots are found.
+
+    Returns
+    -------
+    Tuple[List[np.array], List[int]]
+        A tuple containing the list of roots and a list with 1 indicating stable points, 0 saddle points
+        and -1 unstable points.
+
+    """
     roots = []
     stability = []
     for i in range(nb_random_restarts):
@@ -166,7 +198,7 @@ def find_roots_and_stability(f: Callable[[np.ndarray], np.ndarray], nb_strategie
     return roots, stability
 
 
-def check_if_point_in_unit_simplex(point: np.ndarray, delta: Optional[float] = 1e-12) -> bool:
+def check_if_point_in_unit_simplex(point: np.ndarray, delta: float = 1e-12) -> bool:
     """
     Checks if a point (in barycentric coordinates) is inside the unit simplex.
 
@@ -196,42 +228,57 @@ def calculate_gradients(population_states: np.ndarray,
                         gradient_function: Callable[[np.ndarray], np.ndarray]) -> np.ndarray:
     """
     Calculates the gradients of selection of each of the states given in `population_states`.
+
     Parameters
     ----------
-    population_states: A numpy array of shape (m,n) where n is the number of strategies in the population and
-                       m the number of states for which the gradient should be calculated.
-    gradient_function: A function which accepts a vector of shape (n,) containing the frequencies of each
-                       strategy/type in the population, and returns another vector of shape (n,) containing
-                       the gradient for each strategy.
+    population_states: numpy.ndarray
+        A numpy array of shape (m,n) where n is the number of strategies in the population and
+        m the number of states for which the gradient should be calculated.
+    gradient_function: Callable[[np.ndarray], np.ndarray]
+        A function which accepts a vector of shape (n,) containing the frequencies of each
+        strategy/type in the population, and returns another vector of shape (n,) containing
+        the gradient for each strategy.
 
     Returns
     -------
-    A numpy array of shape (m,n) containing the gradients for each of the input states given in `population_states`.
+    numpy.ndarray
+        A numpy array of shape (m,n) containing the gradients for
+        each of the input states given in `population_states`.
+
     """
     return np.array([gradient_function(population_states[i]) for i in range(population_states.shape[0])])
 
 
 def find_roots(gradient_function: Callable[[np.ndarray], np.ndarray],
-               nb_strategies: int, nb_initial_random_points: Optional[int] = 3,
-               atol: Optional[float] = 1e-7, tol_close_points: Optional[float] = 1e-4,
-               method: Optional[str] = 'hybr') -> List[np.ndarray]:
+               nb_strategies: int, nb_initial_random_points: int = 3,
+               atol: float = 1e-7, tol_close_points: float = 1e-4,
+               method: str = 'hybr') -> List[np.ndarray]:
     """
+    Searches for the roots of the given differential equation.
 
     Parameters
     ----------
-    gradient_function: function that returns a numpy.ndarray with the gradient of every strategy/type given a
-                       current population state.
-    nb_strategies: number of strategies/types present in the population.
-    nb_initial_random_points: number of random points to use as initial states for the root function. These are
-                              additional to the vertex of the simplex.
-    atol: tolerance for considering that a point is in the simplex.
-    tol_close_points: tolerance for considering that two points are equal.
-    method: one of the options described in `scipy.optimize.root`
-            (see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.root.html)
+    gradient_function: Callable[[np.ndarray], np.ndarray]
+        function that returns a numpy.ndarray with the gradient of every strategy/type given a
+        current population state.
+    nb_strategies: int
+        number of strategies/types present in the population.
+    nb_initial_random_points: int
+        number of random points to use as initial states for the root function. These are
+        additional to the vertex of the simplex.
+    atol: float
+        tolerance for considering that a point is in the simplex.
+    tol_close_points: float
+        tolerance for considering that two points are equal.
+    method: str
+        one of the options described in `scipy.optimize.root`
+        (see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.root.html)
 
     Returns
     -------
-    A list of tuples with the identified roots/stationary points.
+    List[numpy.ndarray]
+        A list of tuples with the identified roots/stationary points.
+
     """
     # we test all the vertex of the simplex and some random initial points
     initial_states = [[0 if i != j else 1 for i in range(nb_strategies)] for j in range(nb_strategies)]
@@ -258,12 +305,18 @@ def find_roots(gradient_function: Callable[[np.ndarray], np.ndarray],
 def check_replicator_stability_pairwise_games(stationary_points: List[numpy.ndarray], payoff_matrix: numpy.ndarray,
                                               atol: float = 1e-4) -> List[int]:
     """
+    Calculates the stability of the roots assuming that they are from a system governed by the replicator
+    equation (this function uses the Jacobian of the replicator equation in pairwise games to calculate the
+    stability).
 
     Parameters
     ----------
-    stationary_points: a list of stationary points (represented as numpy.ndarray)
-    payoff_matrix: a payoff matrix represented as a numpy.ndarray
-    atol: tolerance to consider a value zero
+    stationary_points: List[numpy.ndarray]
+        a list of stationary points (represented as numpy.ndarray)
+    payoff_matrix: numpy.ndarray
+        a payoff matrix represented as a numpy.ndarray
+    atol: float
+        tolerance to consider a value zero
 
     Returns
     -------
@@ -272,6 +325,7 @@ def check_replicator_stability_pairwise_games(stationary_points: List[numpy.ndar
         1 - stable
         -1 - unstable
         0 - saddle
+
     """
 
     def fitness(i: int, x: np.ndarray):
