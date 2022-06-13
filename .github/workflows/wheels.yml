@@ -125,7 +125,7 @@ jobs:
         env:
           CIBW_BUILD_FRONTEND: "build"
           CIBW_BUILD: "cp*-${{ matrix.cibw-arch }}"
-          CIBW_SKIP: "cp310-win*"
+          CIBW_SKIP: "cp310-win* cp310-manylinux_i686"
           CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
           CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_BEFORE_ALL: pip install --upgrade pip
