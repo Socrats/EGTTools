@@ -98,6 +98,7 @@ if on_rtd:
         subprocess.check_call(
             [sys.executable, '-m', 'pip', 'install', '--force-reinstall', tmpdir + '/' + zf.namelist()[0]])
 html_css_files = ["readthedocs-custom.css"]  # Override some CSS settings
+
 import egttools
 
 # The short X.Y version
