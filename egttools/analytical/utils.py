@@ -303,7 +303,8 @@ def find_roots(gradient_function: Callable[[np.ndarray], np.ndarray],
 
 
 def check_replicator_stability_pairwise_games(stationary_points: List[numpy.ndarray], payoff_matrix: numpy.ndarray,
-                                              atol: float = 1e-4) -> List[int]:
+                                              atol_neg: float = 1e-4, atol_pos: float = 1e-4,
+                                              atol_zero: float = 1e-4) -> List[int]:
     """
     Calculates the stability of the roots assuming that they are from a system governed by the replicator
     equation (this function uses the Jacobian of the replicator equation in pairwise games to calculate the
@@ -312,11 +313,15 @@ def check_replicator_stability_pairwise_games(stationary_points: List[numpy.ndar
     Parameters
     ----------
     stationary_points: List[numpy.ndarray]
-        a list of stationary points (represented as numpy.ndarray)
+        a list of stationary points (represented as numpy.ndarray).
     payoff_matrix: numpy.ndarray
-        a payoff matrix represented as a numpy.ndarray
-    atol: float
-        tolerance to consider a value zero
+        a payoff matrix represented as a numpy.ndarray.
+    atol_neg: float
+        tolerance to consider a value negative.
+    atol_pos: float
+        tolerance to consider a value positive.
+    atol_zero: float
+        tolerance to determine if a value is zero.
 
     Returns
     -------
@@ -345,12 +350,14 @@ def check_replicator_stability_pairwise_games(stationary_points: List[numpy.ndar
     for point in stationary_points:
         # now we check the stability of the roots using the jacobian
         eigenvalues = eigvals(jacobian(point))
-        if (eigenvalues.real < -atol).all():  # stable point
+        # If all eigenvalues are negatives or zero it's stable
+        if (eigenvalues.real < -atol_neg).all() or np.array(
+                [np.isclose(el, 0., atol=atol_zero) for el in eigenvalues.real[eigenvalues.real > -atol_neg]]).all():
             stability.append(1)
-        elif (eigenvalues.real > atol).any():  # unstable point
+        # If all eigenvalues are positive or zero it's unstable
+        elif (eigenvalues.real > atol_pos).all() or np.array(
+                [np.isclose(el, 0., atol=atol_zero) for el in eigenvalues.real[eigenvalues.real < atol_pos]]).all():
             stability.append(-1)
-        elif len(eigenvalues.real[eigenvalues.real < -atol]) > 0:
-            stability.append(1)
         else:  # saddle point
             # This is probably wrong, but let's first assume that if we reach here, the point is a saddle
             stability.append(0)
