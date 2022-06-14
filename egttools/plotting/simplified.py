@@ -32,8 +32,10 @@ from egttools.plotting import Simplex2D
 from egttools.utils import transform_payoffs_to_pairwise
 
 
-def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray, atol: Optional[float] = 1e-7,
-                                        figsize: Optional[Tuple[int, int]] = (10, 8),
+def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray, atol: float = 1e-7, atol_equal: float = 1e-12,
+                                        atol_stability_pos: float = 1e-4, atol_stability_neg: float = 1e-4,
+                                        atol_stability_zero: float = 1e-4,
+                                        figsize: Tuple[int, int] = (10, 8),
                                         ax: Optional[plt.axis] = None) -> Tuple[Simplex2D,
                                                                                 Callable[[np.ndarray, int], np.ndarray],
                                                                                 List[np.ndarray],
@@ -44,19 +46,32 @@ def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray, atol: Optiona
 
     Parameters
     ----------
-    payoff_matrix:
+    payoff_matrix: numpy.ndarray
         The square payoff matrix. Group games are still unsupported in the replicator dynamics. This feature will
         soon be added.
-    atol:
+    atol: float
         Tolerance to consider a value equal to zero. This is used to check if an edge has random drift. By default
         the tolerance is 1e-7.
-    figsize:
+    atol_equal: float
+        Tolerance to consider two arrays equal.
+    atol_stability_neg: float
+        Tolerance used to determine the stability of the roots. This is used to determine whether an
+        eigenvalue is negative.
+    atol_stability_pos: float
+        Tolerance used to determine the stability of the roots. This is used to determine whether an
+        eigenvalue is positive.
+    atol_stability_zero: float
+        Tolerance used to determine the stability of the roots. This is used to determine whether an
+        eigenvalue is zero.
+    figsize: Tuple[int, int]
         Size of the figure. This parameter is only used if the ax parameter is not defined.
-    ax:
+    ax: Optional[matplotlib.pyplot.axis]
         A matplotlib figure axis.
 
     Returns
     -------
+    Tuple[Simplex2D, Callable[[numpy.ndarray, int], numpy.ndarray], List[numpy.ndarray], List[numpy.ndarray], List[int]]
+
     A tuple with the simplex object which can be used to add more features to the plot, the function that
     can be used to calculate gradients and should be passed to `Simplex2D.draw_trajectory_from_roots` and
     `Simplex2D.draw_scatter_shadow`, a list of the roots in barycentric coordinates, a list of the roots in
@@ -76,10 +91,11 @@ def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray, atol: Optiona
 
     simplex.apply_simplex_boundaries_to_gradients(Ux, Uy)
     roots, roots_xy = calculate_stationary_points(simplex.trimesh.x, simplex.trimesh.y, simplex.corners,
-                                                  lambda u: replicator_equation(u, payoff_matrix))
+                                                  lambda u: replicator_equation(u, payoff_matrix), atol=atol_equal)
     # stability = calculate_stability(roots, lambda u: replicator_equation(u, payoff_matrix))
 
-    stability = check_replicator_stability_pairwise_games(roots, payoff_matrix)
+    stability = check_replicator_stability_pairwise_games(roots, payoff_matrix, atol_neg=atol_stability_neg,
+                                                          atol_pos=atol_stability_pos, atol_zero=atol_stability_zero)
 
     return simplex, lambda u, t: replicator_equation(u, payoff_matrix), roots, roots_xy, stability
 
