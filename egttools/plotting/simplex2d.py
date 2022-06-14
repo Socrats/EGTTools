@@ -333,7 +333,7 @@ class Simplex2D:
                      anchor: Optional[Tuple[float, float]] = (-0.5, 0.5),
                      panchor: Optional[Tuple[float, float]] = (0, 0),
                      shrink: Optional[float] = 0.6,
-                     label: Optional[str] = 'intensity of selection',
+                     label: Optional[str] = 'gradient of selection',
                      label_rotation: Optional[int] = 270,
                      label_fontsize: Optional[int] = 16,
                      labelpad: Optional[float] = 20) -> SelfSimplex2D:
