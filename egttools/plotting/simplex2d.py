@@ -187,6 +187,7 @@ class Simplex2D:
         """
         if ax is not None:
             self.ax = ax
+            self.figure = ax.figure
         else:
             self.figure, self.ax = plt.subplots(figsize=figsize)
 
@@ -366,7 +367,8 @@ class Simplex2D:
             A reference to the class object.
 
         """
-        cbar = plt.colorbar(self.stream.lines, aspect=aspect, anchor=anchor, panchor=panchor, shrink=shrink)
+        cbar = self.figure.colorbar(self.stream.lines, aspect=aspect, anchor=anchor, panchor=panchor, shrink=shrink,
+                                    ax=self.ax)
         cbar.set_label(label, rotation=label_rotation, fontsize=label_fontsize, labelpad=labelpad)
 
         return self
@@ -797,7 +799,8 @@ class Simplex2D:
                                     zorder=zorder)
 
         if colorbar:
-            cbar = plt.colorbar(sd_plot, aspect=aspect, anchor=anchor, panchor=panchor, shrink=shrink)
+            cbar = self.figure.colorbar(sd_plot, aspect=aspect, anchor=anchor, panchor=panchor, shrink=shrink,
+                                        ax=self.ax)
             cbar.set_label(label, rotation=label_rotation, fontsize=label_fontsize, labelpad=labelpad)
 
         return self
