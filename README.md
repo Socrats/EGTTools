@@ -117,7 +117,7 @@ conda install ipykernel # or pip install ipykernel
 python -m ipykernel install --user --name=egttools-env
 ```
 
-Finally, you can **install EGTtools** in your virtual environment by running:
+You can **build EGTtools** in your virtual environment by running:
 
 ```bash
 pip install build
@@ -128,12 +128,14 @@ python -m build
 Where ```<path>``` represents the path to the EGTtools folder. If you are running this while inside the EGTtools folder,
 then ```<path>``` is simply ```./```.
 
-If you wish, you may also install EGTtools in **development** mode, this will allow the installation to update with new
+Finally, you can install EGTtools in **development** mode, this will allow the installation to update with new
 modifications to the package:
 
 ```bash
 python -m pip install -e <path>
 ```
+
+If you don't want development mode, you can skip the option ```-e```.
 
 ## Examples of usage
 
