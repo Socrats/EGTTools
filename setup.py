@@ -36,7 +36,7 @@ except ImportError:
 def find_version():
     with io.open(os.path.join(os.path.dirname(__file__), "src", "version.h"), encoding='utf8') as f:
         version_file = f.read()
-    version_match = re.search(r"^#define EGTTOOLS_VERSION ([0-9a-z.]+)$", version_file, re.M)
+    version_match = re.search(r"^#define EGTTOOLS_VERSION ([\da-z.]+)$", version_file, re.M)
     if version_match:
         return version_match.group(1)
     raise RuntimeError("Unable to find version string.")
