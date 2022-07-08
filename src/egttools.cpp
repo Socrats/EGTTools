@@ -281,7 +281,7 @@ PYBIND11_MODULE(numerical, m) {
 
                     Parameters
                     ----------
-                    player_type : int
+                    strategy_index : int
                         The index of the strategy used by the player.
                     pop_size : int
                         The size of the population.
@@ -293,7 +293,7 @@ PYBIND11_MODULE(numerical, m) {
                     float
                         The fitness of the strategy in the population state given by strategies.
                     )pbdoc",
-                 py::arg("player_type"), py::arg("pop_size"), py::arg("strategies"))
+                 py::arg("strategy_index"), py::arg("pop_size"), py::arg("strategies"))
             .def("__str__", &egttools::FinitePopulations::AbstractGame::toString)
             .def("type", &egttools::FinitePopulations::AbstractGame::type, "returns the type of game.")
             .def("payoffs", &egttools::FinitePopulations::AbstractGame::payoffs,
