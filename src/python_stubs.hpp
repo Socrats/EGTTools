@@ -62,7 +62,7 @@ namespace stubs {
         }
 
         /* Trampoline (need one for each virtual function) */
-        double calculate_fitness(const int &player_type, const size_t &pop_size,
+        double calculate_fitness(const int &strategy_index, const size_t &pop_size,
                                  const Eigen::Ref<const egttools::VectorXui> &strategies) override {
             /* Acquire GIL before calling Python code */
             py::gil_scoped_acquire acquire;
@@ -71,7 +71,7 @@ namespace stubs {
                     double,                                    /* Return type */
                     egttools::FinitePopulations::AbstractGame, /* Parent class */
                     calculate_fitness,                         /* Name of function in C++ (must match Python name) */
-                    player_type, pop_size, strategies          /* Argument(s) */
+                    strategy_index, pop_size, strategies          /* Argument(s) */
             );
         }
 
