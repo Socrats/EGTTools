@@ -122,7 +122,7 @@ def plot_gradients(gradients: numpy.ndarray, fig_title: Optional[str] = None,
 
     The axis in which the figure has been plot.
     """
-    x_values = np.linspace(0, 1, num=101, dtype=np.float64)
+    x_values = np.linspace(0, 1, num=gradients.shape[0], dtype=np.float64)
 
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
@@ -226,13 +226,13 @@ def plot_gradients(gradients: numpy.ndarray, fig_title: Optional[str] = None,
 def plot_gradient(x, gradients, saddle_points, saddle_type, gradient_direction, fig_title='', xlabel='', figsize=(5, 4),
                   **kwargs):
     """
-    Creates a figure plotting the gradient of selection toghether with the saddle points,
+    Creates a figure plotting the gradient of selection together with the saddle points,
     and the gradient arrows.
 
     :param x: vector containing the possible states in x axis. It must have the same length as gradient
     :param gradients: vector containing the gradient for each possible state
     :param saddle_points: vector containing all saddle points
-    :param saddle_type: vector of booleans indicating whether or not the saddle point is stable
+    :param saddle_type: vector of booleans indicating whether the saddle point is stable
     :param gradient_direction: vector of points indicating the direction of the gradient
                                between unstable and stable saddle points
     :param fig_title: a string containing the title of the figure
