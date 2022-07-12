@@ -6,3 +6,5 @@ from egttools.numerical.games import AbstractGame, NormalFormGame, CRDGame, CRDG
 
 from .pgg import PGG
 from .informal_risk import InformalRiskGame
+from .abstract_games import AbstractNPlayerGame, AbstractTwoPLayerGame
+from .nonlinear_games import NPlayerStagHunt
