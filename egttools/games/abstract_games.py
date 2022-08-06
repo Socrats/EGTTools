@@ -57,7 +57,7 @@ class AbstractNPlayerGame(AbstractGame):
         self.nb_strategies_ = nb_strategies
         self.group_size_ = group_size
         self.nb_group_configurations_ = calculate_nb_states(self.group_size_, self.nb_strategies_)
-        self.payoffs_ = np.zeros(shape=(2, self.nb_group_configurations_))
+        self.payoffs_ = np.zeros(shape=(self.nb_strategies_, self.nb_group_configurations_))
 
         # initialize the payoffs matrix
         self.calculate_payoffs()
@@ -104,6 +104,10 @@ class AbstractNPlayerGame(AbstractGame):
         The calculation is done by computing the expected payoff over all possible group combinations
         for the given population state: $ fitness = \\sum_{states} payoff * P(state) $
 
+        This function assumes that the strategy counts given in @param strategies does not include
+        the player with :param population_state strategy. This is useful since to calculate the fitness
+        of strategy player_strategy, we need to assume that it is always in the group.
+
         Parameters
         ----------
         player_strategy : int
@@ -112,7 +116,9 @@ class AbstractNPlayerGame(AbstractGame):
             size of the population - Only necessary for compatibility with the C++ implementation
             (might be eliminated in the future).
         population_state : numpy.ndarray[numpy.uint64[m, 1]]
-            vector with the population state (the number of players adopting each strategy).
+            vector with the population state (the number of players adopting each strategy). This population state
+            does not contain 1 individual of player_strategy type, i.e., the real population state is
+            population_state[player_strategy] += 1.
 
         Returns
         -------
@@ -120,19 +126,17 @@ class AbstractNPlayerGame(AbstractGame):
             The fitness of the population.
         """
         # multivariate PDF
-        population_state[player_strategy] -= 1
         rv = multivariate_hypergeom(population_state, self.group_size_ - 1)
-        population_state[player_strategy] += 1
 
         fitness = 0.0
         # Iterate over all possible group compositions
         for i in range(self.nb_group_configurations_):
-            group_composition = sample_simplex(i, self.group_size_ - 1, self.nb_strategies_)
+            group_composition = sample_simplex(i, self.group_size_, self.nb_strategies_)
             # Estimate probability of the current group composition
             if group_composition[player_strategy] > 0:
+                # Remove the strategy whose fitness we are calculating
                 group_composition[player_strategy] -= 1
                 fitness += self.payoffs_[player_strategy, i] * rv.pmf(x=group_composition)
-                group_composition[player_strategy] += 1
 
         return fitness
 
@@ -186,7 +190,7 @@ class AbstractTwoPLayerGame(AbstractGame):
     2. If your game is normal form, but iterated, you should create another variable to contain the payoff matrix
     for one round of the game, since `self.payoffs_` will contain the expected payoffs over the several rounds
     of the game.
-    3. If the game is one-shot and normal form, `self.payoffs_` is the payoff matrix of the game and you do not
+    3. If the game is one-shot and normal form, `self.payoffs_` is the payoff matrix of the game, and you do not
     need to do anything in calculate_payoffs besides calling this matrix.
 
 
@@ -197,6 +201,25 @@ class AbstractTwoPLayerGame(AbstractGame):
      to the numerical simulator (e.g., egttools.numerical.PairwiseMoran).
 
     """
+
+    def __init__(self, nb_strategies: int):
+        """
+        This class must be initialized with the total number of strategies
+        that will be used and the size of the group in which the game takes place.
+        This is required to calculate the number of group configurations and the correct
+        shape of the payoff matrix.
+
+        Parameters
+        ----------
+        nb_strategies: int
+            total number of possible strategies.
+        """
+        super().__init__()
+        self.nb_strategies_ = nb_strategies
+        self.payoffs_ = np.zeros(shape=(self.nb_strategies_, self.nb_strategies_))
+
+        # initialize the payoffs matrix
+        self.calculate_payoffs()
 
     @abstractmethod
     def play(self, group_composition: Union[List[int], np.ndarray], game_payoffs: np.ndarray) -> None:
