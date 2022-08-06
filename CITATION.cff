@@ -4,7 +4,7 @@ authors:
   - family-names: "Fernández Domingos"
     given-names: "Elias"
     orcid: "https://orcid.org/0000-0002-4717-7984"
-title: "EGTtools"
+title: "EGTtools: Toolbox for Evolutionary Game Theory"
 version: 0.1.10
 date-released: 2022-08-06
 url: "https://github.com/Socrats/EGTTools"
