@@ -333,7 +333,7 @@ class StochDynamics:
         beta : float
             intensity of selection
         fitness_diff : float
-            Difference in fitneess between the strategies (f_a - f_b).
+            Difference in fitness between the strategies (f_a - f_b).
 
         Returns
         -------
@@ -571,16 +571,15 @@ class StochDynamics:
                 # now we calculate the transition probability
                 increase = np.where(np.array(permutation) == 1)[0][0]
                 decrease = np.where(np.array(permutation) == -1)[0][0]
-                fitness_diff = self.full_fitness(increase, decrease, current_state)
+                fitness_diff = self.full_fitness(decrease, increase, current_state)
                 # Probability that the individual that will die is selected and that the individual that
                 # will be imitated is selected times the probability of imitation
-                prob = (current_state[decrease] / self.Z) * (
-                        current_state[increase] / float(self.Z - 1)) * StochDynamics.fermi(-beta, fitness_diff)
+                prob = (current_state[increase] / self.Z) * StochDynamics.fermi(beta, fitness_diff)
                 # The probability that there will not be a mutation event times the probability of the transition
                 # plus the probability that if there is a mutation event, the dying strategy is selected
                 # times the probability that it mutates into the increasing strategy
-                prob = ((1 - self.mu) * prob) + (
-                        self.mu * (current_state[decrease] / self.Z) * (1 / (self.nb_strategies - 1)))
+                prob = (current_state[decrease] / self.Z) * (
+                            ((1 - self.mu) * prob) + (self.mu * (1 / (self.nb_strategies - 1))))
                 total_prob += prob
 
                 new_state_index = calculate_state(self.Z, new_state)
