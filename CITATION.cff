@@ -5,8 +5,8 @@ authors:
     given-names: "Elias"
     orcid: "https://orcid.org/0000-0002-4717-7984"
 title: "EGTtools"
-version: 0.1.9-patch1
-date-released: 2022-01-17
+version: 0.1.10
+date-released: 2022-08-06
 url: "https://github.com/Socrats/EGTTools"
 license: GPL-3.0-or-later
 preferred-citation:
@@ -15,7 +15,7 @@ preferred-citation:
     - family-names: "Fernández Domingos"
       given-names: "Elias"
       orcid: "https://orcid.org/0000-0002-4717-7984"
-  doi: 10.5281/zenodo.3687125
+  doi: 10.5281/zenodo.6969694
   journal: "zenodo"
   month: 1
   title: "EGTtools: Toolbox for Evolutionary Game Theory"
