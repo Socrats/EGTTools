@@ -206,8 +206,7 @@ def plot_moran_dynamics_in_simplex_without_roots(population_size: int,
     beta:
         Intensity of selection.
     payoff_matrix:
-        The square payoff matrix. Group games are still unsupported in the replicator dynamics. This feature will
-        soon be added.
+        The square payoff matrix.
     game:
         Game that should contain a set of payoff matrices
     group_size:
