@@ -371,11 +371,9 @@ class StochDynamics:
             decrease = 0
         else:
             fitness_diff = self.fitness(k, invader, resident, *args)
-            increase = (((self.Z - k) / float(self.Z)) * (k / float(self.Z - 1))) * StochDynamics.fermi(-beta,
-                                                                                                        fitness_diff)
+            increase = (((self.Z - k) / self.Z) * (k / self.Z)) * StochDynamics.fermi(-beta, fitness_diff)
 
-            decrease = ((k / float(self.Z)) * ((self.Z - k) / float(self.Z - 1))) * StochDynamics.fermi(beta,
-                                                                                                        fitness_diff)
+            decrease = ((k / self.Z) * ((self.Z - k) / self.Z)) * StochDynamics.fermi(beta, fitness_diff)
         return np.clip(increase, 0., 1.), np.clip(decrease, 0., 1.)
 
     def prob_increase_decrease_with_mutation(self, k: int, invader: int, resident: int, beta: float,
@@ -435,7 +433,7 @@ class StochDynamics:
         elif k == self.Z:
             return 0
         else:
-            return ((self.Z - k) / float(self.Z)) * (k / float(self.Z - 1)) * np.tanh(
+            return ((self.Z - k) / self.Z) * (k / self.Z) * np.tanh(
                 (beta / 2) * self.fitness(k, invader, resident, *args))
 
     def full_gradient_selection(self, population_state: np.ndarray, beta: float) -> np.ndarray:
@@ -456,7 +454,7 @@ class StochDynamics:
             Matrix indicating the likelihood of change in the population given an starting point.
         """
         probability_selecting_strategy_first = population_state / self.Z
-        probability_selecting_strategy_second = population_state / (self.Z - 1)
+        probability_selecting_strategy_second = population_state / self.Z
         probabilities = np.outer(probability_selecting_strategy_first, probability_selecting_strategy_second)
         fitness = np.asarray([[self.full_fitness(i, j, population_state) for i in
                                range(len(population_state))] for j in range(len(population_state))])
@@ -483,7 +481,7 @@ class StochDynamics:
         """
 
         probability_selecting_strategy_first = population_state / self.Z
-        probability_selecting_strategy_second = population_state / (self.Z - 1)
+        probability_selecting_strategy_second = population_state / self.Z
         probabilities = np.outer(probability_selecting_strategy_first, probability_selecting_strategy_second)
         fitness = np.asarray([[self.full_fitness(i, j, population_state) for i in
                                range(len(population_state))] for j in range(len(population_state))])
@@ -579,7 +577,7 @@ class StochDynamics:
                 # plus the probability that if there is a mutation event, the dying strategy is selected
                 # times the probability that it mutates into the increasing strategy
                 prob = (current_state[decrease] / self.Z) * (
-                            ((1 - self.mu) * prob) + (self.mu * (1 / (self.nb_strategies - 1))))
+                        ((1 - self.mu) * prob) + (self.mu * (1 / (self.nb_strategies - 1))))
                 total_prob += prob
 
                 new_state_index = calculate_state(self.Z, new_state)
