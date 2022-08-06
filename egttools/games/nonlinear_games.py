@@ -32,7 +32,7 @@ class NPlayerStagHunt(AbstractNPlayerGame):
 
         Parameters
         ----------
-        group_composition: Union[List[int], np.ndarray]
+        group_composition: Union[List[int], numpy.ndarray]
             counts of each strategy inside the group.
         game_payoffs: numpy.ndarray
             container for the payoffs of each strategy
