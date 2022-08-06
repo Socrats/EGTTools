@@ -1,10 +1,15 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite it using the metadata from 'preferred-citation'."
+title: 'EGTtools: Toolbox for Evolutionary Game Theory'
+message: >-
+  Please cite this software using the metadata from
+  'preferred-citation'.
+type: software
 authors:
   - family-names: "Fernández Domingos"
     given-names: "Elias"
     orcid: "https://orcid.org/0000-0002-4717-7984"
-title: "EGTtools: Toolbox for Evolutionary Game Theory"
+    affiliation: Université Libre de Bruxelles
+    email: elias.fernandez.domingos@ulb.be
 version: 0.1.10
 date-released: 2022-08-06
 url: "https://github.com/Socrats/EGTTools"
@@ -17,6 +22,6 @@ preferred-citation:
       orcid: "https://orcid.org/0000-0002-4717-7984"
   doi: 10.5281/zenodo.6969694
   journal: "zenodo"
-  month: 1
+  month: 8
   title: "EGTtools: Toolbox for Evolutionary Game Theory"
   year: 2022
