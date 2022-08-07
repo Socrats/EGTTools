@@ -77,7 +77,7 @@ author = 'Elias Fernández'
 
 if on_rtd:
     rtd_version = os.environ.get('READTHEDOCS_VERSION')
-    branch = 'master' if rtd_version == 'latest' else rtd_version
+    branch = 'docs' if rtd_version == 'latest' else rtd_version
 
     github_token = os.environ['GITHUB_TOKEN']
     head_sha = git.Repo(search_parent_directories=True).head.commit.hexsha
