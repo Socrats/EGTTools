@@ -72,7 +72,7 @@ master_doc = 'index'
 # -- Project information -----------------------------------------------------
 
 project = 'EGTtools'
-copyright = '2019-2021, Elias Fernández'
+copyright = '2019-2022, Elias Fernández'
 author = 'Elias Fernández'
 
 if on_rtd:
