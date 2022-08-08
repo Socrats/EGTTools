@@ -292,7 +292,11 @@ def draw_stationary_distribution(strategies: List[str], drift: float, fixation_p
                                  display_node_labels: Optional[bool] = True,
                                  display_edge_labels: Optional[bool] = True,
                                  display_sd_labels: Optional[bool] = True,
+                                 node_labels_top_separation: Optional[float] = 0.15,
+                                 node_labels_bottom_separation: Optional[float] = - 0.2,
                                  edge_width: Optional[int] = 2,
+                                 node_linewidth: Optional[float] = 0,
+                                 node_edgecolors: Optional[str] = None,
                                  figsize: Optional[Tuple[int, int]] = (10, 10),
                                  dpi: Optional[int] = 150,
                                  colors: Optional[List[str]] = None,
@@ -322,14 +326,22 @@ def draw_stationary_distribution(strategies: List[str], drift: float, fixation_p
         Font size of the labels displayed in each edge (which contain the fixation probabilities).
     font_size_sd_labels : Optional[int]
         Font size of the labels displayed beside each node containing the value of the stationary distribution.
-    display_node_labels :
+    display_node_labels : Optional[bool]
         Indicates wether the node labels should be displayed.
-    display_edge_labels :
+    display_edge_labels : Optional[bool]
         Indicates wether the edge labels should be displayed.
-    display_sd_labels :
+    display_sd_labels : Optional[bool]
         Indicates whether the stationary distribution labels should be displayed.
+    node_labels_top_separation : Optional[float]
+        Gives the separation of node label for nodes with positive y (y > 0)
+    node_labels_bottom_separation : Optional[float]
+        Gives the separation of node label for nodes with negative y (y <= 0)
     edge_width : Optional[int]
         Width of the edge line.
+    node_linewidth: Optional[float]
+        Line width of node border
+    node_edgecolors: Optional[str]
+        Colors of node borders
     figsize : Optional[Tuple[int, int]]
         Size of the default figure (Only used if ax is not specified).
     dpi : Optional[int]
@@ -417,6 +429,8 @@ def draw_stationary_distribution(strategies: List[str], drift: float, fixation_p
                            pos,
                            node_size=node_size,
                            node_color=ncolors,
+                           linewidths=node_linewidth,
+                           edgecolors=ncolors if node_edgecolors is None else node_edgecolors,
                            ax=ax)
 
     # edges
@@ -448,9 +462,9 @@ def draw_stationary_distribution(strategies: List[str], drift: float, fixation_p
     for i, (key, value) in enumerate(pos.items()):
         x, y = value
         if y > 0:
-            value = 0.15
+            value = node_labels_top_separation
         else:
-            value = - 0.2
+            value = node_labels_bottom_separation
         if display_sd_labels:
             ax.text(x, y + value, s="{0:.2f}".format(stationary_distribution[used_strategies_idx[i]]),
                     horizontalalignment='center', fontsize=font_size_sd_labels)
