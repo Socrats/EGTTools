@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <egttools/finite_populations/behaviors/AbstractNFGStrategy.hpp>
+#include <memory>
 #include <random>
 #include <stdexcept>
 
