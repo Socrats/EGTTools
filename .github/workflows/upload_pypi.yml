@@ -22,7 +22,7 @@ jobs:
         run: |
           pip install -U wheelhouse_uploader pyyaml
       - name: Downloading wheels and sdist from staging
-        uses: robinraju/release-downloader@v1.4
+        uses: robinraju/release-downloader@v1.5
         with:
           repository: "Socrats/EGTtools"
           latest: true
