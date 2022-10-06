@@ -23,7 +23,8 @@ populations on 2-player games.
 
 import numpy as np
 import numpy.typing as npt
-from scipy.sparse import lil_matrix
+from scipy.sparse import lil_matrix, csr_matrix
+from scipy.linalg import eig
 from scipy.stats import hypergeom, multivariate_hypergeom
 from itertools import permutations
 from typing import Tuple, Optional
@@ -132,6 +133,7 @@ class StochDynamics:
         self.Z = pop_size
         self.N = group_size
         self.mu = mu
+        self.not_mu_ = 1. - mu
         self.nb_states_population = calculate_nb_states(pop_size, nb_strategies)
         self.nb_group_combinations = calculate_nb_states(group_size, nb_strategies)
         if group_size > 2:  # pairwise game
@@ -302,12 +304,12 @@ class StochDynamics:
         float
         The fitness difference between strategies i and j
         """
-        population_state[i] -= 1
-        rv_i = multivariate_hypergeom(population_state, self.N - 1)
-        population_state[i] += 1
-        population_state[j] -= 1
-        rv_j = multivariate_hypergeom(population_state, self.N - 1)
-        population_state[j] += 1
+        copy1 = population_state.copy()
+        copy1[i] -= 1
+        copy2 = population_state.copy()
+        copy2[j] -= 1
+        rv_i = multivariate_hypergeom(copy1, self.N - 1)
+        rv_j = multivariate_hypergeom(copy2, self.N - 1)
 
         fitness_i, fitness_j = 0., 0.
         for state_index in range(self.nb_group_combinations):
@@ -319,7 +321,6 @@ class StochDynamics:
             if group[j] > 0:
                 group[j] -= 1
                 fitness_j += self.payoffs[j, state_index] * rv_j.pmf(x=group)
-                group[j] += 1
 
         return fitness_i - fitness_j
 
@@ -532,7 +533,7 @@ class StochDynamics:
 
         return 1.0 / (1.0 + phi)
 
-    def calculate_full_transition_matrix(self, beta: float, *args: Optional[list]) -> lil_matrix:
+    def calculate_full_transition_matrix(self, beta: float, *args: Optional[list]) -> csr_matrix:
         """
         Returns the full transition matrix in sparse representation.
 
@@ -546,10 +547,11 @@ class StochDynamics:
 
         Returns
         -------
-        scipy.sparse.lil_matrix
+        scipy.sparse.csr_matrix
             The full transition matrix between the two strategies in sparse format.
         """
         nb_states = calculate_nb_states(self.Z, self.nb_strategies)
+        mutation_probability = (self.mu / (self.nb_strategies - 1))
 
         transitions = lil_matrix((nb_states, nb_states), dtype=np.float64)
         possible_transitions = [1, -1]
@@ -559,33 +561,48 @@ class StochDynamics:
         for i in range(nb_states):
             total_prob = 0.
             current_state = sample_simplex(i, self.Z, self.nb_strategies)
+            # Check if we are in a monomorphic state
+            monomorphic = True if (current_state == self.Z).any() else False
+
             # calculate probability of transitioning from current_tate to next_state
             for permutation in permutations(possible_transitions):
                 # get new state
                 new_state = current_state + permutation
+
+                # Check if we are trying an impossible transition
                 if (new_state < 0).any() or (new_state > self.Z).any():
                     continue
 
-                # now we calculate the transition probability
-                increase = np.where(np.array(permutation) == 1)[0][0]
-                decrease = np.where(np.array(permutation) == -1)[0][0]
-                fitness_diff = self.full_fitness(decrease, increase, current_state)
-                # Probability that the individual that will die is selected and that the individual that
-                # will be imitated is selected times the probability of imitation
-                prob = (current_state[increase] / self.Z) * StochDynamics.fermi(beta, fitness_diff)
-                # The probability that there will not be a mutation event times the probability of the transition
-                # plus the probability that if there is a mutation event, the dying strategy is selected
-                # times the probability that it mutates into the increasing strategy
-                prob = (current_state[decrease] / self.Z) * (
-                        ((1 - self.mu) * prob) + (self.mu * (1 / (self.nb_strategies - 1))))
-                total_prob += prob
-
                 new_state_index = calculate_state(self.Z, new_state)
-                transitions[i, new_state_index] = prob
 
-            transitions[i, i] = 1. - total_prob
+                # If we are in a monomorphic population, transitions
+                # can only happen if a mutation event occurs
+                if monomorphic:
+                    total_prob += mutation_probability
+                    transitions[i, new_state_index] = mutation_probability
+                else:
+                    increase = np.where(np.array(permutation) == 1)[0][0]
+                    decrease = np.where(np.array(permutation) == -1)[0][0]
 
-        return transitions.transpose()
+                    # now we calculate the transition probability
+                    fitness_diff = self.full_fitness(decrease, increase, current_state)
+                    # Probability that the individual that will die is selected and that the individual that
+                    # will be imitated is selected times the probability of imitation
+                    prob = self.not_mu_ * (current_state[increase] / self.Z) * StochDynamics.fermi(beta, fitness_diff)
+                    # The probability that there will not be a mutation event times the probability of the transition
+                    # plus the probability that if there is a mutation event, the dying strategy is selected
+                    # times the probability that it mutates into the increasing strategy
+                    prob = (current_state[decrease] / self.Z) * (prob + mutation_probability)
+                    total_prob += prob
+
+                    transitions[i, new_state_index] = prob
+
+            if monomorphic:
+                transitions[i, i] = self.not_mu_
+            else:
+                transitions[i, i] = 1. - total_prob
+
+        return transitions.tocsr().transpose()
 
     def transition_and_fixation_matrix(self, beta: float, *args: Optional[list]) -> Tuple[np.ndarray, np.ndarray]:
         """
@@ -654,8 +671,9 @@ class StochDynamics:
                 "This could result in more than one eigenvalue of magnitude 1 "
                 "(the Markov Chain is degenerate), so please be careful when analysing the results.", RuntimeWarning)
 
+        # noinspection PyTupleAssignmentBalance
+        eigenvalues, eigenvectors = eig(t)
         # calculate stationary distributions using eigenvalues and eigenvectors
-        eigenvalues, eigenvectors = np.linalg.eig(t)
         index_stationary = np.argmin(
             abs(eigenvalues - 1.0))  # look for the element closest to 1 in the list of eigenvalues
         sd = abs(eigenvectors[:, index_stationary].real)  # it is essential to access the matrix by column
