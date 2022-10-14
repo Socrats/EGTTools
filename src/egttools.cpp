@@ -52,13 +52,14 @@ namespace egttools {
                                                                                          int nb_rounds,
                                                                                          int group_size,
                                                                                          double risk,
+                                                                                         double enhancement_factor,
                                                                                          const py::list &strategies) {
         egttools::FinitePopulations::CRDStrategyVector strategies_cpp;
         for (py::handle strategy : strategies) {
             strategies_cpp.push_back(py::cast<egttools::FinitePopulations::behaviors::AbstractCRDStrategy *>(strategy));
         }
         return std::make_unique<egttools::FinitePopulations::CRDGame>(endowment, threshold, nb_rounds,
-                                                                      group_size, risk, strategies_cpp);
+                                                                      group_size, risk, enhancement_factor, strategies_cpp);
     }
 
     std::unique_ptr<egttools::FinitePopulations::games::CRDGameTU> init_crd_tu_game_from_python_list(int endowment,
@@ -705,6 +706,9 @@ PYBIND11_MODULE(numerical, m) {
                         Size of the group that will play the CRD.
                     risk : float
                         The probability that all members will lose their remaining endowment if the threshold is not achieved.
+                    enhancement_factor: float
+                        The payoffs of each strategy are multiplied by this factor if the target is reached
+                        (this may enables the inclusion of a surplus for achieving the goal).
                     strategies : List[egttools.behaviors.CRD.AbstractCRDStrategy]
                         A list containing references of AbstractCRDStrategy strategies (or child classes).
 
@@ -719,6 +723,7 @@ PYBIND11_MODULE(numerical, m) {
                  py::arg("nb_rounds"),
                  py::arg("group_size"),
                  py::arg("risk"),
+                 py::arg("enhancement_factor"),
                  py::arg("strategies"), py::return_value_policy::reference_internal)
             .def("play", &egttools::FinitePopulations::CRDGame::play,
                  R"pbdoc(
@@ -830,6 +835,8 @@ PYBIND11_MODULE(numerical, m) {
                                    "Size of the group which will play the game.")
             .def_property_readonly("risk", &egttools::FinitePopulations::CRDGame::risk,
                                    "Probability that all players will lose their remaining endowment if the target si not achieved.")
+            .def_property_readonly("enhancement_factor", &egttools::FinitePopulations::CRDGame::enhancement_factor,
+                                   "The payoffs of each strategy are multiplied by this factor if the target is reached (this may enables the inclusion of a surplus for achieving the goal).")
             .def_property_readonly("nb_rounds", &egttools::FinitePopulations::CRDGame::nb_rounds,
                                    "Number of rounds of the game.")
             .def_property_readonly("nb_states", &egttools::FinitePopulations::CRDGame::nb_states,

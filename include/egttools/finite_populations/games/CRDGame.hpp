@@ -34,9 +34,10 @@ namespace egttools::FinitePopulations {
          * @param nb_rounds : number of rounds of the game
          * @param group_size : number of players in the group
          * @param risk : probability that all players will lose their endowment if the target isn't reached
+         * @param enhancement_factor: a multiplying factor for the payoff of each player in case the target is achieved
          * @param strategies : vector containing pointers to the strategies that will play the game
          */
-        CRDGame(int endowment, int threshold, int nb_rounds, int group_size, double risk, const CRDStrategyVector &strategies);
+        CRDGame(int endowment, int threshold, int nb_rounds, int group_size, double risk, double enhancement_factor, const CRDStrategyVector &strategies);
 
         void play(const egttools::FinitePopulations::StrategyCounts &group_composition,
                   PayoffVector &game_payoffs) override;
@@ -141,6 +142,7 @@ namespace egttools::FinitePopulations {
         [[nodiscard]] size_t nb_states() const;
 
         [[nodiscard]] double risk() const;
+        [[nodiscard]] double enhancement_factor() const;
 
         [[nodiscard]] std::string toString() const override;
 
@@ -161,7 +163,7 @@ namespace egttools::FinitePopulations {
     protected:
         int endowment_, threshold_, nb_rounds_, group_size_, nb_strategies_;
         int64_t nb_states_;
-        double risk_;
+        double risk_, enhancement_factor_;
         GroupPayoffs expected_payoffs_;
         Vector group_achievement_;
         MatrixXui2D c_behaviors_;

@@ -5,12 +5,13 @@
 #include <egttools/finite_populations/games/CRDGame.hpp>
 
 egttools::FinitePopulations::CRDGame::CRDGame(int endowment, int threshold, int nb_rounds, int group_size,
-                                              double risk, const CRDStrategyVector &strategies)
+                                              double risk, double enhancement_factor, const CRDStrategyVector &strategies)
     : endowment_(endowment),
       threshold_(threshold),
       nb_rounds_(nb_rounds),
       group_size_(group_size),
       risk_(risk),
+      enhancement_factor_(enhancement_factor),
       strategies_(strategies) {
 
     // First we check how many strategies will be in the game
@@ -62,7 +63,12 @@ void egttools::FinitePopulations::CRDGame::play(const egttools::FinitePopulation
         public_account += current_donation;
         prev_donation = current_donation;
         current_donation = 0;
-        if (public_account >= threshold_) break;
+        if (public_account >= threshold_) {
+            for (int j = 0; j < nb_strategies_; ++j) {
+                game_payoffs[j] = game_payoffs[j] * enhancement_factor_;
+            }
+            break;
+        }
     }
 
     // Calculate expected payoffs from risk
@@ -387,6 +393,10 @@ size_t egttools::FinitePopulations::CRDGame::group_size() const {
 
 double egttools::FinitePopulations::CRDGame::risk() const {
     return risk_;
+}
+
+double egttools::FinitePopulations::CRDGame::enhancement_factor() const {
+    return enhancement_factor_;
 }
 
 size_t egttools::FinitePopulations::CRDGame::nb_states() const {
