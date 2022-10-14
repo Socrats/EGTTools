@@ -1135,7 +1135,7 @@ namespace egttools::FinitePopulations {
     template<class Cache>
     bool
     PairwiseMoran<Cache>::_sample_players(int &s1, int &s2, VectorXui &strategies, std::mt19937_64 &generator) {
-        // sample 2 strategies from the pool
+        // sample 2 players from the pool
         auto player1 = _pop_sampler(generator);
         auto player2 = _pop_sampler(generator);
         while (player2 == player1) player2 = _pop_sampler(generator);
@@ -1145,6 +1145,7 @@ namespace egttools::FinitePopulations {
         s2 = 0;
         bool unset_p1 = true, unset_p2 = true;
 
+        // check which strategies correspond with these 2 players
         for (int i = 0; i < static_cast<int>(_nb_strategies); ++i) {
             tmp += strategies(i);
             if (tmp > player1 && unset_p1) {
