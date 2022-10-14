@@ -32,6 +32,7 @@ def plot_gradients(gradients: numpy.ndarray, fig_title: Optional[str] = None,
                    figsize: Optional[Tuple[int, int]] = (7, 5),
                    color: Optional[Optional[Union[str, Tuple[int, int, int], List[str], List[
                        Tuple[int, int, int]], plt.cm.colors.Colormap]]] = 'b',
+                   linelabel: Optional[str] = None,
                    linewidth_gradient: Optional[Union[int, List[int]]] = 3,
                    marker: Optional[str] = None,
                    marker_plot_freq: Optional[int] = 1,
@@ -81,6 +82,7 @@ def plot_gradients(gradients: numpy.ndarray, fig_title: Optional[str] = None,
     ylabel: the label of the y axis.
     figsize: the dimensions of the figure.
     color: the color to use to plot the line.
+    linelabel: label assigned to the plotted line.
     linewidth_gradient: width of the gradient curve.
     marker: use a marker to plot the points (by default no marker is shown).
     marker_plot_freq: how often to plot a marker (so that there aren't many overlapping).
@@ -130,7 +132,7 @@ def plot_gradients(gradients: numpy.ndarray, fig_title: Optional[str] = None,
     if fig_title is not None:
         ax.set_title(fig_title)
 
-    ax.plot(x_values, gradients, color=color, linewidth=linewidth_gradient, zorder=1)
+    ax.plot(x_values, gradients, color=color, linewidth=linewidth_gradient, label=linelabel, zorder=1)
     if marker is not None:
         ax.scatter(x_values[::marker_plot_freq], gradients[::marker_plot_freq], marker=marker, s=marker_size, facecolors=marker_facecolor,
                    edgecolors=marker_edgecolor, linewidths=marker_linewidth, zorder=1.5)
