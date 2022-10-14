@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
+from typing import Dict, Tuple
+
 from .. import AbstractNFGStrategy
 from egttools import Random
 
@@ -144,6 +146,41 @@ class Detective(AbstractNFGStrategy):
 
     def type(self):
         return "NFGStrategies::Detective"
+
+    def is_stochastic(self):
+        return self.is_stochastic_strategy
+
+    def __str__(self):
+        return self.type()
+
+
+class MemoryOneStrategy(AbstractNFGStrategy):
+    def __init__(self, strategy: Dict[Tuple[int, int], float]):
+        """
+        Defines a Memory One strategy.
+
+        Parameters
+        ----------
+        strategy: Dict[Tuple[int, int], float]
+            A dictionary with tuples defining the probability of cooperation for
+            each pair of previous actions of self and the opponent, e.g., CC, DC....
+        """
+        super().__init__()
+        self.strategy_ = strategy
+        self.action_prev_self_ = 0
+        self.random_device = np.random.default_rng(Random.generate())
+        self.is_stochastic_strategy = True
+
+    def get_action(self, time_step: int, action_prev: int):
+        if time_step == 0:
+            return 0 if self.random_device.random() < 0.5 else 1
+        else:
+            action = self.strategy_[(self.action_prev_self_, action_prev)]
+            self.action_prev_self_ = action
+            return action
+
+    def type(self):
+        return "NFGStrategies::MemoryOneStrategy"
 
     def is_stochastic(self):
         return self.is_stochastic_strategy
