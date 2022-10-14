@@ -28,7 +28,7 @@ int main() {
     strategies.push_back(&reciprocal);
 
 
-    auto game = egttools::FinitePopulations::CRDGame(endowment, threshold, nb_rounds, group_size, risk, strategies);
+    auto game = egttools::FinitePopulations::CRDGame(endowment, threshold, nb_rounds, group_size, risk, 1.0, strategies);
 
     cout << game.payoffs() << endl;
 }
