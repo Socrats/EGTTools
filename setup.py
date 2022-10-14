@@ -61,7 +61,7 @@ setup(
                  'egttools.distributions': "egttools/distributions",
                  'egttools.datastructures': "egttools/datastructures"
                  },
-    # py_modules={'utils'},
     cmake_args=shlex.split(os.environ.get('EGTTOOLS_EXTRA_CMAKE_ARGS', '')),
     cmake_install_dir="egttools",
+    cmake_with_sdist=True,
 )
