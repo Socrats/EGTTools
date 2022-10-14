@@ -43,6 +43,8 @@ namespace egttools::utils {
     Vector calculate_strategies_distribution(size_t pop_size, size_t nb_strategies,
                                              SparseMatrix2D& stationary_distribution);
 
+    double calculate_expected_payoff(int64_t pop_size, int64_t group_size, int64_t nb_strategies, SparseMatrix2D& stationary_distribution, Matrix2D& payoff_matrix);
+
 //    /**
 //      * @brief Calculates the average frequency of each strategy available in the population given the stationary distribution.
 //      *
