@@ -18,6 +18,7 @@
 #include <egttools/Data.hpp>
 #include <egttools/LruCache.hpp>
 #include <egttools/finite_populations/PairwiseMoran.hpp>
+#include <egttools/finite_populations/ImitationMultipleGames.hpp>
 #include <egttools/finite_populations/behaviors/AbstractCRDStrategy.hpp>
 #include <egttools/finite_populations/behaviors/AbstractNFGStrategy.hpp>
 #include <egttools/finite_populations/behaviors/NFGStrategies.hpp>
