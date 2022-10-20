@@ -2,13 +2,11 @@ import numpy as np
 
 from typing import Union, List
 from abc import abstractmethod
-from egttools.games import AbstractGame
-from egttools import calculate_state, sample_simplex, calculate_nb_states
-
-from scipy.stats import multivariate_hypergeom
+from egttools.games import AbstractGame, AbstractNPlayerGame
+from egttools import calculate_state, sample_simplex
 
 
-class AbstractNPlayerGame(AbstractGame):
+class AbstractNPlayerGameExpectedPayoff(AbstractNPlayerGame):
     """
     This abstract Game class can be used in most scenarios where the fitness of a strategy is calculated as its
     expected payoff given the population state.
@@ -24,43 +22,21 @@ class AbstractNPlayerGame(AbstractGame):
     It assumes that you have at least the following attributes:
      1. And an attribute `self.nb_strategies_` which contains the number of strategies
      that you are going to analyse for the given game.
-     2. `self.payoffs_` which must be a numpy.ndarray and contain the payoff matrix of the game. This array
-     must be of shape (self.nb_strategies_, nb_group_configurations), where nb_group_configurations is the number
+     2. `self.payoffs()` returns a numpy.ndarray and contain the payoff matrix of the game. This array
+     is of shape (self.nb_strategies(), self.nb_group_configurations()), where self.nb_group_configurations()
+     is the number
      of possible combinations of strategies in the group. Thus, each row should give the (expected) payoff of the row
      strategy when playing in a group with the column configuration. The `payoff` method provides an easy way to access
      the payoffs for any group composition, by taking as arguments the index of the row strategy
      and a List with the count of each possible strategy in the group.
 
-     You must still implement the methods `play` and `calculate_payoffs` which should define how the game assigns
-     payoffs to each strategy for each possible game context. In particular, `calculate_payoffs` should fill the
+     You must still implement the methods `play` which should define how the game assigns
+     payoffs to each strategy for a given game context. In particular, `calculate_payoffs` should fill the
      array `self.payoffs_` with the correct values as explained above. We recommend that you run this method in
      the `__init__` (initialization of the object) since, these values must be set before passing the game object
      to the numerical simulator (e.g., egttools.numerical.PairwiseMoran).
 
     """
-
-    def __init__(self, nb_strategies: int, group_size: int):
-        """
-        This class must be initialized with the total number of strategies
-        that will be used and the size of the group in which the game takes place.
-        This is required to calculate the number of group configurations and the correct
-        shape of the payoff matrix.
-
-        Parameters
-        ----------
-        nb_strategies: int
-            total number of possible strategies.
-        group_size: int
-            size of the group in which the game will take place.
-        """
-        super().__init__()
-        self.nb_strategies_ = nb_strategies
-        self.group_size_ = group_size
-        self.nb_group_configurations_ = calculate_nb_states(self.group_size_, self.nb_strategies_)
-        self.payoffs_ = np.zeros(shape=(self.nb_strategies_, self.nb_group_configurations_))
-
-        # initialize the payoffs matrix
-        self.calculate_payoffs()
 
     @abstractmethod
     def play(self, group_composition: Union[List[int], np.ndarray], game_payoffs: np.ndarray) -> None:
@@ -80,7 +56,6 @@ class AbstractNPlayerGame(AbstractGame):
         """
         pass
 
-    @abstractmethod
     def calculate_payoffs(self) -> np.ndarray:
         """
         This method calculates the payoffs for each strategy in each possible group configuration. Thus, it must
@@ -95,75 +70,17 @@ class AbstractNPlayerGame(AbstractGame):
             The payoff matrix of the game.
 
         """
-        pass
-
-    def calculate_fitness(self, player_strategy: int, pop_size: int, population_state: np.ndarray) -> float:
-        """
-        Calculates the Fitness of a strategy for a given population state.
-
-        The calculation is done by computing the expected payoff over all possible group combinations
-        for the given population state: $ fitness = \\sum_{states} payoff * P(state) $
-
-        This function assumes that the strategy counts given in @param strategies does not include
-        the player with :param population_state strategy. This is useful since to calculate the fitness
-        of strategy player_strategy, we need to assume that it is always in the group.
-
-        Parameters
-        ----------
-        player_strategy : int
-            index of the strategy.
-        pop_size : int
-            size of the population - Only necessary for compatibility with the C++ implementation
-            (might be eliminated in the future).
-        population_state : numpy.ndarray[numpy.uint64[m, 1]]
-            vector with the population state (the number of players adopting each strategy). This population state
-            does not contain 1 individual of player_strategy type, i.e., the real population state is
-            population_state[player_strategy] += 1.
-
-        Returns
-        -------
-        float
-            The fitness of the population.
-        """
-        # multivariate PDF
-        rv = multivariate_hypergeom(population_state, self.group_size_ - 1)
-
-        fitness = 0.0
-        # Iterate over all possible group compositions
+        payoffs_container = np.zeros(shape=(self.nb_strategies_,), dtype=np.float64)
         for i in range(self.nb_group_configurations_):
+            # Get group composition
             group_composition = sample_simplex(i, self.group_size_, self.nb_strategies_)
-            # Estimate probability of the current group composition
-            if group_composition[player_strategy] > 0:
-                # Remove the strategy whose fitness we are calculating
-                group_composition[player_strategy] -= 1
-                fitness += self.payoffs_[player_strategy, i] * rv.pmf(x=group_composition)
+            self.play(group_composition, payoffs_container)
+            for strategy_index, strategy_payoff in enumerate(payoffs_container):
+                self.update_payoff(strategy_index, i, strategy_payoff)
+            # Reinitialize payoff vector
+            payoffs_container[:] = 0
 
-        return fitness
-
-    def __str__(self) -> str:
-        return "NPlayerGame"
-
-    def nb_strategies(self) -> int:
-        return self.nb_strategies_
-
-    def type(self) -> str:
-        return "NPlayerGame"
-
-    def payoffs(self) -> np.ndarray:
-        return self.payoffs_
-
-    def payoff(self, strategy: int, group_composition: List[int]) -> float:
-        if strategy > self.nb_strategies_:
-            raise IndexError(f'You must specify a valid index for the strategy [0, {self.nb_strategies_}].')
-        elif len(group_composition) != self.nb_strategies_:
-            raise Exception(f'The group composition list must be of size {self.nb_strategies_}')
-
-        return self.payoffs_[strategy, calculate_state(self.group_size_, group_composition)]
-
-    def save_payoffs(self, file_name: str) -> None:
-        with open(file_name, 'w') as f:
-            f.write('Payoff matrix of the game:\n')
-            f.write(f'{self.payoffs_}')
+        return self.payoffs()
 
 
 class AbstractTwoPLayerGame(AbstractGame):

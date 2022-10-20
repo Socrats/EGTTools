@@ -2,7 +2,7 @@
 The :mod:`egttools` package implements methods to study evolutionary dynamics.
 """
 try:
-    import egttools.numerical as numerical
+    import egttools.numerical
 except Exception:
     raise Exception("numerical package not initialized")
 else:
