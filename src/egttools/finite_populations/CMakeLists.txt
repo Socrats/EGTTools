@@ -17,6 +17,7 @@
 
 target_sources(numerical PRIVATE
         Utils.cpp
+        games/AbstractNPlayerGame.cpp
         games/NormalFormGame.cpp
         games/CRDGame.cpp
         games/CRDGameTU.cpp

@@ -339,6 +339,146 @@ PYBIND11_MODULE(numerical, m) {
                     )pbdoc",
                  py::arg("file_name"));
 
+    py::class_<egttools::FinitePopulations::AbstractNPlayerGame, stubs::PyAbstractNPlayerGame, egttools::FinitePopulations::AbstractGame>(mGames, "AbstractNPlayerGame")
+            .def(py::init<int, int>(),
+                 R"pbdoc(
+                    Abstract N-Player Game.
+
+                    This abstract Game class can be used in most scenarios where the fitness of a strategy is calculated as its
+                    expected payoff given the population state.
+
+                    It assumes that the game is N player, since the fitness of a strategy given a population state is calculated
+                    as the expected payoff of that strategy over all possible group combinations in the given state.
+
+                    Notes
+                    -----
+                    It might be a good idea to overwrite the methods `__str__`, `type`, and `save_payoffs` to adapt to your
+                    given game implementation
+
+                    It assumes that you have at least the following attributes:
+                    1. And an attribute `self.nb_strategies_` which contains the number of strategies
+                    that you are going to analyse for the given game.
+                    2. `self.payoffs_` which must be a numpy.ndarray and contain the payoff matrix of the game. This array
+                    must be of shape (self.nb_strategies_, nb_group_configurations), where nb_group_configurations is the number
+                    of possible combinations of strategies in the group. Thus, each row should give the (expected) payoff of the row
+                    strategy when playing in a group with the column configuration. The `payoff` method provides an easy way to access
+                    the payoffs for any group composition, by taking as arguments the index of the row strategy
+                    and a List with the count of each possible strategy in the group.
+
+                    You must still implement the methods `play` and `calculate_payoffs` which should define how the game assigns
+                    payoffs to each strategy for each possible game context. In particular, `calculate_payoffs` should fill the
+                    array `self.payoffs_` with the correct values as explained above. We recommend that you run this method in
+                    the `__init__` (initialization of the object) since, these values must be set before passing the game object
+                    to the numerical simulator (e.g., egttools.numerical.PairwiseMoran).
+
+                    Parameters
+                    ----------
+                    nb_strategies: int
+                        total number of possible strategies.
+                    group_size: int
+                        size of the group in which the game will take place.
+                    )pbdoc",
+                 py::arg("nb_strategies"), py::arg("group_size"), py::return_value_policy::reference_internal)
+            .def("play", &egttools::FinitePopulations::AbstractNPlayerGame::play, R"pbdoc(
+                    Updates the vector of payoffs with the payoffs of each player after playing the game.
+
+                    This method will run the game using the players and player types defined in :param group_composition,
+                    and will update the vector :param game_payoffs with the resulting payoff of each player.
+
+                    Parameters
+                    ----------
+                    group_composition : List[int]
+                        A list with counts of the number of players of each strategy in the group.
+                    game_payoffs : List[float]
+                        A list used as container for the payoffs of each player
+                    )pbdoc",
+                 py::arg("group_composition"), py::arg("game_payoffs"))
+            .def("calculate_payoffs", &egttools::FinitePopulations::AbstractNPlayerGame::calculate_payoffs,
+                 R"pbdoc(
+                    Estimates the payoffs for each strategy and returns the values in a matrix.
+                    Each row of the matrix represents a strategy and each column a game state.
+                    E.g., in case of a 2 player game, each entry a_ij gives the payoff for strategy
+                    i against strategy j. In case of a group game, each entry a_ij gives the payoff
+                    of strategy i for game state j, which represents the group composition.
+
+                    Returns
+                    -------
+                    numpy.ndarray[numpy.float64[m, n]]
+                        A matrix with the expected payoffs for each strategy given each possible game
+                        state.
+                    )pbdoc")
+            .def("calculate_fitness", &egttools::FinitePopulations::AbstractNPlayerGame::calculate_fitness,
+                 R"pbdoc(
+                    Estimates the fitness for a player_type in the population with state :param strategies.
+
+                    This function assumes that the player with strategy player_type is not included in
+                    the vector of strategy counts strategies.
+
+                    Parameters
+                    ----------
+                    strategy_index : int
+                        The index of the strategy used by the player.
+                    pop_size : int
+                        The size of the population.
+                    strategies : numpy.ndarray[numpy.uint64[m, 1]]
+                        A vector of counts of each strategy. The current state of the population.
+
+                    Returns
+                    -------
+                    float
+                        The fitness of the strategy in the population state given by strategies.
+                    )pbdoc",
+                 py::arg("strategy_index"), py::arg("pop_size"), py::arg("strategies"))
+            .def("__str__", &egttools::FinitePopulations::AbstractNPlayerGame::toString)
+            .def("type", &egttools::FinitePopulations::AbstractNPlayerGame::type, "returns the type of game.")
+            .def("payoffs", &egttools::FinitePopulations::AbstractNPlayerGame::payoffs,
+                 R"pbdoc(
+                    Returns the payoff matrix of the game.
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        The payoff matrix.
+                    )pbdoc")
+            .def("payoff", &egttools::FinitePopulations::AbstractNPlayerGame::payoff,
+                 R"pbdoc(
+                    Returns the payoff of a strategy given a group composition.
+
+                    If the group composition does not include the strategy, the payoff should be zero.
+
+                    Parameters
+                    ----------
+                    strategy : int
+                        The index of the strategy used by the player.
+                    group_composition : List[int]
+                        List with the group composition. The structure of this list
+                        depends on the particular implementation of this abstract method.
+
+                    Returns
+                    -------
+                    float
+                        The payoff value.
+                    )pbdoc",
+                 py::arg("strategy"), py::arg("group_composition"))
+            .def("update_payoff", &egttools::FinitePopulations::AbstractNPlayerGame::update_payoff, "update an entry of the payoff matrix",
+                 py::arg("strategy_index"), py::arg("group_configuration_index"), py::arg("value"))
+            .def("nb_strategies", &egttools::FinitePopulations::AbstractNPlayerGame::nb_strategies,
+                 "Number of different strategies playing the game.")
+            .def("group_size", &egttools::FinitePopulations::AbstractNPlayerGame::group_size,
+                 "Size of the group.")
+            .def("nb_group_configurations", &egttools::FinitePopulations::AbstractNPlayerGame::nb_group_configurations,
+                 "Number of different group configurations.")
+            .def("save_payoffs", &egttools::FinitePopulations::AbstractNPlayerGame::save_payoffs,
+                 R"pbdoc(
+                    Stores the payoff matrix in a txt file.
+
+                    Parameters
+                    ----------
+                    file_name : str
+                        Name of the file in which the data will be stored.
+                    )pbdoc",
+                 py::arg("file_name"));
+
     m.def("calculate_state",
           static_cast<size_t (*)(const size_t &, const egttools::Factors &)>(&egttools::FinitePopulations::calculate_state),
           R"pbdoc(
