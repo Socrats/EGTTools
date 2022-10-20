@@ -372,7 +372,8 @@ def draw_stationary_distribution(strategies: List[str], drift: float, fixation_p
 
     Examples
     -------
-    >>> from src import egttools as egt    >>> import matplotlib.pyplot as plt
+    >>> import egttools as egt
+    >>> import matplotlib.pyplot as plt
     >>> strategies = [egt.behaviors.NormalForm.TwoActions.Cooperator(), egt.behaviors.NormalForm.TwoActions.Defector(),
     ...               egt.behaviors.NormalForm.TwoActions.TFT(), egt.behaviors.NormalForm.TwoActions.Pavlov(),
     ...               egt.behaviors.NormalForm.TwoActions.Random(), egt.behaviors.NormalForm.TwoActions.GRIM()]

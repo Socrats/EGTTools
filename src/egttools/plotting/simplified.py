@@ -16,11 +16,11 @@
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
 """Simplified plotting functions"""
-from src import egttools
 import matplotlib.pyplot as plt
 import numpy as np
 
 from typing import Optional, Tuple, Callable, List
+from ..games import AbstractGame
 from .. import (calculate_nb_states, )
 from .helpers import (barycentric_to_xy_coordinates,
                                        xy_to_barycentric_coordinates, calculate_stationary_points, calculate_stability,
@@ -103,7 +103,7 @@ def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray, atol: float =
 def plot_moran_dynamics_in_simplex(population_size: int,
                                    beta: float,
                                    payoff_matrix: np.ndarray = None,
-                                   game: egttools.games.AbstractGame = None,
+                                   game: AbstractGame = None,
                                    group_size: Optional[int] = 2,
                                    atol: Optional[float] = 1e-7,
                                    figsize: Optional[Tuple[int, int]] = (10, 8),

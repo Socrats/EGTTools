@@ -87,11 +87,11 @@ class Simplex2D:
         --------
         >>> import numpy as np
         >>> import matplotlib.pyplot as plt
-        >>> from src.egttools import (xy_to_barycentric_coordinates, calculate_stationary_points,
+        >>> from egttools.plotting.helpers import (xy_to_barycentric_coordinates, calculate_stationary_points,
             ... calculate_stability)
-        >>> from src.egttools import (vectorized_replicator_equation,
+        >>> from egttools.helpers.vectorized import (vectorized_replicator_equation,
             ... vectorized_barycentric_to_xy_coordinates)
-        >>> from src.egttools import replicator_equation
+        >>> from egttools.analytical import replicator_equation
         >>> simplex = Simplex2D()
         >>> payoffs = np.array([[1, 0, 0],
             ...        [0, 2, 0],

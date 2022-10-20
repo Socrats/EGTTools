@@ -60,7 +60,7 @@ def xy_to_barycentric_coordinates(x: Union[float, np.ndarray], y: Union[float, n
 
     Examples
     --------
-    >>> from src.egttools import Simplex2D
+    >>> from egttools.plotting import Simplex2D
     >>> simplex = Simplex2D()
     >>> cartesian_coords = np.array([0.2, 0.])
     >>> xy_to_barycentric_coordinates(cartesian_coords[0], cartesian_coords[1], simplex.corners)
