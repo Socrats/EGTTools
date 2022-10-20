@@ -16,7 +16,7 @@
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
 """Simplified plotting functions"""
-import egttools.games
+from src import egttools
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -28,7 +28,7 @@ from egttools.plotting.helpers import (barycentric_to_xy_coordinates,
 from egttools.analytical import (replicator_equation, StochDynamics)
 from egttools.analytical.utils import check_if_there_is_random_drift, check_replicator_stability_pairwise_games
 from egttools.helpers.vectorized import (vectorized_replicator_equation, vectorized_barycentric_to_xy_coordinates)
-from egttools.plotting import Simplex2D
+from src.egttools.plotting import Simplex2D
 from egttools.utils import transform_payoffs_to_pairwise
 
 

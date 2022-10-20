@@ -11,13 +11,15 @@ include environment.yml
 
 include CMakeLists.txt
 include requirements.txt
-graft include
+graft cpp
+graft cpp/include
+graft cpp/src
 graft src
-graft egttools
-graft egttools/behaviors
-graft egttools/behaviors/CRD
-graft egttools/behaviors/NormalForm
-graft egttools/behaviors/NormalForm/TwoActions
+graft src/egttools
+graft src/egttools/behaviors
+graft src/egttools/behaviors/CRD
+graft src/egttools/behaviors/NormalForm
+graft src/egttools/behaviors/NormalForm/TwoActions
 graft pybind11
 graft tests
 
@@ -40,6 +42,4 @@ global-exclude *.so
 exclude pybind11/.git
 exclude build_tools
 recursive-exclude build_tools *
-exclude simulation
-recursive-exclude egttools/simulation *
-exclude egttools/plotting/barplots.py
+exclude src/egttools/plotting/barplots.py

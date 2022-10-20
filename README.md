@@ -164,7 +164,7 @@ selection ![\beta=1](https://latex.codecogs.com/gif.latex?\beta=1) in the follow
 ```python
 import numpy as np
 import matplotlib.pyplot as plt
-from egttools.analytical import StochDynamics
+from egttools import StochDynamics
 
 pop_states = np.arange(0, Z + 1, 1)
 
@@ -177,7 +177,7 @@ gradients = np.array([evolver.gradient_selection(x, 0, 1, beta)
 Afterwards, you can plot the results with:
 
 ```python
-from egttools.utils import find_saddle_type_and_gradient_direction
+from egttools import find_saddle_type_and_gradient_direction
 
 # Find saddle points (where the gradient is 0)
 epsilon = 1e-3
@@ -221,8 +221,8 @@ that you let the simulation run for enough generations after it has achieved a s
 between analytical and numerical results:
 
 ```python
-from egttools.numerical import PairwiseMoran
-from egttools.numerical.games import NormalFormGame
+from egttools import PairwiseMoran
+from egttools import NormalFormGame
 
 # Instantiate the game
 game = NormalFormGame(1, A)
@@ -293,7 +293,7 @@ payoff matrix and returns a `egttools.plotting.Simplex2D` object which can be us
 ```python
 import numpy as np
 import matplotlib.pyplot as plt
-from egttools.plotting import plot_replicator_dynamics_in_simplex
+from egttools import plot_replicator_dynamics_in_simplex
 
 payoffs = np.array([[1, 0, 0],
                     [0, 2, 0],
@@ -340,12 +340,12 @@ for a more in depth examples).
 
 ## Documentation
 
-The [analytical](egttools/analytical/sed_analytical.py) module contains classes and functions that you may use to
+The [analytical](src/egttools/analytical/sed_analytical.py) module contains classes and functions that you may use to
 investigate the evolutionary dynamics in N-player games. For now only the replicator dynamics (for infinite populations)
 and the Pairwise Comparison imitation process (for finite populations) are implemented.
 
 When your state-space is too big (in finite populations), it might become computationally hard to solve the system
-analytically. Thus, we provide an efficient [numerical](egttools/src/egttools) module written in C++ and compiled to
+analytically. Thus, we provide an efficient [numerical](src/egttools/src/egttools) module written in C++ and compiled to
 Python. You may use it to estimate the fixation probabilities and stiationary distribution through Monte-Carlo
 simulations, or perform individual runs of the Moran process.
 

@@ -22,17 +22,17 @@ add_custom_target(pytest
 add_custom_target(tests DEPENDS pytest)
 
 add_library(egttoolsNumerical
-        ../src/egttools/SeedGenerator.cpp
-        ../src/egttools/Distributions.cpp
-        ../src/egttools/Data.cpp
-        ../src/egttools/utils/CalculateExpectedIndicators.cpp
-        ../src/egttools/finite_populations/Utils.cpp
-        ../src/egttools/finite_populations/games/NormalFormGame.cpp
-        ../src/egttools/finite_populations/games/CRDGame.cpp
-        ../src/egttools/finite_populations/games/CRDGameTU.cpp
-        ../src/egttools/finite_populations/games/OneShotCRD.cpp
-        ../src/egttools/finite_populations/behaviors/NFGStrategies.cpp
-        ../src/egttools/finite_populations/behaviors/CRDStrategies.cpp
+        ../cpp/src/egttools/SeedGenerator.cpp
+        ../cpp/src/egttools/Distributions.cpp
+        ../cpp/src/egttools/Data.cpp
+        ../cpp/src/egttools/utils/CalculateExpectedIndicators.cpp
+        ../cpp/src/egttools/finite_populations/Utils.cpp
+        ../cpp/src/egttools/finite_populations/games/NormalFormGame.cpp
+        ../cpp/src/egttools/finite_populations/games/CRDGame.cpp
+        ../cpp/src/egttools/finite_populations/games/CRDGameTU.cpp
+        ../cpp/src/egttools/finite_populations/games/OneShotCRD.cpp
+        ../cpp/src/egttools/finite_populations/behaviors/NFGStrategies.cpp
+        ../cpp/src/egttools/finite_populations/behaviors/CRDStrategies.cpp
         )
 
 set_target_properties(egttoolsNumerical PROPERTIES

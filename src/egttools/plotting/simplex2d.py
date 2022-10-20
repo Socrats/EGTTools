@@ -25,9 +25,9 @@ from matplotlib.patches import Circle
 from typing import Optional, Tuple, List, Union, Callable, TypeVar
 from numpy.typing import ArrayLike
 from egttools.numerical import (sample_unit_simplex, sample_simplex, calculate_nb_states, )
-from egttools.plotting.helpers import (barycentric_to_xy_coordinates, perturb_state, add_arrow,
-                                       perturb_state_discrete, find_where_point_is_in_simplex,
-                                       xy_to_barycentric_coordinates)
+from .helpers import (barycentric_to_xy_coordinates, perturb_state, add_arrow,
+                      perturb_state_discrete, find_where_point_is_in_simplex,
+                      xy_to_barycentric_coordinates)
 
 SelfSimplex2D = TypeVar("SelfSimplex2D", bound="Simplex2D")
 
@@ -87,11 +87,11 @@ class Simplex2D:
         --------
         >>> import numpy as np
         >>> import matplotlib.pyplot as plt
-        >>> from egttools.plotting.helpers import (xy_to_barycentric_coordinates, calculate_stationary_points,
+        >>> from src.egttools import (xy_to_barycentric_coordinates, calculate_stationary_points,
             ... calculate_stability)
-        >>> from egttools.helpers.vectorized import (vectorized_replicator_equation,
+        >>> from src.egttools import (vectorized_replicator_equation,
             ... vectorized_barycentric_to_xy_coordinates)
-        >>> from egttools.analytical import replicator_equation
+        >>> from src.egttools import replicator_equation
         >>> simplex = Simplex2D()
         >>> payoffs = np.array([[1, 0, 0],
             ...        [0, 2, 0],

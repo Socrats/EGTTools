@@ -1,5 +1,5 @@
 try:
-    import egttools
+    from src import egttools
 except ImportError as e:
     print('egttools is not installed')
 else:

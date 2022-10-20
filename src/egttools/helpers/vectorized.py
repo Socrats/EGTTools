@@ -19,7 +19,7 @@
 Set of vectorized functions that can be used to apply these functions on large tensors.
 """
 import numpy as np
-from egttools.plotting.helpers import barycentric_to_xy_coordinates
+from egttools.plotting import barycentric_to_xy_coordinates
 
 
 def vectorized_replicator_equation(frequencies: np.ndarray, payoffs: np.ndarray) -> np.ndarray:

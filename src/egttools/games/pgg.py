@@ -15,33 +15,32 @@
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
-from typing import List
+from typing import List, Union
 import numpy as np
 from scipy.stats import multivariate_hypergeom
 
-from egttools import calculate_nb_states, calculate_state, sample_simplex
+from egttools.numerical import calculate_nb_states, calculate_state, sample_simplex
 from . import AbstractGame
+from egttools.behaviors.pgg_behaviors import PGGOneShotStrategy
 
 
-class InformalRiskGame(AbstractGame):
-    def __init__(self, group_size: int, cost: float, multiplying_factor: float, strategies: List) -> None:
+class PGG(AbstractGame):
+    def __init__(self, group_size: int, cost: float, multiplying_factor: float,
+                 strategies: List[PGGOneShotStrategy]) -> None:
         """
-        Game of informal risk sharing.
-
-        This game has been taken from the model introduced in
-
-        ```Santos, F. P., Pacheco, J. M., Santos, F. C., & Levin, S. A. (2021).
-        Dynamics of informal risk sharing in collective index insurance.
-        Nature Sustainability. https://doi.org/10.1038/s41893-020-00667-2```
-
-        to investigate the dynamics of a collective index insurance with informal risk sharing.
+        Classical Public Goods game with only 2 possible contributions (o or cost).
 
         Parameters
         ----------
-        group_size
-        cost
-        multiplying_factor
-        strategies
+        group_size: int
+            Size of the group playing the game.
+        cost: float
+            Cost of cooperation.
+        multiplying_factor: float
+            The sum of contributions to the public good is multiplied by this factor before being divided equally
+            among all players.
+        strategies: List[egttools.behaviors.pgg_behaviors.PGGOneShotStrategy]
+            A list of strategies that will play the game.
         """
         AbstractGame.__init__(self)
         self.group_size_ = group_size
@@ -53,11 +52,11 @@ class InformalRiskGame(AbstractGame):
         self.payoffs_ = np.zeros(shape=(self.nb_strategies_, self.nb_states_), dtype=np.float64)
         self.calculate_payoffs()
 
-    def play(self, group_composiiton: List[int], game_payoffs: np.ndarray) -> None:
+    def play(self, group_composition: Union[List[int], np.ndarray], game_payoffs: np.ndarray) -> None:
         # Gather contributions
         contributions = 0.0
         non_zero = []
-        for i, strategy_count in enumerate(group_composiiton):
+        for i, strategy_count in enumerate(group_composition):
             if strategy_count == 0:
                 continue
             else:
@@ -113,7 +112,7 @@ class InformalRiskGame(AbstractGame):
             # Estimate probability of the current group composition
             if group_composition[player_strategy] > 0:
                 group_composition[player_strategy] -= 1
-                fitness += self.payoffs[player_strategy, i] * rv.pmf(x=group_composition)
+                fitness += self.payoffs_[player_strategy, i] * rv.pmf(x=group_composition)
 
         return fitness
 
@@ -131,19 +130,16 @@ class InformalRiskGame(AbstractGame):
         '''
         return string
 
-    @property
     def nb_strategies(self) -> int:
         return self.nb_strategies_
 
-    @property
     def type(self) -> str:
         return "PGG"
 
-    @property
     def payoffs(self) -> np.ndarray:
         return self.payoffs_
 
-    def payoff(self, strategy: int, group_composition: List[np.uint64]) -> float:
+    def payoff(self, strategy: int, group_composition: List[int]) -> float:
         if strategy > self.nb_strategies_:
             raise IndexError(f'You must specify a valid index for the strategy [0, {self.nb_strategies_}].')
         elif len(group_composition) != self.nb_strategies_:
@@ -162,4 +158,4 @@ class InformalRiskGame(AbstractGame):
             f.write(f'multiplying_factor = {self.r_}\n')
 
 
-__all__ = ['InformalRiskGame']
+__all__ = ['PGG']

@@ -20,6 +20,10 @@ project(egttools LANGUAGES CXX)
 
 #set(SKIP_OPENMP TRUE)
 
+# Set PYTHONPATH
+
+#set(PYTHONPATH src/:${PYTHONPATH})
+
 # For additional Find library scripts
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules/")
 
@@ -151,8 +155,8 @@ set(Python_FIND_IMPLEMENTATIONS CPython PyPy)
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
 add_subdirectory(pybind11)
 
-include_directories(${PROJECT_SOURCE_DIR}/include)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src)
+include_directories(cpp/include)
+add_subdirectory(cpp/src)
 add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
 add_subdirectory(${PROJECT_SOURCE_DIR}/docs)
 

@@ -34,7 +34,7 @@ except ImportError:
 
 
 def find_version():
-    with io.open(os.path.join(os.path.dirname(__file__), "src", "version.h"), encoding='utf8') as f:
+    with io.open(os.path.join(os.path.dirname(__file__), "cpp/src", "version.h"), encoding='utf8') as f:
         version_file = f.read()
     version_match = re.search(r"^#define EGTTOOLS_VERSION ([\da-z.]+)$", version_file, re.M)
     if version_match:
@@ -51,17 +51,17 @@ setup(
               'egttools.distributions',
               'egttools.datastructures'
               ],
-    package_dir={'egttools': "egttools",
-                 'egttools.analytical': "egttools/analytical",
-                 'egttools.plotting': "egttools/plotting", 'egttools.games': "egttools/games",
-                 'egttools.behaviors': "egttools/behaviors", 'egttools.behaviors.CRD': "egttools/behaviors/CRD",
-                 'egttools.behaviors.NormalForm': "egttools/behaviors/NormalForm",
-                 'egttools.behaviors.NormalForm.TwoActions': "egttools/behaviors/NormalForm/TwoActions",
-                 'egttools.helpers': "egttools/helpers",
-                 'egttools.distributions': "egttools/distributions",
-                 'egttools.datastructures': "egttools/datastructures"
+    package_dir={'egttools': "src/egttools",
+                 'egttools.analytical': "src/egttools/analytical",
+                 'egttools.plotting': "src/egttools/plotting", 'egttools.games': "src/egttools/games",
+                 'egttools.behaviors': "src/egttools/behaviors", 'egttools.behaviors.CRD': "src/egttools/behaviors/CRD",
+                 'egttools.behaviors.NormalForm': "src/egttools/behaviors/NormalForm",
+                 'egttools.behaviors.NormalForm.TwoActions': "src/egttools/behaviors/NormalForm/TwoActions",
+                 'egttools.helpers': "src/egttools/helpers",
+                 'egttools.distributions': "src/egttools/distributions",
+                 'egttools.datastructures': "src/egttools/datastructures"
                  },
     cmake_args=shlex.split(os.environ.get('EGTTOOLS_EXTRA_CMAKE_ARGS', '')),
-    cmake_install_dir="egttools",
+    cmake_install_dir="src/egttools",
     cmake_with_sdist=True,
 )
