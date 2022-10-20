@@ -274,12 +274,13 @@ class StochDynamics:
             float
             Returns the difference in fitness between strategy i and j
         """
-        k_array = np.arange(0, self.N, dtype=np.int64)
-        i_pmf = hypergeom(self.Z - 1, x - 1, self.N - 1).pmf(k_array)
-        j_pmf = hypergeom(self.Z - 1, x, self.N - 1).pmf(k_array)
+        k_array_1 = np.arange(0, self.N, dtype=np.int64)
+        k_array_2 = np.arange(0, self.N, dtype=np.int64)
+        i_pmf = hypergeom(self.Z - 1, x - 1, self.N - 1).pmf(k_array_1)
+        j_pmf = hypergeom(self.Z - 1, x, self.N - 1).pmf(k_array_2)
 
         fitness_i, fitness_j = 0, 0
-        for k in k_array:
+        for k in k_array_1:
             fitness_i += self.payoffs[i, j](k + 1, self.N, *args) * i_pmf[k]
             fitness_j += self.payoffs[j, i](self.N - k, self.N, *args) * j_pmf[k]
 
