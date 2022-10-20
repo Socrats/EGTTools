@@ -19,7 +19,7 @@ from typing import List, Union
 import numpy as np
 from scipy.stats import multivariate_hypergeom
 
-from src.egttools import calculate_nb_states, calculate_state, sample_simplex
+from .. import (calculate_nb_states, calculate_state, sample_simplex, )
 from . import AbstractGame
 
 

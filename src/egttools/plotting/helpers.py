@@ -5,7 +5,7 @@ from typing import Tuple, List, Callable, Optional, Union
 
 import numpy as np
 from scipy.optimize import root
-from egttools.numerical import calculate_nb_states, sample_simplex
+from .. import (calculate_nb_states, sample_simplex, )
 
 
 def simplex_iterator(scale: int, boundary: bool = True) -> Tuple[int, int, int]:

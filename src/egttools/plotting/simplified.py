@@ -21,15 +21,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from typing import Optional, Tuple, Callable, List
-from egttools.numerical import (calculate_nb_states, )
-from egttools.plotting.helpers import (barycentric_to_xy_coordinates,
+from .. import (calculate_nb_states, )
+from .helpers import (barycentric_to_xy_coordinates,
                                        xy_to_barycentric_coordinates, calculate_stationary_points, calculate_stability,
                                        find_roots_in_discrete_barycentric_coordinates)
-from egttools.analytical import (replicator_equation, StochDynamics)
-from egttools.analytical.utils import check_if_there_is_random_drift, check_replicator_stability_pairwise_games
-from egttools.helpers.vectorized import (vectorized_replicator_equation, vectorized_barycentric_to_xy_coordinates)
-from src.egttools.plotting import Simplex2D
-from egttools.utils import transform_payoffs_to_pairwise
+from ..analytical import (replicator_equation, StochDynamics)
+from ..analytical.utils import check_if_there_is_random_drift, check_replicator_stability_pairwise_games
+from ..helpers.vectorized import (vectorized_replicator_equation, vectorized_barycentric_to_xy_coordinates)
+from . import Simplex2D
+from ..utils import transform_payoffs_to_pairwise
 
 
 def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray, atol: float = 1e-7, atol_equal: float = 1e-12,

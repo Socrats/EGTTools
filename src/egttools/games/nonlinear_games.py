@@ -3,7 +3,7 @@ from typing import Union, List
 import numpy as np
 
 from . import AbstractNPlayerGame
-from egttools.numerical import sample_simplex, calculate_state, calculate_nb_states
+from .. import sample_simplex, calculate_state
 
 from scipy.stats import multivariate_hypergeom
 

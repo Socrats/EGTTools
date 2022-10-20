@@ -24,7 +24,7 @@ from scipy.integrate import odeint
 from matplotlib.patches import Circle
 from typing import Optional, Tuple, List, Union, Callable, TypeVar
 from numpy.typing import ArrayLike
-from egttools.numerical import (sample_unit_simplex, sample_simplex, calculate_nb_states, )
+from .. import (sample_simplex, sample_unit_simplex, calculate_nb_states, )
 from .helpers import (barycentric_to_xy_coordinates, perturb_state, add_arrow,
                       perturb_state_discrete, find_where_point_is_in_simplex,
                       xy_to_barycentric_coordinates)

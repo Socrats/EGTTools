@@ -3,7 +3,7 @@ import numpy as np
 from typing import Union, List
 from abc import abstractmethod
 from . import AbstractGame, AbstractNPlayerGame
-from egttools.numerical import calculate_state, sample_simplex
+from .. import calculate_state, sample_simplex
 
 
 class AbstractNPlayerGameExpectedPayoff(AbstractNPlayerGame):
