@@ -32,6 +32,8 @@ except ImportError:
           file=sys.stderr)
     raise
 
+from setuptools import find_packages
+
 
 def find_version():
     with io.open(os.path.join(os.path.dirname(__file__), "cpp/src", "version.h"), encoding='utf8') as f:
@@ -44,7 +46,8 @@ def find_version():
 
 setup(
     version=find_version(),
-    packages=['egttools', 'egttools.analytical', 'egttools.plotting', 'egttools.games',
+    # packages=find_packages(exclude=['contrib', 'docs', 'tests']),
+    packages=['egttools', 'egttools.numerical', 'egttools.analytical', 'egttools.plotting', 'egttools.games',
               'egttools.behaviors',
               'egttools.behaviors.CRD', 'egttools.behaviors.NormalForm', 'egttools.behaviors.NormalForm.TwoActions',
               'egttools.helpers',
@@ -52,6 +55,7 @@ setup(
               'egttools.datastructures'
               ],
     package_dir={'egttools': "src/egttools",
+                 'egttools.numerical': "src/egttools/numerical",
                  'egttools.analytical': "src/egttools/analytical",
                  'egttools.plotting': "src/egttools/plotting", 'egttools.games': "src/egttools/games",
                  'egttools.behaviors': "src/egttools/behaviors", 'egttools.behaviors.CRD': "src/egttools/behaviors/CRD",
@@ -62,6 +66,6 @@ setup(
                  'egttools.datastructures': "src/egttools/datastructures"
                  },
     cmake_args=shlex.split(os.environ.get('EGTTOOLS_EXTRA_CMAKE_ARGS', '')),
-    cmake_install_dir="src/egttools",
+    cmake_install_dir="src/egttools/numerical",
     cmake_with_sdist=True,
 )

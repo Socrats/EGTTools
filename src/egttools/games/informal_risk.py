@@ -19,8 +19,8 @@ from typing import List
 import numpy as np
 from scipy.stats import multivariate_hypergeom
 
-from .. import calculate_nb_states, calculate_state, sample_simplex
 from . import AbstractGame
+from .. import calculate_nb_states, calculate_state, sample_simplex
 
 
 class InformalRiskGame(AbstractGame):
@@ -160,6 +160,3 @@ class InformalRiskGame(AbstractGame):
             f.write(f'group_size = {self.group_size_}\n')
             f.write(f'cost = {self.c_}\n')
             f.write(f'multiplying_factor = {self.r_}\n')
-
-
-__all__ = ['InformalRiskGame']

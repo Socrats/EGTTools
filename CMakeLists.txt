@@ -155,8 +155,8 @@ set(Python_FIND_IMPLEMENTATIONS CPython PyPy)
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
 add_subdirectory(pybind11)
 
-include_directories(cpp/include)
-add_subdirectory(cpp/src)
+include_directories(${PROJECT_SOURCE_DIR}/cpp/include)
+add_subdirectory(${PROJECT_SOURCE_DIR}/cpp/src)
 add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
 add_subdirectory(${PROJECT_SOURCE_DIR}/docs)
 

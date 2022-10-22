@@ -21,24 +21,24 @@ egttools = pytest.importorskip("egttools")
 
 
 def test_calculate_nb_states():
-    assert egttools.numerical.calculate_nb_states == egttools.calculate_nb_states
+    assert egttools.numerical.numerical.calculate_nb_states == egttools.calculate_nb_states
 
 
 def test_calculate_state():
-    assert egttools.numerical.calculate_state == egttools.calculate_state
+    assert egttools.numerical.numerical.calculate_state == egttools.calculate_state
 
 
 def test_sample_simple():
-    assert egttools.numerical.sample_simplex == egttools.sample_simplex
+    assert egttools.numerical.numerical.sample_simplex == egttools.sample_simplex
 
 
 def test_abstract_game():
-    assert egttools.numerical.games.AbstractGame == egttools.games.AbstractGame
+    assert egttools.numerical.numerical.games.AbstractGame == egttools.games.AbstractGame
 
 
 def test_normal_form_game():
-    assert egttools.numerical.games.NormalFormGame == egttools.games.NormalFormGame
+    assert egttools.numerical.numerical.games.NormalFormGame == egttools.games.NormalFormGame
 
 
 def test_abstract_nfg_strategy():
-    assert egttools.numerical.behaviors.NormalForm.AbstractNFGStrategy == egttools.behaviors.NormalForm.AbstractNFGStrategy
+    assert egttools.numerical.numerical.behaviors.NormalForm.AbstractNFGStrategy == egttools.behaviors.NormalForm.AbstractNFGStrategy

@@ -20,7 +20,7 @@ from scipy.optimize import root
 from scipy.linalg import eigvals
 from typing import Tuple, List, Optional, Callable
 from .sed_analytical import StochDynamics, replicator_equation
-from egttools.numerical import sample_unit_simplex
+from .. import sample_unit_simplex
 
 
 def get_pairwise_gradient_from_replicator(i: int, j: int, x: float, nb_strategies: int, payoffs: np.ndarray,

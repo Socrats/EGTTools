@@ -18,7 +18,7 @@
 from typing import Dict, Tuple
 
 from .. import AbstractNFGStrategy
-from egttools.numerical import Random
+from egttools import Random
 
 import numpy as np
 

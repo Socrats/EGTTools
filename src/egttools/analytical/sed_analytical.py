@@ -29,7 +29,7 @@ from scipy.stats import hypergeom, multivariate_hypergeom
 from itertools import permutations
 from typing import Tuple, Optional
 from warnings import warn
-from egttools.numerical import sample_simplex, calculate_nb_states, calculate_state
+from .. import sample_simplex, calculate_nb_states, calculate_state
 
 
 def replicator_equation(x: np.ndarray, payoffs: np.ndarray) -> np.ndarray:

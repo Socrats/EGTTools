@@ -24,6 +24,8 @@ class NPlayerStagHunt(AbstractNPlayerGame):
         self.nb_strategies_ = 2
         super().__init__(self.nb_strategies_, self.group_size_)
 
+        self.nb_group_configurations_ = self.nb_group_configurations()
+
         self.calculate_payoffs()
 
     def play(self, group_composition: Union[List[int], np.ndarray], game_payoffs: np.ndarray) -> None:
@@ -106,6 +108,8 @@ class CommonPoolResourceDilemma(AbstractNPlayerGame):
             self.nb_strategies_ = 3
         else:
             self.nb_strategies_ = len(strategies)
+
+        self.nb_group_configurations_ = self.nb_group_configurations()
 
         super().__init__(self.nb_strategies_, self.group_size_)
 

@@ -156,6 +156,3 @@ class PGG(AbstractGame):
             f.write(f'group_size = {self.group_size_}\n')
             f.write(f'cost = {self.c_}\n')
             f.write(f'multiplying_factor = {self.r_}\n')
-
-
-__all__ = ['PGG']
