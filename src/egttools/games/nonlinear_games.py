@@ -4,6 +4,7 @@ import numpy as np
 
 from . import AbstractNPlayerGame
 from .. import sample_simplex, calculate_state
+from ..behaviors.CPR.abstract_cpr_strategy import AbstractCPRStrategy
 
 from scipy.stats import multivariate_hypergeom
 
@@ -186,7 +187,7 @@ class CommonPoolResourceDilemma(AbstractNPlayerGame):
 
 class CommonPoolResourceDilemmaCommitment(AbstractNPlayerGame):
     def __init__(self, group_size: int, a: float, b: float, cost: float, fine: float,
-                 strategies: List[int] = None):
+                 strategies: List[AbstractCPRStrategy]):
         """
         Common Pool resource game with commitment, but the threshold is set as another strategy
         Parameters
@@ -209,12 +210,7 @@ class CommonPoolResourceDilemmaCommitment(AbstractNPlayerGame):
         self.fine_ = fine
         self.cost_ = cost
         self.strategies_ = strategies
-        if strategies is None:
-            self.nb_strategies_ = 4 + self.group_size_
-        else:
-            self.nb_strategies_ = len(strategies)
-
-        self.commitment_ = False
+        self.nb_strategies_ = len(strategies)
 
         super().__init__(self.nb_strategies_, self.group_size_)
 
@@ -225,18 +221,19 @@ class CommonPoolResourceDilemmaCommitment(AbstractNPlayerGame):
 
     def play(self, group_composition: Union[List[int], np.ndarray], game_payoffs: np.ndarray) -> None:
         # Each player's payoff is a function of the value of theirs and other extractiers' extraction
-        group_extraction = 0
-        self.commitment_ = False
-        for i, strategy_count in enumerate(group_composition):
+        commitment_accepted = np.empty(shape=(self.nb_strategies_,), dtype=bool)
+        nb_committed = self.get_nb_committed(group_composition)
+        self.check_if_commitment_validated(nb_committed, group_composition, commitment_accepted)
+        group_extraction = self.calculate_total_extraction(group_composition)
+
+        for index, strategy_count in enumerate(group_composition):
             if strategy_count == 0:
-                game_payoffs[i] = 0
+                game_payoffs[index] = 0
             else:
-                n_committed = self.get_nb_commited(group_composition)
-                x = self.extraction_strategy(i, n_committed=n_committed)
-                x_total = self.calculate_total_extraction(group_composition)
-                group_extraction = x_total
-                comm, fine = self.calculate_fine_comm(i, group_composition)
-                game_payoffs[i] = self.extraction(x, x_total, cost=comm, fine=fine)  # UPDATED: ONLY MARKET 2
+                extraction = self.strategies_[index].get_extraction(self.a_, self.b_, self.group_size_,
+                                                                    commitment_accepted[index])
+                game_payoffs[index] = self.strategies_[index].get_payoff(self.a_, self.b_, extraction, group_extraction,
+                                                                         self.fine_, self.cost_)
         self.add_group_extraction(group_extraction, group_composition)
 
     def calculate_payoffs(self) -> np.ndarray:
@@ -252,83 +249,37 @@ class CommonPoolResourceDilemmaCommitment(AbstractNPlayerGame):
 
         return self.payoffs()
 
-    def extraction_strategy(self, strategy_id, n_committed: int):
-        """In this implementation these are the strategies index:
-                0: COMP
-                1: Low Extraction
-                2: High Extraction
-                3: Fake
-                4: Free
-        """
-        if self.strategies_ is not None:
-            return self.strategies_[strategy_id]
-        else:
-            extraction = 0
-            if strategy_id <= self.group_size_ - 1:  # COMP_F
-                if n_committed >= strategy_id + 1:
-                    extraction = self.low_extraction()
-                    self.commitment_ = True
-                else:
-                    extraction = self.high_extraction()
-            elif strategy_id == self.group_size_:  # LOW
-                extraction = self.low_extraction()
-            elif strategy_id == self.group_size_ + 1:  # HIGH
-                extraction = self.high_extraction()
-            elif strategy_id == self.group_size_ + 2:  # FAKE
-                extraction = self.high_extraction()
-            elif strategy_id == self.group_size_ + 3:  # FREE
-                if self.commitment_:
-                    extraction = self.low_extraction()
-                else:
-                    extraction = self.high_extraction()
-            return extraction
-
-    def nash_extraction(self):
-        group_max = (self.group_size_ / (self.group_size_ + 1)) * (self.a_ / self.b_)
-        return group_max / self.group_size_
-
-    def high_extraction(self):
-        return self.a_ / (self.b_ * self.group_size_)
-
-    def low_extraction(self):
-        group_optimal = self.a_ / (2 * self.b_)  # CHECK
-        return group_optimal / self.group_size_
-
-    def extraction(self, x, x_total, cost, fine):
-        return ((x / x_total) * ((self.a_ * x_total) - (self.b_ * np.power(x_total, 2)))) - cost + fine
-
-    def calculate_fine_comm(self, strategy_idx, group_composition):
-        comm = 0
-        fine = 0
-        n_committed = self.get_nb_commited(group_composition)
-        if self.commitment_:  # There's a commitment in place
-            if strategy_idx <= self.group_size_ - 1:  # The focal strategy is comp
-                if n_committed >= strategy_idx + 1:  # The commitment applies to the comp_f strategy
-                    if group_composition[self.group_size_ + 2] > 0:  # Commitment shared among commited plus fine
-                        comm = self.cost_ / sum(group_composition[:n_committed])
-                        fine = self.fine_ * group_composition[self.group_size_ + 2]
-                    else:  # Commitment shared but no fine
-                        comm = self.cost_ / sum(group_composition[:n_committed])
-                        fine = 0
-            elif strategy_idx == self.group_size_ + 2:  # FAKE
-                comm = 0
-                fine = - self.fine_
-        return [comm, fine]
-
-    def calculate_total_extraction(self, group_composition):
+    def calculate_total_extraction(self, group_composition: Union[List[int], np.ndarray]) -> float:
         extraction = 0
-        n_committed = self.get_nb_commited(group_composition)
-        for i, g in enumerate(group_composition):
-            if g > 0:
-                extraction += self.extraction_strategy(i, n_committed=n_committed) * g
+        nb_committed = self.get_nb_committed(group_composition)
+        commitment_accepted = np.empty(shape=(self.nb_strategies_,), dtype=bool)
+        self.check_if_commitment_validated(nb_committed, group_composition, commitment_accepted)
+        for index, strategy_count in enumerate(group_composition):
+            if strategy_count > 0:
+                extraction = strategy_count * self.strategies_[index].get_extraction(self.a_, self.b_, self.group_size_,
+                                                                                     commitment_accepted[index])
         return extraction
 
-    def get_nb_commited(self, group_composition):
-        nb_commited = 0
-        if group_composition[0:self.group_size_].sum() > 0:
-            nb_commited = group_composition[:self.group_size_ + 1].sum() + group_composition[self.group_size_ + 2] + \
-                          group_composition[self.group_size_ + 3]
-        return nb_commited
+    def get_nb_committed(self, group_composition: Union[List[int], np.ndarray]) -> int:
+        nb_committed = 0
+        for index, strategy_count in enumerate(group_composition):
+            nb_committed += strategy_count * self.strategies_[index].would_like_to_commit()
+        return nb_committed
+
+    def check_if_commitment_validated(self, nb_committed: int, group_composition: Union[List[int]],
+                                      commitment_accepted: np.ndarray) -> None:
+        validated = False
+        for index, strategy_count in enumerate(group_composition):
+            if strategy_count > 0:
+                if self.strategies_[index].proposes_commitment():
+                    commitment_accepted[index] = self.strategies_[index].is_commitment_validated(nb_committed)
+                    if commitment_accepted[index]:
+                        validated = True
+
+        for index, strategy_count in enumerate(group_composition):
+            if strategy_count > 0:
+                if not self.strategies_[index].proposes_commitment():
+                    commitment_accepted[index] = self.strategies_[index].is_commitment_validated(validated)
 
     def add_group_extraction(self, group_extraction, group_composition):
         self.extractions_[

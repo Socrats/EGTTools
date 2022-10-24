@@ -197,7 +197,7 @@ def plot_moran_dynamics_in_simplex_without_roots(population_size: int,
                                                  ax: Optional[plt.axis] = None) -> \
         Tuple[Simplex2D, Callable[[np.ndarray, int], np.ndarray], StochDynamics]:
     """
-    Helper function to simplified the plotting of the moran dynamics in a 2 Simplex.
+    Helper function to simplify the plotting of the moran dynamics in a 2 Simplex.
 
     Parameters
     ----------
