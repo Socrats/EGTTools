@@ -176,10 +176,7 @@ class FakeStrategy(AbstractCPRStrategy):
         return False
 
     def is_commitment_validated(self, nb_committers: int) -> bool:
-        if nb_committers > 0:
-            return True
-        else:
-            return False
+        return True
 
     def type(self) -> str:
         return "FAKE"
@@ -208,10 +205,7 @@ class FreeStrategy(AbstractCPRStrategy):
         return False
 
     def is_commitment_validated(self, nb_committers: int) -> bool:
-        if nb_committers > 0:
-            return True
-        else:
-            return False
+        return True
 
     def type(self) -> str:
         return "FREE"

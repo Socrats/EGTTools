@@ -221,7 +221,7 @@ class CommonPoolResourceDilemmaCommitment(AbstractNPlayerGame):
 
     def play(self, group_composition: Union[List[int], np.ndarray], game_payoffs: np.ndarray) -> None:
         # Each player's payoff is a function of the value of theirs and other extractiers' extraction
-        commitment_accepted = np.empty(shape=(self.nb_strategies_,), dtype=bool)
+        commitment_accepted = np.zeros(shape=(self.nb_strategies_,), dtype=bool)
         nb_committed = self.get_nb_committed(group_composition)
         self.check_if_commitment_validated(nb_committed, group_composition, commitment_accepted)
         group_extraction = self.calculate_total_extraction(group_composition)
@@ -269,17 +269,19 @@ class CommonPoolResourceDilemmaCommitment(AbstractNPlayerGame):
     def check_if_commitment_validated(self, nb_committed: int, group_composition: Union[List[int]],
                                       commitment_accepted: np.ndarray) -> None:
         validated = False
+        # A commitment will only be validated if a commitment proposing strategy is present in the group
         for index, strategy_count in enumerate(group_composition):
             if strategy_count > 0:
                 if self.strategies_[index].proposes_commitment():
                     commitment_accepted[index] = self.strategies_[index].is_commitment_validated(nb_committed)
-                    if commitment_accepted[index]:
-                        validated = True
-
-        for index, strategy_count in enumerate(group_composition):
-            if strategy_count > 0:
-                if not self.strategies_[index].proposes_commitment():
-                    commitment_accepted[index] = self.strategies_[index].is_commitment_validated(validated)
+                    validated = commitment_accepted[index]
+        # If there is a commitment proposing strategy in the group for which the commitment would be validated
+        # Then we check for every other strategy if they would be part of the commitment
+        if validated:
+            for index, strategy_count in enumerate(group_composition):
+                if strategy_count > 0:
+                    if not self.strategies_[index].proposes_commitment():
+                        commitment_accepted[index] = self.strategies_[index].is_commitment_validated(validated)
 
     def add_group_extraction(self, group_extraction, group_composition):
         self.extractions_[
