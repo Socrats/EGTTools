@@ -21,6 +21,7 @@ graft src/egttools/behaviors
 graft src/egttools/behaviors/CRD
 graft src/egttools/behaviors/NormalForm
 graft src/egttools/behaviors/NormalForm/TwoActions
+graft src/egttools/behaviors/CPR
 graft src/egttools/datastructures
 graft src/egttools/distributions
 graft src/egttools/games

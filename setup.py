@@ -50,6 +50,7 @@ setup(
     packages=['egttools', 'egttools.numerical', 'egttools.analytical', 'egttools.plotting', 'egttools.games',
               'egttools.behaviors',
               'egttools.behaviors.CRD', 'egttools.behaviors.NormalForm', 'egttools.behaviors.NormalForm.TwoActions',
+              'egttools.behaviors.CPR',
               'egttools.helpers',
               'egttools.distributions',
               'egttools.datastructures'
@@ -61,6 +62,7 @@ setup(
                  'egttools.behaviors': "src/egttools/behaviors", 'egttools.behaviors.CRD': "src/egttools/behaviors/CRD",
                  'egttools.behaviors.NormalForm': "src/egttools/behaviors/NormalForm",
                  'egttools.behaviors.NormalForm.TwoActions': "src/egttools/behaviors/NormalForm/TwoActions",
+                 'egttools.behaviors.CPR': "src/egttools/behaviors/CPR",
                  'egttools.helpers': "src/egttools/helpers",
                  'egttools.distributions': "src/egttools/distributions",
                  'egttools.datastructures': "src/egttools/datastructures"
