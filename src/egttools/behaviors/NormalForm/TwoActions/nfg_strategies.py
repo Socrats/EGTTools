@@ -15,14 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union
 
 from .. import AbstractNFGStrategy
 from egttools import Random
 
 import numpy as np
 
-__all__ = ['EpsilonTFT', 'EpsilonGRIM', 'Detective']
+__all__ = ['EpsilonTFT', 'EpsilonGRIM', 'Detective', 'MemoryOneStrategy']
 
 
 class EpsilonTFT(AbstractNFGStrategy):
@@ -93,8 +93,10 @@ class EpsilonGRIM(AbstractNFGStrategy):
 
     def get_action(self, time_step: int, action_prev: int):
         if time_step == 0:
+            self.action_ = 1  # reset action to cooperation
             return 0 if self.random_device.random() < self.p_ else 1
-        elif self.action_ == 1:
+
+        if self.action_ == 1:
             if action_prev == 0:
                 self.action_ = 0
 
@@ -134,6 +136,8 @@ class Detective(AbstractNFGStrategy):
         self.is_stochastic_strategy = False
 
     def get_action(self, time_step: int, action_prev: int):
+        if time_step == 0:  # reset internal variables
+            self.cheated_ = False
         if time_step < 4:
             if time_step > 0 and action_prev == 0:
                 self.cheated_ = True
@@ -155,27 +159,44 @@ class Detective(AbstractNFGStrategy):
 
 
 class MemoryOneStrategy(AbstractNFGStrategy):
-    def __init__(self, strategy: Dict[Tuple[int, int], float]):
+    def __init__(self, action_first_round: Union[int, float],
+                 strategy: Union[Dict[Tuple[int, int], int], Dict[Tuple[int, int], float]], is_stochastic: bool):
         """
         Defines a Memory One strategy.
 
         Parameters
         ----------
-        strategy: Dict[Tuple[int, int], float]
-            A dictionary with tuples defining the probability of cooperation for
+        action_first_round: Union[int, float]
+            Indicates the action this strategy will play in the first round. In the case that `is_stochastic`
+            is True, then this value should be a probability of Cooperation
+        strategy: Union[Dict[Tuple[int, int], int], Dict[Tuple[int, int], float]]
+            A dictionary with tuples defining the action/probability of cooperation for
             each pair of previous actions of self and the opponent, e.g., CC, DC....
+        is_stochastic: bool
+            Indicates whether the strategy is stochastic or not. If it is stochastic, then the values both
+            for the `action_first_round` and the strategy should be probabilities of Cooperation. If it is
+            False, then 1 - indicates Cooperation and 0 - indicates Defection.
         """
         super().__init__()
+        self.action_first_round_ = action_first_round
         self.strategy_ = strategy
-        self.action_prev_self_ = 0
+        self.action_prev_self_ = action_first_round
         self.random_device = np.random.default_rng(Random.generate())
-        self.is_stochastic_strategy = True
+        self.is_stochastic_strategy = is_stochastic
 
     def get_action(self, time_step: int, action_prev: int):
         if time_step == 0:
-            return 0 if self.random_device.random() < 0.5 else 1
+            if not self.is_stochastic_strategy:
+                self.action_prev_self_ = self.action_first_round_
+            else:
+                self.action_prev_self_ = 1 if self.random_device.random() < self.strategy_[
+                    (self.action_prev_self_, action_prev)] else 0
+            return self.action_first_round_
         else:
-            action = self.strategy_[(self.action_prev_self_, action_prev)]
+            if not self.is_stochastic_strategy:
+                action = self.strategy_[(self.action_prev_self_, action_prev)]
+            else:
+                action = 1 if self.random_device.random() < self.strategy_[(self.action_prev_self_, action_prev)] else 0
             self.action_prev_self_ = action
             return action
 

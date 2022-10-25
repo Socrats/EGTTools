@@ -101,6 +101,7 @@ bool egttools::FinitePopulations::behaviors::twoActions::GenerousTFT::is_stochas
     return true;
 }
 int egttools::FinitePopulations::behaviors::twoActions::GradualTFT::get_action(size_t time_step, int action_prev) {
+    // Initialize variables at round 0
     if (time_step == 0) {
         defection_string_ = 0;
         cooperation_string_ = 0;

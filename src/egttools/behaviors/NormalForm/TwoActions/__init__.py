@@ -7,7 +7,8 @@ from egttools.numerical.numerical.behaviors.NormalForm.TwoActions import (Action
                                                                           GradualTFT, ImperfectTFT, Pavlov, Random,
                                                                           SuspiciousTFT,
                                                                           TFT, TFTT, TTFT, )
-from .nfg_strategies import EpsilonTFT, EpsilonGRIM, Detective
+from .nfg_strategies import EpsilonTFT, EpsilonGRIM, Detective, MemoryOneStrategy
 
 __all__ = ['ActionInertia', 'Cooperator', 'Defector', 'GRIM', 'GenerousTFT', 'GradualTFT', 'ImperfectTFT', 'Pavlov',
-           'Random', 'SuspiciousTFT', 'TFT', 'TFTT', 'TTFT', 'EpsilonTFT', 'EpsilonGRIM', 'Detective']
+           'Random', 'SuspiciousTFT', 'TFT', 'TFTT', 'TTFT', 'EpsilonTFT', 'EpsilonGRIM', 'Detective',
+           'MemoryOneStrategy']
