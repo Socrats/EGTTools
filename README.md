@@ -164,12 +164,13 @@ selection ![\beta=1](https://latex.codecogs.com/gif.latex?\beta=1) in the follow
 ```python
 import numpy as np
 import matplotlib.pyplot as plt
-from egttools import StochDynamics
+from egttools.analytical import StochDynamics
 
+beta = 1; Z = 100; nb_strategies = 2; A = np.array([[-0.5, 2.], [0., 0.]])
 pop_states = np.arange(0, Z + 1, 1)
 
 # Instantiate evolver and calculate gradient
-evolver = StochDynamics(2, A, Z)
+evolver = StochDynamics(nb_strategies, A, Z)
 gradients = np.array([evolver.gradient_selection(x, 0, 1, beta)
                       for x in pop_states])
 ```
@@ -177,21 +178,10 @@ gradients = np.array([evolver.gradient_selection(x, 0, 1, beta)
 Afterwards, you can plot the results with:
 
 ```python
-from egttools import find_saddle_type_and_gradient_direction
-
-# Find saddle points (where the gradient is 0)
-epsilon = 1e-3
-saddle_points_idx = np.where((gradients <= epsilon) & (gradients >= -epsilon))[0]
-saddle_points = saddle_points_idx / Z
-
-saddle_type, gradient_direction = find_saddle_type_and_gradient_direction(gradients,
-                                                                          saddle_points_idx)
-
-strategy_i = np.linspace(0, 1, num=Z + 1, dtype=np.float64)
-
-ax = plot_gradient(strategy_i, gradients, saddle_points, saddle_type,
-                   gradient_direction, 'Hawk-Dove game on Finite populations', xlabel='$k/Z$')
-plt.show()
+from egttools.plotting import plot_gradients
+plot_gradients(gradients, figsize=(4,4), fig_title="Hawk-Dove game stochastic dynamics",
+               marker_facecolor='white',
+               xlabel="frequency of hawks (k/Z)", marker="o", marker_size=20, marker_plot_freq=2)
 ```
 
 ![Gradient of selection](docs/images/hawk_dove_analytical_gradient.png)
@@ -221,8 +211,8 @@ that you let the simulation run for enough generations after it has achieved a s
 between analytical and numerical results:
 
 ```python
-from egttools import PairwiseMoran
-from egttools import NormalFormGame
+from egttools.numerical import PairwiseMoran
+from egttools.games import NormalFormGame
 
 # Instantiate the game
 game = NormalFormGame(1, A)
@@ -246,7 +236,7 @@ Lastly, we plot the results:
 ```python
 from sklearn.metrics import mean_squared_error
 
-mse = mean_squared_error(coop_level_analytical, coop_level)
+mse = mean_squared_error(1 - coop_level_analytical, coop_level)
 
 # Finally, we plot and compare visually (and check how much error we get)
 fig, ax = plt.subplots(figsize=(7, 5))
@@ -293,7 +283,7 @@ payoff matrix and returns a `egttools.plotting.Simplex2D` object which can be us
 ```python
 import numpy as np
 import matplotlib.pyplot as plt
-from egttools import plot_replicator_dynamics_in_simplex
+from egttools.plotting import plot_replicator_dynamics_in_simplex
 
 payoffs = np.array([[1, 0, 0],
                     [0, 2, 0],
@@ -302,8 +292,7 @@ type_labels = ['A', 'B', 'C']
 
 fig, ax = plt.subplots(figsize=(10, 8))
 
-simplex, gradient_function,
-roots, roots_xy, stability = plot_replicator_dynamics_in_simplex(payoffs, ax=ax)
+simplex, gradient_function, roots, roots_xy, stability = plot_replicator_dynamics_in_simplex(payoffs, ax=ax)
 
 plot = (simplex.add_axis(ax=ax)
         .draw_triangle()
@@ -345,8 +334,8 @@ investigate the evolutionary dynamics in N-player games. For now only the replic
 and the Pairwise Comparison imitation process (for finite populations) are implemented.
 
 When your state-space is too big (in finite populations), it might become computationally hard to solve the system
-analytically. Thus, we provide an efficient [numerical](src/egttools/src/egttools) module written in C++ and compiled to
-Python. You may use it to estimate the fixation probabilities and stiationary distribution through Monte-Carlo
+analytically. Thus, we provide an efficient [numerical](cpp/src/egttools.cpp) module written in C++ and compiled to
+Python. You may use it to estimate the fixation probabilities and stationary distribution through Monte-Carlo
 simulations, or perform individual runs of the Moran process.
 
 You can find more information in the [ReadTheDocs](https://egttools.readthedocs.io/en/latest/) documentation.
