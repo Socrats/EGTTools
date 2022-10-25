@@ -142,7 +142,7 @@ jobs:
       - name: Build and install
         run: |
           python -m build
-          python -m pip install -e ./
+          python -m pip install ./
       - name: Test
         run: |
           python build_tools/github/check_if_egttools_is_installed.py
@@ -190,7 +190,7 @@ jobs:
       - name: Build
         run: |
           python -m build
-          python -m pip install -e .
+          python -m pip install .
       - name: Build documentation
         run: |
           python -m sphinx -M html docs docs/_build
