@@ -543,7 +543,7 @@ def find_where_point_is_in_simplex(point: np.ndarray) -> Tuple[int, np.ndarray]:
     -------
     Tuple[int, numpy.ndarray]
         An integer which indicates where the point is in the simplex and
-        the index of the non zero entries.
+        the index of the non-zero entries.
     """
     # first we check if the root is in one of the edges
     if np.isclose(point, 0., atol=1e-7).any():

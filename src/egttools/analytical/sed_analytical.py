@@ -119,6 +119,7 @@ class StochDynamics:
         ...     ])
 
     Example of payoff matrix for case 2) full markov chain (mu > 0):
+        >>> import egttools
         >>> nb_group_combinations = egttools.calculate_nb_states(group_size, nb_strategies)
         >>> payoff_matrix = np.zeros(shape=(nb_strategies, nb_group_combinations))
         >>> for group_configuration_index in range(nb_group_combinations):
