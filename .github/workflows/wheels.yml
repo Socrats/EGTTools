@@ -140,7 +140,7 @@ jobs:
 #          CIBW_BEFORE_TEST_MACOS: cd .. && cp -r EGTTools/tests/ /Users/runner/tests/
 #          CIBW_BEFORE_TEST_WINDOWS: cd .. && cp -r EGTTools/tests/ c:\tests\
 #          CIBW_BEFORE_TEST_LINUX: cp -r tests/ /root/tests/ && cd ..
-          CIBW_TEST_COMMAND: pytest tests
+          CIBW_TEST_COMMAND: pytest tests -s --import-mode=importlib
           CIBW_BUILD_VERBOSITY: 1
 
       - name: Upload wheels
