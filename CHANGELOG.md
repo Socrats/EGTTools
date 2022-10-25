@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres
 to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.11] - 25-10-2022
+
+### Fixed
+
+- fixed errors in docstrings examples
+- fixed missing headers
+- fixed error in `full_fitness_difference_group` and `calculate_fulll_transition_matrix`. There was a missing
+  multiplying factor in the probability of transition due to mutation. The probability of selecting the strategy to dies
+  must also be taken into account. There was also an issue when instantiating the `multi_hypergeometric_distribution`
+  class from scipy. It does not copy the array containing the counts of each strategy. Now we create a copy before
+  passing the state vector to avoid the issue.
+- fixed issue with `AbstractNPlayerGame`. For N-player games it was not a good idea to calculate the fitness in Python
+  as this part of the class becomes a bottleneck, as it will be called more often then in the 2-player case (because
+  there are more states - so less likely the fitness will be stored in cache). For this reason we now implemented this
+  abstract class in C++ and the fitness calculation is done in this language. Everything else remains the same, and it
+  should be equally easy to create new games.
+- fixed issues of missing initialization of internal parameters of some `egttools.games.NormalForm.TwoAction`
+  strategies. Internal parameters should be initialized when `time == 0`, i.e., at the beginning of each game.
+
+### Changed
+
+- changed `egttools` to `src-layout`. This should help fix issues with tests and make the overall structure of the
+  library cleaner.
+- moved C++ code to the `cpp` folder. This way the code is more organized.
+-
+
+### Added
+
+- added new controls to `draw_stationary_distribution`
+- added `enhancement_factor` parameter to `CRDGame`. This parameter serves as a multiplying factor for the payoff of
+  each player in case the target is achieved. If `enhancement_factor = 1` the `CRDGame` behaves as usual.
+  For `enhancement_factor > 1`, we are incentivizing strategies that reach the target.
+- added `MemoryOneStrategy` to `egttools.games.NormalForm.TwoAction` strategies.
+- added `CommonPoolResourceDilemma` game - However it has still not been extensively tested!!
+- added `ninja` as a requirement for the build.
+- added `TimeBasedCRDStrategy` to `egttools.games.CRD` strategies. These strategies make contributions to the Public
+  Good in function of the round of the game.
+- added `sdist` to build.
+- added labels to the lines plot by `plot_gradients` so that several lines can be plot.
+-
+
 ## [0.1.10] - 06-08-2022
 
 ### Fixed
@@ -14,11 +55,17 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   when drawing multiple subplots
 - fixed issue with hardcoded x-axis in `plot_gradients`
 - fixed error on `calculate_full_transition_matrix`. The error happened when calculating the transition probability:
-  - a) although the literature is a bit confusing on this, the original paper by Traulsen 2006 says that for the transition we consider that the strategies to reproduce and die are pricked simultaneously (so both with probability 1/Z).
-  - b) the is more accumulated numerical error when doing probability of transitioning from A to B P(A, B) = fermi(-beta, B - A) than when doing fermi(beta, A - B). This is probably specific to Python and Numpy, but must be taken into account in the future.
-  - c) The schur decomposition (egttools.utils.calculate_stationary_distribution_non_hermitian) works better in this case (although still has a slight numerical error) and should be used for full transition matrices).
+    - a) although the literature is a bit confusing on this, the original paper by Traulsen 2006 says that for the
+      transition we consider that the strategies to reproduce and die are pricked simultaneously (so both with
+      probability 1/Z).
+    - b) the is more accumulated numerical error when doing probability of transitioning from A to B P(A, B) = fermi(
+      -beta, B - A) than when doing fermi(beta, A - B). This is probably specific to Python and Numpy, but must be taken
+      into account in the future.
+    - c) The schur decomposition (egttools.utils.calculate_stationary_distribution_non_hermitian) works better in this
+      case (although still has a slight numerical error) and should be used for full transition matrices).
 - normalized transition probabilities to use the definition in Traulsen et al. 2006
-  - now we assume that both death and birth individuals are selected simultaneously with probability n_i/Z, where n_i is the number of individuals of that strategy in the population
+    - now we assume that both death and birth individuals are selected simultaneously with probability n_i/Z, where n_i
+      is the number of individuals of that strategy in the population
 
 ### Changed
 
