@@ -137,9 +137,9 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch == 'macosx_x86_64' && 'x86_64' || matrix.cibw-arch == 'macosx_arm64' && 'arm64' || matrix.cibw-arch == 'macosx_universal2' && '"arm64;x86_64"' || '' }} BUILD_ARCH=${{ matrix.cibw-arch }} MACOSX_DEPLOYMENT_TARGET=10.15 BUILD_ARCH=${{ matrix.cibw-arch }} EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'
           CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
           CIBW_TEST_REQUIRES: pytest
-#          CIBW_BEFORE_TEST_MACOS: cd .. && cp -r EGTTools/tests/ /Users/runner/tests/
-#          CIBW_BEFORE_TEST_WINDOWS: cd .. && cp -r EGTTools/tests/ c:\tests\
-#          CIBW_BEFORE_TEST_LINUX: cp -r tests/ /root/tests/ && cd ..
+          CIBW_BEFORE_TEST_MACOS: cd .. && cp -r EGTTools/tests/ /Users/runner/tests/
+          CIBW_BEFORE_TEST_WINDOWS: cd .. && cp -r EGTTools/tests/ c:\tests\
+          CIBW_BEFORE_TEST_LINUX: cp -r tests/ /root/tests/ && cd ..
           CIBW_TEST_COMMAND: pytest tests -s --import-mode=importlib
           CIBW_BUILD_VERBOSITY: 1
 
