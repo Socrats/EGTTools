@@ -197,3 +197,8 @@ jobs:
       - name: Check links
         run: |
           python -m sphinx -M linkcheck docs docs/_build
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ failure() && github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+        with:
+          limit-access-to-actor: true
