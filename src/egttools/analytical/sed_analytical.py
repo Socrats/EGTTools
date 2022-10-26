@@ -323,6 +323,7 @@ class StochDynamics:
             if group[j] > 0:
                 group[j] -= 1
                 fitness_j += self.payoffs[j, state_index] * rv_j.pmf(x=group)
+                group[j] += 1
 
         return fitness_i - fitness_j
 
