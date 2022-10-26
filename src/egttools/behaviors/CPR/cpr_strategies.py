@@ -67,7 +67,10 @@ class FairExtraction(AbstractCPRStrategy):
         return False
 
     def is_commitment_validated(self, nb_committers: int) -> bool:
-        return True
+        if nb_committers > 0:
+            return True
+        else:
+            return False
 
     def type(self) -> str:
         return "FAIR"
@@ -176,7 +179,7 @@ class FakeStrategy(AbstractCPRStrategy):
         return False
 
     def is_commitment_validated(self, nb_committers: int) -> bool:
-        return True
+        return True if nb_committers > 0 else False
 
     def type(self) -> str:
         return "FAKE"
@@ -205,7 +208,7 @@ class FreeStrategy(AbstractCPRStrategy):
         return False
 
     def is_commitment_validated(self, nb_committers: int) -> bool:
-        return True
+        return True if nb_committers > 0 else False
 
     def type(self) -> str:
         return "FREE"
