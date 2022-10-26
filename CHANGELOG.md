@@ -29,7 +29,10 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 - changed `egttools` to `src-layout`. This should help fix issues with tests and make the overall structure of the
   library cleaner.
 - moved C++ code to the `cpp` folder. This way the code is more organized.
--
+- Bump pypa/cibuildwheel from 2.8.1 to 2.11.1
+- Bump robinraju/release-downloader from 1.4 to 1.5
+- Bump ncipollo/release-action from 1.10.0 to 1.11.1
+- removed support for win32 and manylinux_i686 for Python > 3.7
 
 ### Added
 
@@ -43,8 +46,8 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 - added `TimeBasedCRDStrategy` to `egttools.games.CRD` strategies. These strategies make contributions to the Public
   Good in function of the round of the game.
 - added `sdist` to build.
-- added labels to the lines plot by `plot_gradients` so that several lines can be plot.
--
+- added labels to the lines plot by `plot_gradients` so that several lines can be plotted.
+- added more unit testing, but this still needs a lot of improvement.
 
 ## [0.1.10] - 06-08-2022
 
