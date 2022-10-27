@@ -30,6 +30,7 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   library cleaner.
 - moved C++ code to the `cpp` folder. This way the code is more organized.
 - Bump pypa/cibuildwheel from 2.8.1 to 2.11.1
+- Bump pypa/cibuildwheel from 2.11.1 to 2.11.2
 - Bump robinraju/release-downloader from 1.4 to 1.5
 - Bump ncipollo/release-action from 1.10.0 to 1.11.1
 - removed support for win32 and manylinux_i686 for Python > 3.7
@@ -48,6 +49,7 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 - added `sdist` to build.
 - added labels to the lines plot by `plot_gradients` so that several lines can be plotted.
 - added more unit testing, but this still needs a lot of improvement.
+- added missing libraries on C++ code.
 
 ## [0.1.10] - 06-08-2022
 
