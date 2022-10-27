@@ -83,6 +83,10 @@ class Simplex2D:
         egttools.analytical.replicator_equation,
         egttools.analytical.StochDynamics
 
+        Cite
+        -----
+        This class has been inspired from: https://github.com/marvinboe/egtsimplex
+
         Examples
         --------
         >>> import numpy as np
