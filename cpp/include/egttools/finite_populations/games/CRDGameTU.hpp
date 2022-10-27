@@ -1,7 +1,7 @@
 //
 // Created by Elias Fernandez on 2019-06-13.
 //
-
+#pragma once
 #ifndef EGTTOOLS_FINITEPOPULATIONS_GAMES_CRDGAMETU_HPP
 #define EGTTOOLS_FINITEPOPULATIONS_GAMES_CRDGAMETU_HPP
 
@@ -10,6 +10,7 @@
 #include <egttools/finite_populations/behaviors/CRDStrategies.h>
 
 #include <cassert>
+#include <egttools/finite_populations/Utils.hpp>
 #include <egttools/finite_populations/behaviors/AbstractCRDStrategy.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <egttools/utils/TimingUncertainty.hpp>

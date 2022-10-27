@@ -15,7 +15,7 @@
   * You should have received a copy of the GNU General Public License
   * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 */
-
+#pragma once
 #ifndef EGTTOOLS_FINITEPOPULATIONS_GAMES_NORMALFORMGAME_HPP
 #define EGTTOOLS_FINITEPOPULATIONS_GAMES_NORMALFORMGAME_HPP
 
@@ -23,6 +23,7 @@
 #include <egttools/Types.h>
 
 #include <cassert>
+#include <egttools/finite_populations/Utils.hpp>
 #include <egttools/finite_populations/behaviors/AbstractNFGStrategy.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <fstream>

@@ -9,7 +9,7 @@ class AbstractCPRStrategy(ABC):
     @staticmethod
     @abstractmethod
     def get_payoff(a: float, b: float, extraction: float, group_extraction: float, fine: float = 0,
-                   cost: float = 0) -> float:
+                   cost: float = 0, commitment: bool = False) -> float:
         pass
 
     @abstractmethod

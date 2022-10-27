@@ -15,10 +15,11 @@
   * You should have received a copy of the GNU General Public License
   * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 */
-
+#pragma once
 #ifndef EGTTOOLS_FINITEPOPULATIONS_GAMES_ABSTRACTNPLAYERGAME_HPP
 #define EGTTOOLS_FINITEPOPULATIONS_GAMES_ABSTRACTNPLAYERGAME_HPP
 
+#include <egttools/Distributions.h>
 #include <egttools/Types.h>
 #include <egttools/Utils.h>
 
@@ -28,6 +29,10 @@
 #include <fstream>
 #include <stdexcept>
 #include <vector>
+
+#if defined(_OPENMP)
+#include <egttools/OpenMPUtils.hpp>
+#endif
 
 namespace egttools::FinitePopulations {
     using PayoffVector = std::vector<double>;
@@ -51,7 +56,7 @@ namespace egttools::FinitePopulations {
          * @param game_payoffs container for the payoffs of each player
          */
         void play(const egttools::FinitePopulations::StrategyCounts &group_composition,
-                          PayoffVector &game_payoffs) override = 0;
+                  PayoffVector &game_payoffs) override = 0;
 
         /**
          * @brief Estimates the payoff matrix for each strategy.

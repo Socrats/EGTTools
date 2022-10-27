@@ -1,7 +1,7 @@
 //
 // Created by Elias Fernandez on 03/12/2021.
 //
-
+#pragma once
 #ifndef EGTTOOLS_FINITEPOPULATIONS_GAMES_ONESHOTCRD_HPP
 #define EGTTOOLS_FINITEPOPULATIONS_GAMES_ONESHOTCRD_HPP
 
@@ -9,17 +9,21 @@
 #include <egttools/Types.h>
 
 #include <cassert>
+#include <egttools/finite_populations/Utils.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <fstream>
 #include <stdexcept>
 #include <vector>
+
+#if defined(_OPENMP)
+#include <egttools/OpenMPUtils.hpp>
+#endif
 
 namespace egttools::FinitePopulations {
     using PayoffVector = std::vector<double>;
 
     class OneShotCRD final : public egttools::FinitePopulations::AbstractGame {
     public:
-
         /**
          * This class implements a One-Shot Collective Risk Dilemma.
          *

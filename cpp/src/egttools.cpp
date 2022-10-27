@@ -1855,7 +1855,7 @@ PYBIND11_MODULE(numerical, m) {
                  "runs the moran process with social imitation and returns a matrix with all the states the system went through",
                  py::arg("nb_generations"),
                  py::arg("beta"),
-                 py::arg("init_state"))
+                 py::arg("init_state"), py::return_value_policy::reference_internal)
             .def("run",
                  static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int, double, double,
                                                                            const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
@@ -1863,7 +1863,7 @@ PYBIND11_MODULE(numerical, m) {
                  py::arg("nb_generations"),
                  py::arg("beta"),
                  py::arg("mu"),
-                 py::arg("init_state"))
+                 py::arg("init_state"), py::return_value_policy::reference_internal)
             .def("estimate_fixation_probability", &PairwiseComparison::estimate_fixation_probability,
                  py::call_guard<py::gil_scoped_release>(),
                  "Estimates the fixation probability of an strategy in the population.",

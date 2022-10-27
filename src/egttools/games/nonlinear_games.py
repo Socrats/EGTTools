@@ -222,7 +222,7 @@ class CommonPoolResourceDilemmaCommitment(AbstractNPlayerGame):
         commitment_accepted = np.zeros(shape=(self.nb_strategies_,), dtype=bool)
         nb_committed = self.get_nb_committed(group_composition)
         self.check_if_commitment_validated(nb_committed, group_composition, commitment_accepted)
-        group_extraction = self.calculate_total_extraction(group_composition)
+        group_extraction = self.calculate_total_extraction(commitment_accepted, group_composition)
 
         for index, strategy_count in enumerate(group_composition):
             if strategy_count == 0:
@@ -231,7 +231,8 @@ class CommonPoolResourceDilemmaCommitment(AbstractNPlayerGame):
                 extraction = self.strategies_[index].get_extraction(self.a_, self.b_, self.group_size_,
                                                                     commitment_accepted[index])
                 game_payoffs[index] = self.strategies_[index].get_payoff(self.a_, self.b_, extraction, group_extraction,
-                                                                         self.fine_, self.cost_)
+                                                                         self.fine_, self.cost_,
+                                                                         commitment_accepted[index])
         self.add_group_extraction(group_extraction, group_composition)
 
     def calculate_payoffs(self) -> np.ndarray:
@@ -247,15 +248,14 @@ class CommonPoolResourceDilemmaCommitment(AbstractNPlayerGame):
 
         return self.payoffs()
 
-    def calculate_total_extraction(self, group_composition: Union[List[int], np.ndarray]) -> float:
+    def calculate_total_extraction(self, commitment_accepted: np.ndarray,
+                                   group_composition: Union[List[int], np.ndarray]) -> float:
         extraction = 0
-        nb_committed = self.get_nb_committed(group_composition)
-        commitment_accepted = np.empty(shape=(self.nb_strategies_,), dtype=bool)
-        self.check_if_commitment_validated(nb_committed, group_composition, commitment_accepted)
         for index, strategy_count in enumerate(group_composition):
             if strategy_count > 0:
-                extraction = strategy_count * self.strategies_[index].get_extraction(self.a_, self.b_, self.group_size_,
-                                                                                     commitment_accepted[index])
+                extraction += strategy_count * self.strategies_[index].get_extraction(self.a_, self.b_,
+                                                                                      self.group_size_,
+                                                                                      commitment_accepted[index])
         return extraction
 
     def get_nb_committed(self, group_composition: Union[List[int], np.ndarray]) -> int:

@@ -91,6 +91,15 @@ def test_fair_extraction(setup_cpr_strategy_parameters):
     assert np.round(strategy.get_extraction(a, b, N, commitment=True), 1) == 11.5
 
 
+def test_fair_payoff(setup_cpr_strategy_parameters):
+    a, b, N = setup_cpr_strategy_parameters
+    fine = 5
+    cost = 5
+    strategy = FairExtraction()
+    assert strategy.get_payoff(a, b, strategy.get_extraction(a, b, N, True), 46, fine, cost, commitment=True) == 132.25
+    assert strategy.get_payoff(a, b, strategy.get_extraction(a, b, N, True), 46, fine, cost, commitment=False) == 132.25
+
+
 def test_fair_strategy_commit_proposal():
     strategy = FairExtraction()
 
@@ -204,7 +213,19 @@ def test_free_strategy_validates_commit():
 
 
 def test_cpr_game_play(setup_cpr_game_parameters):
-    pass
+    # There are 8 strategies:
+    # Fair, High, Fake, Free, COM1, COM2, COM3, COM4
+    group_size, a, b, cost, fine, strategies = setup_cpr_game_parameters
+    game = CommonPoolResourceDilemmaCommitment(group_size, a, b, cost, fine, strategies)
+
+    game_payoffs = np.zeros(shape=(game.nb_strategies(),))
+    # Case of all 3 Fair 1 High
+    group_composition = [3, group_size - 3, 0, 0, 0, 0, 0, 0]
+
+    game.play(group_composition, game_payoffs)
+
+    assert game_payoffs[0] == 99.1875
+    assert game_payoffs[1] == 198.375
 
 
 def test_cpr_calculate_payoffs(setup_cpr_game_parameters):
@@ -212,7 +233,83 @@ def test_cpr_calculate_payoffs(setup_cpr_game_parameters):
 
 
 def test_cpr_calculate_total_extraction(setup_cpr_game_parameters):
-    pass
+    # There are 8 strategies:
+    # Fair, High, Fake, Free, COM1, COM2, COM3, COM4
+    group_size, a, b, cost, fine, strategies = setup_cpr_game_parameters
+    game = CommonPoolResourceDilemmaCommitment(group_size, a, b, cost, fine, strategies)
+
+    commitment_accepted = np.zeros(shape=(game.nb_strategies(),), dtype=bool)
+
+    # Case of all Fair
+    group_composition = [group_size, 0, 0, 0, 0, 0, 0, 0]
+    nb_committed = game.get_nb_committed(group_composition)
+    game.check_if_commitment_validated(nb_committed, group_composition, commitment_accepted)
+    assert game.calculate_total_extraction(commitment_accepted, group_composition) == 46
+
+    commitment_accepted.fill(0)
+
+    # Case of all High
+    group_composition = [0, group_size, 0, 0, 0, 0, 0, 0]
+    nb_committed = game.get_nb_committed(group_composition)
+    game.check_if_commitment_validated(nb_committed, group_composition, commitment_accepted)
+    assert game.calculate_total_extraction(commitment_accepted, group_composition) == 92
+
+    commitment_accepted.fill(0)
+
+    # Case of all Fake
+    group_composition = [0, 0, group_size, 0, 0, 0, 0, 0]
+    nb_committed = game.get_nb_committed(group_composition)
+    game.check_if_commitment_validated(nb_committed, group_composition, commitment_accepted)
+    assert game.calculate_total_extraction(commitment_accepted, group_composition) == 92
+
+    commitment_accepted.fill(0)
+
+    # Case of all Free
+    group_composition = [0, 0, 0, group_size, 0, 0, 0, 0]
+    nb_committed = game.get_nb_committed(group_composition)
+    game.check_if_commitment_validated(nb_committed, group_composition, commitment_accepted)
+    assert game.calculate_total_extraction(commitment_accepted, group_composition) == 92
+
+    commitment_accepted.fill(0)
+
+    # Case of all COM1
+    group_composition = [0, 0, 0, 0, group_size, 0, 0, 0]
+    nb_committed = game.get_nb_committed(group_composition)
+    game.check_if_commitment_validated(nb_committed, group_composition, commitment_accepted)
+    assert game.calculate_total_extraction(commitment_accepted, group_composition) == 46
+
+    commitment_accepted.fill(0)
+
+    # Case of all COM2
+    group_composition = [0, 0, 0, 0, 0, group_size, 0, 0]
+    nb_committed = game.get_nb_committed(group_composition)
+    game.check_if_commitment_validated(nb_committed, group_composition, commitment_accepted)
+    assert game.calculate_total_extraction(commitment_accepted, group_composition) == 46
+
+    commitment_accepted.fill(0)
+
+    # Case of all COM3
+    group_composition = [0, 0, 0, 0, 0, 0, group_size, 0]
+    nb_committed = game.get_nb_committed(group_composition)
+    game.check_if_commitment_validated(nb_committed, group_composition, commitment_accepted)
+    assert game.calculate_total_extraction(commitment_accepted, group_composition) == 46
+
+    commitment_accepted.fill(0)
+
+    # Case of all COM4
+    group_composition = [0, 0, 0, 0, 0, 0, 0, group_size]
+    nb_committed = game.get_nb_committed(group_composition)
+    game.check_if_commitment_validated(nb_committed, group_composition, commitment_accepted)
+    assert game.calculate_total_extraction(commitment_accepted, group_composition) == 46
+
+    commitment_accepted.fill(0)
+
+    # Case of all 3 Fair 1 High
+    group_composition = [3, group_size - 3, 0, 0, 0, 0, 0, 0]
+    nb_committed = game.get_nb_committed(group_composition)
+    game.check_if_commitment_validated(nb_committed, group_composition, commitment_accepted)
+    assert all(commitment_accepted == 0)
+    assert game.calculate_total_extraction(commitment_accepted, group_composition) == 57.5
 
 
 def test_cpr_get_nb_committed(setup_cpr_game_parameters):
@@ -397,3 +494,19 @@ def test_cpr_check_if_commitment_validated(setup_cpr_game_parameters):
     assert not commitment_accepted[2]
     assert not commitment_accepted[3]
     assert not commitment_accepted[7]
+
+# def test_fair_payoff_from_game(setup_cpr_game_parameters):
+#     # There are 8 strategies:
+#     # Fair, High, Fake, Free, COM1, COM2, COM3, COM4
+#
+#     group_size, a, b, cost, fine, strategies = setup_cpr_game_parameters
+#     game = CommonPoolResourceDilemmaCommitment(group_size, a, b, cost, fine, strategies)
+#
+#     commitment_accepted = np.zeros(shape=(game.nb_strategies(),), dtype=bool)
+#
+#     strategy = FairExtraction()
+#
+#     game.grou
+#
+#     assert strategy.get_payoff(a, b, strategy.get_extraction(a, b, group_size, True), 46, fine, cost, commitment=True) == 132.25
+#     assert strategy.get_payoff(a, b, strategy.get_extraction(a, b, group_size, True), 46, fine, cost, commitment=False) == 132.25

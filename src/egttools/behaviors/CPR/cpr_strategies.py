@@ -31,7 +31,7 @@ class FixedExtraction(AbstractCPRStrategy):
 
     @staticmethod
     def get_payoff(a: float, b: float, extraction: float, group_extraction: float, fine: float = 0,
-                   cost: float = 0) -> float:
+                   cost: float = 0, commitment: bool = False) -> float:
         return payoff_no_commitment(a, b, extraction, group_extraction)
 
     def would_like_to_commit(self) -> bool:
@@ -57,7 +57,7 @@ class FairExtraction(AbstractCPRStrategy):
 
     @staticmethod
     def get_payoff(a: float, b: float, extraction: float, group_extraction: float, fine: float = 0,
-                   cost: float = 0) -> float:
+                   cost: float = 0, commitment: bool = False) -> float:
         return payoff_no_commitment(a, b, extraction, group_extraction)
 
     def would_like_to_commit(self) -> bool:
@@ -86,7 +86,7 @@ class HighExtraction(AbstractCPRStrategy):
 
     @staticmethod
     def get_payoff(a: float, b: float, extraction: float, group_extraction: float, fine: float = 0,
-                   cost: float = 0) -> float:
+                   cost: float = 0, commitment: bool = False) -> float:
         return payoff_no_commitment(a, b, extraction, group_extraction)
 
     def would_like_to_commit(self) -> bool:
@@ -112,7 +112,7 @@ class NashExtraction(AbstractCPRStrategy):
 
     @staticmethod
     def get_payoff(a: float, b: float, extraction: float, group_extraction: float, fine: float = 0,
-                   cost: float = 0) -> float:
+                   cost: float = 0, commitment: bool = False) -> float:
         return payoff_no_commitment(a, b, extraction, group_extraction)
 
     def would_like_to_commit(self) -> bool:
@@ -143,8 +143,11 @@ class CommitmentStrategy(AbstractCPRStrategy):
 
     @staticmethod
     def get_payoff(a: float, b: float, extraction: float, group_extraction: float, fine: float = 0,
-                   cost: float = 0) -> float:
-        return payoff_no_commitment(a, b, extraction, group_extraction) - cost
+                   cost: float = 0, commitment: bool = False) -> float:
+        if commitment:
+            return payoff_no_commitment(a, b, extraction, group_extraction) - cost
+        else:
+            return payoff_no_commitment(a, b, extraction, group_extraction)
 
     def would_like_to_commit(self) -> bool:
         return True
@@ -169,8 +172,11 @@ class FakeStrategy(AbstractCPRStrategy):
 
     @staticmethod
     def get_payoff(a: float, b: float, extraction: float, group_extraction: float, fine: float = 0,
-                   cost: float = 0) -> float:
-        return payoff_no_commitment(a, b, extraction, group_extraction) - fine
+                   cost: float = 0, commitment: bool = False) -> float:
+        if commitment:
+            return payoff_no_commitment(a, b, extraction, group_extraction)
+        else:
+            return payoff_no_commitment(a, b, extraction, group_extraction) - fine
 
     def would_like_to_commit(self) -> bool:
         return True
@@ -198,7 +204,7 @@ class FreeStrategy(AbstractCPRStrategy):
 
     @staticmethod
     def get_payoff(a: float, b: float, extraction: float, group_extraction: float, fine: float = 0,
-                   cost: float = 0) -> float:
+                   cost: float = 0, commitment: bool = False) -> float:
         return payoff_no_commitment(a, b, extraction, group_extraction)
 
     def would_like_to_commit(self) -> bool:
