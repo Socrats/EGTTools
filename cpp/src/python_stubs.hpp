@@ -18,6 +18,7 @@
 
 #include <egttools/Types.h>
 
+#include <egttools/finite_populations/Utils.hpp>
 #include <egttools/finite_populations/behaviors/AbstractCRDStrategy.hpp>
 #include <egttools/finite_populations/behaviors/AbstractNFGStrategy.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>

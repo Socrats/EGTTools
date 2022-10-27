@@ -340,7 +340,7 @@ PYBIND11_MODULE(numerical, m) {
                  py::arg("file_name"));
 
     py::class_<egttools::FinitePopulations::AbstractNPlayerGame, stubs::PyAbstractNPlayerGame, egttools::FinitePopulations::AbstractGame>(mGames, "AbstractNPlayerGame")
-            .def(py::init<int, int>(),
+            .def(py::init_alias<int, int>(),
                  R"pbdoc(
                     Abstract N-Player Game.
 

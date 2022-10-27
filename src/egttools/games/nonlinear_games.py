@@ -16,6 +16,7 @@ class NPlayerStagHunt(AbstractNPlayerGame):
     """
 
     def __init__(self, group_size, enhancement_factor, cooperation_threshold, cost):
+        super().__init__(2, group_size)  # Must be initialized at the beginning!
         self.group_size_ = group_size  # N
         self.enhancement_factor_ = enhancement_factor  # F
         self.cooperation_threshold_ = cooperation_threshold  # M
@@ -23,7 +24,6 @@ class NPlayerStagHunt(AbstractNPlayerGame):
         self.strategies = ['Defect', 'Cooperate']
 
         self.nb_strategies_ = 2
-        super().__init__(self.nb_strategies_, self.group_size_)
         self.nb_group_configurations_ = self.nb_group_configurations()
 
         self.calculate_payoffs()
@@ -97,19 +97,18 @@ class NPlayerStagHunt(AbstractNPlayerGame):
 
 
 class CommonPoolResourceDilemma(AbstractNPlayerGame):
-    def __init__(self, group_size: int, a: float, b: float, min_e: float, cost: float, strategies: List[int] = None):
+    def __init__(self, group_size: int, a: float, b: float, min_e: float, cost: float, nb_strategies: int = 3,
+                 strategies: List[int] = None):
+        AbstractNPlayerGame.__init__(self, nb_strategies, group_size)  # Must be initialized before anything else!
+
         self.group_size_ = group_size  # N
         self.a_ = a
         self.b_ = b
         self.min_e = min_e
         self.cost_ = cost
         self.strategies_ = strategies
-        if strategies is None:
-            self.nb_strategies_ = 3
-        else:
-            self.nb_strategies_ = len(strategies)
+        self.nb_strategies_ = nb_strategies
 
-        super().__init__(self.nb_strategies_, self.group_size_)
         self.nb_group_configurations_ = self.nb_group_configurations()
 
         self.calculate_payoffs()
@@ -201,6 +200,7 @@ class CommonPoolResourceDilemmaCommitment(AbstractNPlayerGame):
         strategies: Lit[int]
             List of strategies which will play the game
         """
+        AbstractNPlayerGame.__init__(self, len(strategies), group_size)  # Must be initialized before anything else!
         self.group_size_ = group_size
 
         self.a_ = a
@@ -209,8 +209,6 @@ class CommonPoolResourceDilemmaCommitment(AbstractNPlayerGame):
         self.cost_ = cost
         self.strategies_ = strategies
         self.nb_strategies_ = len(strategies)
-
-        super().__init__(self.nb_strategies_, self.group_size_)
 
         self.nb_group_configurations_ = self.nb_group_configurations()
         self.extractions_ = np.zeros(self.nb_group_configurations_, dtype=np.float64)

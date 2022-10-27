@@ -40,6 +40,7 @@ class OpinionGame(AbstractNPlayerGame):
         opinion_values:
             Value of each opinion
         """
+        AbstractNPlayerGame.__init__(self, len(opinion_values), group_size)
         self.group_size_ = group_size
         self.peer_pressure_importance_ = peer_pressure_importance
         self.peer_pressure_ratio_ = peer_pressure_ratio
@@ -47,7 +48,6 @@ class OpinionGame(AbstractNPlayerGame):
         self.nb_strategies_ = len(opinion_values)
         self.strategies_ = np.arange(self.nb_strategies_)
 
-        super().__init__(self.nb_strategies_, self.group_size_)
         self.nb_group_configurations_ = self.nb_group_configurations()
 
         self.calculate_payoffs()

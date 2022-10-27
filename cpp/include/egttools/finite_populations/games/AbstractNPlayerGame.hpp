@@ -27,7 +27,10 @@
 #include <egttools/finite_populations/Utils.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <fstream>
+#include <ios>
+#include <ostream>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 #if defined(_OPENMP)
@@ -36,7 +39,6 @@
 
 namespace egttools::FinitePopulations {
     using PayoffVector = std::vector<double>;
-    //    using RandomDist = std::uniform_real_distribution<double>;
 
     /**
      * @brief This class defines the interface of a game to be used in an evolutionary process.
