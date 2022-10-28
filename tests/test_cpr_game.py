@@ -227,6 +227,17 @@ def test_cpr_game_play(setup_cpr_game_parameters):
     assert game_payoffs[0] == 99.1875
     assert game_payoffs[1] == 198.375
 
+    game_payoffs.fill(0)
+
+    # Case of all 3 Fair 1 High
+    group_composition = [2, 1, 1, 0, 0, 0, 0, 0]
+
+    game.play(group_composition, game_payoffs)
+
+    assert game_payoffs[0] == 66.125
+    assert game_payoffs[1] == 132.25
+    assert game_payoffs[2] == 132.25
+
 
 def test_cpr_calculate_payoffs(setup_cpr_game_parameters):
     pass
