@@ -112,6 +112,22 @@ namespace egttools::FinitePopulations {
         MatrixXui2D run(int nb_generations, double beta, double mu, const Eigen::Ref<const VectorXui> &init_state);
 
         /**
+         * @brief Runs a moran process with social imitation
+         *
+         * Runs the moran process for a given number of generations and returns
+         * all the states the simulation went through.
+         *
+         * @param nb_generations : maximum number of generations
+         * @param transient : the state of the population during the transient period will not be stored. Thus the
+         *                    shape of the return matrix will be (nb_generations - transient, nb_strategies)
+         * @param beta : intensity of selection
+         * @param mu: mutation probability
+         * @param init_state : initial state of the population
+         * @return a matrix with all the states the system went through during the simulation
+         */
+        MatrixXui2D run(int nb_generations, int transient, double beta, double mu, const Eigen::Ref<const VectorXui> &init_state);
+
+        /**
          * @brief Runs a moran process with social imitation without mutation.
          *
          * Runs the moran process for a given number of generations and returns
@@ -514,6 +530,111 @@ namespace egttools::FinitePopulations {
 
         // Imitation process
         for (int j = 1; j < nb_generations + 1; ++j) {
+            // Update with mutation and return how many steps should be added to the current
+            // generation if the only change in the population could have been a mutation
+            if (homogeneous) {
+                k = geometric(_mt);
+                // Update states matrix
+                if (k == 0) states.row(j) = strategies;
+                else if ((j + k) <= nb_generations) {
+                    for (int z = j; z <= j + k; ++z)
+                        states.row(z).array() = strategies;
+                } else {
+                    for (int z = j; z <= nb_generations; ++z)
+                        states.row(z).array() = strategies;
+                }
+
+                // mutate
+                birth = _strategy_sampler(_mt);
+                // If population still homogeneous we wait for another mutation
+                while (birth == idx_homo) birth = _strategy_sampler(_mt);
+                strategies(birth) += 1;
+                strategies(idx_homo) -= 1;
+                homogeneous = false;
+
+                // Update state count by k steps
+                j += k + 1;
+                // Update state after mutation
+                if (j <= nb_generations)
+                    states.row(j).array() = strategies;
+            } else {
+                // First we pick 2 players randomly
+                _sample_players(strategy_p1, strategy_p2, strategies, _mt);
+
+                _update_step(strategy_p1, strategy_p2, beta, mu,
+                             birth, die, homogeneous, idx_homo,
+                             strategies, cache, _mt);
+
+                states.row(j).array() = strategies;
+            }
+        }
+        return states;
+    }
+
+    template<class Cache>
+    MatrixXui2D PairwiseMoran<Cache>::run(int nb_generations, int transient, double beta, double mu,
+                                          const Eigen::Ref<const egttools::VectorXui> &init_state) {
+
+        // Check if transient > nb_generations
+        if (transient > nb_generations) {
+            throw std::invalid_argument(
+                    "transient must be < than nb_generations!");
+        }
+        // Check that there is the length of init_state is the same as the number of strategies
+        if (init_state.size() != static_cast<int>(_nb_strategies)) {
+            throw std::invalid_argument(
+                    "The length of the initial state array must be the number of strategies " + std::to_string(_nb_strategies));
+        }
+        // Check that the initial state is valid
+        if (init_state.sum() != _pop_size) {
+            throw std::invalid_argument(
+                    "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(_pop_size));
+        }
+
+        int die, birth, strategy_p1 = 0, strategy_p2 = 0;
+        MatrixXui2D states = MatrixXui2D::Zero(nb_generations - transient, _nb_strategies);
+        VectorXui strategies(_nb_strategies);
+        // initialise initial state
+        strategies.array() = init_state;
+
+        // Distribution number of generations for a mutation to happen
+        std::geometric_distribution<int> geometric(mu);
+
+        // Check if state is homogeneous
+        auto [homogeneous, idx_homo] = _is_homogeneous(strategies);
+
+        // Creates a cache for the fitness data
+        Cache cache(_cache_size);
+        int k;
+
+        for (int j = 0; j < transient; ++j) {
+            // Update with mutation and return how many steps should be added to the current
+            // generation if the only change in the population could have been a mutation
+            if (homogeneous) {
+                k = geometric(_mt);
+
+                // mutate
+                birth = _strategy_sampler(_mt);
+                // If population still homogeneous we wait for another mutation
+                while (birth == idx_homo) birth = _strategy_sampler(_mt);
+                strategies(birth) += 1;
+                strategies(idx_homo) -= 1;
+                homogeneous = false;
+
+                // Update state count by k steps
+                j += k + 1;
+            } else {
+                // First we pick 2 players randomly
+                _sample_players(strategy_p1, strategy_p2, strategies, _mt);
+
+                _update_step(strategy_p1, strategy_p2, beta, mu,
+                             birth, die, homogeneous, idx_homo,
+                             strategies, cache, _mt);
+            }
+        }
+
+        // Imitation process
+        for (int j = 0; j < nb_generations - transient; ++j) {
             // Update with mutation and return how many steps should be added to the current
             // generation if the only change in the population could have been a mutation
             if (homogeneous) {

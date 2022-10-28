@@ -782,7 +782,8 @@ PYBIND11_MODULE(numerical, m) {
                     -------
                     numpy.ndarray
                         The payoff matrix.
-                    )pbdoc", py::return_value_policy::reference_internal)
+                    )pbdoc",
+                 py::return_value_policy::reference_internal)
             .def("payoff", &egttools::FinitePopulations::NormalFormGame::payoff,
                  R"pbdoc(
                     Returns the payoff of a strategy given a strategy pair.
@@ -801,7 +802,8 @@ PYBIND11_MODULE(numerical, m) {
                     -------
                     float
                         The payoff value.
-                    )pbdoc", py::arg("strategy"),
+                    )pbdoc",
+                 py::arg("strategy"),
                  py::arg("strategy_pair"))
             .def("expected_payoffs", &egttools::FinitePopulations::NormalFormGame::expected_payoffs, "returns the expected payoffs of each strategy vs another", py::return_value_policy::reference_internal)
             .def("nb_strategies", &egttools::FinitePopulations::NormalFormGame::nb_strategies,
@@ -1855,6 +1857,15 @@ PYBIND11_MODULE(numerical, m) {
                  "runs the moran process with social imitation and returns a matrix with all the states the system went through",
                  py::arg("nb_generations"),
                  py::arg("beta"),
+                 py::arg("init_state"), py::return_value_policy::reference_internal)
+            .def("run",
+                 static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int, int, double, double,
+                                                                           const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
+                 "runs the moran process with social imitation and returns a matrix with all the states the system went through excluding the transient period",
+                 py::arg("nb_generations"),
+                 py::arg("transient"),
+                 py::arg("beta"),
+                 py::arg("mu"),
                  py::arg("init_state"), py::return_value_policy::reference_internal)
             .def("run",
                  static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int, double, double,
