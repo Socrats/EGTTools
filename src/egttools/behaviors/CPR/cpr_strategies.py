@@ -174,9 +174,9 @@ class FakeStrategy(AbstractCPRStrategy):
     def get_payoff(a: float, b: float, extraction: float, group_extraction: float, fine: float = 0,
                    cost: float = 0, commitment: bool = False) -> float:
         if commitment:
-            return payoff_no_commitment(a, b, extraction, group_extraction)
-        else:
             return payoff_no_commitment(a, b, extraction, group_extraction) - fine
+        else:
+            return payoff_no_commitment(a, b, extraction, group_extraction)
 
     def would_like_to_commit(self) -> bool:
         return True
