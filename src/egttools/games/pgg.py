@@ -42,7 +42,7 @@ class PGG(AbstractNPlayerGame):
         strategies: List[egttools.behaviors.pgg_behaviors.PGGOneShotStrategy]
             A list of strategies that will play the game.
         """
-        super().__init__(len(strategies), group_size)
+        AbstractNPlayerGame.__init__(self, len(strategies), group_size)
         self.group_size_ = group_size
         self.c_ = cost
         self.r_ = multiplying_factor
