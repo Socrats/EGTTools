@@ -19,6 +19,8 @@
 #include <egttools/Distributions.h>
 
 #if (HAS_BOOST)
+#include <boost/multiprecision/cpp_dec_float.hpp>
+
 #define uint_type_ mp::uint128_t
 #define binomial_coeff_ binomial_precision
 #else
@@ -81,7 +83,11 @@ egttools::multivariateHypergeometricPDF(size_t m, size_t k, size_t n, const std:
         res *= binomial_coeff_(population_counts[i], sample_counts[i]);
     }
 
-    return static_cast<double>(res) / static_cast<double>(denominator);
+#if (HAS_BOOST)
+    return static_cast<double>(res.convert_to<mp::cpp_dec_float_100>() / denominator.convert_to<mp::cpp_dec_float_100>());
+#else
+    return static_cast<double>(res) / static_cast<double>(denominator)
+#endif
 }
 
 double
@@ -98,7 +104,11 @@ egttools::multivariateHypergeometricPDF(size_t m, size_t k, size_t n, const std:
         res *= binomial_coeff_(population_counts(i), sample_counts[i]);
     }
 
-    return static_cast<double>(res) / static_cast<double>(denominator);
+#if (HAS_BOOST)
+    return static_cast<double>(res.convert_to<mp::cpp_dec_float_100>() / denominator.convert_to<mp::cpp_dec_float_100>());
+#else
+    return static_cast<double>(res) / static_cast<double>(denominator)
+#endif
 }
 
 double
@@ -115,7 +125,11 @@ egttools::multivariateHypergeometricPDF(size_t m, size_t k, size_t n, const Eige
         res *= binomial_coeff_(population_counts(i), sample_counts(i));
     }
 
-    return static_cast<double>(res) / static_cast<double>(denominator);
+#if (HAS_BOOST)
+    return static_cast<double>(res.convert_to<mp::cpp_dec_float_100>() / denominator.convert_to<mp::cpp_dec_float_100>());
+#else
+    return static_cast<double>(res) / static_cast<double>(denominator)
+#endif
 }
 
 #if (HAS_BOOST)
