@@ -21,6 +21,7 @@
 
 #include <egttools/SeedGenerator.h>
 #include <egttools/Types.h>
+#include <egttools/Distributions.h>
 
 #include <egttools/LruCache.hpp>
 #include <egttools/finite_populations/Utils.hpp>
