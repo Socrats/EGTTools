@@ -16,6 +16,7 @@
 * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 */
 
+#include <cmath>
 #include <egttools/finite_populations/analytical/PairwiseComparison.hpp>
 
 egttools::FinitePopulations::analytical::PairwiseComparison::PairwiseComparison(int population_size,
@@ -42,7 +43,13 @@ egttools::SparseMatrix2D egttools::FinitePopulations::analytical::PairwiseCompar
     VectorXui current_state = VectorXui::Zero(nb_strategies_);
     VectorXui new_state(current_state);
 
-    double mutation_probability = mu / (nb_strategies_ - 1);
+    double not_mu = 1. - mu;
+    double mutation_probability;
+    if (nb_strategies_ > 2) {
+        mutation_probability = mu / (nb_strategies_ - 1);
+    } else {
+        mutation_probability = mu;
+    }
 
     for (int64_t current_state_index = 0; current_state_index < nb_states_; ++current_state_index) {
         double total_probability = 0.;
@@ -72,40 +79,32 @@ egttools::SparseMatrix2D egttools::FinitePopulations::analytical::PairwiseCompar
         // (their count is zero)
         for (int i = 0; i < nb_strategies_; ++i) {
             // This will happen only when we are in a monomorphic state
-            if (current_state(i) == static_cast<size_t>(population_size_))
-                continue;
+            if (current_state(i) == static_cast<size_t>(population_size_)) continue;
 
             new_state(i) += 1;
 
             if (homomorphic) {
-                auto new_state_index = egttools::FinitePopulations::calculate_state(population_size_,
-                                                                                    new_state);
+                auto new_state_index = egttools::FinitePopulations::calculate_state(population_size_, new_state);
                 // update transition matrix
                 transition_matrix.coeffRef(current_state_index, static_cast<int64_t>(new_state_index)) = mutation_probability;
             } else {
                 // calculate fitness of the increasing strategy
-                current_state(i) -= 1;
-                auto fitness_increase = game_.calculate_fitness(i,
-                                                                population_size_,
-                                                                current_state);
-                current_state(i) += 1;
+                auto fitness_increase = calculate_fitness_(i, current_state);
 
                 for (int j = 0; j < nb_strategies_; ++j) {
                     // if the strategy to decrease already has count 0
                     // continue, or if we are tying to increase and decrease the same strategy
-                    if ((i == j) || (current_state(i) == 0))
+                    if ((i == j) || (current_state(j) == 0))
                         continue;
 
                     new_state(j) -= 1;
-                    auto new_state_index = egttools::FinitePopulations::calculate_state(population_size_,
-                                                                                        new_state);
+                    auto new_state_index = egttools::FinitePopulations::calculate_state(population_size_, new_state);
 
                     // calculate fitness of the decreasing strategy
-                    current_state(j) -= 1;
-                    auto fitness_decrease = game_.calculate_fitness(j, population_size_, current_state);
-                    current_state(j) += 1;
+                    auto fitness_decrease = calculate_fitness_(j, current_state);
 
-                    double transition_probability = (1 - mu) * (static_cast<double>(current_state(i)) / (population_size_ - 1));
+                    // calculate transition probability
+                    double transition_probability = not_mu * (static_cast<double>(current_state(i)) / (population_size_ - 1));
                     transition_probability *= egttools::FinitePopulations::fermi(beta, fitness_decrease, fitness_increase);
                     transition_probability = (static_cast<double>(current_state(j)) / population_size_) * (transition_probability + mutation_probability);
 
@@ -118,9 +117,9 @@ egttools::SparseMatrix2D egttools::FinitePopulations::analytical::PairwiseCompar
             }
             new_state(i) -= 1;
         }
-        // update transition matrix with probability of remaining in the current state
+        // update transition matrix with probability of staying in the current state
         if (homomorphic) {
-            transition_matrix.coeffRef(current_state_index, current_state_index) = (1 - mu);
+            transition_matrix.coeffRef(current_state_index, current_state_index) = not_mu;
         } else {
             transition_matrix.coeffRef(current_state_index, current_state_index) = 1 - total_probability;
         }
@@ -129,12 +128,38 @@ egttools::SparseMatrix2D egttools::FinitePopulations::analytical::PairwiseCompar
     return transition_matrix;
 }
 
-//double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_gradient_of_selection(double beta, egttools::VectorXui state) {
-//    egttools::Vector probability_selecting_strategy_to_die = state.cast<double>() / population_size_;
-//    egttools::Vector probability_selecting_strategy_to_reproduce = state.cast<double>() / (population_size_ - 1);
-//
-//
-//}
+egttools::Vector egttools::FinitePopulations::analytical::PairwiseComparison::calculate_gradient_of_selection(double beta, const Eigen::Ref<const VectorXui> &state) {
+    // The gradient of selection can be calculated by summing all
+    // transition incoming transition probabilities and resting all
+    // outgoing transition probabilities.
+    // We can do that by looping over all possible dimensions (nb_strategies)
+    // adding a delta (a change possible change in the state), calculating the transition
+    // probability from the new state to the current, and subtracting it from the probability
+    // of transitioning from the current state to the new.
+
+    Vector gradients = egttools::Vector::Zero(nb_strategies_);
+    VectorXui current_state(state);
+
+    for (int i = 0; i < nb_strategies_; ++i) {
+        // The first loop is used to get the dimension for which
+        // we calculate the gradient.
+        if (current_state(i) == 0) continue;
+
+        // Check if decreasing this strategy is possible, otherwise the gradient
+        // in this direction is 0.
+        for (int j = 0; j < nb_strategies_; ++j) {
+            // The second loop is used to get the direction of change
+            if (j == i) continue;
+            if (current_state(j) == 0) continue;
+
+            auto gradient_increase = calculate_local_gradient_(j, i, beta, current_state);
+            gradients(i) += gradient_increase;
+            gradients(j) -= gradient_increase;
+        }
+    }
+
+    return gradients / nb_strategies_;
+}
 
 void egttools::FinitePopulations::analytical::PairwiseComparison::update_population_size(int population_size) {
     // Check if the size of the population is positive
@@ -167,4 +192,45 @@ int egttools::FinitePopulations::analytical::PairwiseComparison::population_size
 
 const egttools::FinitePopulations::AbstractGame &egttools::FinitePopulations::analytical::PairwiseComparison::game() const {
     return game_;
+}
+
+//double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_(int decreasing_strategy, int increasing_strategy, double beta, double mu, egttools::VectorXui &state) {
+//    state(increasing_strategy) -= 1;
+//    auto fitness_increasing_strategy = game_.calculate_fitness(increasing_strategy, population_size_, state);
+//    state(increasing_strategy) += 1;
+//    state(decreasing_strategy) -= 1;
+//    auto fitness_decreasing_strategy = game_.calculate_fitness(decreasing_strategy, population_size_, state);
+//    state(decreasing_strategy) += 1;
+//
+//    // To get back from new state to current state, we need
+//    // to calculate the probability that strategy i increases and j decreases
+//    double mutation_probability = mu / (nb_strategies_ - 1);
+//    double transition_probability = (1 - mu) * (static_cast<double>(state(increasing_strategy)) / (population_size_ - 1));
+//    transition_probability *= egttools::FinitePopulations::fermi(beta, fitness_decreasing_strategy, fitness_increasing_strategy);
+//
+//    transition_probability = (static_cast<double>(state(decreasing_strategy)) / population_size_) * (transition_probability + mutation_probability);
+//
+//    return transition_probability;
+//}
+
+double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_local_gradient_(int decreasing_strategy, int increasing_strategy, double beta, egttools::VectorXui &state) {
+    state(increasing_strategy) -= 1;
+    auto fitness_increasing_strategy = game_.calculate_fitness(increasing_strategy, population_size_, state);
+    state(increasing_strategy) += 1;
+    state(decreasing_strategy) -= 1;
+    auto fitness_decreasing_strategy = game_.calculate_fitness(decreasing_strategy, population_size_, state);
+    state(decreasing_strategy) += 1;
+
+    double gradient = (static_cast<double>(state(decreasing_strategy)) / population_size_) * (static_cast<double>(state(increasing_strategy)) / (population_size_ - 1));
+    gradient *= tanh((beta / 2) * (fitness_increasing_strategy - fitness_decreasing_strategy));
+
+    return gradient;
+}
+
+double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fitness_(int &strategy_index, egttools::VectorXui &state) {
+    state(strategy_index) -= 1;
+    auto fitness = game_.calculate_fitness(strategy_index, population_size_, state);
+    state(strategy_index) += 1;
+
+    return fitness;
 }
