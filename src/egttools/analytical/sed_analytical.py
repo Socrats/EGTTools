@@ -314,15 +314,15 @@ class StochDynamics:
         rv_j = multivariate_hypergeom(copy2, self.group_size - 1)
 
         fitness_i, fitness_j = 0., 0.
-        for state_index in range(self.nb_group_combinations):
-            group = sample_simplex(state_index, self.group_size, self.nb_strategies)
+        for group_index in range(self.nb_group_combinations):
+            group = sample_simplex(group_index, self.group_size, self.nb_strategies)
             if group[i] > 0:
                 group[i] -= 1
-                fitness_i += self.payoffs[i, state_index] * rv_i.pmf(group)
+                fitness_i += self.payoffs[i, group_index] * rv_i.pmf(group)
                 group[i] += 1
             if group[j] > 0:
                 group[j] -= 1
-                fitness_j += self.payoffs[j, state_index] * rv_j.pmf(group)
+                fitness_j += self.payoffs[j, group_index] * rv_j.pmf(group)
                 group[j] += 1
 
         return fitness_i - fitness_j
