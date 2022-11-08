@@ -46,12 +46,12 @@ set_target_properties(egttoolsNumerical PROPERTIES
         CXX_STANDARD 17
         CXX_STANDARD_REQUIRED TRUE
         CXX_EXTENSIONS FALSE
-#        INTERPROCEDURAL_OPTIMIZATION ${LTO_SUPPORTED}
-#        POSITION_INDEPENDENT_CODE TRUE
-#         Fixing "ld: warning: direct access in function '...' from file '...' to global weak symbol '...' from file '...' means the weak symbol cannot
-#         be overridden at runtime. This was likely caused by different translation units being compiled with different visibility settings."
-#        C_VISIBILITY_PRESET hidden
-#        CXX_VISIBILITY_PRESET hidden
+        #        INTERPROCEDURAL_OPTIMIZATION ${LTO_SUPPORTED}
+        #        POSITION_INDEPENDENT_CODE TRUE
+        #         Fixing "ld: warning: direct access in function '...' from file '...' to global weak symbol '...' from file '...' means the weak symbol cannot
+        #         be overridden at runtime. This was likely caused by different translation units being compiled with different visibility settings."
+        #        C_VISIBILITY_PRESET hidden
+        #        CXX_VISIBILITY_PRESET hidden
         )
 
 #if (OPENMP_FOUND)
@@ -92,5 +92,7 @@ target_link_libraries(testOneShotCRDGame egttoolsNumerical)
 add_executable(testTimingUncertainty test_timing_uncertainty.cpp)
 target_link_libraries(testTimingUncertainty egttoolsNumerical)
 
-add_executable(testBinomial test_binomial_coefficient.cpp)
-target_link_libraries(testBinomial egttoolsNumerical)
+if (Boost_FOUND)
+    add_executable(testBinomial test_binomial_coefficient.cpp)
+    target_link_libraries(testBinomial egttoolsNumerical)
+endif ()
