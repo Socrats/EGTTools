@@ -21,6 +21,13 @@ add_custom_target(pytest
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 add_custom_target(tests DEPENDS pytest)
 
+FIND_PACKAGE(Boost)
+#IF (Boost_FOUND)
+#    INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+#    ADD_DEFINITIONS( "-DHAS_BOOST" )
+#    message("-- found boost")
+#ENDIF()
+
 add_library(egttoolsNumerical
         ../cpp/src/egttools/SeedGenerator.cpp
         ../cpp/src/egttools/Distributions.cpp
@@ -84,3 +91,6 @@ target_link_libraries(testOneShotCRDGame egttoolsNumerical)
 
 add_executable(testTimingUncertainty test_timing_uncertainty.cpp)
 target_link_libraries(testTimingUncertainty egttoolsNumerical)
+
+add_executable(testBinomial test_binomial_coefficient.cpp)
+target_link_libraries(testBinomial egttoolsNumerical)

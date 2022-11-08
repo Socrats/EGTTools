@@ -28,6 +28,11 @@
 #include <algorithm>
 #include <random>
 
+#if(HAS_BOOST)
+#include <boost/multiprecision/cpp_int.hpp>
+namespace mp = boost::multiprecision;
+#endif
+
 namespace egttools {
     /**
      * @brief This function samples an index from a probability vector.
@@ -104,26 +109,34 @@ namespace egttools {
     /**
     * @brief Calculates the binomial coefficient C(n, k)
     *
-    * @tparam T : Type of to use for the computation
+    * @tparam T : Output type
+    * @tparam I : Input type
     * @param n size of the fixed set
     * @param k size of the unordered subset
     * @return C(n, k)
     */
-    template<typename T>
-    T binomialCoeff(T n, T k) {
-        T res = 1;
+    template<typename T, typename I>
+    T binomialCoeff(I n, I k) {
+        if ((k > n) || (n < 0) || (k < 0))
+            return 0;
 
         // Since C(n, k) = C(n, n-k)
         if (k > n - k) k = n - k;
 
+        T res = 1;
+
         // Calculate value of [n * (n-1) * ... * (n-k+1)] / [k * (k-1) * ... * 1]
-        for (int64_t i = 0; i < static_cast<int64_t>(k); ++i) {
-            res *= n - static_cast<T>(i);
-            res /= static_cast<T>(i) + 1;
+        for (I i = 0; i < k; ++i) {
+            res *= static_cast<T>(n - i);
+            res /= static_cast<T>(i + 1);
         }
 
         return res;
     }
+
+#if(HAS_BOOST)
+    mp::uint128_t binomial_precision(size_t n, size_t k);
+#endif
 
     /**
      * @brief Calculates the probability density function of a multivariate hypergeometric distribution.
@@ -189,13 +202,13 @@ namespace egttools {
      * @brief Finds the number for elements given possible bins/slots and star types.
      *
      * @tparam T : Type of to use for the computation
-     * @param stars : number of elments to feel the bins
+     * @param stars : number of elements to fill the bins
      * @param bins : number of bins that can be filled
      * @return the number of possible combinations of stars in the bins.
      */
-    template<typename T>
-    T starsBars(T stars, T bins) {
-        return egttools::binomialCoeff<T>(stars + bins - 1, stars);
+    template<typename T, typename O=T>
+    O starsBars(T stars, T bins) {
+        return egttools::binomialCoeff<T, T>(stars + bins - 1, stars);
     }
 
 }// namespace egttools

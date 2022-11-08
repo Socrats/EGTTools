@@ -17,8 +17,9 @@
 
 #include <egttools/Data.hpp>
 #include <egttools/LruCache.hpp>
-#include <egttools/finite_populations/PairwiseMoran.hpp>
 #include <egttools/finite_populations/ImitationMultipleGames.hpp>
+#include <egttools/finite_populations/PairwiseMoran.hpp>
+#include <egttools/finite_populations/analytical/PairwiseComparison.hpp>
 #include <egttools/finite_populations/behaviors/AbstractCRDStrategy.hpp>
 #include <egttools/finite_populations/behaviors/AbstractNFGStrategy.hpp>
 #include <egttools/finite_populations/behaviors/NFGStrategies.hpp>
@@ -26,6 +27,7 @@
 #include <egttools/finite_populations/games/AbstractNPlayerGame.hpp>
 #include <egttools/finite_populations/games/CRDGame.hpp>
 #include <egttools/finite_populations/games/CRDGameTU.hpp>
+#include <egttools/finite_populations/games/NPlayerStagHunt.hpp>
 #include <egttools/finite_populations/games/OneShotCRD.hpp>
 #include <egttools/utils/TimingUncertainty.hpp>
 
