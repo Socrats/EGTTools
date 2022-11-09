@@ -26,6 +26,7 @@
 #include <egttools/finite_populations/Utils.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <stdexcept>
+#include <tuple>
 
 #if defined(_OPENMP)
 #include <egttools/OpenMPUtils.hpp>
@@ -84,6 +85,18 @@ namespace egttools::FinitePopulations::analytical {
          * @return Vector of nb_strategies dimensions containing the gradient of selection.
          */
         Vector calculate_gradient_of_selection(double beta, const Eigen::Ref<const VectorXui> &state);
+
+        /**
+         * @brief Calculates the fixation probability of an invading strategy in a population o resident strategy.
+         *
+         * @param index_invading_strategy : index of the invading strategy
+         * @param index_resident_strategy : index of the resident strategy
+         * @param beta : intensity of selection
+         * @return fixation probability
+         */
+        double calculate_fixation_probability(int index_invading_strategy, int index_resident_strategy, double beta);
+
+        std::tuple<Matrix2D, Matrix2D> calculate_transition_and_fixation_matrix_sml(double beta);
 
         //        Vector calculate_gradient_of_selection(const Eigen::Ref<const Matrix2D> &transition_matrix,
         //                                               const Eigen::Ref<const Vector> &stationary_distribution,

@@ -603,7 +603,7 @@ PYBIND11_MODULE(numerical, m) {
 #if(HAS_BOOST)
     m.def("calculate_nb_states", [](size_t group_size, size_t nb_strategies) {
                 auto result = starsBars<size_t, mp::uint128_t>(group_size, nb_strategies);
-                return static_cast<size_t>(result);
+                return result.convert_to<size_t>();
             },
           R"pbdoc(
                     Calculates the number of states (combinations) of the members of a group in a subgroup.
@@ -1942,6 +1942,12 @@ PYBIND11_MODULE(numerical, m) {
             .def("calculate_gradient_of_selection", &egttools::FinitePopulations::analytical::PairwiseComparison::calculate_gradient_of_selection,
                  "Calculates the gradient of selection at the given state.",
                  py::arg("beta"), py::arg("state"))
+            .def("calculate_fixation_probability", &egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability,
+                 "Calculates the fixation probability of the invading strategy in a population of the resident strategy.",
+                 py::arg("invading_strategy_index"), py::arg("resident_strategy_index"), py::arg("beta"))
+            .def("calculate_transition_and_fixation_matrix_sml", &egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_and_fixation_matrix_sml,
+                 "calculates the transition and fixation probabilities matrices assuming the samll mutation limit",
+                 py::arg("beta"))
             .def("update_population_size", &egttools::FinitePopulations::analytical::PairwiseComparison::update_population_size)
             .def("update_game", &egttools::FinitePopulations::analytical::PairwiseComparison::update_game)
             .def("nb_strategies", &egttools::FinitePopulations::analytical::PairwiseComparison::nb_strategies)
@@ -2085,7 +2091,7 @@ PYBIND11_MODULE(numerical, m) {
 #if(HAS_BOOST)
     mDistributions.def("comb",[](size_t n, size_t k) {
                 auto result = egttools::binomial_precision(n, k);
-                return static_cast<size_t>(result);
+                return result.convert_to<size_t>();
             },
                        "Calculates the probability density function of a multivariate hypergeometric distribution.",
                        py::arg("n"),

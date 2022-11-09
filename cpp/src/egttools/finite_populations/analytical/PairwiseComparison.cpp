@@ -19,6 +19,11 @@
 #include <cmath>
 #include <egttools/finite_populations/analytical/PairwiseComparison.hpp>
 
+#if (HAS_BOOST)
+#include <boost/multiprecision/cpp_dec_float.hpp>
+namespace mp = boost::multiprecision;
+#endif
+
 egttools::FinitePopulations::analytical::PairwiseComparison::PairwiseComparison(int population_size,
                                                                                 egttools::FinitePopulations::AbstractGame &game) : population_size_(population_size),
                                                                                                                                    game_(game) {
@@ -159,6 +164,88 @@ egttools::Vector egttools::FinitePopulations::analytical::PairwiseComparison::ca
     }
 
     return gradients / nb_strategies_;
+}
+
+#if (HAS_BOOST)
+double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability(int index_invading_strategy, int index_resident_strategy, double beta) {
+    mp::cpp_dec_float_100 phi = 0;
+    mp::cpp_dec_float_100 prod = 1;
+    mp::cpp_dec_float_100 probability_increase, probability_decrease;
+
+    VectorXui population_state = VectorXui::Zero(nb_strategies_);
+
+    for (int i = 1; i < population_size_; ++i) {
+        population_state(index_invading_strategy) = i;
+        population_state(index_resident_strategy) = population_size_ - i;
+
+        // calculate fitness of invading strategy
+        auto fitness_invading_strategy = calculate_fitness_(index_invading_strategy, population_state);
+        auto fitness_resident_strategy = calculate_fitness_(index_resident_strategy, population_state);
+
+        // Calculate the probability that the invading strategy will increase
+        probability_increase = (static_cast<double>(population_size_ - i) / population_size_) * (static_cast<double>(i) / (population_size_ - 1));
+        probability_increase *= egttools::FinitePopulations::fermi(beta, fitness_resident_strategy, fitness_invading_strategy);
+        probability_decrease = (static_cast<double>(i) / population_size_) * (static_cast<double>(population_size_ - i   ) / (population_size_ - 1));
+        probability_decrease *= egttools::FinitePopulations::fermi(beta, fitness_invading_strategy, fitness_resident_strategy);
+
+        prod *= probability_decrease / probability_increase;
+        phi += prod;
+
+        if (phi > 1e7) return 0.0;
+    }
+
+    mp::cpp_dec_float_100 fixation_probability = 1 / (1. + phi);
+
+    return fixation_probability.convert_to<double>();
+}
+#else
+double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability(int index_invading_strategy, int index_resident_strategy, double beta) {
+    double phi = 0;
+    double prod = 1;
+    double probability_increase, probability_decrease;
+
+    VectorXui population_state = VectorXui::Zero(nb_strategies_);
+
+    for (int i = 1; i < population_size_; ++i) {
+        population_state(index_invading_strategy) = i;
+        population_state(index_resident_strategy) = population_size_ - i;
+
+        // calculate fitness of invading strategy
+        auto fitness_invading_strategy = calculate_fitness_(index_invading_strategy, population_state);
+        auto fitness_resident_strategy = calculate_fitness_(index_resident_strategy, population_state);
+
+        // Calculate the probability that the invading strategy will increase
+        probability_increase = (static_cast<double>(population_state(index_resident_strategy)) / population_size_) * (static_cast<double>(i) / (population_size_ - 1));
+        probability_increase *= egttools::FinitePopulations::fermi(beta, fitness_resident_strategy, fitness_invading_strategy);
+        probability_decrease = (static_cast<double>(i) / population_size_) * (static_cast<double>(population_state(index_resident_strategy)) / (population_size_ - 1));
+        probability_decrease *= egttools::FinitePopulations::fermi(beta, fitness_invading_strategy, fitness_resident_strategy);
+
+        prod *= probability_decrease / probability_increase;
+        phi += prod;
+
+        if (phi > 1e7) return 0.0;
+    }
+    return 1 / (1. + phi);
+}
+#endif
+
+std::tuple<egttools::Matrix2D, egttools::Matrix2D> egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_and_fixation_matrix_sml(double beta) {
+    Matrix2D transitions = Matrix2D::Zero(nb_strategies_, nb_strategies_);
+    Matrix2D fixation_probabilities = Matrix2D::Zero(nb_strategies_, nb_strategies_);
+
+    for (int i = 0; i < nb_strategies_; ++i) {
+        transitions(i, i) = 1;
+        for (int j = 0; j < nb_strategies_; ++j) {
+            if (i != j) {
+                auto fixation_probability = calculate_fixation_probability(j, i, beta);
+                fixation_probabilities(i, j) = fixation_probability;
+                transitions(i, j) = fixation_probability / (nb_strategies_ - 1);
+                transitions(i, i) -= transitions(i, j);
+            }
+        }
+    }
+
+    return {transitions, fixation_probabilities};
 }
 
 void egttools::FinitePopulations::analytical::PairwiseComparison::update_population_size(int population_size) {
