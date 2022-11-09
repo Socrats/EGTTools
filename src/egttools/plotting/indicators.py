@@ -285,6 +285,7 @@ def plot_gradient(x, gradients, saddle_points, saddle_type, gradient_direction, 
 
 def draw_stationary_distribution(strategies: List[str], drift: float, fixation_probabilities: np.ndarray,
                                  stationary_distribution: np.ndarray,
+                                 atol: float = 1e-4,
                                  max_displayed_label_letters: Optional[int] = 4,
                                  min_strategy_frequency: Optional[float] = -1,
                                  node_size: Optional[int] = 4000,
@@ -316,6 +317,8 @@ def draw_stationary_distribution(strategies: List[str], drift: float, fixation_p
         A matrix specifying the fixation probabilities.
     stationary_distribution : numpy.ndarray[float, 1]
         An array containing the stationary distribution (probability of each state in the system).
+    atol : float
+        The tolerance for considering a value equal to 1 (to detect wheter there is random drift). Default is 1e-4.
     max_displayed_label_letters : int
         Maximum number of letters of the strategy labels contained in the `strategies` List to
         be displayed.
@@ -416,14 +419,14 @@ def draw_stationary_distribution(strategies: List[str], drift: float, fixation_p
 
     for j in range(q):
         for i in range(q):
-            if fixation_probabilities_normalized[used_strategies_idx[i], used_strategies_idx[j]] >= 1:
+            if fixation_probabilities_normalized[used_strategies_idx[i], used_strategies_idx[j]] >= 1 - atol:
                 G.add_edge(used_strategies[i], used_strategies[j],
                            weight=fixation_probabilities_normalized[used_strategies_idx[i], used_strategies_idx[j]])
 
-    eselect = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] > 1.0]
+    eselect = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] > 1 + atol]
     eselect_labels = dict(((u, v), r"{0:.2f}$\rho_N$".format(d['weight']))
-                          for (u, v, d) in G.edges(data=True) if d['weight'] > 1.0)
-    edrift = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] == 1.0]
+                          for (u, v, d) in G.edges(data=True) if d['weight'] > 1 + atol)
+    edrift = [(u, v) for (u, v, d) in G.edges(data=True) if np.isclose(d['weight'], 1, atol=atol)]
 
     pos = nx.circular_layout(G)  # positions for all nodes
 
