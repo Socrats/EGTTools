@@ -18,24 +18,24 @@
 
 #include <egttools/Distributions.h>
 
-template<>
-size_t egttools::binomialCoeff<size_t, size_t>(size_t n, size_t k) {
-    if ((k > n) || (n == ULONG_MAX))
-        return 0;
-
-    // Since C(n, k) = C(n, n-k)
-    size_t n_terms = std::min(k, n - k);
-
-    size_t res = 1;
-    size_t m = n + 1;
-
-    // Calculate value of [n * (n-1) * ... * (n-k+1)] / [k * (k-1) * ... * 1]
-    for (size_t i = 1; i < n_terms + 1; ++i) {
-        res *= m - i;
-        res /= i;
-    }
-
-    return res;
+//template<>
+//size_t egttools::binomialCoeff<size_t, size_t>(size_t n, size_t k) {
+//    if ((k > n) || (n == ULONG_MAX))
+//        return 0;
+//
+//    // Since C(n, k) = C(n, n-k)
+//    size_t n_terms = std::min(k, n - k);
+//
+//    size_t res = 1;
+//    size_t m = n + 1;
+//
+//    // Calculate value of [n * (n-1) * ... * (n-k+1)] / [k * (k-1) * ... * 1]
+//    for (size_t i = 1; i < n_terms + 1; ++i) {
+//        res *= m - i;
+//        res /= i;
+//    }
+//
+//    return res;
 }
 
 double
