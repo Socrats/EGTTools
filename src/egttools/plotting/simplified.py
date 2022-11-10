@@ -23,16 +23,20 @@ from typing import Optional, Tuple, Callable, List
 from ..games import AbstractGame
 from .. import (calculate_nb_states, )
 from .helpers import (barycentric_to_xy_coordinates,
-                      xy_to_barycentric_coordinates, calculate_stationary_points, calculate_stability,
+                      xy_to_barycentric_coordinates, calculate_stability,
                       find_roots_in_discrete_barycentric_coordinates)
 from ..analytical import (replicator_equation, StochDynamics)
-from ..analytical.utils import check_if_there_is_random_drift, check_replicator_stability_pairwise_games
+from ..analytical.utils import check_if_there_is_random_drift, check_replicator_stability_pairwise_games, find_roots
 from ..helpers.vectorized import (vectorized_replicator_equation, vectorized_barycentric_to_xy_coordinates)
 from . import Simplex2D
 from ..utils import transform_payoffs_to_pairwise
 
 
-def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray, atol: float = 1e-7, atol_equal: float = 1e-12,
+def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray,
+                                        nb_of_initial_points_for_root_search: int = 10,
+                                        atol: float = 1e-7,
+                                        atol_equal: float = 1e-12,
+                                        method_find_roots: str = 'hybr',
                                         atol_stability_pos: float = 1e-4, atol_stability_neg: float = 1e-4,
                                         atol_stability_zero: float = 1e-4,
                                         figsize: Tuple[int, int] = (10, 8),
@@ -42,18 +46,22 @@ def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray, atol: float =
                                                                                 List[np.ndarray],
                                                                                 List[int]]:
     """
-    Helper function to simplified the plotting of the replicator dynamics in a 2 Simplex.
+    Helper function to simplify the plotting of the replicator dynamics in a 2 Simplex.
 
     Parameters
     ----------
     payoff_matrix: numpy.ndarray
         The square payoff matrix. Group games are still unsupported in the replicator dynamics. This feature will
         soon be added.
+    nb_of_initial_points_for_root_search: int
+        Number of initial points used in the method that searches for the roots of the replicator equation
     atol: float
-        Tolerance to consider a value equal to zero. This is used to check if an edge has random drift. By default
+        Tolerance to consider a value equal to zero. This is used to check if an edge has random drift. By default,
         the tolerance is 1e-7.
     atol_equal: float
         Tolerance to consider two arrays equal.
+    method_find_roots: str
+        Method used in scipy.optimize.root
     atol_stability_neg: float
         Tolerance used to determine the stability of the roots. This is used to determine whether an
         eigenvalue is negative.
@@ -90,9 +98,13 @@ def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray, atol: float =
     Uy = xy_results[:, :, 1].astype(np.float64)
 
     simplex.apply_simplex_boundaries_to_gradients(Ux, Uy)
-    roots, roots_xy = calculate_stationary_points(simplex.trimesh.x, simplex.trimesh.y, simplex.corners,
-                                                  lambda u: replicator_equation(u, payoff_matrix), atol=atol_equal)
+    roots = find_roots(gradient_function=lambda u: replicator_equation(u, payoff_matrix),
+                       nb_strategies=payoff_matrix.shape[0],
+                       nb_initial_random_points=nb_of_initial_points_for_root_search,
+                       atol=atol_equal, tol_close_points=atol_equal, method=method_find_roots)
     # stability = calculate_stability(roots, lambda u: replicator_equation(u, payoff_matrix))
+
+    roots_xy = [barycentric_to_xy_coordinates(root, corners=simplex.corners) for root in roots]
 
     stability = check_replicator_stability_pairwise_games(roots, payoff_matrix, atol_neg=atol_stability_neg,
                                                           atol_pos=atol_stability_pos, atol_zero=atol_stability_zero)
@@ -125,7 +137,7 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex(population_size: int,
     game:
         Game that should contain a set of payoff matrices
     group_size:
-        Size of the group. By default we assume that interactions are pairwise (the group size is 2).
+        Size of the group. By default, we assume that interactions are pairwise (the group size is 2).
     atol:
         Tolerance to consider a value equal to zero. This is used to check if an edge has random drift. By default
         the tolerance is 1e-7.
@@ -210,7 +222,7 @@ def plot_moran_dynamics_in_simplex_without_roots(population_size: int,
     game:
         Game that should contain a set of payoff matrices
     group_size:
-        Size of the group. By default we assume that interactions are pairwise (the group size is 2).
+        Size of the group. By default, we assume that interactions are pairwise (the group size is 2).
     atol:
         Tolerance to consider a value equal to zero. This is used to check if an edge has random drift. By default
         the tolerance is 1e-7.
