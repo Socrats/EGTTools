@@ -8,7 +8,7 @@ import numpy as np
 egt = pytest.importorskip("egttools")
 
 Random = egt.Random
-PairwiseMoran = egt.numerical.PairwiseMoran
+PairwiseComparisonNumerical = egt.numerical.PairwiseComparisonNumerical
 NormalFormGame = egt.games.NormalFormGame
 
 
@@ -50,7 +50,7 @@ def test_normal_form_game_runs(setup_hawk_dove_parameters) -> None:
 
 def test_pairwise_moran_run(setup_hawk_dove_parameters) -> None:
     """
-    This test checks that the run method of PairwiseMoran executes.
+    This test checks that the run method of PairwiseComparisonNumerical executes.
     """
     payoffs = setup_hawk_dove_parameters
 
@@ -63,7 +63,7 @@ def test_pairwise_moran_run(setup_hawk_dove_parameters) -> None:
     mu = 1e-3
     initial_state = [50, 50]
 
-    evolver = PairwiseMoran(pop_size, game, cache_size)
+    evolver = PairwiseComparisonNumerical(pop_size, game, cache_size)
     result = evolver.run(nb_generations, beta, mu, initial_state)
 
     assert result.shape == (nb_generations + 1, game.nb_strategies())
@@ -71,7 +71,7 @@ def test_pairwise_moran_run(setup_hawk_dove_parameters) -> None:
 
 def test_pairwise_moran_stationary_distribution(setup_hawk_dove_parameters) -> None:
     """
-    This test checks that the stationary_distribution method of PairwiseMoran executes.
+    This test checks that the stationary_distribution method of PairwiseComparisonNumerical executes.
     """
     payoffs = setup_hawk_dove_parameters
 
@@ -87,14 +87,14 @@ def test_pairwise_moran_stationary_distribution(setup_hawk_dove_parameters) -> N
 
     nb_states = pop_size + 1
 
-    evolver = PairwiseMoran(pop_size, game, cache_size)
+    evolver = PairwiseComparisonNumerical(pop_size, game, cache_size)
     dist = evolver.estimate_stationary_distribution(runs, nb_generations, transitory, beta, mu)
     assert dist.shape == (nb_states,)
 
 
 def test_pairwise_moran_stationary_distribution_sparse(setup_hawk_dove_parameters) -> None:
     """
-    This test checks that the stationary_distribution method of PairwiseMoran executes.
+    This test checks that the stationary_distribution method of PairwiseComparisonNumerical executes.
     """
     payoffs = setup_hawk_dove_parameters
 
@@ -110,6 +110,6 @@ def test_pairwise_moran_stationary_distribution_sparse(setup_hawk_dove_parameter
 
     nb_states = pop_size + 1
 
-    evolver = PairwiseMoran(pop_size, game, cache_size)
+    evolver = PairwiseComparisonNumerical(pop_size, game, cache_size)
     dist = evolver.estimate_stationary_distribution_sparse(runs, nb_generations, transitory, beta, mu)
     assert dist.shape == (1, nb_states)

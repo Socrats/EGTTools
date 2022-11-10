@@ -51,7 +51,7 @@ def replicator_equation(x: np.ndarray, payoffs: np.ndarray) -> np.ndarray:
     See Also
     --------
     egttools.analytical.StochDynamics
-    egttools.numerical.PairwiseMoran
+    egttools.numerical.PairwiseComparisonNumerical
     """
     ax = np.dot(payoffs, x)
     return x * (ax - np.dot(x, ax))
@@ -96,7 +96,7 @@ class StochDynamics:
 
     See Also
     --------
-    egttools.numerical.PairwiseMoran
+    egttools.numerical.PairwiseComparisonNumerical
     egttools.analytical.replicator_equation
 
     Examples
@@ -521,7 +521,7 @@ class StochDynamics:
 
         See Also
         --------
-        egttools.numerical.PairwiseMoran
+        egttools.numerical.PairwiseComparisonNumerical
         """
         phi = 0.
         prod = 1.

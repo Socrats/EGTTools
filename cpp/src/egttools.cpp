@@ -369,7 +369,7 @@ PYBIND11_MODULE(numerical, m) {
                     payoffs to each strategy for each possible game context. In particular, `calculate_payoffs` should fill the
                     array `self.payoffs_` with the correct values as explained above. We recommend that you run this method in
                     the `__init__` (initialization of the object) since, these values must be set before passing the game object
-                    to the numerical simulator (e.g., egttools.numerical.PairwiseMoran).
+                    to the numerical simulator (e.g., egttools.numerical.PairwiseComparisonNumerical).
 
                     Parameters
                     ----------
@@ -680,8 +680,8 @@ PYBIND11_MODULE(numerical, m) {
                         See Also
                         --------
                         egttools.numerical.calculate_state, egttools.numerical.sample_simplex,
-                        egttools.numerical.calculate_nb_states, egttools.numerical.PairwiseMoran.estimate_stationary_distribution
-                        egttools.numerical.calculate_nb_states, egttools.numerical.PairwiseMoran.estimate_stationary_distribution_sparse
+                        egttools.numerical.calculate_nb_states, egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution
+                        egttools.numerical.calculate_nb_states, egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution_sparse
                         )pbdoc",
           py::arg("pop_size"), py::arg("nb_strategies"), py::arg("stationary_distribution"));
 
@@ -1955,7 +1955,7 @@ PYBIND11_MODULE(numerical, m) {
             .def("population_size", &egttools::FinitePopulations::analytical::PairwiseComparison::population_size)
             .def("game", &egttools::FinitePopulations::analytical::PairwiseComparison::game);
 
-    py::class_<PairwiseComparison>(m, "PairwiseMoran")
+    py::class_<PairwiseComparison>(m, "PairwiseComparisonNumerical")
             .def(py::init<size_t, egttools::FinitePopulations::AbstractGame &, size_t>(),
                  "Runs a moran process with pairwise comparison and calculates fitness according to game",
                  py::arg("pop_size"), py::arg("game"), py::arg("cache_size"), py::keep_alive<1, 3>())
@@ -2036,8 +2036,8 @@ PYBIND11_MODULE(numerical, m) {
 
                 See Also
                 --------
-                egttools.numerical.PairwiseMoran.estimate_stationary_distribution,
-                egttools.numerical.PairwiseMoran.estimate_stationary_distribution_sparse
+                egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution,
+                egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution_sparse
                 )pbdoc",
                  py::arg("nb_runs"), py::arg("nb_generations"), py::arg("transitory"), py::arg("beta"), py::arg("mu"))
             .def_property_readonly("nb_strategies", &PairwiseComparison::nb_strategies, "Number of strategies in the population.")

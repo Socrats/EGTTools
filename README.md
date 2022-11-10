@@ -211,12 +211,12 @@ that you let the simulation run for enough generations after it has achieved a s
 between analytical and numerical results:
 
 ```python
-from egttools.numerical import PairwiseMoran
+from egttools.numerical import PairwiseComparisonNumerical
 from egttools.games import NormalFormGame
 
 # Instantiate the game
 game = NormalFormGame(1, A)
-numerical_evolver = PairwiseMoran(Z, game, 1000000)
+numerical_evolver = PairwiseComparisonNumerical(Z, game, 1000000)
 
 # We do this for different betas
 betas = np.logspace(-4, 1, 50)
