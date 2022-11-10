@@ -36,7 +36,7 @@
 //    }
 //
 //    return res;
-}
+//}
 
 double
 egttools::multivariateHypergeometricPDF(size_t m, size_t k, size_t n, const std::vector<size_t> &sample_counts,
