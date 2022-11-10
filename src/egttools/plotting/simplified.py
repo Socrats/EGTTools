@@ -100,14 +100,14 @@ def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray, atol: float =
     return simplex, lambda u, t: replicator_equation(u, payoff_matrix), roots, roots_xy, stability
 
 
-def plot_moran_dynamics_in_simplex(population_size: int,
-                                   beta: float,
-                                   payoff_matrix: np.ndarray = None,
-                                   game: AbstractGame = None,
-                                   group_size: Optional[int] = 2,
-                                   atol: Optional[float] = 1e-7,
-                                   figsize: Optional[Tuple[int, int]] = (10, 8),
-                                   ax: Optional[plt.axis] = None) -> \
+def plot_pairwise_comparison_rule_dynamics_in_simplex(population_size: int,
+                                                      beta: float,
+                                                      payoff_matrix: np.ndarray = None,
+                                                      game: AbstractGame = None,
+                                                      group_size: Optional[int] = 2,
+                                                      atol: Optional[float] = 1e-7,
+                                                      figsize: Optional[Tuple[int, int]] = (10, 8),
+                                                      ax: Optional[plt.axis] = None) -> \
         Tuple[Simplex2D, Callable[[np.ndarray, int], np.ndarray], List[np.ndarray], List[np.ndarray], List[
             bool], StochDynamics]:
     """

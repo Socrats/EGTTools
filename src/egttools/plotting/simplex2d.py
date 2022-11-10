@@ -79,7 +79,7 @@ class Simplex2D:
         See Also
         --------
         egttools.plotting.plot_gradient,
-        egttools.plotting.draw_stationary_distribution,
+        egttools.plotting.draw_invasion_diagram,
         egttools.analytical.replicator_equation,
         egttools.analytical.StochDynamics
 
