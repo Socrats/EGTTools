@@ -199,14 +199,14 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex(population_size: int,
             roots, roots_xy, stability, evolver)
 
 
-def plot_moran_dynamics_in_simplex_without_roots(population_size: int,
-                                                 beta: float,
-                                                 payoff_matrix: np.ndarray = None,
-                                                 game: AbstractGame = None,
-                                                 group_size: Optional[int] = 2,
-                                                 atol: Optional[float] = 1e-7,
-                                                 figsize: Optional[Tuple[int, int]] = (10, 8),
-                                                 ax: Optional[plt.axis] = None) -> \
+def plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots(population_size: int,
+                                                                    beta: float,
+                                                                    payoff_matrix: np.ndarray = None,
+                                                                    game: AbstractGame = None,
+                                                                    group_size: Optional[int] = 2,
+                                                                    atol: Optional[float] = 1e-7,
+                                                                    figsize: Optional[Tuple[int, int]] = (10, 8),
+                                                                    ax: Optional[plt.axis] = None) -> \
         Tuple[Simplex2D, Callable[[np.ndarray, int], np.ndarray], StochDynamics]:
     """
     Helper function to simplify the plotting of the moran dynamics in a 2 Simplex.
