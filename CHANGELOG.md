@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres
 to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.11.patch1] - 10-11-2022
+
+### Fixed
+
+- Fixed issue with changing mutation rate in StochDynamics. When the mutation rate was updated
+  using `evolver.mu = new_value`, the variable `evolver.not_mu` was not udpated. This variable was used
+  by `calculate_full_stationary_distribution` and it created an error. Now `not_mu` is calculated inside
+  of `calculate_full_stationary_distribution`.
+- Fixed issue with `binomialCoeff` implemented in c++. In some cases, the intermediary calculations were overflowing
+  an `uint64_t` type when calling it from `multivariateHypergeometricPDF`. Now, we no longer calculate the exact value
+  in `multivariateHypergeometricPDF`, instead use double types. This will be improved in the new version by
+  using `boost/multiprecision` `uint128_t` types.
+
 ## [0.1.11] - 25-10-2022
 
 ### Fixed

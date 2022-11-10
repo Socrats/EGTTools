@@ -1132,29 +1132,23 @@ PYBIND11_MODULE(numerical, m) {
     py::class_<egttools::FinitePopulations::OneShotCRD, egttools::FinitePopulations::AbstractGame>(mGames, "OneShotCRD")
             .def(py::init<double, double, double, int, int>(),
                  R"pbdoc(
-                    Collective Risk Dilemma. This allows you to define any number of strategies by passing them
-                    as a list. All strategies must be of type AbstractCRDStrategy *.
+                    One-Shot Collective Risk Dilemma (CRD).
 
-                    The CRD dilemma implemented here follows the description of:
-                    Milinski, M., Sommerfeld, R. D., Krambeck, H.-J., Reed, F. A.,
-                    & Marotzke, J. (2008). The collective-risk social dilemma and the prevention of simulated
-                    dangerous climate change. Proceedings of the National Academy of Sciences of the United States of America, 105(7),
-                    2291–2294. https://doi.org/10.1073/pnas.0709546105
+                    The full description of the One-shot CRD can be found in:
+                    Santos and Pacheco, ‘Risk of Collective Failure Provides an Escape from the Tragedy of the Commons’.
 
                     Parameters
                     ----------
-                    endowment : int
-                        Initial endowment for all players.
-                    threshold : int
-                        Collective target that the group must reach.
-                    nb_rounds : int
-                        Number of rounds of the game.
-                    group_size : int
-                        Size of the group that will play the CRD.
+                    endowment : float
+                        Initial endowment for all players. This is parameter `b` in the mentioned article.
+                    cost : float
+                        Cost of cooperation.
                     risk : float
                         The probability that all members will lose their remaining endowment if the threshold is not achieved.
-                    strategies : List[egttools.behaviors.CRD.AbstractCRDStrategy]
-                        A list containing references of AbstractCRDStrategy strategies (or child classes).
+                    group_size : int
+                        Size of the group that will play the CRD.
+                    min_nb_cooperators: int
+                        Minimum number of cooperators required to avoid the risk of collective loss.
 
                     See Also
                     --------

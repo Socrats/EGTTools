@@ -131,10 +131,9 @@ class StochDynamics:
     def __init__(self, nb_strategies: int, payoffs: np.ndarray, pop_size: int, group_size=2, mu=0) -> None:
         self.nb_strategies = nb_strategies
         self.payoffs = payoffs
-        self.Z = pop_size
-        self.N = group_size
+        self.pop_size = pop_size
+        self.group_size = group_size
         self.mu = mu
-        self.not_mu_ = 1. - mu
         self.nb_states_population = calculate_nb_states(pop_size, nb_strategies)
         self.nb_group_combinations = calculate_nb_states(group_size, nb_strategies)
         if group_size > 2:  # pairwise game
@@ -152,7 +151,7 @@ class StochDynamics:
         ----------
         pop_size: New population size
         """
-        self.Z = pop_size
+        self.pop_size = pop_size
         self.nb_states_population = calculate_nb_states(pop_size, self.nb_strategies)
 
     def update_group_size(self, group_size: int):
@@ -163,7 +162,7 @@ class StochDynamics:
         ----------
         group_size: new group size
         """
-        self.N = group_size
+        self.group_size = group_size
         self.nb_group_combinations = calculate_nb_states(group_size, self.nb_strategies)
         if group_size > 2:  # pairwise game
             self.fitness = self.fitness_group
@@ -192,7 +191,7 @@ class StochDynamics:
     def fitness_pair(self, x: int, i: int, j: int, *args: Optional[list]) -> float:
         """
         Calculates the fitness of strategy i versus strategy j, in
-        a population of x i-strategists and (Z-x) j strategists, considering
+        a population of x i-strategists and (pop_size-x) j strategists, considering
         a 2-player game.
 
         Parameters
@@ -211,9 +210,9 @@ class StochDynamics:
             the fitness difference among the strategies
         """
         fitness_i = ((x - 1) * self.payoffs[i, i] +
-                     (self.Z - x) * self.payoffs[i, j]) / (self.Z - 1)
-        fitness_j = ((self.Z - x - 1) * self.payoffs[j, j] +
-                     x * self.payoffs[j, i]) / (self.Z - 1)
+                     (self.pop_size - x) * self.payoffs[i, j]) / (self.pop_size - 1)
+        fitness_j = ((self.pop_size - x - 1) * self.payoffs[j, j] +
+                     x * self.payoffs[j, i]) / (self.pop_size - 1)
         return fitness_i - fitness_j
 
     def full_fitness_difference_pairwise(self, i: int, j: int, population_state: np.ndarray) -> float:
@@ -246,7 +245,7 @@ class StochDynamics:
                 continue
             fitness_j += population_state[strategy] * self.payoffs[j, strategy]
 
-        return (fitness_i - fitness_j) / (self.Z - 1)
+        return (fitness_i - fitness_j) / (self.pop_size - 1)
 
     def fitness_group(self, x: int, i: int, j: int, *args: Optional[list]) -> float:
         """
@@ -275,22 +274,22 @@ class StochDynamics:
             float
             Returns the difference in fitness between strategy i and j
         """
-        k_array_1 = np.arange(0, self.N, dtype=np.int64)
-        k_array_2 = np.arange(0, self.N, dtype=np.int64)
-        i_pmf = hypergeom(self.Z - 1, x - 1, self.N - 1).pmf(k_array_1)
-        j_pmf = hypergeom(self.Z - 1, x, self.N - 1).pmf(k_array_2)
+        k_array_1 = np.arange(0, self.group_size, dtype=np.int64)
+        k_array_2 = np.arange(0, self.group_size, dtype=np.int64)
+        i_pmf = hypergeom(self.pop_size - 1, x - 1, self.group_size - 1).pmf(k_array_1)
+        j_pmf = hypergeom(self.pop_size - 1, x, self.group_size - 1).pmf(k_array_2)
 
         fitness_i, fitness_j = 0, 0
         for k in k_array_1:
-            fitness_i += self.payoffs[i, j](k + 1, self.N, *args) * i_pmf[k]
-            fitness_j += self.payoffs[j, i](self.N - k, self.N, *args) * j_pmf[k]
+            fitness_i += self.payoffs[i, j](k + 1, self.group_size, *args) * i_pmf[k]
+            fitness_j += self.payoffs[j, i](self.group_size - k, self.group_size, *args) * j_pmf[k]
 
         return fitness_i - fitness_j
 
     def full_fitness_difference_group(self, i: int, j: int, population_state: np.ndarray) -> float:
         """
         Calculate the fitness difference between strategies :param i and :param j
-        assuming that player interact in groups of size N > 2 (n-player games).
+        assuming that player interacts in groups of size N > 2 (n-player games).
 
         Parameters
         ----------
@@ -310,19 +309,19 @@ class StochDynamics:
         copy1[i] -= 1
         copy2 = population_state.copy()
         copy2[j] -= 1
-        rv_i = multivariate_hypergeom(copy1, self.N - 1)
-        rv_j = multivariate_hypergeom(copy2, self.N - 1)
+        rv_i = multivariate_hypergeom(copy1, self.group_size - 1)
+        rv_j = multivariate_hypergeom(copy2, self.group_size - 1)
 
         fitness_i, fitness_j = 0., 0.
-        for state_index in range(self.nb_group_combinations):
-            group = sample_simplex(state_index, self.N, self.nb_strategies)
+        for group_index in range(self.nb_group_combinations):
+            group = sample_simplex(group_index, self.group_size, self.nb_strategies)
             if group[i] > 0:
                 group[i] -= 1
-                fitness_i += self.payoffs[i, state_index] * rv_i.pmf(x=group)
+                fitness_i += self.payoffs[i, group_index] * rv_i.pmf(group)
                 group[i] += 1
             if group[j] > 0:
                 group[j] -= 1
-                fitness_j += self.payoffs[j, state_index] * rv_j.pmf(x=group)
+                fitness_j += self.payoffs[j, group_index] * rv_j.pmf(group)
                 group[j] += 1
 
         return fitness_i - fitness_j
@@ -370,14 +369,16 @@ class StochDynamics:
         Tuple[numpy.typing.ArrayLike, numpy.typing.ArrayLike]
             tuple(probability of increasing the number of invaders, probability of decreasing)
         """
-        if (k == self.Z) or (k == 0):
+        if (k == self.pop_size) or (k == 0):
             increase = 0
             decrease = 0
         else:
             fitness_diff = self.fitness(k, invader, resident, *args)
-            increase = (((self.Z - k) / self.Z) * (k / self.Z)) * StochDynamics.fermi(-beta, fitness_diff)
+            increase = (((self.pop_size - k) / self.pop_size) * (k / self.pop_size)) * StochDynamics.fermi(-beta,
+                                                                                                           fitness_diff)
 
-            decrease = ((k / self.Z) * ((self.Z - k) / self.Z)) * StochDynamics.fermi(beta, fitness_diff)
+            decrease = ((k / self.pop_size) * ((self.pop_size - k) / self.pop_size)) * StochDynamics.fermi(beta,
+                                                                                                           fitness_diff)
         return np.clip(increase, 0., 1.), np.clip(decrease, 0., 1.)
 
     def prob_increase_decrease_with_mutation(self, k: int, invader: int, resident: int, beta: float,
@@ -405,8 +406,8 @@ class StochDynamics:
             tuple(probability of increasing the number of invaders, probability of decreasing)
         """
         p_plus, p_less = self.prob_increase_decrease(k, invader, resident, beta, *args)
-        p_plus = ((1 - self.mu) * p_plus) + (self.mu * ((self.Z - k) / self.Z))
-        p_less = ((1 - self.mu) * p_less) + (self.mu * (k / self.Z))
+        p_plus = ((1 - self.mu) * p_plus) + (self.mu * ((self.pop_size - k) / self.pop_size))
+        p_less = ((1 - self.mu) * p_less) + (self.mu * (k / self.pop_size))
         return p_plus, p_less
 
     def gradient_selection(self, k: int, invader: int, resident: int, beta: float, *args: Optional[list]) -> float:
@@ -434,10 +435,10 @@ class StochDynamics:
         """
         if k == 0:
             return 0
-        elif k == self.Z:
+        elif k == self.pop_size:
             return 0
         else:
-            return ((self.Z - k) / self.Z) * (k / self.Z) * np.tanh(
+            return ((self.pop_size - k) / self.pop_size) * (k / self.pop_size) * np.tanh(
                 (beta / 2) * self.fitness(k, invader, resident, *args))
 
     def full_gradient_selection(self, population_state: np.ndarray, beta: float) -> np.ndarray:
@@ -457,8 +458,8 @@ class StochDynamics:
         numpy.ndarray[numpy.float64[m,m]]
             Matrix indicating the likelihood of change in the population given an starting point.
         """
-        probability_selecting_strategy_first = population_state / self.Z
-        probability_selecting_strategy_second = population_state / self.Z
+        probability_selecting_strategy_first = population_state / self.pop_size
+        probability_selecting_strategy_second = population_state / self.pop_size
         probabilities = np.outer(probability_selecting_strategy_first, probability_selecting_strategy_second)
         fitness = np.asarray([[self.full_fitness(i, j, population_state) for i in
                                range(len(population_state))] for j in range(len(population_state))])
@@ -484,8 +485,8 @@ class StochDynamics:
             Matrix indicating the likelihood of change in the population given an starting point.
         """
 
-        probability_selecting_strategy_first = population_state / self.Z
-        probability_selecting_strategy_second = population_state / self.Z
+        probability_selecting_strategy_first = population_state / self.pop_size
+        probability_selecting_strategy_second = population_state / self.pop_size
         probabilities = np.outer(probability_selecting_strategy_first, probability_selecting_strategy_second)
         fitness = np.asarray([[self.full_fitness(i, j, population_state) for i in
                                range(len(population_state))] for j in range(len(population_state))])
@@ -523,7 +524,7 @@ class StochDynamics:
         """
         phi = 0.
         prod = 1.
-        for i in range(1, self.Z):
+        for i in range(1, self.pop_size):
             p_plus, p_minus = self.prob_increase_decrease(i, invader, resident, beta, *args)
             # this is necessary to avoid divisions by zero
             if np.isclose(p_plus, 0., atol=1e-12) and not np.isclose(p_plus, p_minus):
@@ -553,8 +554,9 @@ class StochDynamics:
         scipy.sparse.csr_matrix
             The full transition matrix between the two strategies in sparse format.
         """
-        nb_states = calculate_nb_states(self.Z, self.nb_strategies)
+        nb_states = calculate_nb_states(self.pop_size, self.nb_strategies)
         mutation_probability = (self.mu / (self.nb_strategies - 1))
+        not_mu = 1. - self.mu
 
         transitions = lil_matrix((nb_states, nb_states), dtype=np.float64)
         possible_transitions = [1, -1]
@@ -563,9 +565,9 @@ class StochDynamics:
 
         for i in range(nb_states):
             total_prob = 0.
-            current_state = sample_simplex(i, self.Z, self.nb_strategies)
+            current_state = sample_simplex(i, self.pop_size, self.nb_strategies)
             # Check if we are in a monomorphic state
-            monomorphic = True if (current_state == self.Z).any() else False
+            monomorphic = True if (current_state == self.pop_size).any() else False
 
             # calculate probability of transitioning from current_tate to next_state
             for permutation in permutations(possible_transitions):
@@ -573,15 +575,14 @@ class StochDynamics:
                 new_state = current_state + permutation
 
                 # Check if we are trying an impossible transition
-                if (new_state < 0).any() or (new_state > self.Z).any():
+                if (new_state < 0).any() or (new_state > self.pop_size).any():
                     continue
 
-                new_state_index = calculate_state(self.Z, new_state)
+                new_state_index = calculate_state(self.pop_size, new_state)
 
                 # If we are in a monomorphic population, transitions
                 # can only happen if a mutation event occurs
                 if monomorphic:
-                    total_prob += mutation_probability
                     transitions[i, new_state_index] = mutation_probability
                 else:
                     increase = np.where(np.array(permutation) == 1)[0][0]
@@ -591,17 +592,18 @@ class StochDynamics:
                     fitness_diff = self.full_fitness(decrease, increase, current_state)
                     # Probability that the individual that will die is selected and that the individual that
                     # will be imitated is selected times the probability of imitation
-                    prob = self.not_mu_ * (current_state[increase] / self.Z) * StochDynamics.fermi(beta, fitness_diff)
+                    prob = not_mu * (current_state[increase] / (self.pop_size - 1))
+                    prob *= StochDynamics.fermi(beta, fitness_diff)
                     # The probability that there will not be a mutation event times the probability of the transition
                     # plus the probability that if there is a mutation event, the dying strategy is selected
                     # times the probability that it mutates into the increasing strategy
-                    prob = (current_state[decrease] / self.Z) * (prob + mutation_probability)
+                    prob = (current_state[decrease] / self.pop_size) * (prob + mutation_probability)
                     total_prob += prob
 
                     transitions[i, new_state_index] = prob
 
             if monomorphic:
-                transitions[i, i] = self.not_mu_
+                transitions[i, i] = not_mu
             else:
                 transitions[i, i] = 1. - total_prob
 
