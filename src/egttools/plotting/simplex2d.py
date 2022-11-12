@@ -673,6 +673,15 @@ class Simplex2D:
 
         return self
 
+    def draw_trajectory_from_vector(self, trajectory: np.ndarray,
+                                    color: Optional[Union[str, Tuple[int, int, int]]] = 'k',
+                                    linewidth: Optional[float] = 0.5, zorder: Optional[int] = 0, ):
+        points = np.asarray([barycentric_to_xy_coordinates(x, self.corners) for x in trajectory])
+
+        self.ax.plot(points[:, 0], points[:, 1], color, linewidth=linewidth, zorder=zorder)
+
+        return self
+
     def draw_scatter_shadow(self, f: Callable[[np.ndarray, int], np.ndarray], nb_trajectories: int,
                             trajectory_length: Optional[int] = 15, step: Optional[float] = 0.1,
                             s: Optional[Union[float, ArrayLike]] = 0.1,
