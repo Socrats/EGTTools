@@ -30,7 +30,6 @@ from itertools import permutations
 from typing import Tuple, Optional
 from warnings import warn
 from .. import sample_simplex, calculate_nb_states, calculate_state
-from ..distributions import multivariate_hypergeometric_pdf
 
 
 def replicator_equation(x: np.ndarray, payoffs: np.ndarray) -> np.ndarray:
@@ -130,6 +129,13 @@ class StochDynamics:
     """
 
     def __init__(self, nb_strategies: int, payoffs: np.ndarray, pop_size: int, group_size=2, mu=0) -> None:
+        warn(
+            "This class will soon be deprecated in favour of egttools.analytical.PairwiseComparison, "
+            "which is implemented in c++ and runs faster, as well as, avoids precision issues that "
+            "appeared in some limit cases.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         self.nb_strategies = nb_strategies
         self.payoffs = payoffs
         self.pop_size = pop_size
