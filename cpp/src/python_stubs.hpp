@@ -231,7 +231,7 @@ namespace stubs {
         }
 
         /* Trampoline (need one for each virtual function) */
-        [[nodiscard]] size_t nb_group_configurations() const override {
+        [[nodiscard]] int64_t nb_group_configurations() const override {
             /* Acquire GIL before calling Python code */
             py::gil_scoped_acquire acquire;
 
