@@ -185,7 +185,7 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fi
         // Calculate the probability that the invading strategy will increase
         probability_increase = (static_cast<double>(population_size_ - i) / population_size_) * (static_cast<double>(i) / (population_size_ - 1));
         probability_increase *= egttools::FinitePopulations::fermi(beta, fitness_resident_strategy, fitness_invading_strategy);
-        probability_decrease = (static_cast<double>(i) / population_size_) * (static_cast<double>(population_size_ - i   ) / (population_size_ - 1));
+        probability_decrease = (static_cast<double>(i) / population_size_) * (static_cast<double>(population_size_ - i) / (population_size_ - 1));
         probability_decrease *= egttools::FinitePopulations::fermi(beta, fitness_invading_strategy, fitness_resident_strategy);
 
         prod *= probability_decrease / probability_increase;
@@ -256,12 +256,6 @@ void egttools::FinitePopulations::analytical::PairwiseComparison::update_populat
     }
 
     population_size_ = population_size;
-    nb_states_ = egttools::starsBars(population_size_, nb_strategies_);
-}
-
-void egttools::FinitePopulations::analytical::PairwiseComparison::update_game(egttools::FinitePopulations::AbstractGame &game) {
-    game_ = game;
-    nb_strategies_ = static_cast<int>(game.nb_strategies());
     nb_states_ = egttools::starsBars(population_size_, nb_strategies_);
 }
 

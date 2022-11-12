@@ -25,6 +25,8 @@
 
 #include <egttools/finite_populations/Utils.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
+#include <egttools/finite_populations/games/Matrix2PlayerGameHolder.hpp>
+#include <egttools/finite_populations/games/MatrixNPlayerGameHolder.hpp>
 #include <stdexcept>
 #include <tuple>
 
@@ -52,6 +54,9 @@ namespace egttools::FinitePopulations::analytical {
          * inheriting from `egttools.games.AbstractGame`, and which contains a method to calculate
          * the fitness of a strategy, given a population state (represented as the counts of each
          * strategy in the population).
+         *
+         * @note For now it is not possible not possible to update the game without instantiating
+         * PairwiseComparison again. Hopefully, this will be fixed in the future
          *
          * @param population_size : size of the population
          * @param game : Game object.
@@ -96,6 +101,25 @@ namespace egttools::FinitePopulations::analytical {
          */
         double calculate_fixation_probability(int index_invading_strategy, int index_resident_strategy, double beta);
 
+        /**
+         * @brief Calculates the transition matrix of the reduced Markov Chain that emerges when assuming SML.
+         *
+         * By assuming the limit of small mutations (SML), we can reduce the number of states of the dynamical system
+         * to those which are monomorphic, i.e., the whole population adopts the same strategy.
+         *
+         * Thus, the dimensions of the transition matrix in the SML is (nb_strategies, nb_strategies), and
+         * the transitions are given by the normalized fixation probabilities. This means that a transition
+         * where i \neq j, T[i, j] = fixation(i, j) / (nb_strategies - 1) and T[i, i] = 1 - \sum{T[i, j]}.
+         *
+         * This method will also return the matrix of fixation probabilities,
+         * where fixation_probabilities[i, j] gives the probability that one mutant j fixates in a population
+         * of i.
+         *
+         *
+         * @param beta : intensity of selection
+         * @return std::tuple<Matrix2D, Matrix2D> A tuple including the transition matrix
+         *         and a matrix with the fixation probabilities.
+         */
         std::tuple<Matrix2D, Matrix2D> calculate_transition_and_fixation_matrix_sml(double beta);
 
         //        Vector calculate_gradient_of_selection(const Eigen::Ref<const Matrix2D> &transition_matrix,
@@ -104,7 +128,6 @@ namespace egttools::FinitePopulations::analytical {
 
         // setters
         void update_population_size(int population_size);
-        void update_game(egttools::FinitePopulations::AbstractGame &game);
 
         // getters
         [[nodiscard]] int nb_strategies() const;
@@ -130,7 +153,7 @@ namespace egttools::FinitePopulations::analytical {
          * @param state : Vector containing the counts of the strategies in the population
          * @return the transition probability
          */
-//        inline double calculate_transition_(int decreasing_strategy, int increasing_strategy, double beta, double mu, VectorXui &state);
+        //        inline double calculate_transition_(int decreasing_strategy, int increasing_strategy, double beta, double mu, VectorXui &state);
 
         inline double calculate_local_gradient_(int decreasing_strategy, int increasing_strategy, double beta, VectorXui &state);
 
