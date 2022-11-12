@@ -69,7 +69,7 @@ class StochDynamics:
                 number of strategies in the population
     payoffs : numpy.ndarray[numpy.float64[m,m]]
             Payoff matrix indicating the payoff of each strategy (rows) against each other (columns).
-            When analyzing an group_size-player game (group_size > 2) the structure of the matrix is a bit more involved, and
+            When analyzing a group_size-player game (group_size > 2) the structure of the matrix is a bit more involved, and
             we can have 2 options for structuring the payoff matrix:
 
             1) If we consider a simplified version of the system with a reduced Markov Chain which only contains
