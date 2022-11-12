@@ -84,7 +84,7 @@ void egttools::FinitePopulations::AbstractNPlayerGame::update_payoff(int strateg
 size_t egttools::FinitePopulations::AbstractNPlayerGame::group_size() const {
     return group_size_;
 }
-size_t egttools::FinitePopulations::AbstractNPlayerGame::nb_group_configurations() const {
+int64_t egttools::FinitePopulations::AbstractNPlayerGame::nb_group_configurations() const {
     return nb_group_configurations_;
 }
 
