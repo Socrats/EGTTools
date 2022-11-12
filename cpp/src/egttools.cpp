@@ -2168,7 +2168,41 @@ PYBIND11_MODULE(numerical, m) {
 
     py::class_<PairwiseComparison>(m, "PairwiseComparisonNumerical")
             .def(py::init<size_t, egttools::FinitePopulations::AbstractGame &, size_t>(),
-                 "Runs a moran process with pairwise comparison and calculates fitness according to game",
+                 R"pbdoc(
+                A class containing methods to study numerically the evolutionary dynamics using the Pairwise comparison rule.
+
+                This class defines methods to estimate numerically fixation probabilities, stationary distributions with or without
+                mutation, and strategy distributions.
+
+                Parameters
+                ----------
+                population_size : int
+                    Size of the population.
+                game : egttools.games.AbstractGame
+                    A game object which must implement the abstract class `egttools.games.AbstractGame`.
+                    This game will contain the expected payoffs for each strategy in the game, or at least
+                    a method to compute it, and a method to calculate the fitness of each strategy for a given
+                    population state.
+                cache_size : int
+                    The maximum size of the cache.
+
+                See Also
+                --------
+                egttools.analytical.PairwiseComparison
+                egttools.analytical.StochDynamics
+                egttools.games.AbstractGame
+
+                Note
+                -----
+                Numerical computations are not exact. Moreover, for now we still did not implement a method to automatically
+                detect if the precision of the estimation of the stationary and strategy distributions are good enough and,
+                thus, stop the simulation. You are advised to test different nb_generations and transitory periods for your
+                specific problem (game).
+
+                If you want to have exact calculations, you can use egttools.analytical.PairwiseComparison. However, this
+                is only advisable for systems with a smaller number of states (i.e., not too big population size or number of strategies).
+                Otherwise, the calculations might require too much memory.
+                )pbdoc",
                  py::arg("pop_size"), py::arg("game"), py::arg("cache_size"), py::keep_alive<1, 3>())
             .def("evolve",
                  static_cast<egttools::VectorXui (PairwiseComparison::*)(size_t, double, double,
