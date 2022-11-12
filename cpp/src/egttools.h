@@ -1,7 +1,7 @@
 //
 // Created by Elias Fernandez on 05/05/2021.
 //
-
+#pragma once
 #ifndef EGTTOOLS_EGTTOOLS_H
 #define EGTTOOLS_EGTTOOLS_H
 
@@ -27,9 +27,14 @@
 #include <egttools/finite_populations/games/AbstractNPlayerGame.hpp>
 #include <egttools/finite_populations/games/CRDGame.hpp>
 #include <egttools/finite_populations/games/CRDGameTU.hpp>
+#include <egttools/finite_populations/games/Matrix2PlayerGameHolder.hpp>
+#include <egttools/finite_populations/games/MatrixNPlayerGameHolder.hpp>
 #include <egttools/finite_populations/games/NPlayerStagHunt.hpp>
 #include <egttools/finite_populations/games/OneShotCRD.hpp>
 #include <egttools/utils/TimingUncertainty.hpp>
+#include <memory>
+#include <stdexcept>
+#include <utility>
 
 #include "python_stubs.hpp"
 #include "version.h"

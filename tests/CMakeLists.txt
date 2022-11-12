@@ -34,6 +34,9 @@ add_library(egttoolsNumerical
         ../cpp/src/egttools/Data.cpp
         ../cpp/src/egttools/utils/CalculateExpectedIndicators.cpp
         ../cpp/src/egttools/finite_populations/Utils.cpp
+        ../cpp/src/egttools/finite_populations/analytical/PairwiseComparison.cpp
+        ../cpp/src/egttools/finite_populations/games/Matrix2PlayerGameHolder.cpp
+        ../cpp/src/egttools/finite_populations/games/MatrixNPlayerGameHolder.cpp
         ../cpp/src/egttools/finite_populations/games/NormalFormGame.cpp
         ../cpp/src/egttools/finite_populations/games/CRDGame.cpp
         ../cpp/src/egttools/finite_populations/games/CRDGameTU.cpp
@@ -96,3 +99,6 @@ if (Boost_FOUND)
     add_executable(testBinomial test_binomial_coefficient.cpp)
     target_link_libraries(testBinomial egttoolsNumerical)
 endif ()
+
+add_executable(testGameHolders test_game_holders.cpp)
+target_link_libraries(testGameHolders egttoolsNumerical)
