@@ -20,16 +20,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from typing import Optional, Tuple, Callable, List
-from ..games import AbstractGame
+from ..games import (AbstractGame, Matrix2PlayerGameHolder, MatrixNPlayerGameHolder, )
 from .. import (calculate_nb_states, )
 from .helpers import (barycentric_to_xy_coordinates,
                       xy_to_barycentric_coordinates, calculate_stability,
                       find_roots_in_discrete_barycentric_coordinates)
-from ..analytical import (replicator_equation, StochDynamics)
+from ..analytical import (replicator_equation, PairwiseComparison, )
 from ..analytical.utils import check_if_there_is_random_drift, check_replicator_stability_pairwise_games, find_roots
 from ..helpers.vectorized import (vectorized_replicator_equation, vectorized_barycentric_to_xy_coordinates)
 from . import Simplex2D
-from ..utils import transform_payoffs_to_pairwise
 
 
 def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray,
@@ -121,9 +120,9 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex(population_size: int,
                                                       figsize: Optional[Tuple[int, int]] = (10, 8),
                                                       ax: Optional[plt.axis] = None) -> \
         Tuple[Simplex2D, Callable[[np.ndarray, int], np.ndarray], List[np.ndarray], List[np.ndarray], List[
-            bool], StochDynamics]:
+            bool], AbstractGame, PairwiseComparison]:
     """
-    Helper function to simplified the plotting of the moran dynamics in a 2 Simplex.
+    Helper function to simplify the plotting of the moran dynamics in a 2 Simplex.
 
     Parameters
     ----------
@@ -151,32 +150,38 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex(population_size: int,
     A tuple with the simplex object which can be used to add more features to the plot, the function that
     can be used to calculate gradients and should be passed to `Simplex2D.draw_trajectory_from_roots` and
     `Simplex2D.draw_scatter_shadow`, a list of the roots in barycentric coordinates, a list of the roots in
-    cartesian coordinates and a list of booleans indicating whether the roots are stable.
+    cartesian coordinates and a list of booleans indicating whether the roots are stable. It also returns the
+    game class (this is important, since a new game is created when passing a payoff matrix, and if not returned,
+    a reference to the game instance will disappear, and it will produce a segmentation fault). Finally, it also returns
+    a reference to the evolver object.
     """
-    if (group_size == 2) and payoff_matrix is None:
-        raise Exception("You need to define a payoff matrix for pairwise games.")
+    if (payoff_matrix is None) and (game is None):
+        raise Exception("You need to define either a payoff matrix or a game.")
+    elif game is None:
+        if (group_size is None) or (group_size < 2):
+            raise Exception("group_size not be None and must be >= 2")
+
+        if group_size == 2:
+            game = Matrix2PlayerGameHolder(payoff_matrix.shape[0], payoff_matrix)
+        else:
+            game = MatrixNPlayerGameHolder(payoff_matrix.shape[0], group_size, payoff_matrix)
 
     simplex = Simplex2D(discrete=True, size=population_size, nb_points=population_size + 1)
     simplex.add_axis(figsize, ax)
 
-    if group_size > 2:
-        payoffs = transform_payoffs_to_pairwise(game.payoffs().shape[0], game)
-        payoff_matrix = game.payoffs()
-    else:
-        payoffs = payoff_matrix
-
-    random_drift = check_if_there_is_random_drift(payoff_matrix=payoffs, population_size=population_size,
+    random_drift = check_if_there_is_random_drift(payoff_matrix=game.payoffs(), population_size=population_size,
                                                   group_size=group_size, beta=beta, atol=atol)
     simplex.add_edges_with_random_drift(random_drift)
 
     v = np.asarray(xy_to_barycentric_coordinates(simplex.X, simplex.Y, simplex.corners))
     v_int = np.floor(v * population_size).astype(np.int64)
 
-    evolver = StochDynamics(nb_strategies=3, payoffs=payoff_matrix, pop_size=population_size, group_size=group_size)
+    evolver = PairwiseComparison(population_size=population_size, game=game)
+    # evolver = StochDynamics(nb_strategies=3, payoffs=payoff_matrix, pop_size=population_size, group_size=group_size)
     result = np.zeros(shape=(v_int.shape[1], v_int.shape[2], 3))
     for i in range(v_int.shape[1]):
         for j in range(v_int.shape[2]):
-            result[i, j, :] = evolver.full_gradient_selection_without_mutation(v_int[:, i, j], beta)
+            result[i, j, :] = evolver.calculate_gradient_of_selection(beta, v_int[:, i, j])
 
     result = result.swapaxes(0, 1).swapaxes(0, 2)
     xy_results = vectorized_barycentric_to_xy_coordinates(result, simplex.corners)
@@ -187,16 +192,16 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex(population_size: int,
     simplex.apply_simplex_boundaries_to_gradients(Ux, Uy)
 
     roots = find_roots_in_discrete_barycentric_coordinates(
-        lambda u: population_size * evolver.full_gradient_selection_without_mutation(u, beta), population_size,
+        lambda u: population_size * evolver.calculate_gradient_of_selection(beta, u), population_size,
         nb_interior_points=calculate_nb_states(population_size,
                                                3),
         atol=1e-1)
     roots_xy = [barycentric_to_xy_coordinates(x, simplex.corners) for x in roots]
-    stability = calculate_stability(roots, lambda u: population_size * evolver.full_gradient_selection(u, beta))
+    stability = calculate_stability(roots, lambda u: population_size * evolver.calculate_gradient_of_selection(beta, u))
 
     return (simplex,
-            lambda u, t: population_size * evolver.full_gradient_selection_without_mutation(u, beta),
-            roots, roots_xy, stability, evolver)
+            lambda u, t: population_size * evolver.calculate_gradient_of_selection(beta, u),
+            roots, roots_xy, stability, game, evolver)
 
 
 def plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots(population_size: int,
@@ -207,7 +212,7 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots(population_s
                                                                     atol: Optional[float] = 1e-7,
                                                                     figsize: Optional[Tuple[int, int]] = (10, 8),
                                                                     ax: Optional[plt.axis] = None) -> \
-        Tuple[Simplex2D, Callable[[np.ndarray, int], np.ndarray], StochDynamics]:
+        Tuple[Simplex2D, Callable[[np.ndarray, int], np.ndarray], AbstractGame, PairwiseComparison]:
     """
     Helper function to simplify the plotting of the moran dynamics in a 2 Simplex.
 
@@ -224,7 +229,7 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots(population_s
     group_size:
         Size of the group. By default, we assume that interactions are pairwise (the group size is 2).
     atol:
-        Tolerance to consider a value equal to zero. This is used to check if an edge has random drift. By default
+        Tolerance to consider a value equal to zero. This is used to check if an edge has random drift. By default,
         the tolerance is 1e-7.
     figsize:
         Size of the figure. This parameter is only used if the ax parameter is not defined.
@@ -236,33 +241,38 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots(population_s
     A tuple with the simplex object which can be used to add more features to the plot, the function that
     can be used to calculate gradients and should be passed to `Simplex2D.draw_trajectory_from_roots` and
     `Simplex2D.draw_scatter_shadow`, a list of the roots in barycentric coordinates, a list of the roots in
-    cartesian coordinates and a list of booleans indicating whether the roots are stable.
+    cartesian coordinates and a list of booleans indicating whether the roots are stable. It also returns the
+    game class (this is important, since a new game is created when passing a payoff matrix, and if not returned,
+    a reference to the game instance will disappear, and it will produce a segmentation fault). Finally, it also returns
+    a reference to the evolver object.
     """
-    if (group_size == 2) and payoff_matrix is None:
-        raise Exception("You need to define a payoff matrix for pairwise games.")
+    if (payoff_matrix is None) and (game is None):
+        raise Exception("You need to define either a payoff matrix or a game.")
+    elif game is None:
+        if (group_size is None) or (group_size < 2):
+            raise Exception("group_size not be None and must be >= 2")
+
+        if group_size == 2:
+            game = Matrix2PlayerGameHolder(payoff_matrix.shape[0], payoff_matrix)
+        else:
+            game = MatrixNPlayerGameHolder(payoff_matrix.shape[0], group_size, payoff_matrix)
 
     simplex = Simplex2D(discrete=True, size=population_size, nb_points=population_size + 1)
     simplex.add_axis(figsize, ax)
 
-    if group_size > 2:
-        payoffs = transform_payoffs_to_pairwise(game.payoffs().shape[0], game)
-        payoff_matrix = game.payoffs()
-    else:
-        payoffs = payoff_matrix
-
-    random_drift = check_if_there_is_random_drift(payoff_matrix=payoffs, population_size=population_size,
+    random_drift = check_if_there_is_random_drift(payoff_matrix=game.payoffs(), population_size=population_size,
                                                   group_size=group_size, beta=beta, atol=atol)
     simplex.add_edges_with_random_drift(random_drift)
 
     v = np.asarray(xy_to_barycentric_coordinates(simplex.X, simplex.Y, simplex.corners))
     v_int = np.floor(v * population_size).astype(np.int64)
 
-    evolver = StochDynamics(nb_strategies=3, payoffs=payoff_matrix, pop_size=population_size, group_size=group_size)
+    evolver = PairwiseComparison(population_size=population_size, game=game)
     result = np.zeros(shape=(v_int.shape[1], v_int.shape[2], 3))
     for i in range(v_int.shape[1]):
         for j in range(v_int.shape[2]):
             if v_int[:, i, j].sum() <= population_size:
-                result[i, j, :] = evolver.full_gradient_selection_without_mutation(v_int[:, i, j], beta)
+                result[i, j, :] = evolver.calculate_gradient_of_selection(beta, v_int[:, i, j])
 
     result = result.swapaxes(0, 1).swapaxes(0, 2)
     xy_results = vectorized_barycentric_to_xy_coordinates(result, simplex.corners)
@@ -272,4 +282,4 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots(population_s
 
     simplex.apply_simplex_boundaries_to_gradients(Ux, Uy)
 
-    return simplex, lambda u, t: population_size * evolver.full_gradient_selection_without_mutation(u, beta), evolver
+    return simplex, lambda u, t: population_size * evolver.calculate_gradient_of_selection(beta, u), game, evolver
