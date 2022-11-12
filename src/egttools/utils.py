@@ -23,6 +23,7 @@ from warnings import warn
 
 import numpy as np
 from scipy.linalg import schur, eigvals
+from scipy.sparse import csr_matrix, csc_matrix
 from typing import Optional, List, Generator, Union, Callable
 from egttools.games import AbstractGame
 
@@ -106,7 +107,7 @@ def get_payoff_function(strategy_i: int,
     Returns
     -------
     Callable[[int, int, Optional[List]], float]
-        A function which will return the payoff of strategy i
+        A function which will return the payoff of strategy i,
         given k individuals of strategy i and group_size - k j strategists.
     """
 
@@ -179,7 +180,7 @@ def transform_payoffs_to_pairwise(nb_strategies: int,
         [[get_payoff_function(i, j, nb_strategies, game) for j in range(nb_strategies)] for i in range(nb_strategies)])
 
 
-def calculate_stationary_distribution(transition_matrix: np.ndarray) -> np.ndarray:
+def calculate_stationary_distribution(transition_matrix: Union[np.ndarray, csr_matrix, csc_matrix]) -> np.ndarray:
     """
     Calculates stationary distribution from a transition matrix of Markov chain.
 
@@ -190,7 +191,7 @@ def calculate_stationary_distribution(transition_matrix: np.ndarray) -> np.ndarr
 
     Parameters
     ----------
-    transition_matrix : numpy.ndarray
+    transition_matrix : Union[numpy.ndarray, scipy.sparse.csr_matrix, scipy.sparse.csc_matrix]
         A 2 dimensional transition matrix
 
     Returns
@@ -203,21 +204,27 @@ def calculate_stationary_distribution(transition_matrix: np.ndarray) -> np.ndarr
     egttools.utils.calculate_stationary_distribution_non_hermitian
 
     """
+    if (type(transition_matrix) == csr_matrix) or (type(transition_matrix) == csc_matrix):
+        tmp = transition_matrix.toarray()
+    else:
+        tmp = transition_matrix
+
     # Check if there is any transition with value 1 - this would mean that the game is degenerate
-    if np.isclose(transition_matrix, 1., atol=1e-11).any():
+    if np.isclose(tmp, 1., atol=1e-11).any():
         warn(
             "Some of the entries in the transition matrix are close to 1 (with a tolerance of 1e-11). "
             "This could result in more than one eigenvalue of magnitute 1 "
             "(the Markov Chain is degenerate), so please be careful when analysing the results.", RuntimeWarning)
 
     # calculate stationary distributions using eigenvalues and eigenvectors
-    eigenvalues, eigenvectors = np.linalg.eig(transition_matrix)
+    eigenvalues, eigenvectors = np.linalg.eig(tmp)
     index_stationary = np.argmin(abs(eigenvalues - 1.0))  # look for the element closest to 1 in the list of eigenvalues
     sd = abs(eigenvectors[:, index_stationary].T.real)  # it is essential to access the matrix by column
     return sd / sd.sum()  # normalize
 
 
-def calculate_stationary_distribution_non_hermitian(transition_matrix: np.ndarray) -> np.ndarray:
+def calculate_stationary_distribution_non_hermitian(
+        transition_matrix: Union[np.ndarray, csr_matrix, csc_matrix]) -> np.ndarray:
     """
     Calculates stationary distribution from a transition matrix of Markov chain which is not hermitian.
 
@@ -225,7 +232,7 @@ def calculate_stationary_distribution_non_hermitian(transition_matrix: np.ndarra
 
     Parameters
     ----------
-    transition_matrix : numpy.ndarray
+    transition_matrix : Union[numpy.ndarray, scipy.sparse.csr_matrix, scipy.sparse.csc_matrix]
         A 2 dimensional transition matrix
 
     Returns
@@ -238,8 +245,13 @@ def calculate_stationary_distribution_non_hermitian(transition_matrix: np.ndarra
     egttools.utils.calculate_stationary_distribution
 
     """
+    if (type(transition_matrix) == csr_matrix) or (type(transition_matrix) == csc_matrix):
+        tmp = transition_matrix.toarray()
+    else:
+        tmp = transition_matrix
+
     # Check if there is any transition with value 1 - this would mean that the game is degenerate
-    if np.isclose(transition_matrix, 1., atol=1e-11).any():
+    if np.isclose(tmp, 1., atol=1e-11).any():
         warn(
             "Some of the entries in the transition matrix are close to 1 (with a tolerance of 1e-11). "
             "This could result in more than one eigenvalue of magnitute 1 "
@@ -247,7 +259,7 @@ def calculate_stationary_distribution_non_hermitian(transition_matrix: np.ndarra
 
     # calculate stationary distributions using eigenvalues and eigenvectors
     # noinspection PyTupleAssignmentBalance
-    schur_form, eigenvectors = schur(transition_matrix)
+    schur_form, eigenvectors = schur(tmp)
     eigenvalues = eigvals(schur_form)
     index_stationary = np.argmin(abs(eigenvalues - 1.0))  # look for the element closest to 1 in the list of eigenvalues
     sd = abs(eigenvectors[:, index_stationary].T.real)  # it is essential to access the matrix by column
