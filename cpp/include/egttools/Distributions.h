@@ -142,7 +142,7 @@ namespace egttools {
      * @brief Calculates the probability density function of a multivariate hypergeometric distribution.
      *
      * This function returns the probability that a sample of size @param n in a population of @param k
-     * objects with have @param sample_counts counts of each object in a sample, given a population D
+     * objects will have @param sample_counts counts of each object in a sample, given a population D
      * with @param population_counts counts of each object.
      *
      * The sampling is without replacement.
@@ -162,7 +162,7 @@ namespace egttools {
     * @brief Calculates the probability density function of a multivariate hypergeometric distribution.
     *
     * This function returns the probability that a sample of size @param n in a population of @param k
-    * objects with have @param sample_counts counts of each object in a sample, given a population D
+    * objects will have @param sample_counts counts of each object in a sample, given a population D
     * with @param population_counts counts of each object.
     *
     * The sampling is without replacement.
@@ -182,7 +182,7 @@ namespace egttools {
     * @brief Calculates the probability density function of a multivariate hypergeometric distribution.
     *
     * This function returns the probability that a sample of size @param n in a population of @param k
-    * objects with have @param sample_counts counts of each object in a sample, given a population D
+    * objects will have @param sample_counts counts of each object in a sample, given a population D
     * with @param population_counts counts of each object.
     *
     * The sampling is without replacement.

@@ -1,4 +1,4 @@
-/** Copyright (c) 2019-2021  Elias Fernandez
+/** Copyright (c) 2019-2023  Elias Fernandez
   *
   * This file is part of EGTtools.
   *

@@ -15,7 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
-pybind11_add_module(numerical egttools.cpp)
+pybind11_add_module(numerical
+        egttools_pybind11_distributed.cpp
+        pybind11_files/methods.cpp
+        pybind11_files/games.cpp
+        pybind11_files/behaviors.cpp
+        pybind11_files/distributions.cpp
+        pybind11_files/datastructures.cpp)
 add_subdirectory(egttools)
 
 target_include_directories(numerical PRIVATE .)
