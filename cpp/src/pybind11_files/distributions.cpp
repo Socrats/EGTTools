@@ -15,11 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 */
-#include <egttools/Distributions.h>
-
-#include <egttools/utils/TimingUncertainty.hpp>
-
-#include "egttools_common.hpp"
+#include "distributions.hpp"
 
 void init_distributions(py::module_ &mDistributions) {
     mDistributions.attr("__init__") = py::str(

@@ -15,14 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 */
-#include <egttools/finite_populations/behaviors/CRDStrategies.h>
-
-#include <egttools/finite_populations/behaviors/AbstractCRDStrategy.hpp>
-#include <egttools/finite_populations/behaviors/AbstractNFGStrategy.hpp>
-#include <egttools/finite_populations/behaviors/NFGStrategies.hpp>
-
-#include "egttools_common.hpp"
-#include "python_stubs.hpp"
+#include "behaviors.hpp"
 
 namespace egttools {
     std::string call_get_action(const py::list &strategies, size_t time_step, int action) {

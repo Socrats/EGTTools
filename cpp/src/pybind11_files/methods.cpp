@@ -15,19 +15,8 @@
 * You should have received a copy of the GNU General Public License
 * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 */
-#include <egttools/SeedGenerator.h>
-#include <egttools/utils/CalculateExpectedIndicators.h>
 
-#include <egttools/LruCache.hpp>
-#include <egttools/finite_populations/PairwiseMoran.hpp>
-#include <egttools/finite_populations/analytical/PairwiseComparison.hpp>
-
-#include "egttools_common.hpp"
-
-#if (HAS_BOOST)
-#include <boost/multiprecision/cpp_int.hpp>
-namespace mp = boost::multiprecision;
-#endif
+#include "methods.hpp"
 
 
 using namespace egttools;

@@ -15,9 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 */
-#include <egttools/Data.hpp>
-
-#include "egttools_common.hpp"
+#include "datastructures.hpp"
 
 void init_datastructures(py::module_ &mData) {
     mData.attr("__init__") = py::str("The `egttools.numerical.DataStructures` submodule contains helpful data structures.");

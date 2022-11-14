@@ -15,19 +15,8 @@
 * You should have received a copy of the GNU General Public License
 * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 */
-#include <egttools/finite_populations/games/NormalFormGame.h>
 
-#include <egttools/finite_populations/games/AbstractGame.hpp>
-#include <egttools/finite_populations/games/AbstractNPlayerGame.hpp>
-#include <egttools/finite_populations/games/CRDGame.hpp>
-#include <egttools/finite_populations/games/CRDGameTU.hpp>
-#include <egttools/finite_populations/games/Matrix2PlayerGameHolder.hpp>
-#include <egttools/finite_populations/games/MatrixNPlayerGameHolder.hpp>
-#include <egttools/finite_populations/games/NPlayerStagHunt.hpp>
-#include <egttools/finite_populations/games/OneShotCRD.hpp>
-
-#include "egttools_common.hpp"
-#include "python_stubs.hpp"
+#include "games.hpp"
 
 namespace egttools {
     std::unique_ptr<egttools::FinitePopulations::NormalFormGame> init_normal_form_game_from_python_list(size_t nb_rounds,
