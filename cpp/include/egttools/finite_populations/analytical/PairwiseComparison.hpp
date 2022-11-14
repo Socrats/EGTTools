@@ -23,12 +23,18 @@
 #include <egttools/SeedGenerator.h>
 #include <egttools/Types.h>
 
+#include <cmath>
 #include <egttools/finite_populations/Utils.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <egttools/finite_populations/games/Matrix2PlayerGameHolder.hpp>
 #include <egttools/finite_populations/games/MatrixNPlayerGameHolder.hpp>
 #include <stdexcept>
 #include <tuple>
+
+#if (HAS_BOOST)
+#include <boost/multiprecision/cpp_dec_float.hpp>
+namespace mp = boost::multiprecision;
+#endif
 
 #if defined(_OPENMP)
 #include <egttools/OpenMPUtils.hpp>

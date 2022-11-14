@@ -26,11 +26,11 @@
 namespace py = pybind11;
 using namespace std::string_literals;
 
-void init_methods(py::module_ &);
+void init_distributions(py::module_ &);
 void init_games(py::module_ &);
 void init_behaviors(py::module_ &);
+void init_methods(py::module_ &);
 void init_datastructures(py::module_ &);
-void init_distributions(py::module_ &);
 
 PYBIND11_MODULE(numerical, m) {
     m.attr("__version__") = py::str(XSTR(EGTTOOLS_VERSION));

@@ -15,7 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 */
-
 #include <egttools/finite_populations/games/NormalFormGame.h>
 
 #include <egttools/finite_populations/games/AbstractGame.hpp>

@@ -15,18 +15,7 @@
   * You should have received a copy of the GNU General Public License
   * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 */
-
 #include <egttools/Distributions.h>
-
-#if (HAS_BOOST)
-#include <boost/multiprecision/cpp_dec_float.hpp>
-
-#define uint_type_ mp::uint128_t
-#define binomial_coeff_ binomial_precision
-#else
-#define uint_type_ size_t
-#define binomial_coeff_ egttools::binomialCoeff<double, size_t>
-#endif
 
 template<>
 size_t egttools::binomialCoeff<size_t, size_t>(size_t n, size_t k) {

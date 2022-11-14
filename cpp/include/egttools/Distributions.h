@@ -28,9 +28,16 @@
 #include <algorithm>
 #include <random>
 
-#if(HAS_BOOST)
+#if (HAS_BOOST)
+#include <boost/multiprecision/cpp_dec_float.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 namespace mp = boost::multiprecision;
+
+#define uint_type_ mp::uint128_t
+#define binomial_coeff_ binomial_precision
+#else
+#define uint_type_ size_t
+#define binomial_coeff_ egttools::binomialCoeff<double, size_t>
 #endif
 
 namespace egttools {
@@ -134,7 +141,7 @@ namespace egttools {
         return res;
     }
 
-#if(HAS_BOOST)
+#if (HAS_BOOST)
     mp::uint128_t binomial_precision(size_t n, size_t k);
 #endif
 
@@ -206,7 +213,7 @@ namespace egttools {
      * @param bins : number of bins that can be filled
      * @return the number of possible combinations of stars in the bins.
      */
-    template<typename T, typename O=T>
+    template<typename T, typename O = T>
     O starsBars(T stars, T bins) {
         return egttools::binomialCoeff<T, T>(stars + bins - 1, stars);
     }

@@ -16,13 +16,7 @@
 * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include <cmath>
 #include <egttools/finite_populations/analytical/PairwiseComparison.hpp>
-
-#if (HAS_BOOST)
-#include <boost/multiprecision/cpp_dec_float.hpp>
-namespace mp = boost::multiprecision;
-#endif
 
 egttools::FinitePopulations::analytical::PairwiseComparison::PairwiseComparison(int population_size,
                                                                                 egttools::FinitePopulations::AbstractGame &game) : population_size_(population_size),
