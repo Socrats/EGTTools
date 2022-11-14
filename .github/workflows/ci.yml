@@ -90,12 +90,14 @@ jobs:
           brew install openblas
           echo "OPENBLAS=$(brew --prefix openblas)" >> $GITHUB_ENV
           echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'" >> $GITHUB_ENV
+          brew install boost
       - name: Install system dependencies Linux
         if: runner.os == 'Linux'
         run: |
           sudo apt-get install libomp-dev
           sudo apt-get install libeigen3-dev
           echo "Eigen3_DIR='/usr/include/eigen3'" >> $GITHUB_ENV
+          sudo apt-get install libboost-all-dev
       - name: Install Eigen3 windows
         if: runner.os == 'Windows'
         run: |
@@ -105,6 +107,13 @@ jobs:
           move eigen3 "C:/Program Files (x86)/Eigen3"
           echo "Eigen3_DIR='C:/Program Files (x86)/Eigen3'" >> $GITHUB_ENV
           echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'" >> $GITHUB_ENV
+          curl.exe --output boost_1_80_0.7z--url https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.7z
+          tar -zxvf boost_1_80_0.7z Boost
+          move Boost "C:/Program Files (x86)/Boost"
+          cd "C:/Program Files (x86)/Boost/boost"
+          .\bootstrap.bat
+          .\b2 -j8 --address-model=64
+          
 
       - name: Install requirements
         run: |
