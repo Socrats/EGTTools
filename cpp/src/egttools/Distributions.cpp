@@ -107,7 +107,7 @@ egttools::multivariateHypergeometricPDF(size_t m, size_t k, size_t n, const std:
 #if (HAS_BOOST)
     return static_cast<double>(res.convert_to<mp::cpp_dec_float_100>() / denominator.convert_to<mp::cpp_dec_float_100>());
 #else
-    return static_cast<double>(res) / static_cast<double>(denominator)
+    return static_cast<double>(res) / static_cast<double>(denominator);
 #endif
 }
 
