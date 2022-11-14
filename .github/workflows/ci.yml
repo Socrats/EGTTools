@@ -29,13 +29,13 @@ jobs:
           - runs-on: ubuntu-latest
             python: 3.9
             arch: x64
-            gcc: 10
-            name-extra: ' (GCC 10)'
+            gcc: 12
+            name-extra: ' (GCC 12)'
           - runs-on: ubuntu-latest
             python: 3.9
             arch: x64
-            clang: 12
-            name-extra: ' (Clang 12)'
+            clang: 16
+            name-extra: ' (Clang 16)'
           - runs-on: ubuntu-latest
             python: 3.9
             arch: x64
@@ -107,9 +107,9 @@ jobs:
           move eigen3 "C:/Program Files (x86)/Eigen3"
           echo "Eigen3_DIR='C:/Program Files (x86)/Eigen3'" >> $GITHUB_ENV
           echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'" >> $GITHUB_ENV
-          curl.exe --output boost_1_80_0.7z--url https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.7z
-          tar -zxvf boost_1_80_0.7z
-          ren boost_1_80_0.7z Boost
+          curl.exe --output boost_1_80_0.zip--url https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.zip
+          tar -zxvf boost_1_80_0.zip
+          ren boost_1_80_0 Boost
           move Boost "C:/Program Files (x86)/Boost"
           cd "C:/Program Files (x86)/Boost/boost"
           .\bootstrap.bat
