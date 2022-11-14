@@ -29,13 +29,13 @@ jobs:
           - runs-on: ubuntu-latest
             python: 3.9
             arch: x64
-            gcc: 12
-            name-extra: ' (GCC 12)'
-          - runs-on: ubuntu-latest
-            python: 3.9
-            arch: x64
-            clang: 16
-            name-extra: ' (Clang 16)'
+            gcc: 10
+            name-extra: ' (GCC 10)'
+#          - runs-on: ubuntu-latest
+#            python: 3.9
+#            arch: x64
+#            clang: 16
+#            name-extra: ' (Clang 16)'
           - runs-on: ubuntu-latest
             python: 3.9
             arch: x64
@@ -50,14 +50,14 @@ jobs:
             arch: x64
             release: true
             name-extra: ' No OpenMP (Release)'
-          - runs-on: windows-latest
-            python: 3.9
-            arch: x64
-            name-extra: ' No OpenMP (Release)'
-          - runs-on: windows-latest
-            python: 3.7
-            arch: x86
-            name-extra: ' (32-bit)'
+#          - runs-on: windows-latest
+#            python: 3.9
+#            arch: x64
+#            name-extra: ' No OpenMP (Release)'
+#          - runs-on: windows-latest
+#            python: 3.7
+#            arch: x86
+#            name-extra: ' (32-bit)'
 
     name: Python ${{ matrix.python }}${{ matrix.name-extra }} • ${{ matrix.runs-on }}
     runs-on: ${{ matrix.runs-on }}
@@ -113,7 +113,7 @@ jobs:
           move Boost "C:/Program Files (x86)/Boost"
           cd "C:/Program Files (x86)/Boost/boost"
           .\bootstrap.bat
-          .\b2 -j8
+          b2 -j8 toolset=msvc-14.0 --build-type=complete --libdir=C:\Boost\lib\x64 architecture=x86 address-model=64 install
           
 
       - name: Install requirements
