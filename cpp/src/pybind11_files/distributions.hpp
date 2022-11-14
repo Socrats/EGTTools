@@ -2,8 +2,8 @@
 // Created by Elias Fernandez on 14/11/2022.
 //
 #pragma once
-#ifndef EGTTOOLS_DISTRIBUTIONS_HPP
-#define EGTTOOLS_DISTRIBUTIONS_HPP
+#ifndef EGTTOOLS_PYBIND11FILES_DISTRIBUTIONS_HPP
+#define EGTTOOLS_PYBIND11FILES_DISTRIBUTIONS_HPP
 
 #include <egttools/Distributions.h>
 
@@ -11,4 +11,4 @@
 
 #include "egttools_common.hpp"
 
-#endif//EGTTOOLS_DISTRIBUTIONS_HPP
+#endif//EGTTOOLS_PYBIND11FILES_DISTRIBUTIONS_HPP

@@ -2,8 +2,8 @@
 // Created by Elias Fernandez on 14/11/2022.
 //
 #pragma once
-#ifndef EGTTOOLS_METHODS_HPP
-#define EGTTOOLS_METHODS_HPP
+#ifndef EGTTOOLS_PYBIND11FILES_METHODS_HPP
+#define EGTTOOLS_PYBIND11FILES_METHODS_HPP
 
 #include <egttools/SeedGenerator.h>
 #include <egttools/utils/CalculateExpectedIndicators.h>
@@ -19,4 +19,4 @@
 namespace mp = boost::multiprecision;
 #endif
 
-#endif//EGTTOOLS_METHODS_HPP
+#endif//EGTTOOLS_PYBIND11FILES_METHODS_HPP

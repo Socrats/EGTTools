@@ -17,25 +17,25 @@
 */
 #include <egttools/Distributions.h>
 
-template<>
-size_t egttools::binomialCoeff<size_t, size_t>(size_t n, size_t k) {
-    if ((k > n) || (n == ULONG_MAX))
-        return 0;
-
-    // Since C(n, k) = C(n, n-k)
-    size_t n_terms = std::min(k, n - k);
-
-    size_t res = 1;
-    size_t m = n + 1;
-
-    // Calculate value of [n * (n-1) * ... * (n-k+1)] / [k * (k-1) * ... * 1]
-    for (size_t i = 1; i < n_terms + 1; ++i) {
-        res *= m - i;
-        res /= i;
-    }
-
-    return res;
-}
+//template<>
+//size_t egttools::binomialCoeff<size_t, size_t>(size_t n, size_t k) {
+//    if ((k > n) || (n == ULONG_MAX))
+//        return 0;
+//
+//    // Since C(n, k) = C(n, n-k)
+//    size_t n_terms = std::min(k, n - k);
+//
+//    size_t res = 1;
+//    size_t m = n + 1;
+//
+//    // Calculate value of [n * (n-1) * ... * (n-k+1)] / [k * (k-1) * ... * 1]
+//    for (size_t i = 1; i < n_terms + 1; ++i) {
+//        res *= m - i;
+//        res /= i;
+//    }
+//
+//    return res;
+//}
 
 #if (HAS_BOOST)
 mp::uint128_t egttools::binomial_precision(size_t n, size_t k) {
@@ -121,9 +121,9 @@ egttools::multivariateHypergeometricPDF(size_t m, size_t k, size_t n, const Eige
 #endif
 }
 
-#if (HAS_BOOST)
-template<>
-mp::uint128_t egttools::starsBars<size_t, mp::uint128_t>(size_t stars, size_t bins) {
-    return egttools::binomial_precision(stars + bins - 1, stars);
-}
-#endif
+//#if (HAS_BOOST)
+//template<>
+//mp::uint128_t egttools::starsBars<size_t, mp::uint128_t>(size_t stars, size_t bins) {
+//    return egttools::binomial_precision(stars + bins - 1, stars);
+//}
+//#endif

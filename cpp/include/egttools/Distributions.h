@@ -141,6 +141,9 @@ namespace egttools {
         return res;
     }
 
+    //    template<>
+    //    size_t binomialCoeff<size_t, size_t>(size_t n, size_t k);
+
 #if (HAS_BOOST)
     mp::uint128_t binomial_precision(size_t n, size_t k);
 #endif
@@ -217,6 +220,13 @@ namespace egttools {
     O starsBars(T stars, T bins) {
         return egttools::binomialCoeff<T, T>(stars + bins - 1, stars);
     }
+
+#if (HAS_BOOST)
+    template<>
+    inline mp::uint128_t starsBars<size_t, mp::uint128_t>(size_t stars, size_t bins) {
+        return egttools::binomial_precision(stars + bins - 1, stars);
+    }
+#endif
 
 }// namespace egttools
 

@@ -2,8 +2,8 @@
 // Created by Elias Fernandez on 14/11/2022.
 //
 #pragma once
-#ifndef EGTTOOLS_GAMES_HPP
-#define EGTTOOLS_GAMES_HPP
+#ifndef EGTTOOLS_PYBIND11FILES_GAMES_HPP
+#define EGTTOOLS_PYBIND11FILES_GAMES_HPP
 
 #include <egttools/finite_populations/games/NormalFormGame.h>
 
@@ -19,4 +19,4 @@
 #include "egttools_common.hpp"
 #include "python_stubs.hpp"
 
-#endif//EGTTOOLS_GAMES_HPP
+#endif//EGTTOOLS_PYBIND11FILES_GAMES_HPP
