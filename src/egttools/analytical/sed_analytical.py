@@ -97,6 +97,12 @@ class StochDynamics:
     --------
     egttools.numerical.PairwiseComparisonNumerical
     egttools.analytical.replicator_equation
+    egttools.analytical.PairwiseComparison
+
+    .. deprecated:: 0.1.12
+          `StochDynamics` will be removed in egttools 0.1.13, it is replaced by
+          `PairwiseComparison` because the latter is implemented in C++, runs faster and supports
+          more precise types.
 
     Examples
     --------
