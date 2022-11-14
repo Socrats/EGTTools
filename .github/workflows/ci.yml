@@ -108,11 +108,12 @@ jobs:
           echo "Eigen3_DIR='C:/Program Files (x86)/Eigen3'" >> $GITHUB_ENV
           echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'" >> $GITHUB_ENV
           curl.exe --output boost_1_80_0.7z--url https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.7z
-          tar -zxvf boost_1_80_0.7z Boost
+          tar -zxvf boost_1_80_0.7z
+          ren boost_1_80_0.7z Boost
           move Boost "C:/Program Files (x86)/Boost"
           cd "C:/Program Files (x86)/Boost/boost"
           .\bootstrap.bat
-          .\b2 -j8 --address-model=64
+          .\b2 -j8
           
 
       - name: Install requirements
