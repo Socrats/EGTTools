@@ -56,9 +56,9 @@ PYBIND11_MODULE(numerical, m) {
             "The `egttools.numerical.distributions` submodule contains "
             "functions and classes that produce stochastic distributions.");
 
-    init_methods(m);
+    init_distributions(mDistributions);
     init_games(mGames);
     init_behaviors(mBehaviors);
     init_datastructures(mData);
-    init_distributions(mDistributions);
+    init_methods(m);
 }
