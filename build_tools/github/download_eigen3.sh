@@ -19,3 +19,5 @@ cd build
 cmake ..
 make install
 yum install -y libjpeg-turbo-devel
+yum install epel-release
+yum install boost boost-thread boost-devel
