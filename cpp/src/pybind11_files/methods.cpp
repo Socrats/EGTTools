@@ -806,19 +806,20 @@ void init_methods(py::module_ &m) {
                         Parameters
                         ----------
                         nb_runs : int
-                        Number of independent simulations to perform. The final result will be an average over all the runs.
+                            Number of independent simulations to perform. The final result will be an average over all the runs.
                         nb_generations : int
-                        Total number of generations.
+                            Total number of generations.
                         transitory: int
-                        Transitory period. These generations will be excluded from the final average. Thus, only the last
-                        nb_generations - transitory generations will be taken into account. This is important, since in
-                        order to obtain a correct average at the steady state, we need to skip the transitory period.
+                            Transitory period. These generations will be excluded from the final average. Thus, only the last
+                            nb_generations - transitory generations will be taken into account. This is important, since in
+                            order to obtain a correct average at the steady state, we need to skip the transitory period.
                         beta: float
-                        Intensity of selection. This parameter determines how important the difference in payoff between players
-                        is for the probability of imitation. If beta is small, the system will mostly undergo random drift
-                        between strategies. If beta is high, a slight difference in payoff will make a strategy disapear.
+                            Intensity of selection. This parameter determines how important the difference in payoff between players
+                            is for the probability of imitation. If beta is small, the system will mostly undergo random drift
+                            between strategies. If beta is high, a slight difference in payoff will make a strategy disapear.
                         mu: float
-                        Probability of mutation. This parameter defines how likely it is for a mutation event to occur at a given generation
+                            Probability of mutation. This parameter defines how likely it is for a mutation event to
+                            occur at a given generation
 
                         Returns
                         -------
