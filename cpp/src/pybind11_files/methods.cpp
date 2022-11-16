@@ -123,10 +123,13 @@ void init_methods(py::module_ &m) {
                     )pbdoc",
                     py::arg("seed"));
 
+    {
+        py::options options;
+        options.disable_function_signatures();
 
-    m.def("calculate_state",
-          static_cast<size_t (*)(const size_t &, const egttools::Factors &)>(&egttools::FinitePopulations::calculate_state),
-          R"pbdoc(
+        m.def("calculate_state",
+              static_cast<size_t (*)(const size_t &, const egttools::Factors &)>(&egttools::FinitePopulations::calculate_state),
+              R"pbdoc(
             This function converts a vector containing counts into an index.
 
             This method was copied from @Svalorzen.
@@ -148,11 +151,11 @@ void init_methods(py::module_ &m) {
             --------
             egttools.sample_simplex, egttools.calculate_nb_states
           )pbdoc",
-          py::arg("group_size"), py::arg("group_composition"));
-    m.def("calculate_state",
-          static_cast<size_t (*)(const size_t &,
-                                 const Eigen::Ref<const egttools::VectorXui> &)>(&egttools::FinitePopulations::calculate_state),
-          R"pbdoc(
+              py::arg("group_size"), py::arg("group_composition"));
+        m.def("calculate_state",
+              static_cast<size_t (*)(const size_t &,
+                                     const Eigen::Ref<const egttools::VectorXui> &)>(&egttools::FinitePopulations::calculate_state),
+              R"pbdoc(
             This function converts a vector containing counts into an index.
 
             This method was copied from @Svalorzen.
@@ -174,7 +177,11 @@ void init_methods(py::module_ &m) {
             --------
             egttools.sample_simplex, egttools.calculate_nb_states
                     )pbdoc",
-          py::arg("group_size"), py::arg("group_composition"));
+              py::arg("group_size"), py::arg("group_composition"));
+
+        options.enable_function_signatures();
+    }
+
     m.def("sample_simplex",
           static_cast<egttools::VectorXui (*)(size_t, const size_t &, const size_t &)>(&egttools::FinitePopulations::sample_simplex),
           R"pbdoc(
@@ -518,9 +525,10 @@ void init_methods(py::module_ &m) {
             .def("population_size", &egttools::FinitePopulations::analytical::PairwiseComparison::population_size)
             .def("game", &egttools::FinitePopulations::analytical::PairwiseComparison::game);
 
-    py::class_<PairwiseComparison>(m, "PairwiseComparisonNumerical")
-            .def(py::init<size_t, egttools::FinitePopulations::AbstractGame &, size_t>(),
-                 R"pbdoc(
+    {
+        auto pair_comp = py::class_<PairwiseComparison>(m, "PairwiseComparisonNumerical")
+                                 .def(py::init<size_t, egttools::FinitePopulations::AbstractGame &, size_t>(),
+                                      R"pbdoc(
                     A class containing methods to study numerically the evolutionary dynamics using the Pairwise comparison rule.
 
                     This class defines methods to estimate numerically fixation probabilities, stationary distributions with or without
@@ -555,11 +563,11 @@ void init_methods(py::module_ &m) {
                     is only advisable for systems with a smaller number of states (i.e., not too big population size or number of strategies).
                     Otherwise, the calculations might require too much memory.
                 )pbdoc",
-                 py::arg("pop_size"), py::arg("game"), py::arg("cache_size"), py::keep_alive<1, 3>())
-            .def("evolve",
-                 static_cast<egttools::VectorXui (PairwiseComparison::*)(size_t, double, double,
-                                                                         const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::evolve),
-                 R"pbdoc(
+                                      py::arg("pop_size"), py::arg("game"), py::arg("cache_size"), py::keep_alive<1, 3>())
+                                 .def("evolve",
+                                      static_cast<egttools::VectorXui (PairwiseComparison::*)(size_t, double, double,
+                                                                                              const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::evolve),
+                                      R"pbdoc(
                     Runs the moran process for a given number of generations.
 
                     Parameters
@@ -586,121 +594,12 @@ void init_methods(py::module_ &m) {
                     egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution_sparse,
                     egttools.numerical.PairwiseComparisonNumerical.estimate_strategy_distribution
                 )pbdoc",
-                 py::arg("nb_generations"), py::arg("beta"),
-                 py::arg("mu"), py::arg("init_state"), py::return_value_policy::move)
-            .def("run",
-                 static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int, double,
-                                                                           const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
-                 R"pbdoc(
-                    Runs the evolutionary process and returns a matrix with all the states the system went through.
-
-                    Parameters
-                    ----------
-                    nb_generations : int
-                        Maximum number of generations.
-                    beta : float
-                        Intensity of selection.
-                    init_state: numpy.ndarray
-                        Initial state of the population. This must be a vector of integers of shape (nb_strategies,),
-                        containing the counts of each strategy in the population. It serves as the initial state
-                        from which the evolutionary process will start.
-
-                    Returns
-                    -------
-                    numpy.ndarray
-                        A matrix containing all the states the system when through, including also the initial state.
-                        The shape of the matrix is (nb_generations + 1, nb_strategies).
-
-                    See Also
-                    --------
-                    egttools.numerical.PairwiseComparisonNumerical.evolve,
-                    egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution_sparse,
-                    egttools.numerical.PairwiseComparisonNumerical.estimate_strategy_distribution
-                )pbdoc",
-                 py::arg("nb_generations"),
-                 py::arg("beta"),
-                 py::arg("init_state"), py::return_value_policy::move)
-            .def("run",
-                 static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int, int, double, double,
-                                                                           const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
-                 R"pbdoc(
-                    Runs the evolutionary process and returns a matrix with all the states the system went through.
-
-                    Mutation events will happen with rate :param mu, and the transient states will not be returned.
-
-                    Parameters
-                    ----------
-                    nb_generations : int
-                        Maximum number of generations.
-                    transient : int
-                        Transient period. Amount of generations that should not be skipped in the return vector.
-                    beta : float
-                        Intensity of selection.
-                    mu : float
-                        Mutation rate.
-                    init_state: numpy.ndarray
-                        Initial state of the population. This must be a vector of integers of shape (nb_strategies,),
-                        containing the counts of each strategy in the population. It serves as the initial state
-                        from which the evolutionary process will start.
-
-                    Returns
-                    -------
-                    numpy.ndarray
-                        A matrix containing all the states the system when through, including also the initial state.
-                        The shape of the matrix is (nb_generations - transient, nb_strategies).
-
-                    See Also
-                    --------
-                    egttools.numerical.PairwiseComparisonNumerical.evolve,
-                    egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution_sparse,
-                    egttools.numerical.PairwiseComparisonNumerical.estimate_strategy_distribution
-                )pbdoc",
-                 py::arg("nb_generations"),
-                 py::arg("transient"),
-                 py::arg("beta"),
-                 py::arg("mu"),
-                 py::arg("init_state"), py::return_value_policy::move)
-            .def("run",
-                 static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int, double, double,
-                                                                           const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
-                 R"pbdoc(
-                    Runs the evolutionary process and returns a matrix with all the states the system went through.
-
-                    Mutation events will happen with rate :param mu.
-
-                    Parameters
-                    ----------
-                    nb_generations : int
-                        Maximum number of generations.
-                    beta : float
-                        Intensity of selection.
-                    mu : float
-                        Mutation rate.
-                    init_state: numpy.ndarray
-                        Initial state of the population. This must be a vector of integers of shape (nb_strategies,),
-                        containing the counts of each strategy in the population. It serves as the initial state
-                        from which the evolutionary process will start.
-
-                    Returns
-                    -------
-                    numpy.ndarray
-                        A matrix containing all the states the system when through, including also the initial state.
-                        The shape of the matrix is (nb_generations - transient, nb_strategies).
-
-                    See Also
-                    --------
-                    egttools.numerical.PairwiseComparisonNumerical.evolve,
-                    egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution_sparse,
-                    egttools.numerical.PairwiseComparisonNumerical.estimate_strategy_distribution
-                )pbdoc",
-                 py::arg("nb_generations"),
-                 py::arg("beta"),
-                 py::arg("mu"),
-                 py::arg("init_state"), py::return_value_policy::move)
-            .def("estimate_fixation_probability",
-                 &PairwiseComparison::estimate_fixation_probability,
-                 py::call_guard<py::gil_scoped_release>(),
-                 R"pbdoc(
+                                      py::arg("nb_generations"), py::arg("beta"),
+                                      py::arg("mu"), py::arg("init_state"), py::return_value_policy::move)
+                                 .def("estimate_fixation_probability",
+                                      &PairwiseComparison::estimate_fixation_probability,
+                                      py::call_guard<py::gil_scoped_release>(),
+                                      R"pbdoc(
                         Estimates the fixation probability of an invading strategy in a population o resident strategy.
 
                         This method estimates the fixation probability of one mutant of the invading strategy
@@ -746,10 +645,10 @@ void init_methods(py::module_ &m) {
                         egttools.analytical.PairwiseComparison.calculate_transition_matrix,
                         egttools.analytical.PairwiseComparison.calculate_transition_and_fixation_matrix_sml,
                 )pbdoc",
-                 py::arg("index_invading_strategy"), py::arg("index_resident_strategy"), py::arg("nb_runs"), py::arg("nb_generations"), py::arg("beta"))
-            .def("estimate_stationary_distribution", &PairwiseComparison::estimate_stationary_distribution,
-                 py::call_guard<py::gil_scoped_release>(),
-                 R"pbdoc(
+                                      py::arg("index_invading_strategy"), py::arg("index_resident_strategy"), py::arg("nb_runs"), py::arg("nb_generations"), py::arg("beta"))
+                                 .def("estimate_stationary_distribution", &PairwiseComparison::estimate_stationary_distribution,
+                                      py::call_guard<py::gil_scoped_release>(),
+                                      R"pbdoc(
                         Estimates the stationary distribution of the population of strategies given the game.
 
                         This method directly estimates how frequent each strategy is in the population, without calculating
@@ -791,10 +690,10 @@ void init_methods(py::module_ &m) {
                         egttools.analytical.PairwiseComparison.calculate_transition_and_fixation_matrix_sml,
                         egttools.analytical.PairwiseComparison.calculate_gradient_of_selection
                 )pbdoc",
-                 py::arg("nb_runs"), py::arg("nb_generations"), py::arg("transitory"), py::arg("beta"), py::arg("mu"))
-            .def("estimate_stationary_distribution_sparse", &PairwiseComparison::estimate_stationary_distribution_sparse,
-                 py::call_guard<py::gil_scoped_release>(),
-                 R"pbdoc(
+                                      py::arg("nb_runs"), py::arg("nb_generations"), py::arg("transitory"), py::arg("beta"), py::arg("mu"))
+                                 .def("estimate_stationary_distribution_sparse", &PairwiseComparison::estimate_stationary_distribution_sparse,
+                                      py::call_guard<py::gil_scoped_release>(),
+                                      R"pbdoc(
                         Estimates the stationary distribution of the population of strategies given the game.
 
                         This method directly estimates how frequent each strategy is in the population, without calculating
@@ -837,10 +736,10 @@ void init_methods(py::module_ &m) {
                         egttools.analytical.PairwiseComparison.calculate_transition_and_fixation_matrix_sml,
                         egttools.analytical.PairwiseComparison.calculate_gradient_of_selection
                 )pbdoc",
-                 py::arg("nb_runs"), py::arg("nb_generations"), py::arg("transitory"), py::arg("beta"), py::arg("mu"))
-            .def("estimate_strategy_distribution", &PairwiseComparison::estimate_strategy_distribution,
-                 py::call_guard<py::gil_scoped_release>(),
-                 R"pbdoc(
+                                      py::arg("nb_runs"), py::arg("nb_generations"), py::arg("transitory"), py::arg("beta"), py::arg("mu"))
+                                 .def("estimate_strategy_distribution", &PairwiseComparison::estimate_strategy_distribution,
+                                      py::call_guard<py::gil_scoped_release>(),
+                                      R"pbdoc(
                         Estimates the distribution of strategies in the population given the current game.
 
                         This method directly estimates how frequent each strategy is in the population, without calculating
@@ -882,13 +781,129 @@ void init_methods(py::module_ &m) {
                         egttools.analytical.PairwiseComparison.calculate_transition_and_fixation_matrix_sml,
                         egttools.analytical.PairwiseComparison.calculate_gradient_of_selection
                 )pbdoc",
-                 py::arg("nb_runs"), py::arg("nb_generations"), py::arg("transitory"), py::arg("beta"), py::arg("mu"))
-            .def_property_readonly("nb_strategies", &PairwiseComparison::nb_strategies, "Number of strategies in the population.")
-            .def_property_readonly("payoffs", &PairwiseComparison::payoffs,
-                                   "Payoff matrix containing the payoff of each strategy (row) for each game state (column)")
-            .def_property_readonly("nb_states", &PairwiseComparison::nb_states, "number of possible population states")
-            .def_property("pop_size", &PairwiseComparison::population_size, &PairwiseComparison::set_population_size,
-                          "Size of the population.")
-            .def_property("cache_size", &PairwiseComparison::cache_size, &PairwiseComparison::set_cache_size,
-                          "Maximum memory which can be used to cache the fitness calculations.");
+                                      py::arg("nb_runs"), py::arg("nb_generations"), py::arg("transitory"), py::arg("beta"), py::arg("mu"))
+                                 .def_property_readonly("nb_strategies", &PairwiseComparison::nb_strategies, "Number of strategies in the population.")
+                                 .def_property_readonly("payoffs", &PairwiseComparison::payoffs,
+                                                        "Payoff matrix containing the payoff of each strategy (row) for each game state (column)")
+                                 .def_property_readonly("nb_states", &PairwiseComparison::nb_states, "number of possible population states")
+                                 .def_property("pop_size", &PairwiseComparison::population_size, &PairwiseComparison::set_population_size,
+                                               "Size of the population.")
+                                 .def_property("cache_size", &PairwiseComparison::cache_size, &PairwiseComparison::set_cache_size,
+                                               "Maximum memory which can be used to cache the fitness calculations.");
+
+        py::options options;
+        options.disable_function_signatures();
+
+        pair_comp.def("run",
+                      static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int, double,
+                                                                                const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
+                      R"pbdoc(
+                    Runs the evolutionary process and returns a matrix with all the states the system went through.
+
+                    Parameters
+                    ----------
+                    nb_generations : int
+                        Maximum number of generations.
+                    beta : float
+                        Intensity of selection.
+                    init_state: numpy.ndarray
+                        Initial state of the population. This must be a vector of integers of shape (nb_strategies,),
+                        containing the counts of each strategy in the population. It serves as the initial state
+                        from which the evolutionary process will start.
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        A matrix containing all the states the system when through, including also the initial state.
+                        The shape of the matrix is (nb_generations + 1, nb_strategies).
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical.evolve,
+                    egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution_sparse,
+                    egttools.numerical.PairwiseComparisonNumerical.estimate_strategy_distribution
+                )pbdoc",
+                      py::arg("nb_generations"),
+                      py::arg("beta"),
+                      py::arg("init_state"), py::return_value_policy::move);
+        pair_comp.def("run",
+                      static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int, int, double, double,
+                                                                                const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
+                      R"pbdoc(
+                    Runs the evolutionary process and returns a matrix with all the states the system went through.
+
+                    Mutation events will happen with rate :param mu, and the transient states will not be returned.
+
+                    Parameters
+                    ----------
+                    nb_generations : int
+                        Maximum number of generations.
+                    transient : int
+                        Transient period. Amount of generations that should not be skipped in the return vector.
+                    beta : float
+                        Intensity of selection.
+                    mu : float
+                        Mutation rate.
+                    init_state: numpy.ndarray
+                        Initial state of the population. This must be a vector of integers of shape (nb_strategies,),
+                        containing the counts of each strategy in the population. It serves as the initial state
+                        from which the evolutionary process will start.
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        A matrix containing all the states the system when through, including also the initial state.
+                        The shape of the matrix is (nb_generations - transient, nb_strategies).
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical.evolve,
+                    egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution_sparse,
+                    egttools.numerical.PairwiseComparisonNumerical.estimate_strategy_distribution
+                )pbdoc",
+                      py::arg("nb_generations"),
+                      py::arg("transient"),
+                      py::arg("beta"),
+                      py::arg("mu"),
+                      py::arg("init_state"), py::return_value_policy::move);
+        pair_comp.def("run",
+                      static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int, double, double,
+                                                                                const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
+                      R"pbdoc(
+                    Runs the evolutionary process and returns a matrix with all the states the system went through.
+
+                    Mutation events will happen with rate :param mu.
+
+                    Parameters
+                    ----------
+                    nb_generations : int
+                        Maximum number of generations.
+                    beta : float
+                        Intensity of selection.
+                    mu : float
+                        Mutation rate.
+                    init_state: numpy.ndarray
+                        Initial state of the population. This must be a vector of integers of shape (nb_strategies,),
+                        containing the counts of each strategy in the population. It serves as the initial state
+                        from which the evolutionary process will start.
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        A matrix containing all the states the system when through, including also the initial state.
+                        The shape of the matrix is (nb_generations - transient, nb_strategies).
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical.evolve,
+                    egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution_sparse,
+                    egttools.numerical.PairwiseComparisonNumerical.estimate_strategy_distribution
+                )pbdoc",
+                      py::arg("nb_generations"),
+                      py::arg("beta"),
+                      py::arg("mu"),
+                      py::arg("init_state"), py::return_value_policy::move);
+
+        options.enable_function_signatures();
+    }
 }
