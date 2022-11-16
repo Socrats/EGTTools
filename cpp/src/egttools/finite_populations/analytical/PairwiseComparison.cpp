@@ -87,31 +87,54 @@ egttools::SparseMatrix2D egttools::FinitePopulations::analytical::PairwiseCompar
                 // update transition matrix
                 transition_matrix.coeffRef(current_state_index, static_cast<int64_t>(new_state_index)) = mutation_probability;
             } else {
-                // calculate fitness of the increasing strategy
-                auto fitness_increase = calculate_fitness_(i, current_state);
+                // If the increasing strategy has currently 0 count, it can only
+                // increase through mutation
+                if (current_state(i) == 0) {
+                    for (int j = 0; j < nb_strategies_; ++j) {
+                        // if the strategy to decrease already has count 0
+                        // continue, or if we are tying to increase and decrease the same strategy
+                        if ((i == j) || (current_state(j) == 0))
+                            continue;
 
-                for (int j = 0; j < nb_strategies_; ++j) {
-                    // if the strategy to decrease already has count 0
-                    // continue, or if we are tying to increase and decrease the same strategy
-                    if ((i == j) || (current_state(j) == 0))
-                        continue;
+                        new_state(j) -= 1;
+                        auto new_state_index = egttools::FinitePopulations::calculate_state(population_size_, new_state);
 
-                    new_state(j) -= 1;
-                    auto new_state_index = egttools::FinitePopulations::calculate_state(population_size_, new_state);
+                        // calculate transition probability
+                        double transition_probability = (static_cast<double>(current_state(j)) / population_size_) * mutation_probability;
 
-                    // calculate fitness of the decreasing strategy
-                    auto fitness_decrease = calculate_fitness_(j, current_state);
+                        // update transition matrix
+                        transition_matrix.coeffRef(current_state_index, static_cast<int64_t>(new_state_index)) = transition_probability;
 
-                    // calculate transition probability
-                    double transition_probability = not_mu * (static_cast<double>(current_state(i)) / (population_size_ - 1));
-                    transition_probability *= egttools::FinitePopulations::fermi(beta, fitness_decrease, fitness_increase);
-                    transition_probability = (static_cast<double>(current_state(j)) / population_size_) * (transition_probability + mutation_probability);
+                        total_probability += transition_probability;
+                        new_state(j) += 1;
+                    }
+                } else {
+                    // calculate fitness of the increasing strategy
+                    auto fitness_increase = calculate_fitness_(i, current_state);
 
-                    // update transition matrix
-                    transition_matrix.coeffRef(current_state_index, static_cast<int64_t>(new_state_index)) = transition_probability;
+                    for (int j = 0; j < nb_strategies_; ++j) {
+                        // if the strategy to decrease already has count 0
+                        // continue, or if we are tying to increase and decrease the same strategy
+                        if ((i == j) || (current_state(j) == 0))
+                            continue;
 
-                    total_probability += transition_probability;
-                    new_state(j) += 1;
+                        new_state(j) -= 1;
+                        auto new_state_index = egttools::FinitePopulations::calculate_state(population_size_, new_state);
+
+                        // calculate fitness of the decreasing strategy
+                        auto fitness_decrease = calculate_fitness_(j, current_state);
+
+                        // calculate transition probability
+                        double transition_probability = not_mu * (static_cast<double>(current_state(i)) / (population_size_ - 1));
+                        transition_probability *= egttools::FinitePopulations::fermi(beta, fitness_decrease, fitness_increase);
+                        transition_probability = (static_cast<double>(current_state(j)) / population_size_) * (transition_probability + mutation_probability);
+
+                        // update transition matrix
+                        transition_matrix.coeffRef(current_state_index, static_cast<int64_t>(new_state_index)) = transition_probability;
+
+                        total_probability += transition_probability;
+                        new_state(j) += 1;
+                    }
                 }
             }
             new_state(i) -= 1;
