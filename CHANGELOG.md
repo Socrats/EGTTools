@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres
 to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.11.patch2] - 16-11-2022
+
+### Fixed
+
+- Fixed error in `calculate_full_transition_matrix`. The previous implementation tried to calculate the fitness for
+  strategies with 0 counts in the population. This would lead to an error when calculating the probability of group
+  forming. Now, we calculate directly the probability of a strategy with 0 counts increasing by 1 individual in the
+  population, i.e., prob = (n_decreasing_strategy / population_size) * (mu / (1 - nb_strategies)).
+
 ## [0.1.11.patch1] - 10-11-2022
 
 ### Fixed
