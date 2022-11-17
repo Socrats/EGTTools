@@ -181,8 +181,8 @@ void init_distributions(py::module_ &mDistributions) {
 #if (HAS_BOOST)
     mDistributions.def(
             "comb", [](size_t n, size_t k) {
-                auto result = egttools::binomial_precision(n, k);
-                return result.convert_to<size_t>();
+                auto result = egttools::binomialCoeff<boost::multiprecision::cpp_int, boost::multiprecision::cpp_int>(n, k);
+                return py::cast(result);
             },
             R"pbdoc(
                     Calculates the binomial coefficient C(n, k).

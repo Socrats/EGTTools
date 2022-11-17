@@ -122,27 +122,24 @@ namespace egttools {
     * @param k size of the unordered subset
     * @return C(n, k)
     */
-    template<typename T, typename I>
-    T binomialCoeff(I n, I k) {
+    template<typename Output, typename Input>
+    Output binomialCoeff(Input n, Input k) {
         if ((k > n) || (n < 0) || (k < 0))
             return 0;
 
         // Since C(n, k) = C(n, n-k)
         if (k > n - k) k = n - k;
 
-        T res = 1;
+        Output res = 1;
 
         // Calculate value of [n * (n-1) * ... * (n-k+1)] / [k * (k-1) * ... * 1]
-        for (I i = 0; i < k; ++i) {
-            res *= static_cast<T>(n - i);
-            res /= static_cast<T>(i + 1);
+        for (Input i = 0; i < k; ++i) {
+            res *= static_cast<Output>(n - i);
+            res /= static_cast<Output>(i + 1);
         }
 
         return res;
     }
-
-    //    template<>
-    //    size_t binomialCoeff<size_t, size_t>(size_t n, size_t k);
 
 #if (HAS_BOOST)
     mp::uint128_t binomial_precision(size_t n, size_t k);
@@ -218,7 +215,7 @@ namespace egttools {
      */
     template<typename T, typename O = T>
     O starsBars(T stars, T bins) {
-        return egttools::binomialCoeff<T, T>(stars + bins - 1, stars);
+        return egttools::binomialCoeff<O, T>(stars + bins - 1, stars);
     }
 
 #if (HAS_BOOST)

@@ -256,8 +256,8 @@ void init_methods(py::module_ &m) {
 #if (HAS_BOOST)
     m.def(
             "calculate_nb_states", [](size_t group_size, size_t nb_strategies) {
-                auto result = starsBars<size_t, mp::uint128_t>(group_size, nb_strategies);
-                return result.convert_to<size_t>();
+                auto result = starsBars<boost::multiprecision::cpp_int, boost::multiprecision::cpp_int>(group_size, nb_strategies);
+                return py::cast(result);
             },
             R"pbdoc(
                     Calculates the number of states (combinations) of the members of a group in a subgroup.
