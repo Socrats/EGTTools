@@ -2,7 +2,7 @@ import numpy as np
 import egttools as egt
 
 
-def test_analytical_fitness_calculation():
+def test_analytical_fitness_calculation_stoch_dynamics():
     N = 6
     M = 3
     c = 0.1

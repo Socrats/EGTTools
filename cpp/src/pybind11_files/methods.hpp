@@ -11,6 +11,7 @@
 #include <egttools/LruCache.hpp>
 #include <egttools/finite_populations/PairwiseMoran.hpp>
 #include <egttools/finite_populations/analytical/PairwiseComparison.hpp>
+#include <egttools/infinite_populations/ReplicatorDynamics.hpp>
 
 #include "egttools_common.hpp"
 

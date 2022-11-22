@@ -19,7 +19,7 @@ import numpy as np
 from scipy.optimize import root
 from scipy.linalg import eigvals
 from typing import Tuple, List, Optional, Callable
-from .sed_analytical import StochDynamics, replicator_equation
+from .sed_analytical import StochDynamics, replicator_equation, replicator_equation_n_player
 from .. import sample_unit_simplex
 
 
@@ -59,6 +59,47 @@ def get_pairwise_gradient_from_replicator(i: int, j: int, x: float, nb_strategie
     freq_array[j] = 1. - x
 
     return replicator_equation(freq_array, payoffs)[i]
+
+
+def get_pairwise_gradient_from_replicator_n_player(i: int, j: int, x: float, nb_strategies: int, group_size: int,
+                                                   payoffs: np.ndarray,
+                                                   freq_array: Optional[np.ndarray] = None) -> float:
+    """
+    Calculate the gradient for strategy/type `i` at the edges of the simplex (when there are
+    only two strategies in the population `i` and `j`).
+
+    Parameters
+    ----------
+    i: int
+        index of the strategy whose gradient we wish to calculate
+    j: int
+        index of the other strategy present in the population
+    x: float
+        frequency of i type
+    nb_strategies: int
+        total number of strategies in the population
+    group_size: int
+        size of the group
+    payoffs: numpy.ndarray
+        payoff matrix that defines the expected  payoff of any give strategy against each other
+    freq_array: Optional[numpy.ndarray]
+        optional vector to store the frequencies of each strategy in the population
+
+    Returns
+    -------
+    float
+        The gradient of strategy i.
+
+    """
+    if freq_array is None:
+        freq_array = np.zeros(shape=(nb_strategies,))
+    else:
+        freq_array[:] = 0
+
+    freq_array[i] = x
+    freq_array[j] = 1. - x
+
+    return replicator_equation_n_player(freq_array, payoffs, group_size)[i]
 
 
 def check_if_there_is_random_drift(payoff_matrix: np.ndarray,
@@ -112,12 +153,19 @@ def check_if_there_is_random_drift(payoff_matrix: np.ndarray,
     if population_size is None:
         freq_array = np.zeros(shape=(payoff_matrix.shape[0]))
 
-        def gradient_functionn(i, j, x):
-            return get_pairwise_gradient_from_replicator(i, j, x, payoff_matrix.shape[0],
-                                                         payoff_matrix,
-                                                         freq_array)
+        if group_size == 2:
+            def gradient_function(i, j, x):
+                return get_pairwise_gradient_from_replicator(i, j, x, payoff_matrix.shape[0],
+                                                             payoff_matrix,
+                                                             freq_array)
+        else:
+            def gradient_function(i, j, x):
+                return get_pairwise_gradient_from_replicator_n_player(i, j, x, payoff_matrix.shape[0],
+                                                                      group_size,
+                                                                      payoff_matrix,
+                                                                      freq_array)
 
-        f = gradient_functionn
+        f = gradient_function
     else:
         if beta is None:
             raise Exception("the beta parameter must be specified!")

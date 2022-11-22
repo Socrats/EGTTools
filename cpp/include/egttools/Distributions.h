@@ -26,7 +26,9 @@
 #include <egttools/Types.h>
 
 #include <algorithm>
+#include <egttools/math.hpp>
 #include <random>
+#include <stdexcept>
 
 #if (HAS_BOOST)
 #include <boost/multiprecision/cpp_dec_float.hpp>
@@ -34,9 +36,11 @@
 namespace mp = boost::multiprecision;
 
 #define uint_type_ mp::uint128_t
+#define float_type_ mp::cpp_dec_float_100
 #define binomial_coeff_ binomial_precision
 #else
 #define uint_type_ size_t
+#define float_type_ double
 #define binomial_coeff_ egttools::binomialCoeff<double, size_t>
 #endif
 
@@ -204,6 +208,17 @@ namespace egttools {
     double
     multivariateHypergeometricPDF(size_t m, size_t k, size_t n, const Eigen::Ref<const VectorXui> &sample_counts,
                                   const Eigen::Ref<const VectorXui> &population_counts);
+
+    /**
+     * Calculates the Probability Mass Function of a multinomial distribution
+     *
+     * @param group_configuration
+     * @param n
+     * @param p
+     * @throws invalid_argument
+     * @return the probability of a specific group configuration occurring.
+     */
+    double multinomialPMF(const Eigen::Ref<const VectorXui> &group_configuration, size_t n, const Eigen::Ref<const Vector> &p);
 
     /**
      * @brief Finds the number for elements given possible bins/slots and star types.

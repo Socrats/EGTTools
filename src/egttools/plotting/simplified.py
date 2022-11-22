@@ -26,12 +26,16 @@ from .helpers import (barycentric_to_xy_coordinates,
                       xy_to_barycentric_coordinates, calculate_stability,
                       find_roots_in_discrete_barycentric_coordinates)
 from ..analytical import (replicator_equation, PairwiseComparison, )
+from ..analytical import replicator_equation_n_player
 from ..analytical.utils import check_if_there_is_random_drift, check_replicator_stability_pairwise_games, find_roots
-from ..helpers.vectorized import (vectorized_replicator_equation, vectorized_barycentric_to_xy_coordinates)
+from ..helpers.vectorized import (vectorized_replicator_equation, vectorized_replicator_equation_n_player,
+                                  vectorized_barycentric_to_xy_coordinates)
 from . import Simplex2D
 
 
 def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray,
+                                        group_size: int = 2,
+                                        nb_points_simplex: int = 100,
                                         nb_of_initial_points_for_root_search: int = 10,
                                         atol: float = 1e-7,
                                         atol_equal: float = 1e-12,
@@ -52,6 +56,10 @@ def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray,
     payoff_matrix: numpy.ndarray
         The square payoff matrix. Group games are still unsupported in the replicator dynamics. This feature will
         soon be added.
+    group_size: int
+        size of the group
+    nb_points_simplex: int
+        Number of initial points to draw in the simplex
     nb_of_initial_points_for_root_search: int
         Number of initial points used in the method that searches for the roots of the replicator equation
     atol: float
@@ -85,28 +93,48 @@ def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray,
     cartesian coordinates and a list of booleans or integers indicating whether the roots are stable.
 
     """
-    simplex = Simplex2D()
+    if (group_size > 2) and (payoff_matrix.shape[1] == payoff_matrix.shape[0]):
+        nb_group_configurations = calculate_nb_states(group_size, payoff_matrix.shape[0])
+        if payoff_matrix.shape[1] != nb_group_configurations:
+            raise ValueError("The number of columns of the payoff matrix must be equal "
+                             "the the number of possible group configurations, when group_size > 2.")
+
+    simplex = Simplex2D(nb_points=nb_points_simplex)
     simplex.add_axis(figsize, ax)
-    random_drift = check_if_there_is_random_drift(payoff_matrix, atol=atol)
+
+    random_drift = check_if_there_is_random_drift(payoff_matrix, group_size=group_size, atol=atol)
     simplex.add_edges_with_random_drift(random_drift)
     v = np.asarray(xy_to_barycentric_coordinates(simplex.X, simplex.Y, simplex.corners))
-    results = vectorized_replicator_equation(v, payoff_matrix)
+    if group_size > 2:
+        results = vectorized_replicator_equation_n_player(v, payoff_matrix, group_size)
+
+        def gradient_function(u):
+            return replicator_equation_n_player(u, payoff_matrix, group_size)
+    else:
+        results = vectorized_replicator_equation(v, payoff_matrix)
+
+        def gradient_function(u):
+            return replicator_equation(u, payoff_matrix)
     xy_results = vectorized_barycentric_to_xy_coordinates(results, simplex.corners)
 
-    Ux = xy_results[:, :, 0].astype(np.float64)
-    Uy = xy_results[:, :, 1].astype(np.float64)
+    ux = xy_results[:, :, 0].astype(np.float64)
+    uy = xy_results[:, :, 1].astype(np.float64)
 
-    simplex.apply_simplex_boundaries_to_gradients(Ux, Uy)
-    roots = find_roots(gradient_function=lambda u: replicator_equation(u, payoff_matrix),
+    simplex.apply_simplex_boundaries_to_gradients(ux, uy)
+
+    roots = find_roots(gradient_function=gradient_function,
                        nb_strategies=payoff_matrix.shape[0],
                        nb_initial_random_points=nb_of_initial_points_for_root_search,
                        atol=atol_equal, tol_close_points=atol_equal, method=method_find_roots)
-    # stability = calculate_stability(roots, lambda u: replicator_equation(u, payoff_matrix))
 
     roots_xy = [barycentric_to_xy_coordinates(root, corners=simplex.corners) for root in roots]
 
-    stability = check_replicator_stability_pairwise_games(roots, payoff_matrix, atol_neg=atol_stability_neg,
-                                                          atol_pos=atol_stability_pos, atol_zero=atol_stability_zero)
+    if group_size > 2:
+        stability = calculate_stability(roots, gradient_function)
+    else:
+        stability = check_replicator_stability_pairwise_games(roots, payoff_matrix, atol_neg=atol_stability_neg,
+                                                              atol_pos=atol_stability_pos,
+                                                              atol_zero=atol_stability_zero)
 
     return simplex, lambda u, t: replicator_equation(u, payoff_matrix), roots, roots_xy, stability
 
@@ -259,10 +287,6 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots(population_s
 
     simplex = Simplex2D(discrete=True, size=population_size, nb_points=population_size + 1)
     simplex.add_axis(figsize, ax)
-
-    random_drift = check_if_there_is_random_drift(payoff_matrix=game.payoffs(), population_size=population_size,
-                                                  group_size=group_size, beta=beta, atol=atol)
-    simplex.add_edges_with_random_drift(random_drift)
 
     v = np.asarray(xy_to_barycentric_coordinates(simplex.X, simplex.Y, simplex.corners))
     v_int = np.floor(v * population_size).astype(np.int64)

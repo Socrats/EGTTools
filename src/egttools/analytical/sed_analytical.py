@@ -25,7 +25,7 @@ import numpy as np
 import numpy.typing as npt
 from scipy.sparse import lil_matrix, csr_matrix
 from scipy.linalg import eig
-from scipy.stats import hypergeom, multivariate_hypergeom
+from scipy.stats import hypergeom, multivariate_hypergeom, multinomial
 from itertools import permutations
 from typing import Tuple, Optional
 from warnings import warn
@@ -35,6 +35,8 @@ from .. import sample_simplex, calculate_nb_states, calculate_state
 def replicator_equation(x: np.ndarray, payoffs: np.ndarray) -> np.ndarray:
     """
     Produces the discrete time derivative of the replicator dynamics
+
+    This only works for 2-player games.
 
     Parameters
     ----------
@@ -56,6 +58,58 @@ def replicator_equation(x: np.ndarray, payoffs: np.ndarray) -> np.ndarray:
     return x * (ax - np.dot(x, ax))
 
 
+def replicator_equation_n_player(x: np.ndarray, payoffs: np.ndarray, group_size: int) -> np.ndarray:
+    """
+    Replicator dynamics in N-player games
+
+    The replicator equation is of the form
+
+    .. math::
+        g(x) \\equiv \\dot{x_{i}} = x_{i}(f_{i}(x) - \\sum_{j=1}^{N}{x_{j}f_{j}(x))
+
+    Which can also be represented using a pairwise comparison rule as:
+
+    .. math::
+        \\dot{x_{i}} = x_{i}\\sum_{j}(f_{ij}(x) - f_{ji}(x))x_{j}
+
+    For N-player games, to calculate the fitness of a strategy given a population state, we
+    need to calculate the probability of each possible group configuration. This can be obtained
+    by summing for each possible group configuration the payoff of strategy i times the probability
+    of the group configurations occurring.
+
+    Parameters
+    ----------
+    x : numpy.ndarray
+        A vector of shape (1, nb_strategies), which contains the current frequency of each strategy in the population.
+    payoffs : numpy.ndarray
+        Payoff matrix. Each row represents a strategy and each column a possible group configuration.
+        Each entry in the matrix should give the expected payoff for each row strategy for a given column group
+        configuration.
+    group_size : int
+        Size of the group.
+
+    Returns
+    -------
+    numpy.ndarray
+        A vector of shape (1, nb_strategies), which contains the change in frequency of each strategy in the population
+        (so the gradient).
+
+    """
+    fitness = np.zeros(shape=(len(x),))
+    fitness_avg = 0.
+    nb_group_configurations = calculate_nb_states(group_size, len(x))
+    for strategy_index in range(len(x)):
+        for i in range(nb_group_configurations):
+            group_configuration = sample_simplex(i, group_size, len(x))
+            if group_configuration[strategy_index] > 0:
+                group_configuration[strategy_index] -= 1
+                prob = multinomial.pmf(group_configuration, group_size - 1, x)
+                fitness[strategy_index] += prob * payoffs[strategy_index, i]
+        fitness_avg += x[strategy_index] * fitness[strategy_index]
+
+    return x * (fitness - fitness_avg)
+
+
 class StochDynamics:
     """A class containing methods to calculate the stochastic evolutionary dynamics of a population.
 
@@ -68,8 +122,8 @@ class StochDynamics:
                 number of strategies in the population
     payoffs : numpy.ndarray[numpy.float64[m,m]]
             Payoff matrix indicating the payoff of each strategy (rows) against each other (columns).
-            When analyzing a group_size-player game (group_size > 2) the structure of the matrix is a bit more involved, and
-            we can have 2 options for structuring the payoff matrix:
+            When analyzing an N-player game (group_size > 2) the structure of the matrix is a bit more involved,
+            and we can have 2 options for structuring the payoff matrix:
 
             1) If we consider a simplified version of the system with a reduced Markov Chain which only contains
             the states at the edges of the simplex (the Small Mutation Limit - SML), then, we can assume that, at most,
@@ -107,16 +161,16 @@ class StochDynamics:
     Examples
     --------
     Example of the payoff matrix for case 1) mu = 0:
-        >>> def get_payoff_A_vs_B(k, group_size, *args):
+        >>> def get_payoff_a_vs_b(k, group_size, *args):
         ...     pre_computed_payoffs = [4, 5, 2, ..., 4] # the size of this list should be group_size + 1
         ...     return pre_computed_payoffs[k]
-        >>> def get_payoff_B_vs_A(k, group_size, *args):
+        >>> def get_payoff_b_vs_a(k, group_size, *args):
         ...     pre_computed_payoffs = [0, 2, 1, ..., 0] # the size of this list should be group_size + 1
         ...     return pre_computed_payoffs[k]
-        >>> def get_payoff_A_vs_A(k, group_size, *args):
+        >>> def get_payoff_a_vs_a(k, group_size, *args):
         ...     pre_computed_payoffs = [1, 1, 1, ..., 1] # the size of this list should be group_size + 1
         ...     return pre_computed_payoffs[k]
-        >>> def get_payoff_B_vs_B(k, group_size, *args):
+        >>> def get_payoff_b_vs_b(k, group_size, *args):
         ...     pre_computed_payoffs = [0, 0, 0, ..., 0] # the size of this list should be group_size + 1
         ...     return pre_computed_payoffs[k]
         >>> payoff_matrix = np.array([
@@ -196,7 +250,7 @@ class StochDynamics:
         """
         if nb_strategies is None:
             if payoffs.shape[0] != self.nb_strategies:
-                raise Exception("The number of rows of the payoff matrix must be equal to the number of strategies.")
+                raise ValueError("The number of rows of the payoff matrix must be equal to the number of strategies.")
         else:
             self.nb_strategies = nb_strategies
         self.payoffs = payoffs
@@ -268,7 +322,7 @@ class StochDynamics:
         that
 
         .. math::
-            x\in[1,pop_size-1]
+            x \\in [1,pop_size-1]
 
         Parameters
         ----------
@@ -371,7 +425,7 @@ class StochDynamics:
         invader: int
             index of the invading strategy
         resident: int
-            index of the resitent strategy
+            index of the resident strategy
         beta: float
             intensity of selection
         args: Optional[list]
@@ -407,7 +461,7 @@ class StochDynamics:
         invader: int
             index of the invading strategy
         resident: int
-            index of the resitent strategy
+            index of the resident strategy
         beta: float
             intensity of selection
         args: Optional[list]
@@ -437,7 +491,7 @@ class StochDynamics:
             index of the resident strategy
         beta : float
             intensity of selection
-        args : Optional[list[
+        args : Optional[List]
             other arguments. Can be used to pass extra arguments to functions contained
             in the payoff matrix.
 
@@ -484,7 +538,7 @@ class StochDynamics:
                 fitness[j, i] = self.full_fitness(i, j, population_state)
 
         return (probabilities * np.tanh((beta / 2) * fitness)).sum(axis=0) * (1 - self.mu) + (
-                    self.mu / (self.nb_strategies - 1)) * probability_selecting_strategy_second
+                self.mu / (self.nb_strategies - 1)) * probability_selecting_strategy_second
 
     def full_gradient_selection_without_mutation(self, population_state: np.ndarray, beta: float) -> np.ndarray:
         """
@@ -502,7 +556,7 @@ class StochDynamics:
         Returns
         -------
         numpy.ndarray[numpy.float64[m,m]]
-            Matrix indicating the likelihood of change in the population given an starting point.
+            Matrix indicating the likelihood of change in the population given a starting point.
         """
 
         probability_selecting_strategy_first = population_state / self.pop_size
@@ -661,19 +715,19 @@ class StochDynamics:
             the matrix of fixation probabilities.
         """
         transitions = np.zeros((self.nb_strategies, self.nb_strategies))
-        fixprobs = np.zeros((self.nb_strategies, self.nb_strategies))
+        fixation_probabilities = np.zeros((self.nb_strategies, self.nb_strategies))
 
         for first in range(self.nb_strategies):
             transitions[first, first] = 1.
             for second in range(self.nb_strategies):
                 if second != first:
                     fp = self.fixation_probability(second, first, beta, *args)
-                    fixprobs[first, second] = fp
+                    fixation_probabilities[first, second] = fp
                     tmp = fp / float(self.nb_strategies - 1)
                     transitions[first, second] = tmp
                     transitions[first, first] = transitions[first, first] - tmp
 
-        return transitions.transpose(), fixprobs
+        return transitions.transpose(), fixation_probabilities
 
     def calculate_stationary_distribution(self, beta: float, *args: Optional[list]) -> np.ndarray:
         """

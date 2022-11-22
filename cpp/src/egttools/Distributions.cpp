@@ -121,6 +121,49 @@ egttools::multivariateHypergeometricPDF(size_t m, size_t k, size_t n, const Eige
 #endif
 }
 
+#if (HAS_BOOST)
+double egttools::multinomialPMF(const Eigen::Ref<const VectorXui> &group_configuration, size_t n, const Eigen::Ref<const Vector> &p) {
+    if (n == ULONG_MAX)
+        return 0;
+    // This would be an error, and probably better to throw an exception here!
+    if (group_configuration.size() != p.size())
+        throw std::invalid_argument("Arguments p and group configuration must have the same length!");
+
+    mp::cpp_int n_factorial = egttools::math::factorial(n);
+    mp::cpp_dec_float_100 prob = 1;
+
+    // Iterate through the possible group configurations and
+    // calculate the multiplications
+    for(signed long i = 0; i < group_configuration.size(); ++i) {
+        for (size_t j = 1; j < group_configuration(i) + 1; ++j) {
+            prob *= p(i) / static_cast<int>(j);
+        }
+    }
+    return (prob * n_factorial.convert_to<mp::cpp_dec_float_100>()).convert_to<double>();
+}
+#else
+double egttools::multinomialPMF(const Eigen::Ref<const VectorXui> &group_configuration, size_t n, const Eigen::Ref<const Vector> &p) {
+    if (n > 170)
+        throw std::invalid_argument("n < 170 or there will be an overflow.");
+    // This would be an error, and probably better to throw an exception here!
+    if (group_configuration.size() != p.size())
+        throw std::invalid_argument("Arguments p and group configuration must have the same length!");
+
+    int64_t n_factorial = egttools::math::factorial(n);
+    double prob = 1;
+
+    // Iterate through the possible group configurations and
+    // calculate the multiplications
+    for(signed long i = 0; i < group_configuration.size(); ++i) {
+        for (size_t j = 1; j < group_configuration(i) + 1; ++j) {
+            prob *= p(i) / static_cast<int>(j);
+        }
+    }
+    return prob * n_factorial;
+}
+
+#endif
+
 //#if (HAS_BOOST)
 //template<>
 //mp::uint128_t egttools::starsBars<size_t, mp::uint128_t>(size_t stars, size_t bins) {

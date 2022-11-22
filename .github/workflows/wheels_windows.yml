@@ -1,4 +1,4 @@
-name: Wheels
+name: Wheels Windows
 
 on:
   workflow_dispatch:

@@ -345,6 +345,112 @@ void init_methods(py::module_ &m) {
                 )pbdoc",
           py::arg("pop_size"), py::arg("nb_strategies"), py::arg("stationary_distribution"));
 
+    m.def("replicator_equation", &egttools::infinite_populations::replicator_equation,
+          py::arg("frequencies"), py::arg("payoff_matrix"),
+          py::return_value_policy::move,
+          R"pbdoc(
+                    Calculates the gradient of the replicator dynamics given the current population state.
+
+                    Parameters
+                    ----------
+                    frequencies : numpy.ndarray
+                        Vector of frequencies of each strategy in the population (it must have
+                        shape=(nb_strategies,)
+                    payoff_matrix : numpy.ndarray
+                        Square matrix containing the payoff of each row strategy against each column strategy
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        A vector with the gradient for each strategy. The vector has shape (nb_strategies,)
+
+                    See Also
+                    --------
+                    egttools.analytical.replicator_equation_n_player
+                    egttools.numerical.PairwiseComparison
+                    egttools.numerical.PairwiseComparisonNumerical
+                    egttools.analytical.StochDynamics
+                    egttools.games.AbstractGame
+                )pbdoc"
+          );
+
+    m.def("replicator_equation_n_player", &egttools::infinite_populations::replicator_equation_n_player,
+          py::arg("frequencies"), py::arg("payoff_matrix"), py::arg("group_size"),
+          py::return_value_policy::move,
+          R"pbdoc(
+                    Calculates the gradient of the replicator dynamics given the current population state.
+
+                    Parameters
+                    ----------
+                    frequencies : numpy.ndarray
+                        Vector of frequencies of each strategy in the population (it must have
+                        shape=(nb_strategies,)
+                    payoff_matrix : numpy.ndarray
+                        A payoff matrix containing the payoff of each row strategy for each
+                        possible group configuration, indicated by the column index.
+                        The matrix must have shape (nb_strategies, nb_group_configurations).
+                    group_size : int
+                        size of the group
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        A vector with the gradient for each strategy. The vector has shape (nb_strategies,)
+
+                    See Also
+                    --------
+                    egttools.analytical.replicator_equation
+                    egttools.numerical.PairwiseComparison
+                    egttools.numerical.PairwiseComparisonNumerical
+                    egttools.analytical.StochDynamics
+                    egttools.games.AbstractGame
+                )pbdoc"
+    );
+
+    m.def("vectorized_replicator_equation_n_player", &egttools::infinite_populations::vectorized_replicator_equation_n_player,
+          py::arg("x1"), py::arg("x2"), py::arg("x3"), py::arg("payoff_matrix"), py::arg("group_size"),
+          py::return_value_policy::move, py::call_guard<py::gil_scoped_release>(),
+          R"pbdoc(
+                    Calculates the gradient of the replicator dynamics given the current population state.
+
+                    This function must only be used for 3 strategy populations! It provides a fast way
+                    to compute the gradient of selection for a large number of population states.
+
+                    You need to pass 3 matrices each containing the frequency of one strategy.
+
+                    The combination of [x1[i,j], x2[i,j], x3[i,j]], gives the population state.
+
+                    Parameters
+                    ----------
+                    x1 : numpy.ndarray
+                        Matrix containing the first component of the frequencies
+                    x2 : numpy.ndarray
+                        Matrix containing the second component of the frequencies
+                    x3 : numpy.ndarray
+                        Matrix containing the third component of the frequencies
+                    payoff_matrix : numpy.ndarray
+                        A payoff matrix containing the payoff of each row strategy for each
+                        possible group configuration, indicated by the column index.
+                        The matrix must have shape (nb_strategies, nb_group_configurations).
+                    group_size : int
+                        size of the group
+
+                    Returns
+                    -------
+                    Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]
+                        Returns 3 matrices containing the gradient of each strategy. Each Matrix
+                        has the same shape as x1, x2 and x3.
+
+                    See Also
+                    --------
+                    egttools.analytical.replicator_equation
+                    egttools.numerical.PairwiseComparison
+                    egttools.numerical.PairwiseComparisonNumerical
+                    egttools.analytical.StochDynamics
+                    egttools.games.AbstractGame
+                )pbdoc"
+    );
+
     py::class_<egttools::FinitePopulations::analytical::PairwiseComparison>(m, "PairwiseComparison")
             .def(py::init<int, egttools::FinitePopulations::AbstractGame &>(),
                  R"pbdoc(

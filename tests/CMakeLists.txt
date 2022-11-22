@@ -63,42 +63,42 @@ set_target_properties(egttoolsNumerical PROPERTIES
 target_link_libraries(egttoolsNumerical)
 #endif()
 
-add_executable(testPMrun test_PairwiseMoran_run.cpp)
+add_executable(testPMrun cpp/test_PairwiseMoran_run.cpp)
 #set_target_properties(testPM PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${LTO_SUPPORTED})
 target_link_libraries(testPMrun egttoolsNumerical)
 
-add_executable(testPMBstationary_distribution_sparse test_PairwiseMoran_stationary_distribution_sparse.cpp)
+add_executable(testPMBstationary_distribution_sparse cpp/test_PairwiseMoran_stationary_distribution_sparse.cpp)
 #set_target_properties(testPM PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${LTO_SUPPORTED})
 target_link_libraries(testPMBstationary_distribution_sparse egttoolsNumerical)
 #if (OPENMP_FOUND)
 #    target_link_libraries(testPMBstationary_distribution_sparse OpenMP::OpenMP_CXX)
 #endif ()
 
-add_executable(testPMBstationary_distribution_dense test_PairwiseMoran_stationary_distribution_dense.cpp)
+add_executable(testPMBstationary_distribution_dense cpp/test_PairwiseMoran_stationary_distribution_dense.cpp)
 #set_target_properties(testPM PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${LTO_SUPPORTED})
 target_link_libraries(testPMBstationary_distribution_dense egttoolsNumerical)
 
-add_executable(testEigenSparseMatrix test_eigen_sparse_matrix.cpp)
+add_executable(testEigenSparseMatrix cpp/test_eigen_sparse_matrix.cpp)
 
-add_executable(testOrderedSamplingWithoutReplacement test_ordered_sampling_without_replacement.cpp)
+add_executable(testOrderedSamplingWithoutReplacement cpp/test_ordered_sampling_without_replacement.cpp)
 target_link_libraries(testOrderedSamplingWithoutReplacement egttoolsNumerical)
 
-add_executable(testCRDGame test_crd_game.cpp)
+add_executable(testCRDGame cpp/test_crd_game.cpp)
 target_link_libraries(testCRDGame egttoolsNumerical)
 
-add_executable(testCRDTUGame test_crd_tu_game.cpp)
+add_executable(testCRDTUGame cpp/test_crd_tu_game.cpp)
 target_link_libraries(testCRDTUGame egttoolsNumerical)
 
-add_executable(testOneShotCRDGame test_oneshotcrd_game.cpp)
+add_executable(testOneShotCRDGame cpp/test_oneshotcrd_game.cpp)
 target_link_libraries(testOneShotCRDGame egttoolsNumerical)
 
-add_executable(testTimingUncertainty test_timing_uncertainty.cpp)
+add_executable(testTimingUncertainty cpp/test_timing_uncertainty.cpp)
 target_link_libraries(testTimingUncertainty egttoolsNumerical)
 
 if (Boost_FOUND)
-    add_executable(testBinomial test_binomial_coefficient.cpp)
+    add_executable(testBinomial cpp/test_binomial_coefficient.cpp)
     target_link_libraries(testBinomial egttoolsNumerical)
 endif ()
 
-add_executable(testGameHolders test_game_holders.cpp)
+add_executable(testGameHolders cpp/test_game_holders.cpp)
 target_link_libraries(testGameHolders egttoolsNumerical)

@@ -16,10 +16,5 @@
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
 target_sources(numerical PRIVATE
-        SeedGenerator.cpp
-        Distributions.cpp
-        Data.cpp
+        ReplicatorDynamics.cpp
         )
-add_subdirectory(utils)
-add_subdirectory(finite_populations)
-add_subdirectory(infinite_populations)

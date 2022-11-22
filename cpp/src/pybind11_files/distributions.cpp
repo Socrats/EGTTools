@@ -49,6 +49,45 @@ void init_distributions(py::module_ &mDistributions) {
             .def_property("max_rounds", &egttools::utils::TimingUncertainty<>::max_rounds,
                           &egttools::utils::TimingUncertainty<>::set_max_rounds);
 
+    mDistributions.def("multinomial_pmf", &egttools::multinomialPMF,
+                       R"pbdoc(
+                                Calculates the probability density function of a multivariate hyper-geometric distribution.
+
+                                This function returns the probability that a sample of size
+                                :param n with counts of each type indicated by :param x
+                                would be drawn from a population with frequencies :param p.
+
+                                Both :param population_counts and :param sample_counts must be of shape
+                                (k,), where k is the number of types of `objects` in the population.
+
+                                For the application often used in this library, :param n would be the size of the group,
+                                :param k would be the number of strategies, :param x would be group configuration and
+                                :param p would be the state of the population (in infinite populations).
+
+                                Parameters
+                                ----------
+                                x : numpy.ndarray
+                                    Vector of containing the counts of each element that should be drawn.
+                                    Must sum to n.
+                                n : int
+                                    Total number of elements to draw
+                                p : numpy.ndarray
+                                    Vector indicating the total frequency of each element. Must sum to 1.
+
+                                Returns
+                                -------
+                                float
+                                    The probability that a sample of size n with counts x of each type is
+                                    draw from a population with total frequencies per type defined by p.
+
+                                See Also
+                                --------
+                                egttools.distributions.multivariate_hypergeometric_pdf
+                                egttools.distributions.binom
+                                egttools.distributions.comb
+                        )pbdoc", py::arg("x"), py::arg("n"), py::arg("p")
+                       );
+
     mDistributions.def("multivariate_hypergeometric_pdf",
                        static_cast<double (*)(size_t, size_t, size_t, const std::vector<size_t> &,
                                               const Eigen::Ref<const egttools::VectorXui> &)>(&egttools::multivariateHypergeometricPDF),

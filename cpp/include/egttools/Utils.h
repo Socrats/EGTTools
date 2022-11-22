@@ -20,7 +20,8 @@
 #ifndef EGTTOOLS_UTILS_H
 #define EGTTOOLS_UTILS_H
 
-#define UNUSED(expr) do { (void)(expr); } while (0)
+#define UNUSED(expr) \
+    do { (void) (expr); } while (0)
 
-#endif //EGTTOOLS_UTILS_H
 
+#endif//EGTTOOLS_UTILS_H
