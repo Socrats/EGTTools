@@ -5,8 +5,8 @@
 
 
 egttools::Vector egttools::infinite_populations::replicator_equation(egttools::Vector &frequencies, egttools::Matrix2D &payoff_matrix) {
-    auto ax = payoff_matrix.transpose() * frequencies;
-    return frequencies * (ax - (frequencies.transpose() * ax));
+    auto ax = payoff_matrix * frequencies;
+    return frequencies * (ax - (frequencies * ax));
 }
 
 egttools::Vector egttools::infinite_populations::replicator_equation_n_player(egttools::Vector &frequencies, egttools::Matrix2D &payoff_matrix, size_t group_size) {
