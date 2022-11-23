@@ -14,6 +14,7 @@ egttools::Vector egttools::infinite_populations::replicator_equation_n_player(eg
     egttools::VectorXui group_configuration = egttools::VectorXui::Zero(frequencies.size());
     auto nb_group_configurations = egttools::starsBars<size_t, int64_t>(group_size, frequencies.size());
 
+    // This loop calculates the fitness of each strategy
     for (int64_t i = 0; i < nb_group_configurations; ++i) {
         egttools::FinitePopulations::sample_simplex(i, group_size, frequencies.size(), group_configuration);
 
@@ -50,9 +51,9 @@ egttools::infinite_populations::vectorized_replicator_equation_n_player(egttools
     for (int i = 0; i < x1.rows(); ++i) {
         for (int j = 0; j < x1.cols(); ++j) {
             // Check if we are in the simplex (frequencies must sum to 1)
-//            if (x1(i, j) + x2(i, j) + x3(i, j) > 1 + 1e-8 ||
-//                x1(i, j) + x2(i, j) + x3(i, j) < 1 - 1e-8)
-//                continue;
+            if (x1(i, j) + x2(i, j) + x3(i, j) > 1 + 1e-8 ||
+                x1(i, j) + x2(i, j) + x3(i, j) < 1 - 1e-8)
+                continue;
 
             egttools::Vector frequencies = egttools::Vector::Zero(3);
             frequencies(0) = x1(i, j);
