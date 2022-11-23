@@ -131,6 +131,7 @@ def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray,
 
     if group_size > 2:
         stability = calculate_stability(roots, gradient_function)
+        stability = [1 if x is True else -1 for x in stability]
     else:
         stability = check_replicator_stability_pairwise_games(roots, payoff_matrix, atol_neg=atol_stability_neg,
                                                               atol_pos=atol_stability_pos,
@@ -214,10 +215,10 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex(population_size: int,
     result = result.swapaxes(0, 1).swapaxes(0, 2)
     xy_results = vectorized_barycentric_to_xy_coordinates(result, simplex.corners)
 
-    Ux = xy_results[:, :, 0].astype(np.float64)
-    Uy = xy_results[:, :, 1].astype(np.float64)
+    ux = xy_results[:, :, 0].astype(np.float64)
+    uy = xy_results[:, :, 1].astype(np.float64)
 
-    simplex.apply_simplex_boundaries_to_gradients(Ux, Uy)
+    simplex.apply_simplex_boundaries_to_gradients(ux, uy)
 
     roots = find_roots_in_discrete_barycentric_coordinates(
         lambda u: population_size * evolver.calculate_gradient_of_selection(beta, u), population_size,
@@ -237,7 +238,6 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots(population_s
                                                                     payoff_matrix: np.ndarray = None,
                                                                     game: AbstractGame = None,
                                                                     group_size: Optional[int] = 2,
-                                                                    atol: Optional[float] = 1e-7,
                                                                     figsize: Optional[Tuple[int, int]] = (10, 8),
                                                                     ax: Optional[plt.axis] = None) -> \
         Tuple[Simplex2D, Callable[[np.ndarray, int], np.ndarray], AbstractGame, PairwiseComparison]:
@@ -256,9 +256,6 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots(population_s
         Game that should contain a set of payoff matrices
     group_size:
         Size of the group. By default, we assume that interactions are pairwise (the group size is 2).
-    atol:
-        Tolerance to consider a value equal to zero. This is used to check if an edge has random drift. By default,
-        the tolerance is 1e-7.
     figsize:
         Size of the figure. This parameter is only used if the ax parameter is not defined.
     ax:
@@ -301,9 +298,9 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots(population_s
     result = result.swapaxes(0, 1).swapaxes(0, 2)
     xy_results = vectorized_barycentric_to_xy_coordinates(result, simplex.corners)
 
-    Ux = xy_results[:, :, 0].astype(np.float64)
-    Uy = xy_results[:, :, 1].astype(np.float64)
+    ux = xy_results[:, :, 0].astype(np.float64)
+    uy = xy_results[:, :, 1].astype(np.float64)
 
-    simplex.apply_simplex_boundaries_to_gradients(Ux, Uy)
+    simplex.apply_simplex_boundaries_to_gradients(ux, uy)
 
     return simplex, lambda u, t: population_size * evolver.calculate_gradient_of_selection(beta, u), game, evolver
