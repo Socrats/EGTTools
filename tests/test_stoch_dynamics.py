@@ -94,10 +94,10 @@ def test_prob_increase_decrease(test_analytical_fitness_calculation_stoch_dynami
     prob_increase, prob_decrease = evolver.prob_increase_decrease(1, 0, 1, 1)
 
     increase = (((evolver.pop_size - 1) / evolver.pop_size) *
-                (1 / evolver.pop_size)) * StochDynamics.fermi(-1, fitness_diff)
+                (1 / (evolver.pop_size - 1))) * StochDynamics.fermi(-1, fitness_diff)
 
     decrease = ((1 / evolver.pop_size) *
-                ((evolver.pop_size - 1) / evolver.pop_size)) * StochDynamics.fermi(1, fitness_diff)
+                ((evolver.pop_size - 1) / (evolver.pop_size - 1))) * StochDynamics.fermi(1, fitness_diff)
 
     assert np.isclose(increase, prob_increase)
     assert np.isclose(decrease, prob_decrease)
@@ -122,11 +122,11 @@ def test_prob_increase_decrease_with_mutation(test_analytical_fitness_calculatio
     prob_increase, prob_decrease = evolver.prob_increase_decrease_with_mutation(1, 0, 1, 1)
 
     increase = (((evolver.pop_size - 1) / evolver.pop_size) *
-                (1 / evolver.pop_size)) * StochDynamics.fermi(-1, fitness_diff)
+                (1 / (evolver.pop_size - 1))) * StochDynamics.fermi(-1, fitness_diff)
     increase = ((1 - mu) * increase) + (mu * ((evolver.pop_size - 1) / evolver.pop_size))
 
     decrease = ((1 / evolver.pop_size) *
-                ((evolver.pop_size - 1) / evolver.pop_size)) * StochDynamics.fermi(1, fitness_diff)
+                ((evolver.pop_size - 1) / (evolver.pop_size - 1))) * StochDynamics.fermi(1, fitness_diff)
     decrease = ((1 - mu) * decrease) + (mu * (1 / evolver.pop_size))
 
     assert np.isclose(increase, prob_increase)

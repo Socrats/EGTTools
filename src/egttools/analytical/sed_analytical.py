@@ -153,10 +153,10 @@ class StochDynamics:
     egttools.analytical.replicator_equation
     egttools.analytical.PairwiseComparison
 
-    .. deprecated:: 0.1.12
-          `StochDynamics` will be removed in egttools 0.1.13, it is replaced by
-          `PairwiseComparison` because the latter is implemented in C++, runs faster and supports
-          more precise types.
+    Notes
+    -----
+    We recommend that instead of`StochDynamics`, you use `PairwiseComparison` because the latter
+    is implemented in C++, runs faster and supports more precise types.
 
     Examples
     --------
@@ -189,13 +189,6 @@ class StochDynamics:
     """
 
     def __init__(self, nb_strategies: int, payoffs: np.ndarray, pop_size: int, group_size=2, mu=0) -> None:
-        warn(
-            "This class will soon be deprecated in favour of egttools.analytical.PairwiseComparison, "
-            "which is implemented in c++ and runs faster, as well as, avoids precision issues that "
-            "appeared in some limit cases.",
-            DeprecationWarning,
-            stacklevel=2
-        )
         self.nb_strategies = nb_strategies
         self.payoffs = payoffs
         self.pop_size = pop_size
@@ -441,11 +434,13 @@ class StochDynamics:
             decrease = 0
         else:
             fitness_diff = self.fitness(k, invader, resident, *args)
-            increase = (((self.pop_size - k) / self.pop_size) * (k / self.pop_size)) * StochDynamics.fermi(-beta,
-                                                                                                           fitness_diff)
+            increase = (((self.pop_size - k) / self.pop_size) *
+                        (k / (self.pop_size - 1))) * StochDynamics.fermi(-beta,
+                                                                         fitness_diff)
 
-            decrease = ((k / self.pop_size) * ((self.pop_size - k) / self.pop_size)) * StochDynamics.fermi(beta,
-                                                                                                           fitness_diff)
+            decrease = ((k / self.pop_size) * ((self.pop_size - k) /
+                                               (self.pop_size - 1))) * StochDynamics.fermi(beta,
+                                                                                           fitness_diff)
         return np.clip(increase, 0., 1.), np.clip(decrease, 0., 1.)
 
     def prob_increase_decrease_with_mutation(self, k: int, invader: int, resident: int, beta: float,
@@ -505,7 +500,7 @@ class StochDynamics:
         elif k == self.pop_size:
             return 0
         else:
-            return ((self.pop_size - k) / self.pop_size) * (k / self.pop_size) * np.tanh(
+            return ((self.pop_size - k) / self.pop_size) * (k / (self.pop_size - 1)) * np.tanh(
                 (beta / 2) * self.fitness(k, invader, resident, *args))
 
     def full_gradient_selection(self, population_state: np.ndarray, beta: float) -> np.ndarray:
