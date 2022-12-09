@@ -17,39 +17,19 @@
 */
 #include <egttools/Distributions.h>
 
-//template<>
-//size_t egttools::binomialCoeff<size_t, size_t>(size_t n, size_t k) {
-//    if ((k > n) || (n == ULONG_MAX))
-//        return 0;
-//
-//    // Since C(n, k) = C(n, n-k)
-//    size_t n_terms = std::min(k, n - k);
-//
-//    size_t res = 1;
-//    size_t m = n + 1;
-//
-//    // Calculate value of [n * (n-1) * ... * (n-k+1)] / [k * (k-1) * ... * 1]
-//    for (size_t i = 1; i < n_terms + 1; ++i) {
-//        res *= m - i;
-//        res /= i;
-//    }
-//
-//    return res;
-//}
-
 #if (HAS_BOOST)
-mp::uint128_t egttools::binomial_precision(size_t n, size_t k) {
+uint_type_ egttools::binomial_precision(size_t n, size_t k) {
     if ((k > n) || (n == ULONG_MAX))
         return 0;
 
     // Since C(n, k) = C(n, n-k)
     size_t n_terms = std::min(k, n - k);
 
-    mp::uint128_t res = 1;
+    uint_type_ res = 1;
     size_t m = n + 1;
 
     // Calculate value of [n * (n-1) * ... * (n-k+1)] / [k * (k-1) * ... * 1]
-    for (mp::uint128_t i = 1; i < n_terms + 1; ++i) {
+    for (uint_type_ i = 1; i < n_terms + 1; ++i) {
         res *= m - i;
         res /= i;
     }
@@ -72,11 +52,8 @@ egttools::multivariateHypergeometricPDF(size_t m, size_t k, size_t n, const std:
         res *= binomial_coeff_(population_counts[i], sample_counts[i]);
     }
 
-#if (HAS_BOOST)
-    return static_cast<double>(res.convert_to<mp::cpp_dec_float_100>() / denominator.convert_to<mp::cpp_dec_float_100>());
-#else
-    return static_cast<double>(res) / static_cast<double>(denominator);
-#endif
+
+    return static_cast<double>(res.convert_to<float_type_>() / denominator.convert_to<float_type_>());
 }
 
 double
@@ -93,11 +70,7 @@ egttools::multivariateHypergeometricPDF(size_t m, size_t k, size_t n, const std:
         res *= binomial_coeff_(population_counts(i), sample_counts[i]);
     }
 
-#if (HAS_BOOST)
-    return static_cast<double>(res.convert_to<mp::cpp_dec_float_100>() / denominator.convert_to<mp::cpp_dec_float_100>());
-#else
-    return static_cast<double>(res) / static_cast<double>(denominator);
-#endif
+    return static_cast<double>(res.convert_to<float_type_>() / denominator.convert_to<float_type_>());
 }
 
 double
@@ -114,11 +87,7 @@ egttools::multivariateHypergeometricPDF(size_t m, size_t k, size_t n, const Eige
         res *= binomial_coeff_(population_counts(i), sample_counts(i));
     }
 
-#if (HAS_BOOST)
-    return static_cast<double>(res.convert_to<mp::cpp_dec_float_100>() / denominator.convert_to<mp::cpp_dec_float_100>());
-#else
-    return static_cast<double>(res) / static_cast<double>(denominator);
-#endif
+    return static_cast<double>(res.convert_to<float_type_>() / denominator.convert_to<float_type_>());
 }
 
 #if (HAS_BOOST)
@@ -129,17 +98,17 @@ double egttools::multinomialPMF(const Eigen::Ref<const VectorXui> &group_configu
     if (group_configuration.size() != p.size())
         throw std::invalid_argument("Arguments p and group configuration must have the same length!");
 
-    mp::cpp_int n_factorial = egttools::math::factorial(n);
-    mp::cpp_dec_float_100 prob = 1;
+    int_type_ n_factorial = egttools::math::factorial(n);
+    float_type_ prob = 1;
 
     // Iterate through the possible group configurations and
     // calculate the multiplications
-    for(signed long i = 0; i < group_configuration.size(); ++i) {
+    for (signed long i = 0; i < group_configuration.size(); ++i) {
         for (size_t j = 1; j < group_configuration(i) + 1; ++j) {
             prob *= p(i) / static_cast<int>(j);
         }
     }
-    return (prob * n_factorial.convert_to<mp::cpp_dec_float_100>()).convert_to<double>();
+    return (prob * n_factorial.convert_to<float_type_>()).convert_to<double>();
 }
 #else
 double egttools::multinomialPMF(const Eigen::Ref<const VectorXui> &group_configuration, size_t n, const Eigen::Ref<const Vector> &p) {
@@ -154,7 +123,7 @@ double egttools::multinomialPMF(const Eigen::Ref<const VectorXui> &group_configu
 
     // Iterate through the possible group configurations and
     // calculate the multiplications
-    for(signed long i = 0; i < group_configuration.size(); ++i) {
+    for (signed long i = 0; i < group_configuration.size(); ++i) {
         for (size_t j = 1; j < group_configuration(i) + 1; ++j) {
             prob *= p(i) / static_cast<int>(j);
         }
@@ -163,10 +132,3 @@ double egttools::multinomialPMF(const Eigen::Ref<const VectorXui> &group_configu
 }
 
 #endif
-
-//#if (HAS_BOOST)
-//template<>
-//mp::uint128_t egttools::starsBars<size_t, mp::uint128_t>(size_t stars, size_t bins) {
-//    return egttools::binomial_precision(stars + bins - 1, stars);
-//}
-//#endif

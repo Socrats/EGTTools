@@ -40,6 +40,10 @@
 #endif
 
 namespace egttools::FinitePopulations::analytical {
+#if (HAS_BOOST)
+    using cpp_dec_float_100 = boost::multiprecision::cpp_dec_float_100;
+#endif
+
     /**
      * @brief Provides analytical methods to study evolutionary dynamics in finite populations
      * with the Pairwise Comparison rule.

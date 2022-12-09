@@ -7,11 +7,11 @@
 #include <boost/multiprecision/cpp_int.hpp>
 #include <sstream>
 
-using cpp_int = boost::multiprecision::cpp_int;
-using uint128_t = boost::multiprecision::uint128_t;
-namespace py = pybind11;
-
 namespace pybind11::detail {
+    using cpp_int = boost::multiprecision::cpp_int;
+    using uint128_t = boost::multiprecision::uint128_t;
+    namespace py = pybind11;
+
     template<>
     struct type_caster<cpp_int> {
         /**
@@ -77,8 +77,8 @@ namespace pybind11::detail {
 
             auto s = py::cast<std::string>(tmp);
             value = uint128_t{s};// explicit cast from string to cpp_int,
-                               // don't need a base here because
-                               // `PyNumber_ToBase` already prepended '0x'
+                                 // don't need a base here because
+                                 // `PyNumber_ToBase` already prepended '0x'
             Py_DECREF(tmp);
 
             /* Ensure return code was OK (to avoid out-of-range errors etc) */

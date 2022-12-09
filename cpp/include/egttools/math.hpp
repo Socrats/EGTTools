@@ -7,10 +7,13 @@
 
 #if (HAS_BOOST)
 #include <boost/multiprecision/cpp_int.hpp>
-using cpp_int = boost::multiprecision::cpp_int;
 #endif
 
 namespace egttools::math {
+
+#if (HAS_BOOST)
+    using cpp_int = boost::multiprecision::cpp_int;
+#endif
 
 #if (HAS_BOOST)
 

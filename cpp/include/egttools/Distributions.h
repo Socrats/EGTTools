@@ -33,12 +33,13 @@
 #if (HAS_BOOST)
 #include <boost/multiprecision/cpp_dec_float.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
-namespace mp = boost::multiprecision;
 
-#define uint_type_ mp::uint128_t
-#define float_type_ mp::cpp_dec_float_100
+#define int_type_ boost::multiprecision::cpp_int
+#define uint_type_ boost::multiprecision::uint128_t
+#define float_type_ boost::multiprecision::cpp_dec_float_100
 #define binomial_coeff_ binomial_precision
 #else
+#define int_type_ int64_t
 #define uint_type_ size_t
 #define float_type_ double
 #define binomial_coeff_ egttools::binomialCoeff<double, size_t>
@@ -146,7 +147,7 @@ namespace egttools {
     }
 
 #if (HAS_BOOST)
-    mp::uint128_t binomial_precision(size_t n, size_t k);
+    uint_type_ binomial_precision(size_t n, size_t k);
 #endif
 
     /**
@@ -235,7 +236,7 @@ namespace egttools {
 
 #if (HAS_BOOST)
     template<>
-    inline mp::uint128_t starsBars<size_t, mp::uint128_t>(size_t stars, size_t bins) {
+    inline uint_type_ starsBars<size_t, uint_type_>(size_t stars, size_t bins) {
         return egttools::binomial_precision(stars + bins - 1, stars);
     }
 #endif

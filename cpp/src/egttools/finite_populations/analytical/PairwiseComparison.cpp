@@ -185,9 +185,9 @@ egttools::Vector egttools::FinitePopulations::analytical::PairwiseComparison::ca
 
 #if (HAS_BOOST)
 double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability(int index_invading_strategy, int index_resident_strategy, double beta) {
-    mp::cpp_dec_float_100 phi = 0;
-    mp::cpp_dec_float_100 prod = 1;
-    mp::cpp_dec_float_100 probability_increase, probability_decrease;
+    cpp_dec_float_100 phi = 0;
+    cpp_dec_float_100 prod = 1;
+    cpp_dec_float_100 probability_increase, probability_decrease;
 
     VectorXui population_state = VectorXui::Zero(nb_strategies_);
 
@@ -211,7 +211,7 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fi
         if (phi > 1e7) return 0.0;
     }
 
-    mp::cpp_dec_float_100 fixation_probability = 1 / (1. + phi);
+    cpp_dec_float_100 fixation_probability = 1 / (1. + phi);
 
     return fixation_probability.convert_to<double>();
 }
