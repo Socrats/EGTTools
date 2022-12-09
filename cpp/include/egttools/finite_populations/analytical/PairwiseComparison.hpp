@@ -33,7 +33,6 @@
 
 #if (HAS_BOOST)
 #include <boost/multiprecision/cpp_dec_float.hpp>
-namespace mp = boost::multiprecision;
 #endif
 
 #if defined(_OPENMP)
