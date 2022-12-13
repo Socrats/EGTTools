@@ -23,3 +23,4 @@ and how to implement new strategies or `behaviors` for the existing games:
     Apply numerical methods <tutorials/numerical_methods>
     Visualizing results <tutorials/plotting>
     Utility functions <tutorials/utility_functions>
+    References <tutorials/references>

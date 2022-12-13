@@ -97,7 +97,7 @@ purpose of each method:
 
 
 Simplifying game implementation: `AbstractTwoPLayerGame` and `AbstractNPlayerGame` classes
----------------------------------------------------------
+------------------------------------------------------------------------------------------
 
 However, in most scenarios the fitness of a strategy at a given population
 state is its expected payoff at that state. For this reason,
@@ -215,9 +215,3 @@ List of implemented games
         This game takes as parameters the size of the group, and enhancement factor, a cooperation threshold, i.e.,
         the minimum number of cooperators required to provide the public good, and the cost of cooperation.
         The game is implemented so that the only strategies playing the game is `Cooperate` and `Defect`.
-
-
-
-References
-----------
-.. bibliography::
