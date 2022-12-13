@@ -448,3 +448,22 @@ def check_replicator_stability_pairwise_games(stationary_points: List[numpy.ndar
             #     stability.append(0)
 
     return stability
+
+
+def fermi_update(beta: float, fitness_diff: float) -> npt.ArrayLike:
+    """
+    The fermi function determines the probability that the first type imitates the second.
+
+    Parameters
+    ----------
+    beta : float
+        intensity of selection
+    fitness_diff : float
+        Difference in fitness between the strategies (f_a - f_b).
+
+    Returns
+    -------
+    numpy.typing.ArrayLike
+        the probability of imitation
+    """
+    return np.clip(1. / (1. + np.exp(beta * fitness_diff, dtype=np.float64)), 0., 1.)
