@@ -117,3 +117,25 @@ def test_if_stoch_dynamics_matches_with_pairwise_comparison():
     full_transitions2 = evolver2.calculate_full_transition_matrix(1)
 
     assert np.allclose(full_transitions1.toarray().transpose(), full_transitions2.toarray())
+
+
+def test_replicator_dynamics_2_player():
+    # Payoff matrix
+    v = 2
+    d = 3
+    t = 1
+    payoff_matrix = np.array([
+        [(v - d) / 2, v],
+        [0, (v / 2) - t],
+    ])
+    x = np.array([0, 1])
+    result = egt.analytical.replicator_equation(x, payoff_matrix)
+
+    # Now the same but for N-player games
+    payoff_matrix2 = np.array([
+        [(v - d) / 2, v, v / 2, d],
+        [0, (v / 2) - t, t, v],
+    ])
+
+    result = egt.analytical.replicator_equation_n_player(x, payoff_matrix2, group_size=3)
+
