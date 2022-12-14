@@ -1,19 +1,17 @@
 import numpy as np
-import numpy.typing as npt
 from scipy.sparse import csr_matrix, lil_matrix
 from ..games import AbstractGame
-from .. import sample_simplex, calculate_state, calculate_nb_states
-from .utils import fermi_update
+from .. import calculate_nb_states
 from . import PairwiseComparison
 
-from typing import List, Tuple
+from typing import List, Tuple, Callable
 
 
 class PairwiseComparison2D:
 
     def __init__(self, population_size: int, nb_strategies: int, games: List[AbstractGame],
-                 game_transitions: csr_matrix, kappa: float,
-                 lda: float):
+                 game_transitions: csr_matrix, lda: float, delta: float = None,
+                 population_transitions: Callable[[np.ndarray, AbstractGame], float] = None):
         """
         Implements a 2 dimensional Markov Chain model.
 
@@ -22,24 +20,33 @@ class PairwiseComparison2D:
         by using a Moran process with a pairwise-comparison rule.
 
         The class needs to receive a list of games, and a Sparse matrix containing the transition probabilities
-        between games. Also, 2 extra parameters, `kappa` and `lda` which control the probability at which each
-        event (behavior or environmental update) may happen. `kappa` represents the probability of a population
-        update happening, and `lda` represents the probability
+        between games. Also, lda` controls the probability that a population event will occur (an environment update
+        event occurs with probability `1-lda`). It is also a scaling factor to make sure that all transition
+        probabilities sum to 1. In effect, it will serve as a timescale factor.
+
+        `delta` determines the influence of the population in the game transitions. If `delta` is 0, the game
+        transitions are solely determined by the environment stochasticity. If `delta` is 1, the game transitions
+        are solely determined by the population.
 
         Parameters
         ----------
         population_size
         games
         game_transitions
-        kappa
         lda
+        delta
+        population_condition
         """
         self.population_size = population_size
         self.nb_strategies = nb_strategies
         self.games = games
         self.game_transitions = game_transitions
-        self.kappa = kappa
         self.lda = lda
+        self.not_lda = 1 - lda
+        self.delta = delta
+        if self.delta is not None:
+            self.not_delta = 1 - delta
+            self.population_transitions = population_transitions
 
         self.nb_population_states = calculate_nb_states(population_size, nb_strategies)
         self.nb_game_states = len(games)
@@ -67,26 +74,15 @@ class PairwiseComparison2D:
                 state_index_out = self.calculate_state_index(row, game_index)
                 state_index_in = self.calculate_state_index(col, game_index)
 
+                transition_matrix[state_index_out, state_index_in] = transitions[row, col] * self.lda
 
-        # Then all game transitions for each population state
-        # Then re-scaling with the time factors (kappa and lda)
-        # Finally, we might try to think whether it's possible to compute
-        # analytically the joint probability of a population and environmental change.
+        # Then all game transitions for each population state (transitions are from row to column)
+        for population_state_index in range(self.nb_population_states):
+            for row, col in zip(*self.game_transitions.nonzero()):
+                state_index_out = self.calculate_state_index(population_state_index, row)
+                state_index_in = self.calculate_state_index(population_state_index, col)
 
-        # for i in range(self.nb_states):
-        #     population_state_index_out, game_state_index_out = self.get_population_and_game_index_from_state_index(i)
-        #
-        #     # Calculate fitness of all strategies here
-        #
-        #     for j in range(self.nb_states):
-        #         population_state_index_in, game_state_index_in = self.get_population_and_game_index_from_state_index(j)
-        #
-        #         #
-        #
-        #         # The transition probabilities here, are defined by the previous fitness
-        #         # we need to know what is the
+                # The sum is very important to account for the probability of remaining in the current state
+                transition_matrix[state_index_out, state_index_in] += self.game_transitions[row, col] * self.not_lda
 
         return transition_matrix.tocsr()
-
-    def transition_probability(self, population_state: np.ndarray, game_state: int):
-        pass

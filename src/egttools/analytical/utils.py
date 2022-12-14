@@ -16,6 +16,7 @@
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 import numpy
 import numpy as np
+import numpy.typing as npt
 from scipy.optimize import root
 from scipy.linalg import eigvals
 from typing import Tuple, List, Optional, Callable
