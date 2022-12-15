@@ -85,7 +85,7 @@ namespace egttools::FinitePopulations {
 
         [[nodiscard]] virtual size_t group_size() const;
 
-        [[nodiscard]] virtual size_t nb_group_configurations() const;
+        [[nodiscard]] virtual int64_t nb_group_configurations() const;
 
         /**
          * @return Returns a small description of the game.

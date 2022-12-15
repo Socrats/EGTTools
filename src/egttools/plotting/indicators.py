@@ -283,26 +283,27 @@ def plot_gradient(x, gradients, saddle_points, saddle_type, gradient_direction, 
     return ax
 
 
-def draw_stationary_distribution(strategies: List[str], drift: float, fixation_probabilities: np.ndarray,
-                                 stationary_distribution: np.ndarray,
-                                 max_displayed_label_letters: Optional[int] = 4,
-                                 min_strategy_frequency: Optional[float] = -1,
-                                 node_size: Optional[int] = 4000,
-                                 font_size_node_labels: Optional[int] = 18,
-                                 font_size_edge_labels: Optional[int] = 14,
-                                 font_size_sd_labels: Optional[int] = 12,
-                                 display_node_labels: Optional[bool] = True,
-                                 display_edge_labels: Optional[bool] = True,
-                                 display_sd_labels: Optional[bool] = True,
-                                 node_labels_top_separation: Optional[float] = 0.15,
-                                 node_labels_bottom_separation: Optional[float] = - 0.2,
-                                 edge_width: Optional[int] = 2,
-                                 node_linewidth: Optional[float] = 0,
-                                 node_edgecolors: Optional[str] = None,
-                                 figsize: Optional[Tuple[int, int]] = (10, 10),
-                                 dpi: Optional[int] = 150,
-                                 colors: Optional[List[str]] = None,
-                                 ax: Optional[plt.axis] = None) -> nx.Graph:
+def draw_invasion_diagram(strategies: List[str], drift: float, fixation_probabilities: np.ndarray,
+                          stationary_distribution: np.ndarray,
+                          atol: float = 1e-4,
+                          max_displayed_label_letters: Optional[int] = 4,
+                          min_strategy_frequency: Optional[float] = -1,
+                          node_size: Optional[int] = 4000,
+                          font_size_node_labels: Optional[int] = 18,
+                          font_size_edge_labels: Optional[int] = 14,
+                          font_size_sd_labels: Optional[int] = 12,
+                          display_node_labels: Optional[bool] = True,
+                          display_edge_labels: Optional[bool] = True,
+                          display_sd_labels: Optional[bool] = True,
+                          node_labels_top_separation: Optional[float] = 0.15,
+                          node_labels_bottom_separation: Optional[float] = - 0.2,
+                          edge_width: Optional[int] = 2,
+                          node_linewidth: Optional[float] = 0,
+                          node_edgecolors: Optional[str] = None,
+                          figsize: Optional[Tuple[int, int]] = (10, 10),
+                          dpi: Optional[int] = 150,
+                          colors: Optional[List[str]] = None,
+                          ax: Optional[plt.axis] = None) -> nx.Graph:
     """
     Draws the markov chain for a given stationary distribution of monomorphic states.
 
@@ -316,6 +317,8 @@ def draw_stationary_distribution(strategies: List[str], drift: float, fixation_p
         A matrix specifying the fixation probabilities.
     stationary_distribution : numpy.ndarray[float, 1]
         An array containing the stationary distribution (probability of each state in the system).
+    atol : float
+        The tolerance for considering a value equal to 1 (to detect wheter there is random drift). Default is 1e-4.
     max_displayed_label_letters : int
         Maximum number of letters of the strategy labels contained in the `strategies` List to
         be displayed.
@@ -388,7 +391,7 @@ def draw_stationary_distribution(strategies: List[str], drift: float, fixation_p
     >>> sd = evolver.calculate_stationary_distribution(beta)
     >>> transitions, fixation_probabilities = evolver.transition_and_fixation_matrix(beta)
     >>> fig, ax = plt.subplots(figsize=(5, 5), dpi=150)
-    >>> G = egt.plotting.draw_stationary_distribution(strategy_labels, 1/Z, fixation_probabilities, sd,
+    >>> G = egt.plotting.draw_invasion_diagram(strategy_labels, 1/Z, fixation_probabilities, sd,
     ...     node_size=2000, min_strategy_frequency=0.00001, ax=ax)
     >>> plt.axis('off')
     >>> plt.show() # display
@@ -416,14 +419,14 @@ def draw_stationary_distribution(strategies: List[str], drift: float, fixation_p
 
     for j in range(q):
         for i in range(q):
-            if fixation_probabilities_normalized[used_strategies_idx[i], used_strategies_idx[j]] >= 1:
+            if fixation_probabilities_normalized[used_strategies_idx[i], used_strategies_idx[j]] >= 1 - atol:
                 G.add_edge(used_strategies[i], used_strategies[j],
                            weight=fixation_probabilities_normalized[used_strategies_idx[i], used_strategies_idx[j]])
 
-    eselect = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] > 1.0]
+    eselect = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] > 1 + atol]
     eselect_labels = dict(((u, v), r"{0:.2f}$\rho_N$".format(d['weight']))
-                          for (u, v, d) in G.edges(data=True) if d['weight'] > 1.0)
-    edrift = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] == 1.0]
+                          for (u, v, d) in G.edges(data=True) if d['weight'] > 1 + atol)
+    edrift = [(u, v) for (u, v, d) in G.edges(data=True) if np.isclose(d['weight'], 1, atol=atol)]
 
     pos = nx.circular_layout(G)  # positions for all nodes
 

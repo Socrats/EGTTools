@@ -34,7 +34,7 @@ class AbstractNPlayerGameExpectedPayoff(AbstractNPlayerGame):
      payoffs to each strategy for a given game context. In particular, `calculate_payoffs` should fill the
      array `self.payoffs_` with the correct values as explained above. We recommend that you run this method in
      the `__init__` (initialization of the object) since, these values must be set before passing the game object
-     to the numerical simulator (e.g., egttools.numerical.PairwiseMoran).
+     to the numerical simulator (e.g., egttools.numerical.PairwiseComparisonNumerical).
 
     """
 
@@ -115,7 +115,7 @@ class AbstractTwoPLayerGame(AbstractGame):
      payoffs to each strategy for each possible game context. In particular, `calculate_payoffs` should fill the
      array `self.payoffs_` with the correct values as explained above. We recommend that you run this method in
      the `__init__` (initialization of the object) since, these values must be set before passing the game object
-     to the numerical simulator (e.g., egttools.numerical.PairwiseMoran).
+     to the numerical simulator (e.g., egttools.numerical.PairwiseComparisonNumerical).
 
     """
 

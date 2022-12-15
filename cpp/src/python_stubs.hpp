@@ -15,7 +15,6 @@
   * You should have received a copy of the GNU General Public License
   * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 */
-
 #include <egttools/Types.h>
 
 #include <egttools/finite_populations/Utils.hpp>
@@ -231,7 +230,7 @@ namespace stubs {
         }
 
         /* Trampoline (need one for each virtual function) */
-        [[nodiscard]] size_t nb_group_configurations() const override {
+        [[nodiscard]] int64_t nb_group_configurations() const override {
             /* Acquire GIL before calling Python code */
             py::gil_scoped_acquire acquire;
 

@@ -4,14 +4,14 @@ Examples
 The following examples give an idea of how to use EGTtools to model social dynamics:
 
 .. toctree::
-    :maxdepth: 2
 
-    examples/hawk_dove_dynamics
-    examples/normal_form_game_mc_simulations
-    examples/plot_invasion_diagram
-    examples/plot_simplex
-    examples/plot_simplex_simplified
-    examples/examples_of_use
+    Hawk and dove dynamics <examples/hawk_dove_dynamics>
+    Hawk and dove dynamics with new PairwiseComparison class <examples/hawk_dove_dynamics_pairwise_comparison>
+    Monte Carlo simulations <examples/normal_form_game_mc_simulations>
+    Invasion diagram <examples/plot_invasion_diagram>
+    2D Simplex plot <examples/plot_simplex>
+    2D Simplex plot simplified <examples/plot_simplex_simplified>
+    General examples <examples/examples_of_use>
 
 
 Projects using EGTtools

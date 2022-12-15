@@ -115,7 +115,7 @@ egttools::FinitePopulations::calculate_state(const size_t &group_size,
 
 egttools::VectorXui
 egttools::FinitePopulations::sample_simplex(size_t i, const size_t &pop_size, const size_t &nb_strategies) {
-    // To be able to infer the multi-dimensional state from the index
+    // To be able to infer the multidimensional state from the index
     // we apply a recursive algorithm that will complete a vector of size
     // nb_strategies from right to left
 
@@ -140,7 +140,7 @@ egttools::FinitePopulations::sample_simplex(size_t i, const size_t &pop_size, co
 
 void egttools::FinitePopulations::sample_simplex(size_t i, const size_t &pop_size, const size_t &nb_strategies,
                                                  egttools::VectorXui &state) {
-    // To be able to infer the multi-dimensional state from the index
+    // To be able to infer the multidimensional state from the index
     // we apply a recursive algorithm that will complete a vector of size
     // nb_strategies from right to left
 
@@ -164,7 +164,7 @@ void egttools::FinitePopulations::sample_simplex(size_t i, const size_t &pop_siz
 
 void egttools::FinitePopulations::sample_simplex(size_t i, const size_t &pop_size, const size_t &nb_strategies,
                                                  std::vector<size_t> &state) {
-    // To be able to infer the multi-dimensional state from the index
+    // To be able to infer the multidimensional state from the index
     // we apply a recursive algorithm that will complete a vector of size
     // nb_strategies from right to left
 

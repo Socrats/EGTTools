@@ -20,6 +20,8 @@ Set of vectorized functions that can be used to apply these functions on large t
 """
 import numpy as np
 from ..plotting.helpers import barycentric_to_xy_coordinates
+from ..analytical import replicator_equation_n_player
+from ..numerical.numerical import vectorized_replicator_equation_n_player as cpp_vectorized_replicator_equation_n_player
 
 
 def vectorized_replicator_equation(frequencies: np.ndarray, payoffs: np.ndarray) -> np.ndarray:
@@ -49,6 +51,44 @@ def vectorized_replicator_equation(frequencies: np.ndarray, payoffs: np.ndarray)
     axs = [np.dot(payoffs, frequencies[:, i, :]) for i in range(frequencies.shape[1])]
     return np.asarray([frequencies[:, i, :] * (axs[i] - np.diagonal(np.dot(frequencies[:, i, :].T, axs[i]))) for i in
                        range(frequencies.shape[1])]).swapaxes(0, 1)
+
+
+def vectorized_replicator_equation_n_player(frequencies: np.ndarray, payoffs: np.ndarray,
+                                            group_size: int) -> np.ndarray:
+    """
+    This function provides an easy way to calculate a matrix of gradients in a simplex in one go.
+
+    The input `frequencies` is expected to be a 3 dimensional tensor of shape (p, m, n) while the payoffs
+    matrix is expected to be of shape (p, p).
+
+    The main intention of this helper function is to facilitate
+    the calculation of the gradients that are required by the `plot_gradients` method of the
+    `egttools.Simplex2D` class.
+
+    Parameters
+    ----------
+    frequencies: numpy.ndarray[p,m,n]
+        A 3 dimensional tensor containing the set of population frequencies for which the gradient should be
+        calculated.
+    payoffs: numpy.ndarray[p,p]
+        A 2 dimensional matrix containing the payoffs of the game.
+    group_size: int
+        Size of the group
+
+    Returns
+    -------
+    numpy.ndarray[p,m,n]
+        The gradients for each of the input frequencies.
+    """
+    res1, res2, res3 = cpp_vectorized_replicator_equation_n_player(frequencies[0, :, :], frequencies[1, :, :],
+                                                                   frequencies[2, :, :], payoffs, group_size)
+
+    results = np.zeros_like(frequencies)
+    results[0, :, :] = res1[:, :]
+    results[1, :, :] = res2[:, :]
+    results[2, :, :] = res3[:, :]
+
+    return results
 
 
 def vectorized_barycentric_to_xy_coordinates(barycentric_coordinates: np.ndarray, corners: np.ndarray) -> np.ndarray:

@@ -22,6 +22,10 @@ target_sources(numerical PRIVATE
         games/CRDGame.cpp
         games/CRDGameTU.cpp
         games/OneShotCRD.cpp
+        games/NPlayerStagHunt.cpp
+        games/Matrix2PlayerGameHolder.cpp
+        games/MatrixNPlayerGameHolder.cpp
         behaviors/NFGStrategies.cpp
         behaviors/CRDStrategies.cpp
+        analytical/PairwiseComparison.cpp
         )

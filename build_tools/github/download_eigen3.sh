@@ -18,4 +18,4 @@ mkdir "build"
 cd build
 cmake ..
 make install
-yum install -y libjpeg-turbo-devel
+yum install boost boost-thread boost-devel

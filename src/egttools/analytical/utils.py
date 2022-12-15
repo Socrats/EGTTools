@@ -19,7 +19,7 @@ import numpy as np
 from scipy.optimize import root
 from scipy.linalg import eigvals
 from typing import Tuple, List, Optional, Callable
-from .sed_analytical import StochDynamics, replicator_equation
+from .sed_analytical import StochDynamics, replicator_equation, replicator_equation_n_player
 from .. import sample_unit_simplex
 
 
@@ -59,6 +59,47 @@ def get_pairwise_gradient_from_replicator(i: int, j: int, x: float, nb_strategie
     freq_array[j] = 1. - x
 
     return replicator_equation(freq_array, payoffs)[i]
+
+
+def get_pairwise_gradient_from_replicator_n_player(i: int, j: int, x: float, nb_strategies: int, group_size: int,
+                                                   payoffs: np.ndarray,
+                                                   freq_array: Optional[np.ndarray] = None) -> float:
+    """
+    Calculate the gradient for strategy/type `i` at the edges of the simplex (when there are
+    only two strategies in the population `i` and `j`).
+
+    Parameters
+    ----------
+    i: int
+        index of the strategy whose gradient we wish to calculate
+    j: int
+        index of the other strategy present in the population
+    x: float
+        frequency of i type
+    nb_strategies: int
+        total number of strategies in the population
+    group_size: int
+        size of the group
+    payoffs: numpy.ndarray
+        payoff matrix that defines the expected  payoff of any give strategy against each other
+    freq_array: Optional[numpy.ndarray]
+        optional vector to store the frequencies of each strategy in the population
+
+    Returns
+    -------
+    float
+        The gradient of strategy i.
+
+    """
+    if freq_array is None:
+        freq_array = np.zeros(shape=(nb_strategies,))
+    else:
+        freq_array[:] = 0
+
+    freq_array[i] = x
+    freq_array[j] = 1. - x
+
+    return replicator_equation_n_player(freq_array, payoffs, group_size)[i]
 
 
 def check_if_there_is_random_drift(payoff_matrix: np.ndarray,
@@ -112,12 +153,19 @@ def check_if_there_is_random_drift(payoff_matrix: np.ndarray,
     if population_size is None:
         freq_array = np.zeros(shape=(payoff_matrix.shape[0]))
 
-        def gradient_functionn(i, j, x):
-            return get_pairwise_gradient_from_replicator(i, j, x, payoff_matrix.shape[0],
-                                                         payoff_matrix,
-                                                         freq_array)
+        if group_size == 2:
+            def gradient_function(i, j, x):
+                return get_pairwise_gradient_from_replicator(i, j, x, payoff_matrix.shape[0],
+                                                             payoff_matrix,
+                                                             freq_array)
+        else:
+            def gradient_function(i, j, x):
+                return get_pairwise_gradient_from_replicator_n_player(i, j, x, payoff_matrix.shape[0],
+                                                                      group_size,
+                                                                      payoff_matrix,
+                                                                      freq_array)
 
-        f = gradient_functionn
+        f = gradient_function
     else:
         if beta is None:
             raise Exception("the beta parameter must be specified!")
@@ -145,23 +193,40 @@ def check_if_there_is_random_drift(payoff_matrix: np.ndarray,
     return solutions
 
 
-def find_roots_and_stability(f: Callable[[np.ndarray], np.ndarray], nb_strategies: int, atol: float = 1e-12,
-                             nb_random_restarts: int = 1) -> Tuple[List[np.array], List[int]]:
+def find_roots_and_stability(gradient_function: Callable[[np.ndarray], np.ndarray], nb_strategies: int,
+                             nb_initial_random_points: int = 3,
+                             atol: float = 1e-7,
+                             atol_neg: float = 1e-4, atol_pos: float = 1e-4,
+                             atol_zero: float = 1e-4,
+                             tol_close_points: float = 1e-4,
+                             method: str = 'hybr') -> Tuple[List[np.array], List[int]]:
     """
-    Searches for the roots of the differential equation `f` and calculates the stability based
+    Searches for the roots of the differential equation `gradient_function` and calculates the stability based
     on an estimate of the Jacobian. This estimate is often imprecise which leads to wrong results.
 
     Parameters
     ----------
-    f: Callable[[np.ndarray], np.ndarray]
-        The differential equation implemented as a function.
+    gradient_function: Callable[[np.ndarray], np.ndarray]
+        function that returns a numpy.ndarray with the gradient of every strategy/type given a
+        current population state.
     nb_strategies: int
-        the number of strategies of the system.
+        number of strategies/types present in the population.
+    nb_initial_random_points: int
+        number of random points to use as initial states for the root function. These are
+        additional to the vertex of the simplex.
     atol: float
-        the tolerance to consider a value equal to zero.
-    nb_random_restarts: int
-        number of times the root function will be restarted at a random initial point.
-        This is used to increase the likelihood that all roots are found.
+        tolerance for considering that a point is in the simplex.
+    atol_neg: float
+        tolerance to consider a value negative.
+    atol_pos: float
+        tolerance to consider a value positive.
+    atol_zero: float
+        tolerance to determine if a value is zero.
+    tol_close_points: float
+        tolerance for considering that two points are equal.
+    method: str
+        one of the options described in `scipy.optimize.root`
+        (see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.root.html)
 
     Returns
     -------
@@ -170,31 +235,47 @@ def find_roots_and_stability(f: Callable[[np.ndarray], np.ndarray], nb_strategie
         and -1 unstable points.
 
     """
+    # we test all the vertex of the simplex and some random initial points
+    initial_states = [[0 if i != j else 1 for i in range(nb_strategies)] for j in range(nb_strategies)]
+    for i in range(nb_initial_random_points):
+        initial_states.append(sample_unit_simplex(nb_strategies))
+
+    initial_states = np.asarray(initial_states)
+
     roots = []
     stability = []
-    for i in range(nb_random_restarts):
-        state = sample_unit_simplex(nb_strategies)
-        sol = root(f, state, method="hybr")  # ,xtol=1.49012e-10,maxfev=1000
+
+    for initial_state in initial_states:
+        sol = root(gradient_function, initial_state, method=method, jac=False)
 
         if sol.success:
             v = sol.x
             if check_if_point_in_unit_simplex(v, atol):
                 # only add new fixed points to list
-                if not np.array([np.allclose(v, x, atol=atol) for x in roots]).any():
+                if not np.array([np.allclose(v, x, atol=tol_close_points) for x in roots]).any():
                     roots.append(v)
+
                     # now we check the stability of the roots using the jacobian
                     eigenvalues = eigvals(sol.fjac)
-                    if (eigenvalues.real < 0).all():
+                    print(eigenvalues)
+                    # If all eigenvalues are negatives or zero it's stable
+                    if (eigenvalues.real < -atol_neg).all() or np.array(
+                            [np.isclose(el, 0., atol=atol_zero) for el in
+                             eigenvalues.real[eigenvalues.real > -atol_neg]]).all():
                         stability.append(1)
-                    elif (eigenvalues.real > 0).any():
+                    # If all eigenvalues are positive or zero it's unstable
+                    elif (eigenvalues.real > atol_pos).all() or np.array(
+                            [np.isclose(el, 0., atol=atol_zero) for el in
+                             eigenvalues.real[eigenvalues.real < atol_pos]]).all():
                         stability.append(-1)
-                    else:
+                    else:  # saddle point
                         # This is probably wrong, but let's first assume that if we reach here, the point is a saddle
                         stability.append(0)
                         # # we need to check the hessian matrix to find out if the point is a saddle
                         # eigenvalues, _ = np.linalg.eig(sol.hess)
                         # if (eigenvalues > 0).any() and (eigenvalues < 0).any():
                         #     stability.append(0)
+
     return roots, stability
 
 

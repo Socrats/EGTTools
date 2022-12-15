@@ -21,6 +21,7 @@
 
 #include <egttools/SeedGenerator.h>
 #include <egttools/Types.h>
+#include <egttools/Distributions.h>
 
 #include <egttools/LruCache.hpp>
 #include <egttools/finite_populations/Utils.hpp>
@@ -238,6 +239,8 @@ namespace egttools::FinitePopulations {
         [[nodiscard]] std::string game_type() const;
 
         [[nodiscard]] const GroupPayoffs &payoffs() const;
+
+        [[nodiscard]] int64_t nb_states() const;
 
         // Setters
         void set_population_size(size_t pop_size);
@@ -1327,6 +1330,11 @@ namespace egttools::FinitePopulations {
     template<class Cache>
     size_t PairwiseMoran<Cache>::cache_size() const {
         return _cache_size;
+    }
+
+    template<class Cache>
+    int64_t PairwiseMoran<Cache>::nb_states() const {
+        return _nb_states;
     }
 
     template<class Cache>

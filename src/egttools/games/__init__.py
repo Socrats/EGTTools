@@ -7,7 +7,9 @@ from egttools.numerical.numerical.games import (AbstractGame,
                                                 NormalFormGame,
                                                 CRDGame,
                                                 CRDGameTU,
-                                                OneShotCRD, )
+                                                OneShotCRD,
+                                                Matrix2PlayerGameHolder,
+                                                MatrixNPlayerGameHolder, )
 
 from .pgg import PGG
 from .informal_risk import InformalRiskGame
@@ -16,4 +18,4 @@ from .nonlinear_games import NPlayerStagHunt, CommonPoolResourceDilemma, CommonP
 
 __all__ = ['AbstractGame', 'AbstractNPlayerGame', 'NormalFormGame', 'CRDGame', 'CRDGameTU', 'OneShotCRD', 'PGG',
            'InformalRiskGame', 'AbstractTwoPLayerGame', 'NPlayerStagHunt', 'CommonPoolResourceDilemma',
-           'CommonPoolResourceDilemmaCommitment']
+           'CommonPoolResourceDilemmaCommitment', 'Matrix2PlayerGameHolder', 'MatrixNPlayerGameHolder']

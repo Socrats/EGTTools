@@ -123,6 +123,13 @@ if (EIGEN3_FOUND)
     message(STATUS "Eigen found")
 endif ()
 
+find_package(Boost)
+if (Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIR})
+    add_definitions( "-DHAS_BOOST" )
+    message(STATUS "Boost found")
+endif()
+
 #include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
 
 # Support for OpenMP parallelization - not on windows

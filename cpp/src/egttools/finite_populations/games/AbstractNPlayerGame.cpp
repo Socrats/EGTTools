@@ -28,13 +28,12 @@ double egttools::FinitePopulations::AbstractNPlayerGame::calculate_fitness(const
 
     // If it isn't, then we must calculate the fitness for every possible group combination
     for (int64_t i = 0; i < nb_group_configurations_; ++i) {
-        // Update sample counts based on the current state
+        // Update sample counts based on the current state - get new group composition
         egttools::FinitePopulations::sample_simplex(i, group_size_, nb_strategies_, sample_counts);
 
         // If the focal player is not in the group, then the payoff should be zero
         if (sample_counts[player_type] > 0) {
-            // First update sample_counts with new group composition
-            payoff = expected_payoffs_(static_cast<int>(player_type), i);
+            payoff = expected_payoffs_(player_type, i);
             sample_counts[player_type] -= 1;
 
             // Calculate probability of encountering the current group
@@ -85,7 +84,7 @@ void egttools::FinitePopulations::AbstractNPlayerGame::update_payoff(int strateg
 size_t egttools::FinitePopulations::AbstractNPlayerGame::group_size() const {
     return group_size_;
 }
-size_t egttools::FinitePopulations::AbstractNPlayerGame::nb_group_configurations() const {
+int64_t egttools::FinitePopulations::AbstractNPlayerGame::nb_group_configurations() const {
     return nb_group_configurations_;
 }
 

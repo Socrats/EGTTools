@@ -22,3 +22,4 @@ target_sources(numerical PRIVATE
         )
 add_subdirectory(utils)
 add_subdirectory(finite_populations)
+add_subdirectory(infinite_populations)

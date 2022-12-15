@@ -26,7 +26,24 @@
 #include <egttools/Types.h>
 
 #include <algorithm>
+#include <egttools/math.hpp>
 #include <random>
+#include <stdexcept>
+
+#if (HAS_BOOST)
+#include <boost/multiprecision/cpp_dec_float.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+
+#define int_type_ boost::multiprecision::cpp_int
+#define uint_type_ boost::multiprecision::uint128_t
+#define float_type_ boost::multiprecision::cpp_dec_float_100
+#define binomial_coeff_ binomial_precision
+#else
+#define int_type_ int64_t
+#define uint_type_ size_t
+#define float_type_ double
+#define binomial_coeff_ egttools::binomialCoeff<double, size_t>
+#endif
 
 namespace egttools {
     /**
@@ -110,30 +127,34 @@ namespace egttools {
     * @param k size of the unordered subset
     * @return C(n, k)
     */
-    template<typename T, typename I>
-    T binomialCoeff(I n, I k) {
+    template<typename Output, typename Input>
+    Output binomialCoeff(Input n, Input k) {
         if ((k > n) || (n < 0) || (k < 0))
             return 0;
 
         // Since C(n, k) = C(n, n-k)
         if (k > n - k) k = n - k;
 
-        T res = 1;
+        Output res = 1;
 
         // Calculate value of [n * (n-1) * ... * (n-k+1)] / [k * (k-1) * ... * 1]
-        for (I i = 0; i < k; ++i) {
-            res *= static_cast<T>(n - i);
-            res /= static_cast<T>(i + 1);
+        for (Input i = 0; i < k; ++i) {
+            res *= static_cast<Output>(n - i);
+            res /= static_cast<Output>(i + 1);
         }
 
         return res;
     }
 
+#if (HAS_BOOST)
+    uint_type_ binomial_precision(size_t n, size_t k);
+#endif
+
     /**
      * @brief Calculates the probability density function of a multivariate hypergeometric distribution.
      *
      * This function returns the probability that a sample of size @param n in a population of @param k
-     * objects with have @param sample_counts counts of each object in a sample, given a population D
+     * objects will have @param sample_counts counts of each object in a sample, given a population D
      * with @param population_counts counts of each object.
      *
      * The sampling is without replacement.
@@ -153,7 +174,7 @@ namespace egttools {
     * @brief Calculates the probability density function of a multivariate hypergeometric distribution.
     *
     * This function returns the probability that a sample of size @param n in a population of @param k
-    * objects with have @param sample_counts counts of each object in a sample, given a population D
+    * objects will have @param sample_counts counts of each object in a sample, given a population D
     * with @param population_counts counts of each object.
     *
     * The sampling is without replacement.
@@ -173,7 +194,7 @@ namespace egttools {
     * @brief Calculates the probability density function of a multivariate hypergeometric distribution.
     *
     * This function returns the probability that a sample of size @param n in a population of @param k
-    * objects with have @param sample_counts counts of each object in a sample, given a population D
+    * objects will have @param sample_counts counts of each object in a sample, given a population D
     * with @param population_counts counts of each object.
     *
     * The sampling is without replacement.
@@ -190,6 +211,17 @@ namespace egttools {
                                   const Eigen::Ref<const VectorXui> &population_counts);
 
     /**
+     * Calculates the Probability Mass Function of a multinomial distribution
+     *
+     * @param group_configuration
+     * @param n
+     * @param p
+     * @throws invalid_argument
+     * @return the probability of a specific group configuration occurring.
+     */
+    double multinomialPMF(const Eigen::Ref<const VectorXui> &group_configuration, size_t n, const Eigen::Ref<const Vector> &p);
+
+    /**
      * @brief Finds the number for elements given possible bins/slots and star types.
      *
      * @tparam T : Type of to use for the computation
@@ -197,10 +229,17 @@ namespace egttools {
      * @param bins : number of bins that can be filled
      * @return the number of possible combinations of stars in the bins.
      */
-    template<typename T, typename O=T>
+    template<typename T, typename O = T>
     O starsBars(T stars, T bins) {
         return egttools::binomialCoeff<O, T>(stars + bins - 1, stars);
     }
+
+#if (HAS_BOOST)
+    template<>
+    inline uint_type_ starsBars<size_t, uint_type_>(size_t stars, size_t bins) {
+        return egttools::binomial_precision(stars + bins - 1, stars);
+    }
+#endif
 
 }// namespace egttools
 

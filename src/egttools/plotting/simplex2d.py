@@ -79,7 +79,7 @@ class Simplex2D:
         See Also
         --------
         egttools.plotting.plot_gradient,
-        egttools.plotting.draw_stationary_distribution,
+        egttools.plotting.draw_invasion_diagram,
         egttools.analytical.replicator_equation,
         egttools.analytical.StochDynamics
 
@@ -670,6 +670,15 @@ class Simplex2D:
                     if draw_arrow:
                         add_arrow(line, size=arrowsize, arrowstyle=arrowstyle, position=position,
                                   direction=arrowdirection)
+
+        return self
+
+    def draw_trajectory_from_vector(self, trajectory: np.ndarray,
+                                    color: Optional[Union[str, Tuple[int, int, int]]] = 'k',
+                                    linewidth: Optional[float] = 0.5, zorder: Optional[int] = 0, ):
+        points = np.asarray([barycentric_to_xy_coordinates(x, self.corners) for x in trajectory])
+
+        self.ax.plot(points[:, 0], points[:, 1], color, linewidth=linewidth, zorder=zorder)
 
         return self
 

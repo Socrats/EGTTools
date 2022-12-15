@@ -1,4 +1,4 @@
-/** Copyright (c) 2019-2021  Elias Fernandez
+/** Copyright (c) 2019-2023  Elias Fernandez
   *
   * This file is part of EGTtools.
   *
@@ -369,7 +369,7 @@ PYBIND11_MODULE(numerical, m) {
                     payoffs to each strategy for each possible game context. In particular, `calculate_payoffs` should fill the
                     array `self.payoffs_` with the correct values as explained above. We recommend that you run this method in
                     the `__init__` (initialization of the object) since, these values must be set before passing the game object
-                    to the numerical simulator (e.g., egttools.numerical.PairwiseMoran).
+                    to the numerical simulator (e.g., egttools.numerical.PairwiseComparisonNumerical).
 
                     Parameters
                     ----------
@@ -600,6 +600,36 @@ PYBIND11_MODULE(numerical, m) {
                     )pbdoc",
           py::arg("nb_strategies"));
 
+#if (HAS_BOOST)
+    m.def(
+            "calculate_nb_states", [](size_t group_size, size_t nb_strategies) {
+                auto result = starsBars<size_t, mp::uint128_t>(group_size, nb_strategies);
+                return result.convert_to<size_t>();
+            },
+            R"pbdoc(
+                    Calculates the number of states (combinations) of the members of a group in a subgroup.
+                    It can be used to calculate the maximum number of states in a discrete simplex.
+
+                    The implementation of this method follows the stars and bars algorithm (see Wikipedia).
+
+                    Parameters
+                    ----------
+                    group_size : int
+                        Size of the group (maximum number of players/elements that can adopt each possible strategy).
+                    nb_strategies : int
+                        number of strategies that can be assigned to players.
+
+                    Returns
+                    -------
+                    int
+                        Number of states (possible combinations of strategies and players).
+
+                    See Also
+                    --------
+                    egttools.numerical.calculate_state, egttools.numerical.sample_simplex
+                    )pbdoc",
+            py::arg("group_size"), py::arg("nb_strategies"));
+#else
     m.def("calculate_nb_states",
           &egttools::starsBars<size_t>,
           R"pbdoc(
@@ -625,6 +655,7 @@ PYBIND11_MODULE(numerical, m) {
                     egttools.numerical.calculate_state, egttools.numerical.sample_simplex
                     )pbdoc",
           py::arg("group_size"), py::arg("nb_strategies"));
+#endif
 
     m.def("calculate_strategies_distribution",
           static_cast<egttools::Vector (*)(size_t, size_t, egttools::SparseMatrix2D &)>(&egttools::utils::calculate_strategies_distribution),
@@ -650,8 +681,8 @@ PYBIND11_MODULE(numerical, m) {
                         See Also
                         --------
                         egttools.numerical.calculate_state, egttools.numerical.sample_simplex,
-                        egttools.numerical.calculate_nb_states, egttools.numerical.PairwiseMoran.estimate_stationary_distribution
-                        egttools.numerical.calculate_nb_states, egttools.numerical.PairwiseMoran.estimate_stationary_distribution_sparse
+                        egttools.numerical.calculate_nb_states, egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution
+                        egttools.numerical.calculate_nb_states, egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution_sparse
                         )pbdoc",
           py::arg("pop_size"), py::arg("nb_strategies"), py::arg("stationary_distribution"));
 
@@ -1149,7 +1180,6 @@ PYBIND11_MODULE(numerical, m) {
                         Size of the group that will play the CRD.
                     min_nb_cooperators: int
                         Minimum number of cooperators required to avoid the risk of collective loss.
-
                     See Also
                     --------
                     egttools.games.AbstractGame
@@ -1197,6 +1227,253 @@ PYBIND11_MODULE(numerical, m) {
             .def_property_readonly("nb_states", &egttools::FinitePopulations::OneShotCRD::nb_group_compositions,
                                    "Number of combinations of Cs and Ds that can be matched in the game.")
             .def("save_payoffs", &egttools::FinitePopulations::OneShotCRD::save_payoffs,
+                 "Saves the payoff matrix in a txt file.");
+
+    py::class_<egttools::FinitePopulations::NPlayerStagHunt, egttools::FinitePopulations::AbstractGame>(mGames, "NPlayerStagHunt")
+            .def(py::init<int, int, double, double>(),
+                 R"pbdoc(
+                    N-Player Stag Hunt (NPSH).
+
+                    NPSH follows the description of:
+                    Pacheco et al., ‘Evolutionary Dynamics of Collective Action in N -Person Stag Hunt Dilemmas’.
+
+                    Parameters
+                    ----------
+                    group_size : int
+                        Number of players in the group. Parameter `N` in the article.
+                    cooperation_threshold : int
+                        Minimum number of cooperators required to provide the collective good. Parameter `M` in the article.
+                    enhancement_factor : float
+                        Number of rounds of the game. Parameter `F` in the article.
+                    cost : float
+                        Size of the group that will play the CRD. Parameter `c` in the article.
+
+                    See Also
+                    --------
+                    egttools.games.AbstractGame
+                    egttools.games.NormalFormGame
+                    )pbdoc",
+                 py::arg("group_size"),
+                 py::arg("cooperation_threshold"),
+                 py::arg("enhancement_factor"),
+                 py::arg("cost"), py::return_value_policy::reference_internal)
+            .def("play", &egttools::FinitePopulations::NPlayerStagHunt::play)
+            .def("calculate_payoffs", &egttools::FinitePopulations::NPlayerStagHunt::calculate_payoffs,
+                 "updates the internal payoff and coop_level matrices by calculating the payoff of each strategy "
+                 "given any possible strategy pair")
+            .def("calculate_fitness", &egttools::FinitePopulations::NPlayerStagHunt::calculate_fitness,
+                 "calculates the fitness of an individual of a given strategy given a population state."
+                 "It always assumes that the population state does not contain the current individual",
+                 py::arg("player_strategy"),
+                 py::arg("pop_size"), py::arg("population_state"))
+            .def("calculate_population_group_achievement", &egttools::FinitePopulations::NPlayerStagHunt::calculate_population_group_achievement,
+                 "calculates the group achievement in the population at a given state.",
+                 py::arg("population_size"), py::arg("population_state"))
+            .def("calculate_group_achievement", &egttools::FinitePopulations::NPlayerStagHunt::calculate_group_achievement,
+                 "calculates the group achievement for a given stationary distribution.",
+                 py::arg("population_size"), py::arg("stationary_distribution"))
+            .def("__str__", &egttools::FinitePopulations::NPlayerStagHunt::toString)
+            .def("type", &egttools::FinitePopulations::NPlayerStagHunt::type)
+            .def("payoffs", &egttools::FinitePopulations::NPlayerStagHunt::payoffs, "returns the expected payoffs of each strategy vs each possible game state")
+            .def("payoff", &egttools::FinitePopulations::NPlayerStagHunt::payoff,
+                 "returns the payoff of a strategy given a group composition.", py::arg("strategy"),
+                 py::arg("strategy pair"))
+            .def_property_readonly("group_achievement_per_group", &egttools::FinitePopulations::NPlayerStagHunt::group_achievements)
+            .def("nb_strategies", &egttools::FinitePopulations::NPlayerStagHunt::nb_strategies,
+                 "Number of different strategies which are playing the game.")
+            .def("strategies", &egttools::FinitePopulations::NPlayerStagHunt::strategies,
+                 "List containing the names of the strategies used in the game, in the correct order.")
+            .def("nb_group_configurations", &egttools::FinitePopulations::NPlayerStagHunt::nb_group_configurations,
+                 "Number of combinations of Cs and Ds that can be matched in the game.")
+            .def_property_readonly("group_size", &egttools::FinitePopulations::NPlayerStagHunt::group_size,
+                                   "Size of the group which will play the game.")
+            .def_property_readonly("cooperation_threshold", &egttools::FinitePopulations::NPlayerStagHunt::cooperation_threshold,
+                                   "Minimum number of cooperators to provide the public good.")
+            .def_property_readonly("enhancement_factor", &egttools::FinitePopulations::NPlayerStagHunt::enhancement_factor,
+                                   "Enhancement factor F.")
+            .def_property_readonly("cost", &egttools::FinitePopulations::NPlayerStagHunt::cost,
+                                   "Cost of cooperation.")
+            .def("save_payoffs", &egttools::FinitePopulations::NPlayerStagHunt::save_payoffs,
+                 "Saves the payoff matrix in a txt file.");
+
+    py::class_<egttools::FinitePopulations::Matrix2PlayerGameHolder, egttools::FinitePopulations::AbstractGame>(mGames, "Matrix2PlayerGameHolder")
+            .def(py::init<int, egttools::Matrix2D>(),
+                 R"pbdoc(Holder class for 2-player games for which the expected payoff between strategies has already been calculated.
+
+                    This class is useful to store the matrix of expected payoffs between strategies
+                    in an 2-player game and keep the methods to calculate the fitness between these strategies.
+
+                    Parameters
+                    ----------
+                    nb_strategies : int
+                        number of strategies in the game
+                    payoff_matrix : numpy.ndarray
+                        matrix of shape (nb_strategies, nb_strategies) containing the payoffs
+                        of each strategy against any other strategy.
+
+                    See Also
+                    --------
+                    egttools.games.Matrix2NlayerGameHolder,
+                    egttools.games.AbstractGame
+                    )pbdoc",
+                 py::arg("nb_strategies"),
+                 py::arg("payoff_matrix"), py::return_value_policy::reference_internal)
+            .def("play", &egttools::FinitePopulations::Matrix2PlayerGameHolder::play,
+                 R"pbdoc(
+                    Plays the One-shop CRD and update the game_payoffs given the group_composition.
+
+                    We always assume that strategy 0 is D and strategy 1 is C.
+
+                    The payoffs of Defectors and Cooperators are described by the following equations:
+
+                    .. math::
+                        \Pi_{D}(k) = b\{\theta(k-M)+ (1-r)[1 - \theta(k-M)]\}
+
+                        \Pi_{C}(k) = \Pi_{D}(k) - cb
+
+                        \text{where } \theta(x) = 0 \text{if } x < 0 \text{ and 1 otherwise.}
+
+                    Parameters
+                    ----------
+                    group_composition : Union[List[int], numpy.ndarray]
+                        A list or array containing the counts of how many members of each strategy are
+                        present in the group.
+                    game_payoffs: numpy.ndarray
+                        A vector in which the payoffs of the game will be stored.
+                    )pbdoc")
+            .def("calculate_payoffs", &egttools::FinitePopulations::Matrix2PlayerGameHolder::calculate_payoffs,
+                 R"pbdoc(
+                    Calculates the payoffs of every strategy in each possible group composition.
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        A matrix containing the payoff of each strategy in every possible group composition.
+                    )pbdoc")
+            .def("calculate_fitness", &egttools::FinitePopulations::Matrix2PlayerGameHolder::calculate_fitness,
+                 R"pbdoc(
+                    Calculates the fitness of a strategy given a population state.
+
+                    Parameters
+                    ----------
+                    player_type : int
+                        The index of the strategy whose fitness will be calculated.
+                    pop_size : int
+                        The size of the population (Z).
+                    population_state : numpy.ndarray
+                        A vector containing the counts of each strategy in the population.
+
+                    Returns
+                    -------
+                    float
+                        The fitness of the strategy in the current population state.
+                    )pbdoc",
+                 py::arg("player_strategy"),
+                 py::arg("pop_size"), py::arg("population_state"))
+            .def("__str__", &egttools::FinitePopulations::Matrix2PlayerGameHolder::toString)
+            .def("type", &egttools::FinitePopulations::Matrix2PlayerGameHolder::type)
+            .def("payoffs", &egttools::FinitePopulations::Matrix2PlayerGameHolder::payoffs, "returns the expected payoffs of each strategy vs each possible game state")
+            .def("payoff", &egttools::FinitePopulations::Matrix2PlayerGameHolder::payoff,
+                 "returns the payoff of a strategy given a group composition.", py::arg("strategy"),
+                 py::arg("strategy pair"))
+            .def("nb_strategies", &egttools::FinitePopulations::Matrix2PlayerGameHolder::nb_strategies,
+                 "Number of different strategies which are playing the game.")
+            .def("update_payoff_matrix", &egttools::FinitePopulations::Matrix2PlayerGameHolder::update_payoff_matrix,
+                 "updates the values of the payoff matrix.", py::arg("payoff_matrix"))
+            .def("save_payoffs", &egttools::FinitePopulations::Matrix2PlayerGameHolder::save_payoffs,
+                 "Saves the payoff matrix in a txt file.");
+
+    py::class_<egttools::FinitePopulations::MatrixNPlayerGameHolder, egttools::FinitePopulations::AbstractGame>(mGames, "MatrixNPlayerGameHolder")
+            .def(py::init<int, int, egttools::Matrix2D>(),
+                 R"pbdoc(Holder class for N-player games for which the expected payoff between strategies has already been calculated.
+
+                    This class is useful to store the matrix of expected payoffs between strategies
+                    in an N-player game and keep the methods to calculate the fitness between these strategies.
+
+                    Parameters
+                    ----------
+                    nb_strategies : int
+                        number of strategies in the game
+                    group_size : int
+                        size of the group
+                    payoff_matrix : numpy.ndarray
+                        matrix of shape (nb_strategies, nb_group_configurations) containing the payoffs
+                        of each strategy against any other strategy.
+
+                    See Also
+                    --------
+                    egttools.games.Matrix2PlayerGameHolder,
+                    egttools.games.AbstractGame
+                    )pbdoc",
+                 py::arg("nb_strategies"), py::arg("group_size"),
+                 py::arg("payoff_matrix"), py::return_value_policy::reference_internal)
+            .def("play", &egttools::FinitePopulations::MatrixNPlayerGameHolder::play,
+                 R"pbdoc(
+                    Plays the One-shop CRD and update the game_payoffs given the group_composition.
+
+                    We always assume that strategy 0 is D and strategy 1 is C.
+
+                    The payoffs of Defectors and Cooperators are described by the following equations:
+
+                    .. math::
+                        \Pi_{D}(k) = b\{\theta(k-M)+ (1-r)[1 - \theta(k-M)]\}
+
+                        \Pi_{C}(k) = \Pi_{D}(k) - cb
+
+                        \text{where } \theta(x) = 0 \text{if } x < 0 \text{ and 1 otherwise.}
+
+                    Parameters
+                    ----------
+                    group_composition : Union[List[int], numpy.ndarray]
+                        A list or array containing the counts of how many members of each strategy are
+                        present in the group.
+                    game_payoffs: numpy.ndarray
+                        A vector in which the payoffs of the game will be stored.
+                    )pbdoc")
+            .def("calculate_payoffs", &egttools::FinitePopulations::MatrixNPlayerGameHolder::calculate_payoffs,
+                 R"pbdoc(
+                    Calculates the payoffs of every strategy in each possible group composition.
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        A matrix containing the payoff of each strategy in every possible group composition.
+                    )pbdoc")
+            .def("calculate_fitness", &egttools::FinitePopulations::MatrixNPlayerGameHolder::calculate_fitness,
+                 R"pbdoc(
+                    Calculates the fitness of a strategy given a population state.
+
+                    Parameters
+                    ----------
+                    player_type : int
+                        The index of the strategy whose fitness will be calculated.
+                    pop_size : int
+                        The size of the population (Z).
+                    population_state : numpy.ndarray
+                        A vector containing the counts of each strategy in the population.
+
+                    Returns
+                    -------
+                    float
+                        The fitness of the strategy in the current population state.
+                    )pbdoc",
+                 py::arg("player_strategy"),
+                 py::arg("pop_size"), py::arg("population_state"))
+            .def("__str__", &egttools::FinitePopulations::MatrixNPlayerGameHolder::toString)
+            .def("type", &egttools::FinitePopulations::MatrixNPlayerGameHolder::type)
+            .def("payoffs", &egttools::FinitePopulations::MatrixNPlayerGameHolder::payoffs, "returns the expected payoffs of each strategy vs each possible game state")
+            .def("payoff", &egttools::FinitePopulations::MatrixNPlayerGameHolder::payoff,
+                 "returns the payoff of a strategy given a group composition.", py::arg("strategy"),
+                 py::arg("strategy pair"))
+            .def("nb_strategies", &egttools::FinitePopulations::MatrixNPlayerGameHolder::nb_strategies,
+                 "Number of different strategies which are playing the game.")
+            .def("group_size", &egttools::FinitePopulations::MatrixNPlayerGameHolder::group_size,
+                 "Size of the group.")
+            .def("nb_group_configurations", &egttools::FinitePopulations::MatrixNPlayerGameHolder::nb_group_configurations,
+                 "Number of different group configurations.")
+            .def("update_payoff_matrix", &egttools::FinitePopulations::MatrixNPlayerGameHolder::update_payoff_matrix,
+                 "updates the values of the payoff matrix.", py::arg("payoff_matrix"))
+            .def("save_payoffs", &egttools::FinitePopulations::MatrixNPlayerGameHolder::save_payoffs,
                  "Saves the payoff matrix in a txt file.");
 
     py::class_<egttools::FinitePopulations::behaviors::AbstractNFGStrategy, stubs::PyAbstractNFGStrategy>(mNF, "AbstractNFGStrategy")
@@ -1835,9 +2112,97 @@ PYBIND11_MODULE(numerical, m) {
             .def("type", &egttools::FinitePopulations::behaviors::CRD::CRDMemoryOnePlayer::type, "Returns a string indicating the Strategy Type.")
             .def("__str__", &egttools::FinitePopulations::behaviors::CRD::CRDMemoryOnePlayer::toString);
 
-    py::class_<PairwiseComparison>(m, "PairwiseMoran")
+    py::class_<egttools::FinitePopulations::analytical::PairwiseComparison>(m, "PairwiseComparison")
+            .def(py::init<int, egttools::FinitePopulations::AbstractGame &>(),
+                 R"pbdoc(
+                A class containing methods to study analytically the evolutionary dynamics using the Pairwise comparison rule.
+
+                This class defines methods to compute fixation probabilities, transition matrices in the Small Mutation
+                Limit (SML), gradients of selection, and the full transition matrices of the system when considering
+                mutation > 0.
+
+                Parameters
+                ----------
+                population_size : int
+                    Size of the population.
+                game : egttools.games.AbstractGame
+                    A game object which must implement the abstract class `egttools.games.AbstractGame`.
+                    This game will contain the expected payoffs for each strategy in the game, or at least
+                    a method to compute it, and a method to calculate the fitness of each strategy for a given
+                    population state.
+
+                See Also
+                --------
+                egttools.numerical.PairwiseComparisonNumerical
+                egttools.analytical.StochDynamics
+                egttools.games.AbstractGame
+
+                Note
+                -----
+                Analytical computations should be avoided for problems with very large state spaces.
+                This means very big populations with many strategies. The bigger the state space, the
+                more memory and time these methods will require!
+
+                Also, for now it is not possible to update the game without having to instantiate PairwiseComparison
+                again. Hopefully, this will be fixed in the future.
+                )pbdoc",
+                 py::arg("population_size"), py::arg("game"), py::keep_alive<1, 2>())
+            .def("calculate_transition_matrix",
+                 &egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_matrix,
+                 "Calculates the transition matrix of the Markov Chain that defines the dynamics of the system.",
+                 py::arg("beta"), py::arg("mu"), py::return_value_policy::move)
+            .def("calculate_gradient_of_selection", &egttools::FinitePopulations::analytical::PairwiseComparison::calculate_gradient_of_selection,
+                 "Calculates the gradient of selection at the given state.",
+                 py::arg("beta"), py::arg("state"))
+            .def("calculate_fixation_probability", &egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability,
+                 "Calculates the fixation probability of the invading strategy in a population of the resident strategy.",
+                 py::arg("invading_strategy_index"), py::arg("resident_strategy_index"), py::arg("beta"))
+            .def("calculate_transition_and_fixation_matrix_sml", &egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_and_fixation_matrix_sml,
+                 "calculates the transition and fixation probabilities matrices assuming the samll mutation limit",
+                 py::arg("beta"), py::return_value_policy::move)
+            .def("update_population_size", &egttools::FinitePopulations::analytical::PairwiseComparison::update_population_size)
+            .def("nb_strategies", &egttools::FinitePopulations::analytical::PairwiseComparison::nb_strategies)
+            .def("nb_states", &egttools::FinitePopulations::analytical::PairwiseComparison::nb_states)
+            .def("population_size", &egttools::FinitePopulations::analytical::PairwiseComparison::population_size)
+            .def("game", &egttools::FinitePopulations::analytical::PairwiseComparison::game);
+
+    py::class_<PairwiseComparison>(m, "PairwiseComparisonNumerical")
             .def(py::init<size_t, egttools::FinitePopulations::AbstractGame &, size_t>(),
-                 "Runs a moran process with pairwise comparison and calculates fitness according to game",
+                 R"pbdoc(
+                A class containing methods to study numerically the evolutionary dynamics using the Pairwise comparison rule.
+
+                This class defines methods to estimate numerically fixation probabilities, stationary distributions with or without
+                mutation, and strategy distributions.
+
+                Parameters
+                ----------
+                population_size : int
+                    Size of the population.
+                game : egttools.games.AbstractGame
+                    A game object which must implement the abstract class `egttools.games.AbstractGame`.
+                    This game will contain the expected payoffs for each strategy in the game, or at least
+                    a method to compute it, and a method to calculate the fitness of each strategy for a given
+                    population state.
+                cache_size : int
+                    The maximum size of the cache.
+
+                See Also
+                --------
+                egttools.analytical.PairwiseComparison
+                egttools.analytical.StochDynamics
+                egttools.games.AbstractGame
+
+                Note
+                -----
+                Numerical computations are not exact. Moreover, for now we still did not implement a method to automatically
+                detect if the precision of the estimation of the stationary and strategy distributions are good enough and,
+                thus, stop the simulation. You are advised to test different nb_generations and transitory periods for your
+                specific problem (game).
+
+                If you want to have exact calculations, you can use egttools.analytical.PairwiseComparison. However, this
+                is only advisable for systems with a smaller number of states (i.e., not too big population size or number of strategies).
+                Otherwise, the calculations might require too much memory.
+                )pbdoc",
                  py::arg("pop_size"), py::arg("game"), py::arg("cache_size"), py::keep_alive<1, 3>())
             .def("evolve",
                  static_cast<egttools::VectorXui (PairwiseComparison::*)(size_t, double, double,
@@ -1851,7 +2216,7 @@ PYBIND11_MODULE(numerical, m) {
                  "runs the moran process with social imitation and returns a matrix with all the states the system went through",
                  py::arg("nb_generations"),
                  py::arg("beta"),
-                 py::arg("init_state"), py::return_value_policy::reference_internal)
+                 py::arg("init_state"), py::return_value_policy::move)
             .def("run",
                  static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int, int, double, double,
                                                                            const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
@@ -1860,7 +2225,7 @@ PYBIND11_MODULE(numerical, m) {
                  py::arg("transient"),
                  py::arg("beta"),
                  py::arg("mu"),
-                 py::arg("init_state"), py::return_value_policy::reference_internal)
+                 py::arg("init_state"), py::return_value_policy::move)
             .def("run",
                  static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int, double, double,
                                                                            const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
@@ -1868,7 +2233,7 @@ PYBIND11_MODULE(numerical, m) {
                  py::arg("nb_generations"),
                  py::arg("beta"),
                  py::arg("mu"),
-                 py::arg("init_state"), py::return_value_policy::reference_internal)
+                 py::arg("init_state"), py::return_value_policy::move)
             .def("estimate_fixation_probability", &PairwiseComparison::estimate_fixation_probability,
                  py::call_guard<py::gil_scoped_release>(),
                  "Estimates the fixation probability of an strategy in the population.",
@@ -1916,13 +2281,14 @@ PYBIND11_MODULE(numerical, m) {
 
                 See Also
                 --------
-                egttools.numerical.PairwiseMoran.estimate_stationary_distribution,
-                egttools.numerical.PairwiseMoran.estimate_stationary_distribution_sparse
+                egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution,
+                egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution_sparse
                 )pbdoc",
                  py::arg("nb_runs"), py::arg("nb_generations"), py::arg("transitory"), py::arg("beta"), py::arg("mu"))
             .def_property_readonly("nb_strategies", &PairwiseComparison::nb_strategies, "Number of strategies in the population.")
             .def_property_readonly("payoffs", &PairwiseComparison::payoffs,
                                    "Payoff matrix containing the payoff of each strategy (row) for each game state (column)")
+            .def_property_readonly("nb_states", &PairwiseComparison::nb_states, "number of possible population states")
             .def_property("pop_size", &PairwiseComparison::population_size, &PairwiseComparison::set_population_size,
                           "Size of the population.")
             .def_property("cache_size", &PairwiseComparison::cache_size, &PairwiseComparison::set_cache_size,
@@ -1961,4 +2327,25 @@ PYBIND11_MODULE(numerical, m) {
                        py::arg("n"),
                        py::arg("sample_counts"),
                        py::arg("population_counts"));
+
+    mDistributions.def("binom",
+                       &egttools::binomialCoeff<double, int64_t>,
+                       "Calculates the probability density function of a multivariate hypergeometric distribution.",
+                       py::arg("n"),
+                       py::arg("k"));
+
+#if (HAS_BOOST)
+    mDistributions.def(
+            "comb", [](size_t n, size_t k) {
+                auto result = egttools::binomial_precision(n, k);
+                return result.convert_to<size_t>();
+            },
+            "Calculates the probability density function of a multivariate hypergeometric distribution.", py::arg("n"), py::arg("k"));
+#else
+    mDistributions.def("comb",
+                       &egttools::binomialCoeff<size_t, size_t>,
+                       "Calculates the probability density function of a multivariate hypergeometric distribution.",
+                       py::arg("n"),
+                       py::arg("k"));
+#endif
 }

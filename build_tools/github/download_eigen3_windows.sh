@@ -13,3 +13,5 @@ choco install eigen
 #echo "Eigen3_DIR='C:/Program Files (x86)/Eigen3'" >> $GITHUB_ENV
 export EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'
 #echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'" >> $GITHUB_ENV
+
+choco install boost-msvc-14.3
