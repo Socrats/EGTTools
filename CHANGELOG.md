@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres
 to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.12] - 15-12-2022
+
+### Fixed
+
+- Fixed stability plot and minor syntax issues.
+- Fixed issue with fitness calculations of strategies with 0 counts in the population.
+- Fixed LNK2005 error on windows.
+- Fixed version naming convesion to adhere to PEP440.
+
+### Changed
+
+- Changed name of `PairwiseMoran` class to `PairwiseComparisonNumerical`.
+- Changed function and class names that used "moran" to "pairwise_comparison_rule".
+- Removed signatures of overloaded methods in docstrings.
+- Moved all headers for pybind11 to .hpp files to avoid issues on windows.
+- Updated pybind11 version to 2.10.
+- Removed specialization of `binomialCoeff` to avoid issues on Windows.
+- Refactored the binding code from C++ to Python so that now we use different files for defining each Python submodule.
+  This makes the code much more clear. These files can be found in `cpp/src/pybind11_files`.
+
+### Added
+
+- Added support for multiprecision types with boost::multiprecision.
+- Added replicator equation for n-player games (implementation in c++).
+- Added `replicator_equation` implementation in C++.
+- Added a new C++ implementation of the analytical stochastic dynamics named `PairwiseComparison`.
+- Added `Matrix2PlayerGameHolder` and `MatrixNPlayerGameHolder` classes, so that a game can be defined using a payoff
+  matrix.
+- Added several tests (coverage now is ~50%).
+- Added tutorials to the documentation.
+
 ## [0.1.11.patch2] - 16-11-2022
 
 ### Fixed
