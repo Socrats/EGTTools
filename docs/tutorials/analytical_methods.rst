@@ -106,7 +106,7 @@ However, in many occasions, when modelling realistic problems, we cannot neglect
 that come along when individuals interact in finite populations :cite:p:`traulsen2006stochastic`.
 
 We now consider a finite population of :math:`Z` individuals, who interact in groups of size :math:`N\in[2,Z]`,
-in which they engage in strategic interactions (or games). Each individual can adopt one of the $n_s$ strategies.
+in which they engage in strategic interactions (or games). Each individual can adopt one of the :math:`n_s` strategies.
 The success (or fitness) of an individual can be computed as the expected payoff of the game in
 a given state :math:`\vec{x}`.
 
@@ -141,10 +141,7 @@ The complete characterization of this process becomes unfeasible as the number o
 scales with the population size and the number of strategies following
 :math:`\binom{Z+n_s-1}{n_s-1}` :cite:p:`Vasconcelos2017`.
 
-Thus, for larger strategy spaces, computer simulations for the estimation of the model' parameters
-are often a requirement. For this reason, we first assume that :math:`n_s=2` by using the PGG introduced earlier.
-In the next section we show that we can apply the case shown here for two strategies, to any number of them
-if we assume :math:`\mu\rightarrow 0`. The probability that the number :math:`k` of participants adopting a cooperative
+The probability that the number :math:`k` of participants adopting a cooperative
 strategy :math:`C` would increase (:math:`T^+(k)`) or decrease (:math:`T^-(k)`)
 can be specified as :cite:p:`traulsen2006stochastic`:
 
@@ -152,24 +149,8 @@ can be specified as :cite:p:`traulsen2006stochastic`:
     \begin{equation}
         \label{eq:prob_increase_decrease}
         \begin{split}
-            T^+ &= (1-\mu)\frac{Z-k}{Z}\frac{k}{Z-1}[1+e^{-\beta(f_C-f_D)}]^{-1} + \mu\frac{Z-k}{Z}\\
-            T^- &= (1-\mu)\frac{k}{Z}\frac{Z-k}{Z-1}[1+e^{\beta(f_C-f_D)}]^{-1} + \mu\frac{k}{Z}\\
-        \end{split}
-    \end{equation}
-
-where :math:`\mu\frac{Z-k}{Z}` represents the probability of a mutation occurring and picking strategy D,
-and :math:`(1-\mu)\frac{Z-k}{Z}\frac{k}{Z-1}` the probability that instead, the imitation process occurs,
-and individuals adopting different strategies (in this case C and D) are selected. Therefore, the transition
-matrix :math:`T` that fully characterizes the dynamics of the stochastic process consists of a mapping from each
-state :math:`k` (the state in this case is defined by the number of cooperators) to an adjacent state :math:`k^{'}` as
-described by the following equation :cite:p:`Sigmund2010b,Vasconcelos2015`.
-
-.. math::
-    \begin{equation}
-        \begin{split}
-            T_{i+1,i} &= T^-\\
-            T_{i,i+1} &= T^+\\
-            T_{1,i} &= 1 - T^+ - T^-
+            T^+ &= (1-\mu)\frac{Z-k}{Z}\frac{k}{Z-1}[1+e^{-\beta(f_i-f_j)}]^{-1} + \mu\frac{Z-k}{Z}\\
+            T^- &= (1-\mu)\frac{k}{Z}\frac{Z-k}{Z-1}[1+e^{\beta(f_i-f_j)}]^{-1} + \mu\frac{k}{Z}\\
         \end{split}
     \end{equation}
 
@@ -185,12 +166,15 @@ when a new strategy appears through mutation, one of two outcomes occurs long be
 either the population faces the fixation of a newly introduced strategy, or the mutant strategy goes extinct.
 
 Hence, there will be a maximum of two strategies present simultaneously in the population. This allows us to describe
-the behavioural dynamics in terms of a reduced Markov Chain of size $n_s$, whose transitions are defined
-by the fixation probabilities $\rho_{ji}$ of a single mutant with strategy $i$ in a population of
-individuals adopting another strategy $j$ according to Eq. \ref{eq:fixation_probabilities}
-\citep{Traulsen2006,ewens2004mathematical-books,karlinfirst}. Thus, fixation probabilities
-also characterise the evolutionary resilience of a strategy over another, and the increase (decrease)
-probabilities, $T^- (k)$($T^+ (k)$), are defined as indicated in Eq. \ref{eq:prob_increase_decrease_sml}.
+the behavioural dynamics in terms of a reduced Markov Chain of size :math:`n_s`, whose transitions are defined
+by the fixation probabilities :math:`\rho_{ji}` of a single mutant with strategy :math:`i` in a population of
+individuals adopting another strategy :math:`j`
+:cite:p:`traulsen2006stochastic,ewens2004mathematical-books,karlinfirst`.
+
+.. math::
+    \begin{equation}
+        \rho_{ji}=\left(1+\sum_{m=1}^{Z-1}\prod_{k=1}^m\frac{T^- (k)}{T^+ (k)}\right)^{-1}
+    \end{equation}
 
 How to use this model in EGTtools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -215,6 +199,9 @@ contains the following methods:
 - `calculate_transition_matrix(beta, mu)`:
     Calculates the transition matrix of the Markov chain that defines the dynamics of the population. `beta` gives
     the intensity of selection and `mu` the mutation rate.
+
+You can see an example of the SML :doc:`here <../examples/plot_invasion_diagram>`,
+and of the calculation of the full transition matrix :doc:`here <../examples/hawk_dove_dynamics>`.
 
 
 .. note::
