@@ -163,16 +163,17 @@ selection ![\beta=1](https://latex.codecogs.com/gif.latex?\beta=1) in the follow
 
 ```python
 import numpy as np
-import matplotlib.pyplot as plt
-from egttools.analytical import StochDynamics
+from egttools.analytical import PairwiseComparison
+from egttools.games import Matrix2PlayerGameHolder
 
 beta = 1; Z = 100; nb_strategies = 2; A = np.array([[-0.5, 2.], [0., 0.]])
 pop_states = np.arange(0, Z + 1, 1)
 
+game = Matrix2PlayerGameHolder(nb_strategies, payoff_matrix=A)
+
 # Instantiate evolver and calculate gradient
-evolver = StochDynamics(nb_strategies, A, Z)
-gradients = np.array([evolver.gradient_selection(x, 0, 1, beta)
-                      for x in pop_states])
+evolver = PairwiseComparison(population_size=Z, game=game)
+gradients = np.array([evolver.calculate_gradient_of_selection(beta, np.array([x, Z-x])) for x in range(Z + 1)])
 ```
 
 Afterwards, you can plot the results with:
@@ -190,8 +191,11 @@ And you can plot the stationary distribution for a mutation
 rate ![\mu=1eˆ{-3}](https://latex.codecogs.com/gif.latex?\mu=1e-3) with:
 
 ```python
-evolver.mu = 1e-3
-stationary_with_mu = evolver.calculate_stationary_distribution(beta)
+import matplotlib.pyplot as plt
+from egttools.utils import calculate_stationary_distribution
+
+transitions = evolver.calculate_transition_matrix(beta, mu=1e-3)
+stationary_with_mu = calculate_stationary_distribution(transitions.transpose())
 fig, ax = plt.subplots(figsize=(5, 4))
 fig.patch.set_facecolor('white')
 lines = ax.plot(np.arange(0, Z + 1) / Z, stationary_with_mu)
