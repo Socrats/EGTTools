@@ -51,6 +51,7 @@ jobs:
           sudo apt-get install libomp-dev
           sudo apt-get install libeigen3-dev
           echo "Eigen3_DIR='/usr/include/eigen3'" >> $GITHUB_ENV
+          sudo apt-get install libboost-all-dev
 
       - name: Install requirements
         run: |
