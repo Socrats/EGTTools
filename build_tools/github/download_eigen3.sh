@@ -20,11 +20,17 @@ cmake ..
 make install
 
 # Download and install Boost 1.80.0
-yum check-update
-yum install boost-devel
+#yum install boost-devel
 
 #sudo apt-get update && sudo apt-get install -yq libboost1.80-dev
 #yum search boost
+cd ../..
+git clone https://github.com/boostorg/boost.git
+git checkout tags/boost-1.80.0
+git submodule update --init --recursive
+cd boost
+./bootstrap.sh
+./b2
 #curl -O https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.gz
 #tar xf boost_1_80_0.tar.gz
 #mv boost_1_80_0 boost
