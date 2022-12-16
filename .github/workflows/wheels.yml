@@ -36,6 +36,13 @@ jobs:
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.13
 
+      - name: Cache boost linux
+        uses: actions/cache@v1.0.3
+        id: cache-boost
+        with:
+          path: "~/boost"
+          key: libboost1.80-dev
+
       - name: Install system dependencies macOS
         if: runner.os == 'macOS'
         run: |
@@ -46,12 +53,23 @@ jobs:
           brew install gfortran
           echo "GFORTRAN=$(brew --prefix gfortran)" >> $GITHUB_ENV
       - name: Install system dependencies Linux
+        env:
+          CACHE_HIT: ${{steps.cache-boost.outputs.cache-hit}}
         if: runner.os == 'Linux'
         run: |
+          sudo apt-get update
           sudo apt-get install libomp-dev
           sudo apt-get install libeigen3-dev
           echo "Eigen3_DIR='/usr/include/eigen3'" >> $GITHUB_ENV
-          sudo apt-get install libboost-all-dev
+          if [[ "$CACHE_HIT" == 'true' ]]; then
+            sudo cp --force --recursive ~/boost/* /
+          else
+            sudo apt-get install -yq libboost1.80-dev
+            mkdir -p ~/boost
+            for dep in libboost1.80-dev; do
+              dpkg -L $dep | while IFS= read -r f; do if test -f $f; then echo $f; fi; done | xargs cp --parents --target-directory ~/boost/
+            done
+          fi
 
       - name: Install requirements
         run: |
@@ -124,6 +142,7 @@ jobs:
       - name: Build and test wheels
         uses: pypa/cibuildwheel@v2.11.2
         env:
+          CACHE_HIT: ${{steps.cache-boost.outputs.cache-hit}}
           CIBW_BUILD_FRONTEND: "build"
           CIBW_BUILD: "cp*-${{ matrix.cibw-arch }}"
           CIBW_SKIP: "cp311-* cp310-win* cp38-manylinux_i686 cp39-manylinux_i686 cp310-manylinux_i686 cp38-win32 cp39-win32 cp310-win32"

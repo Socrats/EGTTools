@@ -20,10 +20,22 @@ cmake ..
 make install
 
 # Download and install Boost 1.80.0
-curl -O https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.gz
-tar xf boost_1_80_0.tar.gz
-mv boost_1_80_0 boost
-cd boost
-./bootstrap.sh
-./bjam install
+if [[ "$CACHE_HIT" == 'true' ]]; then
+  sudo cp --force --recursive ~/boost/* /
+else
+  sudo apt-get update && sudo apt-get install -yq libboost1.80-dev
+  mkdir -p ~/boost
+  for dep in libboost1.80-dev; do
+    dpkg -L $dep | while IFS= read -r f; do if test -f $f; then echo $f; fi; done | xargs cp --parents --target-directory ~/boost/
+  done
+fi
+
+#sudo apt-get update && sudo apt-get install -yq libboost1.80-dev
+#yum search boost
+#curl -O https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.gz
+#tar xf boost_1_80_0.tar.gz
+#mv boost_1_80_0 boost
+#cd boost
+#./bootstrap.sh
+#./bjam install
 #yum install boost-devel
