@@ -21,7 +21,6 @@ make install
 
 # Download and install Boost 1.80.0
 yum check-update
-yum search boost
 yum list available boost\*
 sudo apt-get install libboost-all-dev
 
