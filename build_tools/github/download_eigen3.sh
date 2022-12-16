@@ -26,8 +26,8 @@ make install
 #yum search boost
 cd ../..
 git clone https://github.com/boostorg/boost.git
-git checkout tags/boost-1.80.0
 git submodule update --init --recursive
+git checkout tags/boost-1.80.0
 cd boost
 ./bootstrap.sh
 ./b2
