@@ -20,15 +20,10 @@ cmake ..
 make install
 
 # Download and install Boost 1.80.0
-if [[ "$CACHE_HIT" == 'true' ]]; then
-  sudo cp --force --recursive ~/boost/* /
-else
-  sudo apt-get update && sudo apt-get install -yq libboost1.80-dev
-  mkdir -p ~/boost
-  for dep in libboost1.80-dev; do
-    dpkg -L $dep | while IFS= read -r f; do if test -f $f; then echo $f; fi; done | xargs cp --parents --target-directory ~/boost/
-  done
-fi
+yum check-update
+yum search boost
+yum list available boost\*
+sudo apt-get install libboost-all-dev
 
 #sudo apt-get update && sudo apt-get install -yq libboost1.80-dev
 #yum search boost
