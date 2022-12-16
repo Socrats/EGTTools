@@ -26,10 +26,10 @@ make install
 #yum search boost
 cd ../..
 git clone https://github.com/boostorg/boost.git
-git fetch --all --tags
-git checkout tags/boost-1.80.0 -b master
-git submodule update --init --recursive
 cd boost
+git fetch --all --tags
+git checkout tags/boost-1.80.0
+git submodule update --init --recursive
 ./bootstrap.sh
 ./b2
 #curl -O https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.gz
