@@ -24,18 +24,10 @@ make install
 
 #sudo apt-get update && sudo apt-get install -yq libboost1.80-dev
 #yum search boost
-cd ../..
-git clone https://github.com/boostorg/boost.git
-cd boost
-git fetch --all --tags
-git checkout tags/boost-1.80.0
-git submodule update --init --recursive
-./bootstrap.sh
-./b2
 #curl -O https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.gz
 #tar xf boost_1_80_0.tar.gz
 #mv boost_1_80_0 boost
 #cd boost
 #./bootstrap.sh
 #./bjam install
-#yum install boost-devel
+yum install boost-devel

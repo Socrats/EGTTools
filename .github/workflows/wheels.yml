@@ -124,6 +124,23 @@ jobs:
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.13
 
+      - name: Install boost
+        uses: MarkusJx/install-boost@v2.4.1
+        id: install-boost
+        with:
+          # REQUIRED: Specify the required boost version
+          # A list of supported versions can be found here:
+          # https://github.com/MarkusJx/prebuilt-boost/blob/main/versions-manifest.json
+          boost_version: 1.80.0
+          # OPTIONAL: Specify a platform version
+          platform_version: 18.04
+          # OPTIONAL: Specify a custom install location
+          boost_install_dir: /home/runner/boost
+          # OPTIONAL: Specify a toolset
+          toolset: gcc
+          # OPTIONAL: Specify an architecture
+          arch: x86
+
       - name: Build and test wheels
         uses: pypa/cibuildwheel@v2.11.2
         env:
