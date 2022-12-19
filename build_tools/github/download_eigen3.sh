@@ -30,4 +30,4 @@ make install
 #cd boost
 #./bootstrap.sh
 #./bjam install
-yum install boost-devel
+#yum install boost-devel
