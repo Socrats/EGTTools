@@ -97,8 +97,8 @@ jobs:
             python-arch: x86
           - runs-on: ubuntu-latest
             cibw-arch: manylinux_x86_64
-          - runs-on: ubuntu-latest
-            cibw-arch: manylinux_i686
+#          - runs-on: ubuntu-latest
+#            cibw-arch: manylinux_i686
           - runs-on: macos-latest
             cibw-arch: macosx_x86_64
           - runs-on: macos-latest
@@ -123,24 +123,6 @@ jobs:
 
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.13
-
-#      - name: Install boost
-#        if: runner.os == 'Linux' && matrix.cibw-arch == 'manylinux_x86_64'
-#        uses: MarkusJx/install-boost@v2.4.1
-#        id: install-boost
-#        with:
-#          # REQUIRED: Specify the required boost version
-#          # A list of supported versions can be found here:
-#          # https://github.com/MarkusJx/prebuilt-boost/blob/main/versions-manifest.json
-#          boost_version: 1.80.0
-#          platform_version: 22.04
-#          # OPTIONAL: Specify a custom install location
-#          boost_install_dir: /tmp/boost
-#          # OPTIONAL: Specify a toolset
-#          toolset: gcc
-#          # OPTIONAL: Specify an architecture
-#          arch: x86
-#          link: static
 
       - name: Build and test wheels
         uses: pypa/cibuildwheel@v2.11.2
