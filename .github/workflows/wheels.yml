@@ -140,6 +140,7 @@ jobs:
           toolset: gcc
           # OPTIONAL: Specify an architecture
           arch: x86
+          link: static
 
       - name: Build and test wheels
         uses: pypa/cibuildwheel@v2.11.2
