@@ -24,6 +24,8 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 - Removed specialization of `binomialCoeff` to avoid issues on Windows.
 - Refactored the binding code from C++ to Python so that now we use different files for defining each Python submodule.
   This makes the code much more clear. These files can be found in `cpp/src/pybind11_files`.
+- Now the GitHub CI builds download and install Boost C++ library, as it is required to build egttools.
+- Dropped support for manylinux_i686. In the future only 64 bit architectures will be supported.
 
 ### Added
 
