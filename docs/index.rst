@@ -1,7 +1,7 @@
 .. EGTtools documentation master file, created by
-   sphinx-quickstart on Tue Oct  6 16:03:26 2020.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+sphinx-quickstart on Tue Oct  6 16:03:26 2020.
+You can adapt this file completely to your liking, but it should at least
+contain the root `toctree` directive.
 
 .. image:: images/logo-full.png
 
@@ -26,6 +26,7 @@ of researchers.
 
    Home page <self>
    Installation <installation>
+   Tutorials <tutorials>
    Examples <examples>
    API reference <_autosummary/egttools>
 
@@ -47,6 +48,14 @@ You may cite this repository in the following way:
      doi = {10.5281/zenodo.3687125}
    }
 
+Acknowledgements
+----------------
+I would like to thank Prof. Tom Lenaerts and Prof. Francisco C. Santos for the great help
+in building this library.
+
+We would also like to thank Yannick Jadoul author of
+Parselmouth and Eugenio Bargiacchi author of AIToolBox
+for their great advice on the implementation of EGTtools.
 
 
 

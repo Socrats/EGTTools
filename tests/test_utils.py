@@ -3,8 +3,10 @@ from typing import Tuple
 import numpy as np
 import pytest
 
-from egttools.analytical import replicator_equation
-from egttools.utils import find_saddle_type_and_gradient_direction
+egttools = pytest.importorskip("egttools")
+
+replicator_equation = egttools.analytical.replicator_equation
+find_saddle_type_and_gradient_direction = egttools.utils.find_saddle_type_and_gradient_direction
 
 
 @pytest.fixture

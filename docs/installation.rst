@@ -27,10 +27,42 @@ To update your installed version to the latest release, add ``-U`` (or ``--upgra
     The arm64 and universal2::arm64 have not been tested upstream on CI, so please report any issues or bugs you
     may encounter.
 
+.. warning::
+
+    For Apple M1 (arm64) you should install using ``pip install egttools --no-deps`` so that pip does not
+    install the dependencies of the package. This is necessary since there is no Scipy wheel for architecture arm64
+    available on PyPi yet.
+    To install the package dependencies you should create a virtual environment
+    with `miniforge <https://github.com/conda-forge/miniforge>`_. Once you have miniforge installed you can do the
+    following (assuming that you are in the base miniforge environment)::
+
+        conda create -n egtenv python=3.9
+        conda activate egtenv
+        conda install numpy
+        conda install scipy
+        conda install matplotlib
+        conda install networkx
+
 Build from source
 -----------------
 
-To build `egttools` from source follow the following steps.
+To build `egttools` from source you need:
+
+* A recent version of Linux (only tested on Ubuntu), MacOSX (Mojave or above) or Windows
+* `CMake <https://cmake.org>` version 3.17 or higher
+* `C++ 17 <https://en.cppreference.com/w/cpp/17>`
+* `Eigen <https://eigen.tuxfamily.org/index.php?title=Main_Page>` 3.3.*
+* `Boost <https://www.boost.org/>` 1.80.*
+* **Python** 3.7 or higher
+
+.. warning::
+
+    **Boost** is required in order for EGTtools to use multiprecision integers and
+    floating point numbers with higher precision. You may still be able to compile EGTtools without Boost,
+    but we highly recommend don't.
+
+
+Once you install these libraries, you can follow the following steps.
 
 To **install all required packages** run::
 
@@ -48,17 +80,22 @@ Also, to make your virtual environment visible to jupyter::
     conda install ipykernel # or pip install ipykernel
     python -m ipykernel install --user --name=egttools-env
 
-Finally, you can **install EGTtools** in your virtual environment by running::
+You can **build EGTtools** by running::
 
-    python -m pip install <path>
+    pip install build
+    cd <path>
+    python -m build
 
 Where ``<path>`` represents the path to the EGTtools folder. If you are running this while inside the EGTtools folder,
 then ``<path>`` is simply ``./``.
 
-If you wish, you may also install EGTtools in **development** mode, this will allow the installation to update with new
+Finally, you can install EGTtools in **development** mode, this will allow the installation to update with new
 modifications to the package::
 
     python -m pip install -e <path>
+
+
+If you don't want development mode, you can skip the option ```-e```.
 
 Python distributions
 --------------------

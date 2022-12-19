@@ -5,4 +5,4 @@ except ImportError as e:
 else:
     print('found egttools')
     print('Numerical module in: {}'.format(egttools.numerical))
-    print(egttools.numerical.behaviors.NormalForm.TwoActions.Random())
+    print(egttools.numerical.numerical.behaviors.NormalForm.TwoActions.Random())

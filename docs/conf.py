@@ -55,7 +55,12 @@ extensions = [
     'recommonmark',
     'nbsphinx',
     'pybind11_docstrings',
+    'sphinxcontrib.bibtex',
 ]
+
+bibtex_bibfiles = ['references.bib']
+bibtex_encoding = 'latin'
+bibtex_default_style = 'unsrt'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -72,12 +77,12 @@ master_doc = 'index'
 # -- Project information -----------------------------------------------------
 
 project = 'EGTtools'
-copyright = '2019-2021, Elias Fernández'
+copyright = '2019-2022, Elias Fernández'
 author = 'Elias Fernández'
 
 if on_rtd:
     rtd_version = os.environ.get('READTHEDOCS_VERSION')
-    branch = 'master' if rtd_version == 'latest' else rtd_version
+    branch = 'docs' if rtd_version == 'latest' else rtd_version
 
     github_token = os.environ['GITHUB_TOKEN']
     head_sha = git.Repo(search_parent_directories=True).head.commit.hexsha
@@ -98,6 +103,7 @@ if on_rtd:
         subprocess.check_call(
             [sys.executable, '-m', 'pip', 'install', '--force-reinstall', tmpdir + '/' + zf.namelist()[0]])
 html_css_files = ["readthedocs-custom.css"]  # Override some CSS settings
+
 import egttools
 
 # The short X.Y version
@@ -110,7 +116,7 @@ release = egttools.__version__
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -160,6 +166,7 @@ nitpick_ignore = [('py:class', 'pybind11_builtins.pybind11_object'),
                   ('py:class', 'numpy.complex128'),
                   ('py:obj', 'List'),
                   ('py:class', 'm'),
+                  ('py:class', 'n'),
                   ('py:class', '1')]
 
 if on_rtd:

@@ -1,6 +1,7 @@
 Sphinx>=3.2.1
 sphinx_rtd_theme>=0.5.1
-sphinx-autodoc-typehints>=1.12.0
+sphinx-autodoc-typehints>1.12.0
+sphinxcontrib-bibtex>=2.5.0
 
 GitPython
 PyGithub
@@ -13,7 +14,7 @@ ipywidgets
 nbsphinx>=0.8.7
 recommonmark>=0.7.1
 docutils<= 0.16
-prompt-toolkit<3.0.0
+prompt-toolkit
 
 
 -r examples/requirements.txt

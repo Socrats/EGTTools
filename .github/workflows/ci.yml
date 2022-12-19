@@ -31,11 +31,11 @@ jobs:
             arch: x64
             gcc: 10
             name-extra: ' (GCC 10)'
-          - runs-on: ubuntu-latest
-            python: 3.9
-            arch: x64
-            clang: 12
-            name-extra: ' (Clang 12)'
+#          - runs-on: ubuntu-latest
+#            python: 3.9
+#            arch: x64
+#            clang: 16
+#            name-extra: ' (Clang 16)'
           - runs-on: ubuntu-latest
             python: 3.9
             arch: x64
@@ -50,14 +50,14 @@ jobs:
             arch: x64
             release: true
             name-extra: ' No OpenMP (Release)'
-          - runs-on: windows-latest
-            python: 3.9
-            arch: x64
-            name-extra: ' No OpenMP (Release)'
-          - runs-on: windows-latest
-            python: 3.9
-            arch: x86
-            name-extra: ' (32-bit)'
+#          - runs-on: windows-latest
+#            python: 3.9
+#            arch: x64
+#            name-extra: ' No OpenMP (Release)'
+#          - runs-on: windows-latest
+#            python: 3.7
+#            arch: x86
+#            name-extra: ' (32-bit)'
 
     name: Python ${{ matrix.python }}${{ matrix.name-extra }} • ${{ matrix.runs-on }}
     runs-on: ${{ matrix.runs-on }}
@@ -66,18 +66,18 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           submodules: recursive
 
       - name: Setup Python ${{ matrix.python }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
           architecture: ${{ matrix.arch }}
 
       - name: Setup CMake
-        uses: jwlawson/actions-setup-cmake@v1.11
+        uses: jwlawson/actions-setup-cmake@v1.13
 
       - name: Install system dependencies macOS
         if: runner.os == 'macOS'
@@ -90,12 +90,14 @@ jobs:
           brew install openblas
           echo "OPENBLAS=$(brew --prefix openblas)" >> $GITHUB_ENV
           echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'" >> $GITHUB_ENV
+          brew install boost
       - name: Install system dependencies Linux
         if: runner.os == 'Linux'
         run: |
           sudo apt-get install libomp-dev
           sudo apt-get install libeigen3-dev
           echo "Eigen3_DIR='/usr/include/eigen3'" >> $GITHUB_ENV
+          sudo apt-get install libboost-all-dev
       - name: Install Eigen3 windows
         if: runner.os == 'Windows'
         run: |
@@ -105,6 +107,14 @@ jobs:
           move eigen3 "C:/Program Files (x86)/Eigen3"
           echo "Eigen3_DIR='C:/Program Files (x86)/Eigen3'" >> $GITHUB_ENV
           echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'" >> $GITHUB_ENV
+          curl.exe --output boost_1_80_0.zip--url https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.zip
+          tar -zxvf boost_1_80_0.zip
+          ren boost_1_80_0 Boost
+          move Boost "C:/Program Files (x86)/Boost"
+          cd "C:/Program Files (x86)/Boost/boost"
+          .\bootstrap.bat
+          b2 -j8 toolset=msvc-14.0 --build-type=complete --libdir=C:\Boost\lib\x64 architecture=x86 address-model=64 install
+          
 
       - name: Install requirements
         run: |
@@ -142,7 +152,7 @@ jobs:
       - name: Build and install
         run: |
           python -m build
-          python -m pip install -e ./
+          python -m pip install ./
       - name: Test
         run: |
           python build_tools/github/check_if_egttools_is_installed.py
@@ -160,23 +170,24 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           submodules: recursive
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.8'
 
       - name: Setup CMake
-        uses: jwlawson/actions-setup-cmake@v1.11
+        uses: jwlawson/actions-setup-cmake@v1.13
 
       - name: Install system dependencies Linux
         run: |
           sudo apt-get install libomp-dev
           sudo apt-get install libeigen3-dev
           echo "Eigen3_DIR='/usr/include/eigen3'" >> $GITHUB_ENV
+          sudo apt-get install libboost-all-dev
 
       - name: Install requirements
         run: |
@@ -190,10 +201,15 @@ jobs:
       - name: Build
         run: |
           python -m build
-          python -m pip install -e .
+          python -m pip install .
       - name: Build documentation
         run: |
           python -m sphinx -M html docs docs/_build
       - name: Check links
         run: |
           python -m sphinx -M linkcheck docs docs/_build
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ failure() && github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+        with:
+          limit-access-to-actor: true

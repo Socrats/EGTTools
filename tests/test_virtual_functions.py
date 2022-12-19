@@ -1,7 +1,11 @@
+import pytest
+
 import numpy as np
 
-from egttools.games import PGG
-from egttools.behaviors.pgg_behaviors import player_factory
+egttools = pytest.importorskip("egttools")
+
+PGG = egttools.games.PGG
+player_factory = egttools.behaviors.pgg_behaviors.player_factory
 
 
 def test_extend_abstract_game() -> None:
