@@ -42,6 +42,7 @@ To be able to install EGTtools, you must have:
 * [**CMake**](https://cmake.org) version 3.17 or higher
 * [**C++ 17**](https://en.cppreference.com/w/cpp/17)
 * [**Eigen**](https://eigen.tuxfamily.org/index.php?title=Main_Page) 3.3.*
+* [**Boost**](https://www.boost.org/) 1.80.*
 * **Python** 3.7 or higher
 * If you want support for parallel operations you should install [**OpenMP**](https://www.openmp.org)
 * Ideally, you should also install [**OpenBLAS**](https://www.openblas.net), which offers optimized implementations of
