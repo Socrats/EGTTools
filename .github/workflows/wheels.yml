@@ -126,7 +126,7 @@ jobs:
 
       - name: Install boost
         if: runner.os == 'Linux' && matrix.cibw-arch == 'manylinux_x86_64'
-        uses: MarkusJx/install-boost@v2.4.1
+        uses: MarkusJx/install-boost@v2.4.3
         id: install-boost
         with:
           # REQUIRED: Specify the required boost version
