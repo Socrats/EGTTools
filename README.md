@@ -376,6 +376,8 @@ You may cite this repository in the following way:
 }
 ```
 
+Moreover, you may find a pre-print of our article [here](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4296554).
+
 ## Licence
 
 * EGTtools is released under the [GNU General Public Licence](LICENSE), version 3 or later.

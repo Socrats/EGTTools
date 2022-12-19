@@ -20,8 +20,8 @@ keywords:
 - C++
 - modeling
 - computational social sciences
-version: 0.1.11
-date-released: 2022-10-27
+version: 0.1.12
+date-released: 2022-12-19
 url: "https://github.com/Socrats/EGTTools"
 license: GPL-3.0-or-later
 preferred-citation:
@@ -32,6 +32,6 @@ preferred-citation:
       orcid: "https://orcid.org/0000-0002-4717-7984"
   doi: 10.5281/zenodo.7256084
   journal: "zenodo"
-  month: 10
+  month: 12
   title: "EGTtools: Toolbox for Evolutionary Game Theory"
   year: 2022
