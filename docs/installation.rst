@@ -42,6 +42,7 @@ To update your installed version to the latest release, add ``-U`` (or ``--upgra
         conda install scipy
         conda install matplotlib
         conda install networkx
+        conda install seaborn
 
 Build from source
 -----------------
