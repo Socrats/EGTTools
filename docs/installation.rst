@@ -46,7 +46,23 @@ To update your installed version to the latest release, add ``-U`` (or ``--upgra
 Build from source
 -----------------
 
-To build `egttools` from source follow the following steps.
+To build `egttools` from source you need:
+
+* A recent version of Linux (only tested on Ubuntu), MacOSX (Mojave or above) or Windows
+* `CMake <https://cmake.org>` version 3.17 or higher
+* `C++ 17 <https://en.cppreference.com/w/cpp/17>`
+* `Eigen <https://eigen.tuxfamily.org/index.php?title=Main_Page>` 3.3.*
+* `Boost <https://www.boost.org/>` 1.80.*
+* **Python** 3.7 or higher
+
+.. warning::
+
+    **Boost** is required in order for EGTtools to use multiprecision integers and
+    floating point numbers with higher precision. You may still be able to compile EGTtools without Boost,
+    but we highly recommend don't.
+
+
+Once you install these libraries, you can follow the following steps.
 
 To **install all required packages** run::
 
