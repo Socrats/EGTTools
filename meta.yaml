@@ -1,0 +1,57 @@
+{% set name = "egttools" %}
+{% set version = "0.1.12" %}
+{% set git_rev = "0.1.12" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/egttools-{{ version }}.tar.gz
+  sha256: 7d6d0091701eda9f2419075fc4d32f80e9deaf2484ac56f198653b1591a23bc9
+  git_rev: {{ git_rev }}
+  git_url: https://github.com/Socrats/EGTTools.git
+
+build:
+  noarch: python
+  script: {{ PYTHON }} -m pip install . -vv
+  number: 0
+
+requirements:
+  host:
+    - python >=3.7
+    - pip
+    - build
+  run:
+    - python >=3.7
+    - numpy >=1.7.0
+    - scipy >=1.5.0
+    - matplotlib-base >=3.3.0
+    - networkx
+    - seaborn >=0.11.2
+  build-system:
+    - setuptools>=44
+    - wheel
+    - scikit-build>=0.13.1
+    - cmake>=3.18
+    - ninja; platform_system!='Windows'
+
+test:
+  imports:
+    - egttools
+  commands:
+    - pytest tests
+  requires:
+    - pytest
+
+about:
+  home: https://github.com/Socrats/EGTTools
+  summary: Efficient Python library for EGT
+  license: GPL-3.0 & BSD-3-Clause
+  license_file:
+    - LICENSE
+    - pybind11/LICENSE
+
+extra:
+  recipe-maintainers:
+    - eliasfernandez
