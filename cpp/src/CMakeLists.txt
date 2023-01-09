@@ -19,6 +19,7 @@ pybind11_add_module(numerical
         egttools_pybind11_distributed.cpp
         pybind11_files/distributions.cpp
         pybind11_files/games.cpp
+        pybind11_files/structure.cpp
         pybind11_files/behaviors.cpp
         pybind11_files/methods.cpp
         pybind11_files/datastructures.cpp)

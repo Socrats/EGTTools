@@ -47,7 +47,8 @@ def find_version():
 setup(
     version=find_version(),
     # packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-    packages=['egttools', 'egttools.numerical', 'egttools.analytical', 'egttools.plotting', 'egttools.games',
+    packages=['egttools', 'egttools.numerical', 'egttools.numerical.structure', 'egttools.analytical',
+              'egttools.plotting', 'egttools.games',
               'egttools.behaviors',
               'egttools.behaviors.CRD', 'egttools.behaviors.NormalForm', 'egttools.behaviors.NormalForm.TwoActions',
               'egttools.behaviors.CPR',
@@ -57,6 +58,7 @@ setup(
               ],
     package_dir={'egttools': "src/egttools",
                  'egttools.numerical': "src/egttools/numerical",
+                 'egttools.numerical.structure': 'src/egttools/numerical/structure',
                  'egttools.analytical': "src/egttools/analytical",
                  'egttools.plotting': "src/egttools/plotting", 'egttools.games': "src/egttools/games",
                  'egttools.behaviors': "src/egttools/behaviors", 'egttools.behaviors.CRD': "src/egttools/behaviors/CRD",

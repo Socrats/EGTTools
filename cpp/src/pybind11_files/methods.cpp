@@ -371,8 +371,7 @@ void init_methods(py::module_ &m) {
                     egttools.numerical.PairwiseComparisonNumerical
                     egttools.analytical.StochDynamics
                     egttools.games.AbstractGame
-                )pbdoc"
-          );
+                )pbdoc");
 
     m.def("replicator_equation_n_player", &egttools::infinite_populations::replicator_equation_n_player,
           py::arg("frequencies"), py::arg("payoff_matrix"), py::arg("group_size"),
@@ -404,8 +403,7 @@ void init_methods(py::module_ &m) {
                     egttools.numerical.PairwiseComparisonNumerical
                     egttools.analytical.StochDynamics
                     egttools.games.AbstractGame
-                )pbdoc"
-    );
+                )pbdoc");
 
     m.def("vectorized_replicator_equation_n_player", &egttools::infinite_populations::vectorized_replicator_equation_n_player,
           py::arg("x1"), py::arg("x2"), py::arg("x3"), py::arg("payoff_matrix"), py::arg("group_size"),
@@ -448,8 +446,7 @@ void init_methods(py::module_ &m) {
                     egttools.numerical.PairwiseComparisonNumerical
                     egttools.analytical.StochDynamics
                     egttools.games.AbstractGame
-                )pbdoc"
-    );
+                )pbdoc");
 
     py::class_<egttools::FinitePopulations::analytical::PairwiseComparison>(m, "PairwiseComparison")
             .def(py::init<int, egttools::FinitePopulations::AbstractGame &>(),
@@ -1012,4 +1009,68 @@ void init_methods(py::module_ &m) {
 
         options.enable_function_signatures();
     }
+
+    py::class_<egttools::FinitePopulations::evolvers::GeneralPopulationEvolver>(m, "GeneralPopulationEvolver")
+            .def(py::init<egttools::FinitePopulations::structure::AbstractStructure &>(),
+                 py::arg("structure"), py::keep_alive<1, 2>(),
+                 R"pbdoc(
+                    General population evolver.
+
+                    This class is designed to simulation the evolution of a population defined inside
+                    the `structure` object.
+
+                    Parameters
+                    ----------
+                    structure : egttools.numerical.structure.AbstractStructure
+                        A Structure object which defines the relations between individuals in the population
+                        as well as how individuals update their behavior.
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical
+                )pbdoc")
+            .def("evolve", &egttools::FinitePopulations::evolvers::GeneralPopulationEvolver::evolve,
+                 py::arg("nb_generations"), py::return_value_policy::move,
+                 R"pbdoc(
+                    Evolves the population in structure for `nb_generations`.
+
+                    This method only returns the last total counts of strategies in the population.
+
+                    Parameters
+                    ----------
+                    nb_generations : int
+                        Maximum number of generations.
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        An array with the final count of strategies in the population.
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical.evolve
+                )pbdoc")
+            .def("run", &egttools::FinitePopulations::evolvers::GeneralPopulationEvolver::run,
+                 py::arg("nb_generations"), py::arg("transitory"), py::return_value_policy::move,
+                 R"pbdoc(
+                    Evolves the population in structure for `nb_generations`.
+
+                    This method only returns the last total counts of strategies in the population.
+
+                    Parameters
+                    ----------
+                    nb_generations : int
+                        Maximum number of generations.
+                    transitory : int
+                        The transitory period. The generations until transitory are not taken into account.
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        An array with the final count of strategies in the population.
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical.evolve
+                )pbdoc");
 }

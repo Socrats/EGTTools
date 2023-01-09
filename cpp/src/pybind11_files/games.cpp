@@ -28,6 +28,15 @@ namespace egttools {
         return std::make_unique<egttools::FinitePopulations::NormalFormGame>(nb_rounds, payoff_matrix, strategies_cpp);
     }
 
+    std::unique_ptr<egttools::FinitePopulations::games::NormalFormNetworkGame> init_normal_form_network_game_from_python_list(int nb_rounds,
+                                                                                                                              const Eigen::Ref<const Matrix2D> &payoff_matrix, const py::list &strategies) {
+        egttools::FinitePopulations::games::NFGStrategyVector strategies_cpp;
+        for (py::handle strategy : strategies) {
+            strategies_cpp.push_back(py::cast<egttools::FinitePopulations::games::AbstractNFGStrategy_ptr>(strategy));
+        }
+        return std::make_unique<egttools::FinitePopulations::games::NormalFormNetworkGame>(nb_rounds, payoff_matrix, strategies_cpp);
+    }
+
     std::unique_ptr<egttools::FinitePopulations::CRDGame> init_crd_game_from_python_list(int endowment,
                                                                                          int threshold,
                                                                                          int nb_rounds,
@@ -1124,4 +1133,146 @@ void init_games(py::module_ &mGames) {
                  "updates the values of the payoff matrix.", py::arg("payoff_matrix"))
             .def("save_payoffs", &egttools::FinitePopulations::MatrixNPlayerGameHolder::save_payoffs,
                  "Saves the payoff matrix in a txt file.");
+
+
+    py::class_<egttools::FinitePopulations::games::AbstractSpatialGame, stubs::PyAbstractSpatialGame>(mGames, "AbstractSpatialGame")
+            .def(py::init<>(),
+                 R"pbdoc(
+                    Common interface for spatial games.
+
+                    All that is required to be able to run a Spatial game in egttools is
+                    for the game to be able to compute the fitness of a strategy given a state vector.
+                    This state vector may mean anything. We leave that implementation dependant. This
+                    Way developers may define any kind of dynamics.
+
+                    Nevertheless, as an example, in a Network game, the state vector can be
+                    the counts of each strategy in the neighborhood of the focal player.
+
+                    Note
+                    ----
+                    This API is still not stable, there might be changes in the future.
+                    )pbdoc")
+            .def("calculate_fitness", &egttools::FinitePopulations::games::AbstractSpatialGame::calculate_fitness,
+                 py::arg("strategy_index"),
+                 py::arg("state"),
+                 R"pbdoc(
+                    Calculates the fitness of the `strategy_index` at a given state.
+
+                    Parameters
+                    ----------
+                    strategy_index: int
+                        The index of the strategy adopted by the individual's whose payoff must be calculated.
+                    state: numpy.ndarray
+                        An array of integers containing information necessary to calculate the fitness
+
+                    Returns
+                    -------
+                    double
+                        The fitness of `strategy_index` at `state`.
+                    )pbdoc")
+            .def("nb_strategies", &egttools::FinitePopulations::games::AbstractSpatialGame::nb_strategies,
+                 "Returns the number of strategies in the population.")
+            .def("__str__", &egttools::FinitePopulations::games::AbstractSpatialGame::toString,
+                 "A string representation of the game.")
+            .def("type", &egttools::FinitePopulations::games::AbstractSpatialGame::type,
+                 "the type of game.");
+
+    py::class_<egttools::FinitePopulations::games::NormalFormNetworkGame, egttools::FinitePopulations::games::AbstractSpatialGame>(mGames, "NormalFormNetworkGame")
+            .def(py::init<size_t, const Eigen::Ref<const egttools::Matrix2D> &>(),
+                 R"pbdoc(
+                    Normal Form Network Game. This constructor assumes that there are only two possible strategies and two possible actions.
+
+                    This class will run the game using the players and player types defined in :param group_composition,
+                    and will update the vector :param game_payoffs with the resulting payoff of each player.
+
+                    Parameters
+                    ----------
+                    nb_rounds : int
+                        Number of rounds of the game.
+                    payoff_matrix : numpy.ndarray[numpy.float64[m, m]]
+                        A payoff matrix of shape (nb_actions, nb_actions).
+
+                    See Also
+                    --------
+                    egttools.games.AbstractGame,
+                    egttools.games.AbstractNPlayerGame,
+                    egttools.games.CRDGame,
+                    egttools.games.CRDGameTU,
+                    egttools.behaviors.NormalForm.TwoActions
+                    )pbdoc",
+                 py::arg("nb_rounds"),
+                 py::arg("payoff_matrix"), py::return_value_policy::reference_internal)
+            .def(py::init(&egttools::init_normal_form_network_game_from_python_list),
+                 R"pbdoc(
+                    Normal Form Network Game.
+
+                    This constructor allows you to define any number of strategies
+                    by passing a list of pointers to them. All strategies must by of type AbstractNFGStrategy *.
+
+                    Parameters
+                    ----------
+                    nb_rounds : int
+                        Number of rounds of the game.
+                    payoff_matrix : numpy.ndarray[float]
+                        A payoff matrix of shape (nb_actions, nb_actions).
+                    strategies : List[egttools.behaviors.AbstractNFGStrategy]
+                        A list containing references of AbstractNFGStrategy strategies (or child classes).
+
+                    See Also
+                    --------
+                    egttools.games.AbstractGame
+                    )pbdoc",
+                 py::arg("nb_rounds"),
+                 py::arg("payoff_matrix"), py::arg("strategies"), py::return_value_policy::reference_internal)
+            .def("calculate_payoffs", &egttools::FinitePopulations::games::NormalFormNetworkGame::calculate_payoffs,
+                 "calculates the expected payoff matrix.")
+            .def("calculate_fitness", &egttools::FinitePopulations::games::NormalFormNetworkGame::calculate_fitness,
+                 py::arg("strategy_index"),
+                 py::arg("state"),
+                 R"pbdoc(
+                    Calculates the fitness of the `strategy_index` at a given neighborhood state.
+
+                    Parameters
+                    ----------
+                    strategy_index: int
+                        The index of the strategy adopted by the individual's whose payoff must be calculated.
+                    state: numpy.ndarray
+                        An array of integers containing the counts of strategies in the neighborhood.
+
+                    Returns
+                    -------
+                    double
+                        The fitness of `strategy_index` at the neighborhood `state`.
+                    )pbdoc")
+            .def("calculate_cooperation_level_neighborhood", &egttools::FinitePopulations::games::NormalFormNetworkGame::calculate_cooperation_level_neighborhood,
+                 py::arg("strategy_index"),
+                 py::arg("state"),
+                 R"pbdoc(
+                    Calculates the level of cooperation at the neighbourhood.
+
+                    This method is only relevant when the nb_rounds > 1 and there are conditional
+                    or stochastic strategies in the population
+
+                    Parameters
+                    ----------
+                    index_strategy_focal: int
+                        The index of the strategy adopted by the individual's whose payoff must be calculated.
+                    neighborhood_state: numpy.ndarray
+                        An array of integers containing the counts of strategies in the neighborhood.
+
+                    Returns
+                    -------
+                    double
+                        The fitness of `strategy_index` at the neighborhood `state`.
+                    )pbdoc")
+            .def("nb_strategies", &egttools::FinitePopulations::games::NormalFormNetworkGame::nb_strategies,
+                 "Returns the number of strategies in the population.")
+            .def("nb_rounds", &egttools::FinitePopulations::games::NormalFormNetworkGame::nb_rounds,
+                 "The number of rounds of the game.")
+            .def("__str__", &egttools::FinitePopulations::games::NormalFormNetworkGame::toString,
+                 "A string representation of the game.")
+            .def("type", &egttools::FinitePopulations::games::NormalFormNetworkGame::type,
+                 "the type of game.")
+            .def("strategies", &egttools::FinitePopulations::games::NormalFormNetworkGame::strategies,
+                 "The strategies that play the game.");
 }

@@ -6,5 +6,6 @@ except Exception:
     raise Exception("numerical package not initialized")
 else:
     from egttools.numerical.numerical import PairwiseComparisonNumerical
+    from egttools.numerical.numerical import GeneralPopulationEvolver
 
-__all__ = ['numerical', 'PairwiseComparisonNumerical']
+__all__ = ['numerical', 'PairwiseComparisonNumerical', 'GeneralPopulationEvolver']

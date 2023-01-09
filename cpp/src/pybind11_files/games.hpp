@@ -6,9 +6,11 @@
 #define EGTTOOLS_PYBIND11FILES_GAMES_HPP
 
 #include <egttools/finite_populations/games/NormalFormGame.h>
+#include <egttools/finite_populations/games/NormalFormNetworkGame.h>
 
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <egttools/finite_populations/games/AbstractNPlayerGame.hpp>
+#include <egttools/finite_populations/games/AbstractSpatialGame.hpp>
 #include <egttools/finite_populations/games/CRDGame.hpp>
 #include <egttools/finite_populations/games/CRDGameTU.hpp>
 #include <egttools/finite_populations/games/Matrix2PlayerGameHolder.hpp>

@@ -11,12 +11,15 @@
 #include <egttools/LruCache.hpp>
 #include <egttools/finite_populations/PairwiseMoran.hpp>
 #include <egttools/finite_populations/analytical/PairwiseComparison.hpp>
+#include <egttools/finite_populations/evolvers/GeneralPopulationEvolver.hpp>
+#include <egttools/finite_populations/structure/AbstractStructure.hpp>
 #include <egttools/infinite_populations/ReplicatorDynamics.hpp>
 
 #include "egttools_common.hpp"
 
 #if (HAS_BOOST)
 #include <boost/multiprecision/cpp_int.hpp>
+
 #include "boost_cpp_int_cast_to_pybind11.hpp"
 #endif
 

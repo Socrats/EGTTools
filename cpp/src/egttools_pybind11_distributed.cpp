@@ -29,6 +29,7 @@ using namespace std::string_literals;
 void init_distributions(py::module_ &);
 void init_games(py::module_ &);
 void init_behaviors(py::module_ &);
+void init_structure(py::module_ &);
 void init_methods(py::module_ &);
 void init_datastructures(py::module_ &);
 
@@ -46,11 +47,13 @@ PYBIND11_MODULE(numerical, m) {
     // Now we define a submodule
     auto mGames = m.def_submodule("games");
     auto mBehaviors = m.def_submodule("behaviors");
+    auto mStructure = m.def_submodule("structure");
     auto mData = m.def_submodule("DataStructures");
     auto mDistributions = m.def_submodule("distributions");
 
     mGames.attr("__init__") = py::str("The `egttools.numerical.games` submodule contains the available games.");
     mBehaviors.attr("__init__") = py::str("The `egttools.numerical.behaviors` submodule contains the available strategies to evolve.");
+    mStructure.attr("__init__") = py::str("The `egttools.numerical.structure` submodule contains population structures.");
     mData.attr("__init__") = py::str("The `egttools.numerical.DataStructures` submodule contains helpful data structures.");
     mDistributions.attr("__init__") = py::str(
             "The `egttools.numerical.distributions` submodule contains "
@@ -59,6 +62,7 @@ PYBIND11_MODULE(numerical, m) {
     init_distributions(mDistributions);
     init_games(mGames);
     init_behaviors(mBehaviors);
+    init_structure(mStructure);
     init_datastructures(mData);
     init_methods(m);
 }
