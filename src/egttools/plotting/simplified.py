@@ -137,7 +137,7 @@ def plot_replicator_dynamics_in_simplex(payoff_matrix: np.ndarray,
                                                               atol_pos=atol_stability_pos,
                                                               atol_zero=atol_stability_zero)
 
-    return simplex, lambda u, t: replicator_equation(u, payoff_matrix), roots, roots_xy, stability
+    return simplex, lambda u, t: gradient_function(u), roots, roots_xy, stability
 
 
 def plot_pairwise_comparison_rule_dynamics_in_simplex(population_size: int,
