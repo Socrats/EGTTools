@@ -15,12 +15,12 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
   # wheels.yml accordingly.
   if [[ "$BUILD_ARCH" == "macosx_x86_64"  ]]; then
     brew install libomp
-    export MACOSX_DEPLOYMENT_TARGET=10.15
-    export CIBW_ENVIRONMENT="$CIBW_ENVIRONMENT MACOSX_DEPLOYMENT_TARGET=10.15"
+    export MACOSX_DEPLOYMENT_TARGET=10.9
+    export CIBW_ENVIRONMENT="$CIBW_ENVIRONMENT MACOSX_DEPLOYMENT_TARGET=10.9"
   else
     brew install libomp
-    export MACOSX_DEPLOYMENT_TARGET=12
-    export CIBW_ENVIRONMENT="$CIBW_ENVIRONMENT MACOSX_DEPLOYMENT_TARGET=11.0"
+    export MACOSX_DEPLOYMENT_TARGET=12.0
+    export CIBW_ENVIRONMENT="$CIBW_ENVIRONMENT MACOSX_DEPLOYMENT_TARGET=12.0"
   fi
   export CC=/usr/bin/clang
   export CXX=/usr/bin/clang++
