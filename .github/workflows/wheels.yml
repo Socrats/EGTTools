@@ -131,7 +131,7 @@ jobs:
           CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
           CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_BEFORE_ALL: pip install --upgrade pip
-          CIBW_BEFORE_BUILD_MACOS: bash build_tools/github/build_macos.sh
+          CIBW_BEFORE_BUILD_MACOS: bash build_tools/github/before_all_mac.sh
           CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
           CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3_windows.sh
           CIBW_ENVIRONMENT: CMAKE_BUILD_PARALLEL_LEVEL=2
