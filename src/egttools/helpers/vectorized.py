@@ -18,10 +18,15 @@
 """
 Set of vectorized functions that can be used to apply these functions on large tensors.
 """
-import numpy as np
-from ..plotting.helpers import barycentric_to_xy_coordinates
-from ..analytical import replicator_equation_n_player
-from ..numerical.numerical import vectorized_replicator_equation_n_player as cpp_vectorized_replicator_equation_n_player
+try:
+    from ..numerical.numerical_ import \
+        vectorized_replicator_equation_n_player as cpp_vectorized_replicator_equation_n_player
+except Exception:
+    raise Exception("numerical package not initialized")
+else:
+    import numpy as np
+    from ..plotting.helpers import barycentric_to_xy_coordinates
+    from ..analytical import replicator_equation_n_player
 
 
 def vectorized_replicator_equation(frequencies: np.ndarray, payoffs: np.ndarray) -> np.ndarray:

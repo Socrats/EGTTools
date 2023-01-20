@@ -19,7 +19,7 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
     export CIBW_ENVIRONMENT="$CIBW_ENVIRONMENT MACOSX_DEPLOYMENT_TARGET=10.15"
   else
     brew install libomp
-    export MACOSX_DEPLOYMENT_TARGET=11
+    export MACOSX_DEPLOYMENT_TARGET=12
     export CIBW_ENVIRONMENT="$CIBW_ENVIRONMENT MACOSX_DEPLOYMENT_TARGET=11.0"
   fi
   export CC=/usr/bin/clang

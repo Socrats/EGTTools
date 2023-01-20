@@ -16,7 +16,7 @@
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
 add_custom_target(pytest
-        COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=$<TARGET_FILE_DIR:numerical> ${Python_EXECUTABLE} -m pytest
+        COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=$<TARGET_FILE_DIR:numerical_> ${Python_EXECUTABLE} -m pytest
         DEPENDS numerical
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 add_custom_target(tests DEPENDS pytest)

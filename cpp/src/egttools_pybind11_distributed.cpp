@@ -33,7 +33,7 @@ void init_structure(py::module_ &);
 void init_methods(py::module_ &);
 void init_datastructures(py::module_ &);
 
-PYBIND11_MODULE(numerical, m) {
+PYBIND11_MODULE(numerical_, m) {
     m.attr("__version__") = py::str(XSTR(EGTTOOLS_VERSION));
     m.attr("VERSION") = py::str(XSTR(EGTTOOLS_VERSION));
     m.attr("__init__") = py::str(

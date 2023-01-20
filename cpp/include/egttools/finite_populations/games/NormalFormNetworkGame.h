@@ -32,10 +32,6 @@
 #include <stdexcept>
 #include <vector>
 
-#if defined(_OPENMP)
-#include <egttools/OpenMPUtils.hpp>
-#endif
-
 namespace egttools::FinitePopulations::games {
     using AbstractNFGStrategy_ptr = egttools::FinitePopulations::behaviors::AbstractNFGStrategy *;
     using NFGStrategyVector = std::vector<AbstractNFGStrategy_ptr>;
@@ -81,7 +77,7 @@ namespace egttools::FinitePopulations::games {
         [[nodiscard]] const NFGStrategyVector &strategies() const;
 
         // setters
-//        void set_strategies(NFGStrategyVector &strategies);
+        //        void set_strategies(NFGStrategyVector &strategies);
 
     protected:
         int nb_rounds_, nb_strategies_;

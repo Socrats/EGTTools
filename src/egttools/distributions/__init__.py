@@ -1,9 +1,12 @@
 """Helpful implementations of stochastic distributions."""
 
-from egttools.numerical.numerical.distributions import (TimingUncertainty,
-                                                        multinomial_pmf,
-                                                        multivariate_hypergeometric_pdf,
-                                                        binom,
-                                                        comb)
+try:
+    from ..numerical.numerical_.distributions import (TimingUncertainty,
+                                                      multinomial_pmf,
+                                                      multivariate_hypergeometric_pdf,
+                                                      binom,
+                                                      comb)
+except Exception:
+    raise Exception("numerical package not initialized")
 
 __all__ = ['TimingUncertainty', 'multinomial_pmf', 'multivariate_hypergeometric_pdf', 'binom', 'comb']

@@ -17,9 +17,8 @@
 
 from typing import List, Union
 import numpy as np
-from scipy.stats import multivariate_hypergeom
 
-from .. import (calculate_nb_states, calculate_state, sample_simplex, )
+from .. import (sample_simplex, )
 from . import AbstractNPlayerGame
 from ..behaviors.pgg_behaviors import PGGOneShotStrategy
 
