@@ -19,7 +19,7 @@ Plotting the stationary distribution
 Populations with 3 strategies
 -----------------------------
 
-The `Simplex2D` class
+The Simplex2D class
 ^^^^^^^^^^^^^^^^^^^^^
 
 The gradient of selection and stability in infinite populations
