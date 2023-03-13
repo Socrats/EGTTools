@@ -11,7 +11,7 @@ if [[ $(uname) == "Darwin" ]]; then
     # supported version of the macos SDK as libomp will be vendored into the
     # scikit-learn wheels for macos.
 
-    if [[ "$CIBW_BUILD" == *-macosx_arm64 || "$CIBW_BUILD" == *-macosx_universal2 ]]; then
+    if [[ "$CIBW_BUILD" == *-macosx_arm64 ]] then
         if [[ $(uname -m) == "x86_64" ]]; then
             # arm64 builds must cross compile because the CI instance is x86
             # This turns off the computation of the test program in
@@ -38,13 +38,13 @@ if [[ $(uname) == "Darwin" ]]; then
     export CXXFLAGS="$CXXFLAGS -I$PREFIX/include"
     export LDFLAGS="$LDFLAGS -Wl,-rpath,$PREFIX/lib -L$PREFIX/lib -lomp"
 
-#    if [[ $(uname -m) == "arm64" && "$CIBW_BUILD" == "cp38-macosx_arm64" ]]; then
-#        # Enables native building and testing for macosx arm on Python 3.8. For details see:
-#        # https://cibuildwheel.readthedocs.io/en/stable/faq/#macos-building-cpython-38-wheels-on-arm64
-#        curl -o /tmp/Python38.pkg https://www.python.org/ftp/python/3.8.10/python-3.8.10-macos11.pkg
-#        sudo installer -pkg /tmp/Python38.pkg -target /
-#        sh "/Applications/Python 3.8/Install Certificates.command"
-#    fi
+    if [[ $(uname -m) == "arm64" && "$CIBW_BUILD" == "cp38-macosx_arm64" ]]; then
+        # Enables native building and testing for macosx arm on Python 3.8. For details see:
+        # https://cibuildwheel.readthedocs.io/en/stable/faq/#macos-building-cpython-38-wheels-on-arm64
+        curl -o /tmp/Python38.pkg https://www.python.org/ftp/python/3.8.10/python-3.8.10-macos11.pkg
+        sudo installer -pkg /tmp/Python38.pkg -target /
+        sh "/Applications/Python 3.8/Install Certificates.command"
+    fi
 fi
 
 brew install eigen
