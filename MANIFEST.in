@@ -9,6 +9,11 @@ include setup.py
 include .clang-format
 include environment.yml
 
+# Anaconda files
+include bld.bat
+include build.sh
+include meta.yaml
+
 include CMakeLists.txt
 include requirements.txt
 graft cpp
