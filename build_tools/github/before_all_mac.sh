@@ -11,7 +11,7 @@ if [[ $(uname) == "Darwin" ]]; then
     # supported version of the macos SDK as libomp will be vendored into the
     # scikit-learn wheels for macos.
 
-    if [[ "$CIBW_BUILD" == *-macosx_arm64 ] | [ "$CIBW_BUILD" == *-macosx_universal2]; then
+    if [[ "$CIBW_BUILD" == *-macosx_arm64]] | [["$CIBW_BUILD" == *-macosx_universal2]]; then
         if [[ $(uname -m) == "x86_64" ]]; then
             # arm64 builds must cross compile because the CI instance is x86
             # This turns off the computation of the test program in
