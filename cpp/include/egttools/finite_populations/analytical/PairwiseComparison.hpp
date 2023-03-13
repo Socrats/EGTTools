@@ -35,9 +35,6 @@
 #include <boost/multiprecision/cpp_dec_float.hpp>
 #endif
 
-#if defined(_OPENMP)
-#include <egttools/OpenMPUtils.hpp>
-#endif
 
 namespace egttools::FinitePopulations::analytical {
 #if (HAS_BOOST)

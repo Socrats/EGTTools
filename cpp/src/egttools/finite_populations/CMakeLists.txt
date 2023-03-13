@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
-target_sources(numerical PRIVATE
+target_sources(numerical_ PRIVATE
         Utils.cpp
         games/AbstractNPlayerGame.cpp
         games/NormalFormGame.cpp
@@ -25,7 +25,9 @@ target_sources(numerical PRIVATE
         games/NPlayerStagHunt.cpp
         games/Matrix2PlayerGameHolder.cpp
         games/MatrixNPlayerGameHolder.cpp
+        games/NormalFormNetworkGame.cpp
         behaviors/NFGStrategies.cpp
         behaviors/CRDStrategies.cpp
         analytical/PairwiseComparison.cpp
+        evolvers/GeneralPopulationEvolver.cpp
         )

@@ -70,10 +70,10 @@ class AbstractNPlayerGameExpectedPayoff(AbstractNPlayerGame):
             The payoff matrix of the game.
 
         """
-        payoffs_container = np.zeros(shape=(self.nb_strategies_,), dtype=np.float64)
-        for i in range(self.nb_group_configurations_):
+        payoffs_container = np.zeros(shape=(self.nb_strategies(),), dtype=np.float64)
+        for i in range(self.nb_group_configurations()):
             # Get group composition
-            group_composition = sample_simplex(i, self.group_size_, self.nb_strategies_)
+            group_composition = sample_simplex(i, self.group_size(), self.nb_strategies())
             self.play(group_composition, payoffs_container)
             for strategy_index, strategy_payoff in enumerate(payoffs_container):
                 self.update_payoff(strategy_index, i, strategy_payoff)

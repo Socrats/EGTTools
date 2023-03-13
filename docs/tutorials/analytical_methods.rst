@@ -179,8 +179,13 @@ individuals adopting another strategy :math:`j`
 How to use this model in EGTtools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-All of these analytical equations are implemented in the class `egttools.analytical.PairwiseComparison`, which
-contains the following methods:
+All of these analytical equations are implemented in two classes, `egttools.analytical.StochDynamics` and
+`egttools.analytical.PairwiseComparison`. Both classes implement similar methods, however, we recommend the use
+of `PairwiseComparison`, which is implemented in C++ and should run much faster than `SochDynamics`. Moreover,
+it is possible that we will deprecate `StochDynamics` in the future.
+
+
+`egttools.analytical.PairwiseComparison` contains the following methods:
 
 - `calculate_fixation_probability(invading_strategy_index, resident_strategy_index:, beta:)`:
     Calculates the fixation probability of a single mutant of an invading strategy of index
@@ -212,3 +217,35 @@ and of the calculation of the full transition matrix :doc:`here <../examples/haw
 
 .. note::
     We will add support for multiple populations soon.
+
+Below you may find an example of use of this class to study the stochastic dynamics in finite populations of a
+Hawk-Dove game:
+
+.. code-block:: Python
+
+    from egttools.analytical import PairwiseComparison
+    # Payoff matrix
+    V = 2; D = 3; T = 1
+    A = np.array([
+            [ (V-D)/2, V],
+            [ 0      , (V/2) - T],
+        ])
+
+
+    # Parameters and evolver
+    nb_strategies = 2; Z = 100; N = 2;
+    beta = 1
+    pop_states = np.arange(0, Z + 1, 1)
+    game = egt.games.Matrix2PlayerGameHolder(nb_strategies, A)
+    evolver = PairwiseComparison(Z, game)
+
+    gradients = np.array([evolver.calculate_gradient_of_selection(beta, np.array([x, Z-x])) for x in range(Z + 1)])
+
+    egt.plotting.indicators.plot_gradients(gradients[:, 0], figsize=(6,5),
+                                       marker_facecolor='white',
+                                       xlabel="frequency of hawks (k/Z)", marker="o", marker_size=30, marker_plot_freq=2)
+
+.. image:: ../images/hawk_dove_moran_gradient.pdf
+   :alt: Gradient of selection of a N-player Hawk Dove game
+   :align: center
+   :scale: 30%

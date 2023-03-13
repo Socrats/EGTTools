@@ -97,8 +97,6 @@ jobs:
             python-arch: x86
           - runs-on: ubuntu-latest
             cibw-arch: manylinux_x86_64
-#          - runs-on: ubuntu-latest
-#            cibw-arch: manylinux_i686
           - runs-on: macos-latest
             cibw-arch: macosx_x86_64
           - runs-on: macos-latest
@@ -129,16 +127,16 @@ jobs:
         env:
           CIBW_BUILD_FRONTEND: "build"
           CIBW_BUILD: "cp*-${{ matrix.cibw-arch }}"
-          CIBW_SKIP: "cp311-* cp310-win* cp38-manylinux_i686 cp39-manylinux_i686 cp310-manylinux_i686 cp38-win32 cp39-win32 cp310-win32"
+          CIBW_SKIP: "cp311-* cp310-win* cp38-win32 cp39-win32 cp310-win32"
           CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
           CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_BEFORE_ALL: pip install --upgrade pip
-          CIBW_BEFORE_BUILD_MACOS: brew install eigen && brew install libomp && brew install gfortran && brew install openblas && brew install boost
+          CIBW_BEFORE_BUILD_MACOS: bash build_tools/github/before_all_mac.sh
           CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
           CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3_windows.sh
           CIBW_ENVIRONMENT: CMAKE_BUILD_PARALLEL_LEVEL=2
           CIBW_ENVIRONMENT_WINDOWS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_ARCH="${{ matrix.platform_id == 'win32' && '-A Win32' || '' }}"
-          CIBW_ENVIRONMENT_MACOS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch == 'macosx_x86_64' && 'x86_64' || matrix.cibw-arch == 'macosx_arm64' && 'arm64' || matrix.cibw-arch == 'macosx_universal2' && '"arm64;x86_64"' || '' }} BUILD_ARCH=${{ matrix.cibw-arch }} MACOSX_DEPLOYMENT_TARGET=10.15 BUILD_ARCH=${{ matrix.cibw-arch }} EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'
+          CIBW_ENVIRONMENT_MACOS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch == 'macosx_x86_64' && 'x86_64' || matrix.cibw-arch == 'macosx_arm64' && 'arm64' || matrix.cibw-arch == 'macosx_universal2' && '"arm64;x86_64"' || '' }} BUILD_ARCH=${{ matrix.cibw-arch }} MACOSX_DEPLOYMENT_TARGET=10.9
           CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
           CIBW_TEST_REQUIRES: pytest
           CIBW_BEFORE_TEST_MACOS: cd .. && cp -r EGTTools/tests/ /Users/runner/tests/
@@ -146,6 +144,7 @@ jobs:
           CIBW_BEFORE_TEST_LINUX: cp -r tests/ /root/tests/ && cd ..
           CIBW_TEST_COMMAND: pytest tests -s --import-mode=importlib
           CIBW_BUILD_VERBOSITY: 1
+          CONDA_HOME: /usr/local/miniconda
 
       - name: Upload wheels
         if: startsWith(github.ref, 'refs/heads/docs') != true

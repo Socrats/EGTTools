@@ -15,26 +15,27 @@
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
-pybind11_add_module(numerical
+pybind11_add_module(numerical_
         egttools_pybind11_distributed.cpp
         pybind11_files/distributions.cpp
         pybind11_files/games.cpp
+        pybind11_files/structure.cpp
         pybind11_files/behaviors.cpp
         pybind11_files/methods.cpp
         pybind11_files/datastructures.cpp)
 add_subdirectory(egttools)
 
-target_include_directories(numerical PRIVATE .)
+target_include_directories(numerical_ PRIVATE .)
 
 if (UNIX)
-    target_compile_options(numerical PRIVATE
+    target_compile_options(numerical_ PRIVATE
             -Wall
             -Wextra
             -Wno-unknown-pragmas
             )
 endif ()
 
-set_target_properties(numerical PROPERTIES
+set_target_properties(numerical_ PROPERTIES
         CXX_STANDARD 17
         CXX_STANDARD_REQUIRED TRUE
         CXX_EXTENSIONS FALSE
@@ -46,11 +47,11 @@ set_target_properties(numerical PROPERTIES
         CXX_VISIBILITY_PRESET hidden
         )
 
-target_include_directories(numerical SYSTEM INTERFACE ${CMAKE_SOURCE_DIR})
+target_include_directories(numerical_ SYSTEM INTERFACE ${CMAKE_SOURCE_DIR})
 
 if (OPENMP_FOUND)
-    message("-- linking OpenMP to target numerical")
-    target_link_libraries(numerical PRIVATE OpenMP::OpenMP_CXX)
+    message("-- linking OpenMP to target numerical_")
+    target_link_libraries(numerical_ PRIVATE OpenMP::OpenMP_CXX)
 else ()
-    target_link_libraries(numerical)
+    target_link_libraries(numerical_)
 endif ()

@@ -1,5 +1,8 @@
 """Custom data structures used to store data from numerical simulations."""
 
-from egttools.numerical.numerical.DataStructures import DataTable
+try:
+    from ..numerical.numerical_.DataStructures import DataTable
+except Exception:
+    raise Exception("numerical package not initialized")
 
 __all__ = ['DataTable']

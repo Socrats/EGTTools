@@ -16,7 +16,7 @@
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
 add_custom_target(pytest
-        COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=$<TARGET_FILE_DIR:numerical> ${Python_EXECUTABLE} -m pytest
+        COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=$<TARGET_FILE_DIR:numerical_> ${Python_EXECUTABLE} -m pytest
         DEPENDS numerical
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 add_custom_target(tests DEPENDS pytest)
@@ -41,8 +41,10 @@ add_library(egttoolsNumerical
         ../cpp/src/egttools/finite_populations/games/CRDGame.cpp
         ../cpp/src/egttools/finite_populations/games/CRDGameTU.cpp
         ../cpp/src/egttools/finite_populations/games/OneShotCRD.cpp
+        ../cpp/src/egttools/finite_populations/games/NormalFormNetworkGame.cpp
         ../cpp/src/egttools/finite_populations/behaviors/NFGStrategies.cpp
         ../cpp/src/egttools/finite_populations/behaviors/CRDStrategies.cpp
+        ../cpp/src/egttools/finite_populations/evolvers/GeneralPopulationEvolver.cpp
         )
 
 set_target_properties(egttoolsNumerical PROPERTIES
@@ -102,3 +104,6 @@ endif ()
 
 add_executable(testGameHolders cpp/test_game_holders.cpp)
 target_link_libraries(testGameHolders egttoolsNumerical)
+
+add_executable(testGeneralEvolverNetwork cpp/test_general_evolver_network.cpp)
+target_link_libraries(testGeneralEvolverNetwork egttoolsNumerical)

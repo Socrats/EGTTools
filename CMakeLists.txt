@@ -168,5 +168,5 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
 add_subdirectory(${PROJECT_SOURCE_DIR}/docs)
 
 if (SKBUILD)
-    install(TARGETS numerical LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX})
+    install(TARGETS numerical_ LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX})
 endif ()

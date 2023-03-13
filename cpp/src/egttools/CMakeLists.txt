@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
-target_sources(numerical PRIVATE
+target_sources(numerical_ PRIVATE
         SeedGenerator.cpp
         Distributions.cpp
         Data.cpp
