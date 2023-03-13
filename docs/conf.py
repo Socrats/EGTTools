@@ -169,6 +169,16 @@ nitpick_ignore = [('py:class', 'pybind11_builtins.pybind11_object'),
                   ('py:class', 'n'),
                   ('py:class', '1')]
 
+# Links to ignore
+linkcheck_ignore = [
+    'https://doi.org/10.1098/rspb.2008.1126',
+    'https://royalsocietypublishing.org/doi/10.1098/rspb.2008.1126',
+    'https://doi.org/10.1073/pnas.1015648108',
+    'https://pnas.org/doi/full/10.1073/pnas.1015648108',
+    'https://doi.org/10.1073/pnas.0709546105',
+    'https://pnas.org/doi/full/10.1073/pnas.0709546105',
+]
+
 if on_rtd:
     branch_or_tag = branch or 'v{}'.format(release)
 else:
