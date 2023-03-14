@@ -128,7 +128,7 @@ jobs:
           CIBW_BUILD_FRONTEND: "build"
           CIBW_BUILD: "cp*-${{ matrix.cibw-arch }}"
           CIBW_SKIP: "cp311-* cp310-win* cp38-win32 cp39-win32 cp310-win32"
-          CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
+          CIBW_ARCHS_MACOS: "x86_64 arm64"
           CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_BEFORE_ALL: pip install --upgrade pip
           CIBW_BEFORE_BUILD_MACOS: bash build_tools/github/before_build_mac.sh
@@ -142,10 +142,10 @@ jobs:
             BUILD_ARCH=${{ matrix.cibw-arch }}
           CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
           CIBW_TEST_REQUIRES: pytest
-          CIBW_BEFORE_TEST_MACOS: cd .. && cp -r EGTTools/tests/ /Users/runner/tests/
-          CIBW_BEFORE_TEST_WINDOWS: cd .. && cp -r EGTTools/tests/ c:\tests\
-          CIBW_BEFORE_TEST_LINUX: cp -r tests/ /root/tests/ && cd ..
-          CIBW_TEST_COMMAND: pytest tests -s --import-mode=importlib
+#          CIBW_BEFORE_TEST_MACOS: cd .. && cp -r EGTTools/tests/ /Users/runner/tests/
+#          CIBW_BEFORE_TEST_WINDOWS: cd .. && cp -r EGTTools/tests/ c:\tests\
+#          CIBW_BEFORE_TEST_LINUX: cp -r tests/ /root/tests/ && cd ..
+          CIBW_TEST_COMMAND: pytest tests
           CIBW_BUILD_VERBOSITY: 1
 #          CONDA_HOME: /usr/local/miniconda
 
