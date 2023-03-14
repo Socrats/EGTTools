@@ -99,9 +99,9 @@ jobs:
             cibw-arch: manylinux_x86_64
           - runs-on: macos-latest
             cibw-arch: macosx_x86_64
-          - runs-on: macos-latest
+          - runs-on: macos-11
             cibw-arch: macosx_arm64
-          - runs-on: macos-latest
+          - runs-on: macos-11
             cibw-arch: macosx_universal2
 
     name: Wheels • ${{ matrix.cibw-arch }}
@@ -140,7 +140,6 @@ jobs:
             CMAKE_BUILD_PARALLEL_LEVEL=2 
             CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch == 'macosx_x86_64' && 'x86_64' || matrix.cibw-arch == 'macosx_arm64' && 'arm64' || matrix.cibw-arch == 'macosx_universal2' && '"arm64;x86_64"' || '' }} 
             BUILD_ARCH=${{ matrix.cibw-arch }}
-            MACOSX_DEPLOYMENT_TARGET=12.0
           CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
           CIBW_TEST_REQUIRES: pytest
           CIBW_BEFORE_TEST_MACOS: cd .. && cp -r EGTTools/tests/ /Users/runner/tests/
