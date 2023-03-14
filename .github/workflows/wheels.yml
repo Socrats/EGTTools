@@ -142,7 +142,7 @@ jobs:
           CIBW_TEST_REQUIRES: pytest
           CIBW_BEFORE_TEST_MACOS: cd .. && cp -r {package}/tests/ {project}/tests/
           CIBW_BEFORE_TEST_WINDOWS: cd .. && cp -r {package}/tests/ {project}\tests\
-          CIBW_BEFORE_TEST_LINUX: cp -r {package}/tests/ {project}/tests/
+#          CIBW_BEFORE_TEST_LINUX: cp -r {package}/tests/ {project}/tests/
           CIBW_TEST_COMMAND: pytest {project}/tests
           CIBW_BUILD_VERBOSITY: 1
 #          CONDA_HOME: /usr/local/miniconda
