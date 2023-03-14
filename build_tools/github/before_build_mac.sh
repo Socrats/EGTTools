@@ -16,7 +16,7 @@ if [[ $(uname) == "Darwin" ]]; then
     export MACOSX_DEPLOYMENT_TARGET=12.0
     echo "MACOSX_DEPLOYMENT_TARGET=12.0" >> "$GITHUB_ENV"
   else
-    export MACOSX_DEPLOYMENT_TARGET=10.9
-    echo "MACOSX_DEPLOYMENT_TARGET=10.9" >> "$GITHUB_ENV"
+    export MACOSX_DEPLOYMENT_TARGET=10.15
+    echo "MACOSX_DEPLOYMENT_TARGET=10.15" >> "$GITHUB_ENV"
   fi
 fi
