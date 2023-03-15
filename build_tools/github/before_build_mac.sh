@@ -26,7 +26,7 @@ if [[ $(uname) == "Darwin" ]]; then
     # Install boost
     cd boost
     ./bootstrap.sh
-    ./b2 -j8 architecture=arm64 address-model=64 install
+    ./b2 -j8 architecture=arm address-model=64 install
     cd ..
   else
     export MACOSX_DEPLOYMENT_TARGET=10.15
@@ -48,6 +48,7 @@ cd build
 cmake ..
 make install
 
-# Install extra libraries
+# Install extra libraries for parallel processing
 brew install gfortran
 brew install openblas
+brew install openmp
