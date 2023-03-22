@@ -362,21 +362,33 @@ You can find more information in the [ReadTheDocs](https://egttools.readthedocs.
 
 ## Citing
 
-You may cite this repository in the following way:
+If you use EGTtools in your publications, please cite it in the following way:
+
+```latex
+@article{Fernandez2023,
+  author = {Fernández Domingos, Elias and Santos, Francisco C. and Lenaerts, Tom},
+  title = {EGTTools: Evolutionary Game Dynamics in Python},
+  year = {2023},
+  publisher = {Elsevier},
+  journal = {iScience},
+  doi = {https://doi.org/10.1016/j.isci.2023.106419}
+}
+```
+
+And to cite the current version of EGTtools you can use:
 
 ```latex
 @misc{Fernandez2020,
   author = {Fernández Domingos, Elias},
-  title = {EGTTools: Toolbox for Evolutionary Game Theory},
-  year = {2020},
-  publisher = {GitHub},
-  journal = {GitHub repository},
-  howpublished = {\url{https://github.com/Socrats/EGTTools}},
-  doi = {10.5281/zenodo.3687125}
+  title = {EGTTools v: Toolbox for Evolutionary Game Theory (0.1.12)},
+  year = {2022},
+  month = {Dec},
+  journal = {Zenodo},
+  doi = {10.5281/zenodo.7458631}
 }
 ```
 
-Moreover, you may find a pre-print of our article [here](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4296554).
+Moreover, you may find our article at [here](https://www.cell.com/iscience/pdf/S2589-0042(23)00496-0.pdf).
 
 ## Licence
 
