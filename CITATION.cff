@@ -13,12 +13,6 @@ authors:
     orcid: "https://orcid.org/0000-0002-4717-7984"
     affiliation: Machine Learning Group, Université Libre de Bruxelles
     email: elias.fernandez.domingos@ulb.be
-  - family-names: "Santos"
-    given-names: "Francisco C."
-    affiliation: INESC-ID & Instituto Superior Técnico, Universidade de Lisboa
-  - family-names: "Lenaerts"
-    given-names: "Tom"
-    affiliation: Machine Learning Group, Université Libre de Bruxelles
 keywords:
 - Evolutionary Game Theory
 - EGT
@@ -37,6 +31,10 @@ preferred-citation:
     - family-names: "Fernández Domingos"
       given-names: "Elias"
       orcid: "https://orcid.org/0000-0002-4717-7984"
+    - family-names: "Santos"
+      given-names: "Francisco C."
+    - family-names: "Lenaerts"
+      given-names: "Tom"
   doi: https://doi.org/10.1016/j.isci.2023.106419
   journal: "iScience"
   title: "EGTtools: Evolutionary Game Dynamics in Python"
