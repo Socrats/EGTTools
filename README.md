@@ -392,7 +392,7 @@ And to cite the current version of EGTtools you can use:
 ```latex
 @misc{Fernandez2020,
   author = {Fernández Domingos, Elias},
-  title = {EGTTools v: Toolbox for Evolutionary Game Theory (0.1.12)},
+  title = {EGTTools: Toolbox for Evolutionary Game Theory (0.1.12)},
   year = {2022},
   month = {Dec},
   journal = {Zenodo},
