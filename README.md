@@ -167,21 +167,25 @@ import numpy as np
 from egttools.analytical import PairwiseComparison
 from egttools.games import Matrix2PlayerGameHolder
 
-beta = 1; Z = 100; nb_strategies = 2; A = np.array([[-0.5, 2.], [0., 0.]])
+beta = 1;
+Z = 100;
+nb_strategies = 2;
+A = np.array([[-0.5, 2.], [0., 0.]])
 pop_states = np.arange(0, Z + 1, 1)
 
 game = Matrix2PlayerGameHolder(nb_strategies, payoff_matrix=A)
 
 # Instantiate evolver and calculate gradient
 evolver = PairwiseComparison(population_size=Z, game=game)
-gradients = np.array([evolver.calculate_gradient_of_selection(beta, np.array([x, Z-x])) for x in range(Z + 1)])
+gradients = np.array([evolver.calculate_gradient_of_selection(beta, np.array([x, Z - x])) for x in range(Z + 1)])
 ```
 
 Afterwards, you can plot the results with:
 
 ```python
 from egttools.plotting import plot_gradients
-plot_gradients(gradients, figsize=(4,4), fig_title="Hawk-Dove game stochastic dynamics",
+
+plot_gradients(gradients, figsize=(4, 4), fig_title="Hawk-Dove game stochastic dynamics",
                marker_facecolor='white',
                xlabel="frequency of hawks (k/Z)", marker="o", marker_size=20, marker_plot_freq=2)
 ```
@@ -362,17 +366,25 @@ You can find more information in the [ReadTheDocs](https://egttools.readthedocs.
 
 ## Citing
 
-If you use EGTtools in your publications, please cite it in the following way:
+If you use EGTtools in your publications, please cite it in the following way with bibtex:
 
 ```latex
 @article{Fernandez2023,
   author = {Fernández Domingos, Elias and Santos, Francisco C. and Lenaerts, Tom},
-  title = {EGTTools: Evolutionary Game Dynamics in Python},
-  year = {2023},
-  publisher = {Elsevier},
+  title = {EGTtools: Evolutionary game dynamics in Python},
   journal = {iScience},
+  volume = {26},
+  number = {4},
+  pages = {106419},
+  year = {2023},
+  issn = {2589-0042},
   doi = {https://doi.org/10.1016/j.isci.2023.106419}
 }
+```
+Or in text format:
+
+```
+Fernández Domingos, E., Santos, F. C. & Lenaerts, T. EGTtools: Evolutionary game dynamics in Python. iScience 26, 106419 (2023).
 ```
 
 And to cite the current version of EGTtools you can use:

@@ -39,3 +39,6 @@ preferred-citation:
   journal: "iScience"
   title: "EGTtools: Evolutionary Game Dynamics in Python"
   year: 2023
+  volume: 26
+  number: 4
+  pages: 106419
