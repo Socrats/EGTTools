@@ -37,10 +37,10 @@ jobs:
           python-version: 3.9
 
       - name: Setup CMake
-        uses: jwlawson/actions-setup-cmake@v1.13
+        uses: jwlawson/actions-setup-cmake@v1.14
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.12.1
+        uses: pypa/cibuildwheel@v2.12.3
         env:
           CIBW_BUILD_FRONTEND: "build"
           CIBW_BUILD: "cp*-${{ matrix.cibw-arch }}"
