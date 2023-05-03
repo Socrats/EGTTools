@@ -250,16 +250,19 @@ std::tuple<egttools::Matrix2D, egttools::Matrix2D> egttools::FinitePopulations::
     Matrix2D transitions = Matrix2D::Zero(nb_strategies_, nb_strategies_);
     Matrix2D fixation_probabilities = Matrix2D::Zero(nb_strategies_, nb_strategies_);
 
+#pragma omp parallel for default(none) shared(beta, nb_strategies_, population_size_, transitions, fixation_probabilities)
     for (int i = 0; i < nb_strategies_; ++i) {
-        transitions(i, i) = 1;
+        double transition_stay = 1;
         for (int j = 0; j < nb_strategies_; ++j) {
             if (i != j) {
                 auto fixation_probability = calculate_fixation_probability(j, i, beta);
                 fixation_probabilities(i, j) = fixation_probability;
                 transitions(i, j) = fixation_probability / (nb_strategies_ - 1);
-                transitions(i, i) -= transitions(i, j);
+#pragma omp atomic update
+                transition_stay -= transitions(i, j);
             }
         }
+        transitions(i, i) = transition_stay;
     }
 
     return {transitions, fixation_probabilities};

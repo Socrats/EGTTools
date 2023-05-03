@@ -64,7 +64,7 @@ endif()
 
 # Necessary for certain MacOX versions to find homebrew OpenMP
 if (APPLE AND NOT SKIP_OPENMP)
-    message("-- Try to install OpenMP")
+#    message("-- Try to install OpenMP")
 #    message(STATUS "BUILD_ARCH=$ENV{BUILD_ARCH}")
 #    if ("$ENV{BUILD_ARCH}" MATCHES "macosx_x86_64|macosx_universal2")
 #        message(STATUS "Using ANACONDA OpenMP")
@@ -77,9 +77,9 @@ if (APPLE AND NOT SKIP_OPENMP)
 #        string(STRIP ${LIBOMP_DIR} LIBOMP_DIR)
 #    endif()
 
-    execute_process(COMMAND brew install libomp)
-    execute_process(COMMAND brew --prefix libomp OUTPUT_VARIABLE LIBOMP_DIR)
-    string(STRIP ${LIBOMP_DIR} LIBOMP_DIR)
+#    execute_process(COMMAND brew install libomp)
+#    execute_process(COMMAND brew --prefix libomp OUTPUT_VARIABLE LIBOMP_DIR)
+#    string(STRIP ${LIBOMP_DIR} LIBOMP_DIR)
 
     if (CMAKE_C_COMPILER_ID MATCHES "Clang\$")
         set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${LIBOMP_DIR}/include")
@@ -94,7 +94,6 @@ if (APPLE AND NOT SKIP_OPENMP)
         set(OpenMP_omp_LIBRARY ${LIBOMP_DIR}/lib/libomp.dylib)
         set(LDFLAGS "$LDFLAGS -Wl,-rpath,${LIBOMP_DIR}/lib -L${LIBOMP_DIR}/lib -lomp")
     endif ()
-
 endif ()
 
 if (NOT WIN32)
@@ -108,7 +107,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(EIGEN_VERSION_REQUIRED 3.3)
+#set(EIGEN_VERSION_REQUIRED 3.3)
 
 find_package(Eigen3 ${EIGEN_VERSION_REQUIRED} QUIET CONFIG)
 if (NOT EIGEN3_FOUND)
@@ -161,6 +160,8 @@ endif ()
 set(Python_FIND_IMPLEMENTATIONS CPython PyPy)
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
 add_subdirectory(pybind11)
+
+message(STATUS "${Python_INCLUDE_DIRS}")
 
 include_directories(${PROJECT_SOURCE_DIR}/cpp/include)
 add_subdirectory(${PROJECT_SOURCE_DIR}/cpp/src)

@@ -24,7 +24,8 @@ from warnings import warn
 import numpy as np
 from scipy.linalg import schur, eigvals
 from scipy.sparse import csr_matrix, csc_matrix
-from typing import Optional, List, Generator, Union, Callable
+from typing import Optional, List, Generator, Union, Callable, Dict
+from networkx import Graph
 from egttools.games import AbstractGame
 
 
@@ -330,3 +331,11 @@ def calculate_nb_unique_combinations(slots_per_bin: Union[List[int], np.ndarray]
     divider = np.prod([np.math.factorial(x) for x in slots_per_bin])
 
     return np.math.factorial(total_slots) // divider
+
+
+def transform_graph_to_dict_of_lists(graph: Graph) -> Dict[int, List[int]]:
+    graph_dictionary = {}
+    for node in graph.nodes:
+        graph_dictionary[node] = list(graph[node].keys())
+
+    return graph_dictionary

@@ -26,6 +26,7 @@ target_sources(numerical_ PRIVATE
         games/Matrix2PlayerGameHolder.cpp
         games/MatrixNPlayerGameHolder.cpp
         games/NormalFormNetworkGame.cpp
+        games/OneShotCRDNetworkGame.cpp
         behaviors/NFGStrategies.cpp
         behaviors/CRDStrategies.cpp
         analytical/PairwiseComparison.cpp

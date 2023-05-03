@@ -582,6 +582,7 @@ void init_methods(py::module_ &m) {
                 )pbdoc",
                  py::arg("invading_strategy_index"), py::arg("resident_strategy_index"), py::arg("beta"))
             .def("calculate_transition_and_fixation_matrix_sml", &egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_and_fixation_matrix_sml,
+                 py::call_guard<py::gil_scoped_release>(),
                  R"pbdoc(
                     Calculates the transition matrix of the reduced Markov Chain that emerges when assuming SML.
 
