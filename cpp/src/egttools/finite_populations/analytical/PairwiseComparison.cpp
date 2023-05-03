@@ -31,7 +31,7 @@ egttools::FinitePopulations::analytical::PairwiseComparison::PairwiseComparison(
 }
 
 egttools::SparseMatrix2D egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_matrix(double beta, double mu) {
-    // Check if the size of the population is positive
+    // Check if beta is positive
     if (beta < 0) {
         throw std::invalid_argument(
                 "The intensity of selection beta must not be negative!");
