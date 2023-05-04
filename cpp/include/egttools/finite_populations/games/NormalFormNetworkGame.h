@@ -23,7 +23,6 @@
 #include <egttools/Types.h>
 
 #include <cassert>
-#include <egttools/LruCache.hpp>
 #include <egttools/finite_populations/Utils.hpp>
 #include <egttools/finite_populations/behaviors/AbstractNFGStrategy.hpp>
 #include <egttools/finite_populations/behaviors/NFGStrategies.hpp>

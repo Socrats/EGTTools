@@ -11,6 +11,7 @@ try:
                                               CRDGame,
                                               CRDGameTU,
                                               OneShotCRD,
+                                              OneShotCRDNetworkGame,
                                               Matrix2PlayerGameHolder,
                                               MatrixNPlayerGameHolder, )
 except Exception:
@@ -23,6 +24,6 @@ else:
 
 __all__ = ['AbstractGame', 'AbstractSpatialGame', 'AbstractNPlayerGame', 'NormalFormGame', 'NormalFormNetworkGame',
            'CRDGame', 'CRDGameTU',
-           'OneShotCRD', 'PGG',
+           'OneShotCRD', 'OneShotCRDNetworkGame', 'PGG',
            'InformalRiskGame', 'AbstractTwoPLayerGame', 'NPlayerStagHunt', 'CommonPoolResourceDilemma',
            'CommonPoolResourceDilemmaCommitment', 'Matrix2PlayerGameHolder', 'MatrixNPlayerGameHolder']

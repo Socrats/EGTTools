@@ -22,8 +22,8 @@
 #include <egttools/Distributions.h>
 #include <egttools/Types.h>
 
+#include <array>
 #include <cassert>
-#include <egttools/LruCache.hpp>
 #include <egttools/finite_populations/Utils.hpp>
 #include <egttools/finite_populations/games/AbstractSpatialGame.hpp>
 #include <memory>
@@ -56,44 +56,34 @@ namespace egttools::FinitePopulations::games {
          *               This value must be in the interval [0, 1]
          * @param risk : The risk that all members of the group will lose their remaining endowment if the
          *               collective target is not achieved.
-         * @param group_size : The size of the group (N)
          * @param min_nb_cooperators : The minimum number of cooperators (M) required to reach the
          *                             collective target. In other words, the collective target is
          *                             reached if the collective effort is at least Mcb. This value
          *                             must be in the discrete interval [[0, N]].
          */
-        OneShotCRDNetworkGame(double endowment, double cost, double risk, int group_size, int min_nb_cooperators);
-
-        double calculate_fitness(int strategy_index, VectorXui &state) override;
+        OneShotCRDNetworkGame(double endowment, double cost, double risk, int min_nb_cooperators);
 
         /**
-        * @brief Calculates the average cooperation of a player with its neighborhood
-        * @param index_strategy_focal : index of the strategy of the focal individual
-        * @param neighborhood_state : counts of each strategy in the neighborhood
-        * @return the level of cooperation of a strategy given the neighborhood
-        */
-        double calculate_cooperation_level_neighborhood(int index_strategy_focal, const Eigen::Ref<const VectorXui> &neighborhood_state);
-
-        /**
-         * @brief Calculates the payoff of a focal player in its neighborhood
-         * @param index_strategy_focal
-         * @param neighborhood_state
-         * @return
+         * @brief Calculates the payoff of the strategy_index in the neighbourhood
+         * @param strategy_index : index of the strategy of the focal player
+         * @param state : this vector contains the counts for each strategy in the neighborhood
+         * @return the payoff of the focal player in the neighborhood
          */
-        double calculate_expected_payoff_neighborhood(int index_strategy_focal, const Eigen::Ref<const VectorXui> &neighborhood_state);
+        double calculate_fitness(int strategy_index, VectorXui &state) override;
 
         // getters
         [[nodiscard]] int nb_strategies() const override;
         [[nodiscard]] double endowment() const;
+        [[nodiscard]] double cost() const;
         [[nodiscard]] double risk() const;
-        [[nodiscard]] int group_size() const;
         [[nodiscard]] int min_nb_cooperators() const;
         [[nodiscard]] std::string toString() const override;
         [[nodiscard]] std::string type() const override;
 
     protected:
         double endowment_, cost_, risk_;
-        int group_size_, min_nb_cooperators_;
+        double payoffs_failure_[2], payoffs_success_[2];
+        int min_nb_cooperators_, nb_strategies_;
     };
 }// namespace egttools::FinitePopulations::games
 
