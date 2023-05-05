@@ -1031,6 +1031,7 @@ void init_methods(py::module_ &m) {
                     egttools.numerical.PairwiseComparisonNumerical
                 )pbdoc")
             .def("evolve", &egttools::FinitePopulations::evolvers::GeneralPopulationEvolver::evolve,
+                 py::call_guard<py::gil_scoped_release>(),
                  py::arg("nb_generations"), py::return_value_policy::move,
                  R"pbdoc(
                     Evolves the population in structure for `nb_generations`.
@@ -1052,6 +1053,7 @@ void init_methods(py::module_ &m) {
                     egttools.numerical.PairwiseComparisonNumerical.evolve
                 )pbdoc")
             .def("run", &egttools::FinitePopulations::evolvers::GeneralPopulationEvolver::run,
+                 py::call_guard<py::gil_scoped_release>(),
                  py::arg("nb_generations"), py::arg("transitory"), py::return_value_policy::move,
                  R"pbdoc(
                     Evolves the population in structure for `nb_generations`.
