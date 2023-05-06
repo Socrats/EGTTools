@@ -11,7 +11,7 @@ egttools::VectorXui egttools::FinitePopulations::evolvers::GeneralPopulationEvol
     structure_.initialize();
 
     // Then iterate for all the generations and return the final mean state
-    for (int i = 0; i < nb_generations; ++i) {
+    for (int_fast64_t i = 0; i < nb_generations; ++i) {
         structure_.update_population();
     }
 
@@ -28,14 +28,14 @@ egttools::MatrixXui2D egttools::FinitePopulations::evolvers::GeneralPopulationEv
     // First initialize the structure
     structure_.initialize();
 
-    for (int i = 0; i < transitory; ++i) {
+    for (int_fast64_t i = 0; i < transitory; ++i) {
         structure_.update_population();
     }
 
     results.row(0).array() = structure_.mean_population_state().array();
 
     // Then iterate for all the generations and return the final mean state
-    for (int i = 0; i < nb_generations - transitory; ++i) {
+    for (int_fast64_t i = 0; i < nb_generations - transitory; ++i) {
         structure_.update_population();
         results.row(i).array() = structure_.mean_population_state().array();
     }
