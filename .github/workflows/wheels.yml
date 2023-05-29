@@ -121,7 +121,7 @@ jobs:
         uses: jwlawson/actions-setup-cmake@v1.14
 
       - name: Build and test wheels
-        uses: pypa/cibuildwheel@v2.12.3
+        uses: pypa/cibuildwheel@v2.13.0
         env:
           CIBW_BUILD_FRONTEND: "build"
           CIBW_BUILD: "cp*-${{ matrix.cibw-arch }}"
