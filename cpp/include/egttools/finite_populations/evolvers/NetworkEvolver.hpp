@@ -58,7 +58,7 @@ namespace egttools::FinitePopulations::evolvers {
          * @return
          */
         Vector calculate_average_gradient_of_selection(VectorXui &state, int_fast64_t nb_simulations,
-                                                       int_fast64_t nb_generations, std::vector<AbstractNetworkStructure> networks);
+                                                       int_fast64_t nb_generations, std::vector<AbstractNetworkStructure *> networks);
 
         /**
          * Evolves the population in structure for `nb_generations` and returns all states.
@@ -71,8 +71,6 @@ namespace egttools::FinitePopulations::evolvers {
          * @return the count of strategies of the population for every generation after `transitory`.
          */
         MatrixXui2D run(int_fast64_t nb_generations, int_fast64_t transitory);
-
-        AbstractNetworkStructure build_network(NodeDictionary network);
 
         [[nodiscard]] std::shared_ptr<AbstractNetworkStructure> structure();
 

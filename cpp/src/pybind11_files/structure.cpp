@@ -60,7 +60,7 @@ void init_structure(py::module_ &m) {
                 Note
                 ----
                 This is still a first implementation.
-                This class might be renamed ini the future and the API might change.
+                This class might be renamed in the future and the API might change.
                 )pbdoc")
             .def("initialize", &egttools::FinitePopulations::structure::AbstractStructure::initialize, R"pbdoc(
                     Initializes each element of the structure.
@@ -73,14 +73,14 @@ void init_structure(py::module_ &m) {
                     e.g., initialize_all_black, would initialize each individual
                     with the black strategy.
                     )pbdoc")
-            .def("update_population", &egttools::FinitePopulations::structure::AbstractStructure::initialize, R"pbdoc(
+            .def("update_population", &egttools::FinitePopulations::structure::AbstractStructure::update_population, R"pbdoc(
                     Updates the strategy of an individual inside of the population.
 
                     The developer has freedom to implement this method. All that is required
                     is that it applies some change to the population every time it is called
                     given the current population state.
                     )pbdoc")
-            .def("mean_population_state", &egttools::FinitePopulations::structure::AbstractStructure::initialize, R"pbdoc(
+            .def("mean_population_state", &egttools::FinitePopulations::structure::AbstractStructure::mean_population_state, R"pbdoc(
                     Returns the mean population state.
 
                     Returns
@@ -88,13 +88,103 @@ void init_structure(py::module_ &m) {
                     numpy.ndarray
                         The total counts of each strategy in the population.
                     )pbdoc")
-            .def("nb_strategies", &egttools::FinitePopulations::structure::AbstractStructure::initialize, R"pbdoc(
+            .def("nb_strategies", &egttools::FinitePopulations::structure::AbstractStructure::nb_strategies, R"pbdoc(
                     Returns the maximum number of strategies that can be present in the population.
 
                     Returns
                     -------
                     int
                         The maximum number of strategies that can be present in the population.
+                    )pbdoc");
+
+    py::class_<egttools::FinitePopulations::structure::AbstractNetworkStructure, stubs::PyAbstractNetworkStructure, egttools::FinitePopulations::structure::AbstractStructure>(m, "AbstractNetworkStructure")
+            .def(py::init<>(), R"pbdoc(
+                Abstract class which must be implemented by any new network structure.
+
+                This class provides a common interface for classes that implement general
+                behavioral updates for a population structure in a network (i.e., individuals are
+                represented as nodes, and edges represent connections between individuals).
+
+                A network structure in egttools is meant to contain a population
+                (which may be structure in any way in function of the implementation)
+                and whose state (the behaviors of the individuals) are updated according
+                to a given function.
+
+                For this reason, a Structure class must expose a method to initialize the population
+                (specific implementations may add other initialization methods), a method
+                to update the population given its current state, a method that returns the number
+                of possible strategies in the population, a method that returns the mean
+                state of the population, i.e., how many individuals, in total, in the population
+                adopt each strategy, a method that returns the size of the network (i.e., the
+                size of the population), a method that returns the network itself,
+                and a method that calculates the average gradient of
+                selection of the network.
+
+                You must implement the following methods:
+                - initialize()
+                - initialize_state(state: numpy.ndarray)
+                - update_population()
+                - calculate_average_gradient_of_selection()
+                - mean_population_state()
+                - nb_strategies()
+                - population_size()
+
+                See Also
+                --------
+                egttools.numerical.structures.AbstractStructure
+                egttools.numerical.structures.Network
+                egttools.numerical.structures.NetworkGroup
+
+                Note
+                ----
+                This is still a first implementation.
+                This class might be renamed in the future and the API might change.
+                )pbdoc")
+            .def("initialize_state", &egttools::FinitePopulations::structure::AbstractNetworkStructure::initialize_state,
+                 py::arg("state"), R"pbdoc(
+                    Initializes each element of the structure at given state.
+
+                    In Evolutionary games, this means that each individual in the structure is
+                    assigned a strategy according to some algorithm (generally
+                    it will be a random assignment) until the counts of each strategy in the population
+                    match that of `state`.
+
+                    Parameters
+                    ----------
+                    state : numpy.ndarray
+                        A numpy array containing the counts of each strategy in the population
+                    )pbdoc")
+            .def("calculate_average_gradient_of_selection", &egttools::FinitePopulations::structure::AbstractNetworkStructure::calculate_average_gradient_of_selection,
+                 R"pbdoc(
+                    Calculates the average gradient of selection at the current state of the network.
+
+                    This method averages the difference in transition probabilities of increasing and decreasing
+                    the count of each strategy in the population at each node of the network. It runs a single trial.
+
+                    To obtain the true gradient of selection for a given average network state, this method must be
+                    run multiple times with different initializations of the network. In the limit, the best calculation would be
+                    obtained by averaging the computations at any possible initialization of the network in a given aggregated state.
+
+                    Returns
+                    ----------
+                    numpy.array
+                        The averaged gradient of selection for each strategy in the population at the current network structure.
+                    )pbdoc")
+            .def("population_size", &egttools::FinitePopulations::structure::AbstractNetworkStructure::population_size, R"pbdoc(
+                    Returns the population size.
+
+                    Returns
+                    -------
+                    int
+                        The number of nodes in the network.
+                    )pbdoc")
+            .def("network", &egttools::FinitePopulations::structure::AbstractNetworkStructure::network, R"pbdoc(
+                    Returns a dictionary with the nodes and neighbours of each node in the network.
+
+                    Returns
+                    -------
+                    Dict[int, List[int]]
+                        A dictionary with the nodes and neighbours of each node in the network.
                     )pbdoc");
 
     py::class_<NetworkStructure, egttools::FinitePopulations::structure::AbstractStructure>(m, "Network")
@@ -239,7 +329,7 @@ void init_structure(py::module_ &m) {
                         The game played by the population.
                     )pbdoc");
 
-    py::class_<NetworkGroupStructure, egttools::FinitePopulations::structure::AbstractStructure>(m, "NetworkGroup")
+    py::class_<NetworkGroupStructure, egttools::FinitePopulations::structure::AbstractNetworkStructure>(m, "NetworkGroup")
             .def(py::init(&egttools::init_network_group_structure),
                  py::arg("nb_strategies"),
                  py::arg("beta"),
@@ -295,6 +385,20 @@ void init_structure(py::module_ &m) {
                     If the population is big enough and divisible by the number of strategies,
                     This should result in a roughly equal distribution of each strategy.
                     )pbdoc")
+            .def("initialize_state", &NetworkGroupStructure::initialize_state,
+                 py::arg("state"), R"pbdoc(
+                    Initializes each element of the structure at given state.
+
+                    In Evolutionary games, this means that each individual in the structure is
+                    assigned a strategy according to some algorithm (generally
+                    it will be a random assignment) until the counts of each strategy in the population
+                    match that of `state`.
+
+                    Parameters
+                    ----------
+                    state : numpy.ndarray
+                        A numpy array containing the counts of each strategy in the population
+                    )pbdoc")
             .def("update_population", &NetworkGroupStructure::update_population,
                  R"pbdoc(
                     Initializes each element of the structure.
@@ -302,6 +406,23 @@ void init_structure(py::module_ &m) {
                     Each individual will adopt any of the available strategies with equal probability.
                     If the population is big enough and divisible by the number of strategies,
                     This should result in a roughly equal distribution of each strategy.
+                    )pbdoc")
+            .def("calculate_average_gradient_of_selection", &NetworkGroupStructure::calculate_average_gradient_of_selection,
+                 py::return_value_policy::move,
+                 R"pbdoc(
+                    Calculates the average gradient of selection at the current state of the network.
+
+                    This method averages the difference in transition probabilities of increasing and decreasing
+                    the count of each strategy in the population at each node of the network. It runs a single trial.
+
+                    To obtain the true gradient of selection for a given average network state, this method must be
+                    run multiple times with different initializations of the network. In the limit, the best calculation would be
+                    obtained by averaging the computations at any possible initialization of the network in a given aggregated state.
+
+                    Returns
+                    ----------
+                    numpy.array
+                        The averaged gradient of selection for each strategy in the population at the current network structure.
                     )pbdoc")
             .def("calculate_fitness", &NetworkGroupStructure::calculate_fitness,
                  py::call_guard<py::gil_scoped_release>(),
@@ -321,7 +442,8 @@ void init_structure(py::module_ &m) {
                     -------
                     float
                         The fitness of the individual at the node `index`.
-                    )pbdoc", py::arg("index"))
+                    )pbdoc",
+                 py::arg("index"))
             .def("calculate_game_payoff", &NetworkGroupStructure::calculate_game_payoff,
                  R"pbdoc(
                     Calculates the payoff of a strategy given a neighborhood state.
@@ -338,7 +460,8 @@ void init_structure(py::module_ &m) {
                     -------
                     float
                         The payoff of the individual at the node `index`.
-                    )pbdoc", py::arg("index"))
+                    )pbdoc",
+                 py::arg("index"))
             .def("population_size", &NetworkGroupStructure::population_size,
                  R"pbdoc(
                     Returns the number of individuals in the population.

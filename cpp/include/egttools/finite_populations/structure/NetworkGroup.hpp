@@ -62,7 +62,7 @@ namespace egttools::FinitePopulations::structure {
 
         void initialize() override;
         void initialize_state(VectorXui &state) override;
-        void initialize_state(VectorXui &state, std::mt19937_64 &generator);
+//        void initialize_state(VectorXui &state, std::mt19937_64 &generator);
         void update_population() override;
         /**
          * Calculates the average gradient of selection given the current state of the network
@@ -162,19 +162,19 @@ namespace egttools::FinitePopulations::structure {
         std::shuffle(population_.begin(), population_.end(), generator_);
     }
 
-    template<class GameType, class CacheType>
-    void NetworkGroup<GameType, CacheType>::initialize_state(egttools::VectorXui &state, std::mt19937_64 &generator) {
-        // We first fill the population with the number of strategies indicated by state in order
-        int index = 0;
-        for (int s = 0; s < nb_strategies_; ++s) {
-            for (size_t i = 0; i < state[s]; ++i) {
-                population_[index] = s;
-                index++;
-            }
-        }
-        // Finally we shuffle
-        std::shuffle(population_.begin(), population_.end(), generator);
-    }
+//    template<class GameType, class CacheType>
+//    void NetworkGroup<GameType, CacheType>::initialize_state(egttools::VectorXui &state, std::mt19937_64 &generator) {
+//        // We first fill the population with the number of strategies indicated by state in order
+//        int index = 0;
+//        for (int s = 0; s < nb_strategies_; ++s) {
+//            for (size_t i = 0; i < state[s]; ++i) {
+//                population_[index] = s;
+//                index++;
+//            }
+//        }
+//        // Finally we shuffle
+//        std::shuffle(population_.begin(), population_.end(), generator);
+//    }
 
     template<class GameType, class CacheType>
     Vector NetworkGroup<GameType, CacheType>::calculate_average_gradient_of_selection() {
@@ -191,7 +191,7 @@ namespace egttools::FinitePopulations::structure {
             auto fitness_focal = calculate_fitness(i);
             double transition_probability_unconditional = 0.;
             Vector transition_probability = Vector::Zero(nb_strategies_);
-            for (int j = 0; j < network_[i].size(); ++j) {
+            for (size_t j = 0; j < network_[i].size(); ++j) {
                 if (population_[network_[i][j]] == population_[i]) continue;
                 // Get the fitness of both players
                 auto fitness_neighbor = calculate_fitness(j);

@@ -1076,4 +1076,120 @@ void init_methods(py::module_ &m) {
                     --------
                     egttools.numerical.PairwiseComparisonNumerical.evolve
                 )pbdoc");
+
+    py::class_<egttools::FinitePopulations::evolvers::NetworkEvolver>(m, "NetworkEvolver")
+            .def(py::init<egttools::FinitePopulations::structure::AbstractNetworkStructure &>(),
+                 py::arg("structure"), py::keep_alive<1, 2>(),
+                 R"pbdoc(
+                    General population evolver.
+
+                    This class is designed to simulation the evolution of a population defined inside
+                    the `structure` object.
+
+                    Parameters
+                    ----------
+                    structure : egttools.numerical.structure.AbstractStructure
+                        A Structure object which defines the relations between individuals in the population
+                        as well as how individuals update their behavior.
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical
+                )pbdoc")
+            .def("evolve", &egttools::FinitePopulations::evolvers::NetworkEvolver::evolve,
+                 py::arg("nb_generations"), py::return_value_policy::move,
+                 R"pbdoc(
+                    Evolves the population in structure for `nb_generations`.
+
+                    This method only returns the last total counts of strategies in the population.
+
+                    Parameters
+                    ----------
+                    nb_generations : int
+                        Maximum number of generations.
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        An array with the final count of strategies in the population.
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical.evolve
+                )pbdoc")
+            .def("calculate_average_gradient_of_selection", static_cast<egttools::Vector (egttools::FinitePopulations::evolvers::NetworkEvolver::*)(egttools::VectorXui &, int_fast64_t, int_fast64_t)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::calculate_average_gradient_of_selection),
+                 py::arg("state"), py::arg("nb_simulations"), py::arg("nb_generations"), py::return_value_policy::move,
+                 R"pbdoc(
+                    Evolves the population in structure for `nb_generations`.
+
+                    This method only returns the last total counts of strategies in the population.
+
+                    Parameters
+                    ----------
+                    state : numpy.ndarray
+                        The counts of each strategy in the population.
+                    nb_simulations : int
+                        The number of simulations to perform for the given state
+                    nb_generations : int
+                        Maximum number of generations.
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        An array with the final count of strategies in the population.
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical.evolve
+                )pbdoc")
+            .def("calculate_average_gradient_of_selection", static_cast<egttools::Vector (egttools::FinitePopulations::evolvers::NetworkEvolver::*)(egttools::VectorXui &, int_fast64_t, int_fast64_t, std::vector<egttools::FinitePopulations::structure::AbstractNetworkStructure *>)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::calculate_average_gradient_of_selection),
+                 py::arg("state"), py::arg("nb_simulations"), py::arg("nb_generations"), py::arg("networks"), py::return_value_policy::move,
+                 R"pbdoc(
+                    Evolves the population in structure for `nb_generations`.
+
+                    This method only returns the last total counts of strategies in the population.
+
+                    Parameters
+                    ----------
+                    state : numpy.ndarray
+                        The counts of each strategy in the population.
+                    nb_simulations : int
+                        The number of simulations to perform for the given state
+                    nb_generations : int
+                        Maximum number of generations.
+                    networks : List[AbstractNetworkStructure *]
+                        A list of network structures.
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        An array with the final count of strategies in the population.
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical.evolve
+                )pbdoc")
+            .def("run", &egttools::FinitePopulations::evolvers::NetworkEvolver::run,
+                 py::arg("nb_generations"), py::arg("transitory"), py::return_value_policy::move,
+                 R"pbdoc(
+                    Evolves the population in structure for `nb_generations`.
+
+                    This method only returns the last total counts of strategies in the population.
+
+                    Parameters
+                    ----------
+                    nb_generations : int
+                        Maximum number of generations.
+                    transitory : int
+                        The transitory period. The generations until transitory are not taken into account.
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        An array with the final count of strategies in the population.
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical.evolve
+                )pbdoc");
 }

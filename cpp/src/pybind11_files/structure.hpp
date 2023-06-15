@@ -6,6 +6,7 @@
 #define EGTTOOLS_PYBIND11FILES_STRUCTURE_HPP
 
 #include <egttools/finite_populations/games/AbstractSpatialGame.hpp>
+#include <egttools/finite_populations/structure/AbstractNetworkStructure.hpp>
 #include <egttools/finite_populations/structure/AbstractStructure.hpp>
 #include <egttools/finite_populations/structure/Network.hpp>
 #include <egttools/finite_populations/structure/NetworkGroup.hpp>

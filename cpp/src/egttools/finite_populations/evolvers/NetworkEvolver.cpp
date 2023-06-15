@@ -64,7 +64,7 @@ egttools::Vector egttools::FinitePopulations::evolvers::NetworkEvolver::calculat
 
     return average_gradient_of_selection / (nb_simulations * nb_generations);
 }
-egttools::Vector egttools::FinitePopulations::evolvers::NetworkEvolver::calculate_average_gradient_of_selection(egttools::VectorXui &state, int_fast64_t nb_simulations, int_fast64_t nb_generations, std::vector<AbstractNetworkStructure> networks) {
+egttools::Vector egttools::FinitePopulations::evolvers::NetworkEvolver::calculate_average_gradient_of_selection(egttools::VectorXui &state, int_fast64_t nb_simulations, int_fast64_t nb_generations, std::vector<AbstractNetworkStructure *> networks) {
     if (static_cast<int>(state.sum()) != structure_.population_size())
         throw std::invalid_argument("state must sum to population_size.");
     if (nb_simulations < 1)
@@ -78,11 +78,11 @@ egttools::Vector egttools::FinitePopulations::evolvers::NetworkEvolver::calculat
     for (auto & network : networks) {
         for (int_fast64_t i = 0; i < nb_simulations; ++i) {
             // Initialize the structure
-            network.initialize_state(state);
+            network->initialize_state(state);
 
             for (int_fast64_t j = 0; j < nb_generations; ++j) {
                 // Calculate average gradient at the current generation
-                average_gradient_of_selection += network.calculate_average_gradient_of_selection();
+                average_gradient_of_selection += network->calculate_average_gradient_of_selection();
             }
         }
     }
