@@ -31,4 +31,5 @@ target_sources(numerical_ PRIVATE
         behaviors/CRDStrategies.cpp
         analytical/PairwiseComparison.cpp
         evolvers/GeneralPopulationEvolver.cpp
+        evolvers/NetworkEvolver.cpp
         )

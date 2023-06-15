@@ -19,12 +19,14 @@
 #ifndef EGTTOOLS_FINITEPOPULATIONS_STRUCTURE_NETWORKGROUP_HPP
 #define EGTTOOLS_FINITEPOPULATIONS_STRUCTURE_NETWORKGROUP_HPP
 
+#include <egttools/Sampling.h>
 #include <egttools/SeedGenerator.h>
 #include <egttools/Types.h>
 
+#include <algorithm>
 #include <egttools/LruCache.hpp>
 #include <egttools/finite_populations/Utils.hpp>
-#include <egttools/finite_populations/structure/AbstractStructure.hpp>
+#include <egttools/finite_populations/structure/AbstractNetworkStructure.hpp>
 #include <map>
 #include <random>
 #include <stdexcept>
@@ -32,15 +34,9 @@
 #include <utility>
 #include <vector>
 
-#if defined(_OPENMP)
-#include <egttools/OpenMPUtils.hpp>
-#endif
-
 namespace egttools::FinitePopulations::structure {
-    using NodeDictionary = std::map<int, std::vector<int>>;
-
     template<class GameType, class CacheType = egttools::Utils::LRUCache<std::string, double>>
-    class NetworkGroup final : public AbstractStructure {
+    class NetworkGroup final : public AbstractNetworkStructure {
     public:
         /**
          * @brief Network structure for N-player games
@@ -65,15 +61,25 @@ namespace egttools::FinitePopulations::structure {
                      int cache_size = 1000);
 
         void initialize() override;
+        void initialize_state(VectorXui &state) override;
+        void initialize_state(VectorXui &state, std::mt19937_64 &generator);
         void update_population() override;
+        /**
+         * Calculates the average gradient of selection given the current state of the network
+         *
+         * This method runs a single trial.
+         *
+         * @return the average gradient of selection for the current network
+         */
+        Vector calculate_average_gradient_of_selection() override;
 
         double calculate_fitness(int index);
         double calculate_game_payoff(int index);
 
         // getters
-        [[nodiscard]] int population_size();
+        [[nodiscard]] int population_size() override;
         [[nodiscard]] int nb_strategies() override;
-        [[nodiscard]] NodeDictionary &network();
+        [[nodiscard]] NodeDictionary &network() override;
         [[nodiscard]] std::vector<int> population_strategies() const;
         [[nodiscard]] VectorXui &mean_population_state() override;
         [[nodiscard]] GameType &game();
@@ -101,8 +107,6 @@ namespace egttools::FinitePopulations::structure {
         std::uniform_int_distribution<int> strategy_sampler_;
         std::uniform_int_distribution<int> population_sampler_;
         std::uniform_real_distribution<double> real_rand_;
-
-        // Helper functions
 
         std::mt19937_64 generator_{egttools::Random::SeedGenerator::getInstance().getSeed()};
     };
@@ -142,6 +146,72 @@ namespace egttools::FinitePopulations::structure {
         }
 
         assert(static_cast<int>(mean_population_state_.sum()) == population_size_);
+    }
+
+    template<class GameType, class CacheType>
+    void NetworkGroup<GameType, CacheType>::initialize_state(egttools::VectorXui &state) {
+        // We first fill the population with the number of strategies indicated by state in order
+        int index = 0;
+        for (int s = 0; s < nb_strategies_; ++s) {
+            for (size_t i = 0; i < state[s]; ++i) {
+                population_[index] = s;
+                index++;
+            }
+        }
+        // Finally we shuffle
+        std::shuffle(population_.begin(), population_.end(), generator_);
+    }
+
+    template<class GameType, class CacheType>
+    void NetworkGroup<GameType, CacheType>::initialize_state(egttools::VectorXui &state, std::mt19937_64 &generator) {
+        // We first fill the population with the number of strategies indicated by state in order
+        int index = 0;
+        for (int s = 0; s < nb_strategies_; ++s) {
+            for (size_t i = 0; i < state[s]; ++i) {
+                population_[index] = s;
+                index++;
+            }
+        }
+        // Finally we shuffle
+        std::shuffle(population_.begin(), population_.end(), generator);
+    }
+
+    template<class GameType, class CacheType>
+    Vector NetworkGroup<GameType, CacheType>::calculate_average_gradient_of_selection() {
+        // For every node, we need to calculate:
+        // 1. probability of changing strategy
+        // 2. probability of changing to a specific strategy
+        Vector average_gradient_of_selection = Vector::Zero(nb_strategies_);
+        // T+ and T- for every strategy
+        Matrix2D transitions_plus_minus = Matrix2D::Zero(nb_strategies_, 2);
+
+        // Iterate through every node
+        for (int i = 0; i < population_size_; ++i) {
+            // Calculate the probability of changing behavior of that node T
+            auto fitness_focal = calculate_fitness(i);
+            double transition_probability_unconditional = 0.;
+            Vector transition_probability = Vector::Zero(nb_strategies_);
+            for (int j = 0; j < network_[i].size(); ++j) {
+                if (population_[network_[i][j]] == population_[i]) continue;
+                // Get the fitness of both players
+                auto fitness_neighbor = calculate_fitness(j);
+                transition_probability_unconditional += egttools::FinitePopulations::fermi(beta_, fitness_focal, fitness_neighbor);
+                transition_probability(population_[network_[i][j]]) += egttools::FinitePopulations::fermi(beta_, fitness_focal, fitness_neighbor);
+            }
+            transition_probability_unconditional /= network_[i].size();
+            transition_probability /= network_[i].size();
+
+            // Now add these transition probabilities to T+ and T-
+            // T+ is the probability that there will be an increase in the strategy sk, so any other strategy must change to sk
+            transitions_plus_minus.row(0) += transition_probability;
+            // T- is the probability that there will be a decrease in the strategy sk
+            transitions_plus_minus(population_[i], 1) += transition_probability_unconditional;
+        }
+
+        transitions_plus_minus /= population_size_;
+        average_gradient_of_selection = transitions_plus_minus.row(0) - transitions_plus_minus.row(1);
+
+        return average_gradient_of_selection;
     }
 
     template<class GameType, class CacheType>
@@ -199,7 +269,6 @@ namespace egttools::FinitePopulations::structure {
         // player and her neighbourhood
         auto fitness = calculate_game_payoff(index);
 
-#pragma omp parallel for reduction(+ : fitness) default(none) shared(index, nb_strategies_, population_, game_, cache_)
         for (int &i : network_[index]) {
             fitness += calculate_game_payoff(i);
         }
