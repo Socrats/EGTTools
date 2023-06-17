@@ -1118,7 +1118,8 @@ void init_methods(py::module_ &m) {
                     egttools.numerical.PairwiseComparisonNumerical.evolve
                 )pbdoc")
             .def("calculate_average_gradient_of_selection", static_cast<egttools::Vector (egttools::FinitePopulations::evolvers::NetworkEvolver::*)(egttools::VectorXui &, int_fast64_t, int_fast64_t)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::calculate_average_gradient_of_selection),
-                 py::arg("state"), py::arg("nb_simulations"), py::arg("nb_generations"), py::return_value_policy::move,
+                 py::arg("state"), py::arg("nb_simulations"),
+                 py::arg("nb_generations"), py::return_value_policy::move,
                  R"pbdoc(
                     Evolves the population in structure for `nb_generations`.
 
@@ -1143,7 +1144,10 @@ void init_methods(py::module_ &m) {
                     egttools.numerical.PairwiseComparisonNumerical.evolve
                 )pbdoc")
             .def("calculate_average_gradient_of_selection", static_cast<egttools::Vector (egttools::FinitePopulations::evolvers::NetworkEvolver::*)(egttools::VectorXui &, int_fast64_t, int_fast64_t, std::vector<egttools::FinitePopulations::structure::AbstractNetworkStructure *>)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::calculate_average_gradient_of_selection),
-                 py::arg("state"), py::arg("nb_simulations"), py::arg("nb_generations"), py::arg("networks"), py::return_value_policy::move,
+                 py::arg("state"), py::arg("nb_simulations"),
+                 py::arg("nb_generations"), py::arg("networks"),
+                 py::call_guard<py::gil_scoped_release>(),
+                 py::return_value_policy::move,
                  R"pbdoc(
                     Evolves the population in structure for `nb_generations`.
 
@@ -1170,7 +1174,8 @@ void init_methods(py::module_ &m) {
                     egttools.numerical.PairwiseComparisonNumerical.evolve
                 )pbdoc")
             .def("run", &egttools::FinitePopulations::evolvers::NetworkEvolver::run,
-                 py::arg("nb_generations"), py::arg("transitory"), py::return_value_policy::move,
+                 py::arg("nb_generations"),
+                 py::arg("transitory"), py::return_value_policy::move,
                  R"pbdoc(
                     Evolves the population in structure for `nb_generations`.
 

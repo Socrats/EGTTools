@@ -126,6 +126,7 @@ namespace egttools::FinitePopulations::structure {
 
         // The population size must be equal to the number of nodes in the network
         population_size_ = network_.size();
+        population_ = std::vector<int>(population_size_);
 
         // Initialize the vector that will hold the mean population state
         // That is, the number of individuals adopting each strategy
@@ -141,7 +142,7 @@ namespace egttools::FinitePopulations::structure {
     void NetworkGroup<GameType, CacheType>::initialize() {
         for (int i = 0; i < population_size_; ++i) {
             auto strategy_index = strategy_sampler_(generator_);
-            population_.push_back(strategy_index);
+            population_[i] = strategy_index;
             mean_population_state_(strategy_index) += 1;
         }
 
@@ -151,6 +152,7 @@ namespace egttools::FinitePopulations::structure {
     template<class GameType, class CacheType>
     void NetworkGroup<GameType, CacheType>::initialize_state(egttools::VectorXui &state) {
         // We first fill the population with the number of strategies indicated by state in order
+        mean_population_state_ = state;
         int index = 0;
         for (int s = 0; s < nb_strategies_; ++s) {
             for (size_t i = 0; i < state[s]; ++i) {
@@ -195,21 +197,22 @@ namespace egttools::FinitePopulations::structure {
                 if (population_[network_[i][j]] == population_[i]) continue;
                 // Get the fitness of both players
                 auto fitness_neighbor = calculate_fitness(j);
-                transition_probability_unconditional += egttools::FinitePopulations::fermi(beta_, fitness_focal, fitness_neighbor);
-                transition_probability(population_[network_[i][j]]) += egttools::FinitePopulations::fermi(beta_, fitness_focal, fitness_neighbor);
+                auto prob = egttools::FinitePopulations::fermi(beta_, fitness_focal, fitness_neighbor);
+                transition_probability_unconditional += prob;
+                transition_probability(population_[network_[i][j]]) += prob;
             }
             transition_probability_unconditional /= network_[i].size();
             transition_probability /= network_[i].size();
 
             // Now add these transition probabilities to T+ and T-
             // T+ is the probability that there will be an increase in the strategy sk, so any other strategy must change to sk
-            transitions_plus_minus.row(0) += transition_probability;
+            transitions_plus_minus.col(0) += transition_probability;
             // T- is the probability that there will be a decrease in the strategy sk
             transitions_plus_minus(population_[i], 1) += transition_probability_unconditional;
         }
 
         transitions_plus_minus /= population_size_;
-        average_gradient_of_selection = transitions_plus_minus.row(0) - transitions_plus_minus.row(1);
+        average_gradient_of_selection = transitions_plus_minus.col(0) - transitions_plus_minus.col(1);
 
         return average_gradient_of_selection;
     }

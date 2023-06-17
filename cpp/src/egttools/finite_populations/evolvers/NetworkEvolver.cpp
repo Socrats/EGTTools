@@ -58,6 +58,7 @@ egttools::Vector egttools::FinitePopulations::evolvers::NetworkEvolver::calculat
         for (int_fast64_t j = 0; j < nb_generations; ++j) {
             // Calculate average gradient at the current generation
             average_gradient_of_selection += structure_.calculate_average_gradient_of_selection();
+            structure_.update_population();
         }
     }
 
@@ -83,6 +84,7 @@ egttools::Vector egttools::FinitePopulations::evolvers::NetworkEvolver::calculat
             for (int_fast64_t j = 0; j < nb_generations; ++j) {
                 // Calculate average gradient at the current generation
                 average_gradient_of_selection += network->calculate_average_gradient_of_selection();
+                network->update_population();
             }
         }
     }

@@ -16,8 +16,8 @@
 * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 */
 #pragma once
-#ifndef EGTTOOLS_FINITEPOPULATIONS_STRUCTURE_NETWORK_HPP
-#define EGTTOOLS_FINITEPOPULATIONS_STRUCTURE_NETWORK_HPP
+#ifndef EGTTOOLS_FINITEPOPULATIONS_STRUCTURE_NETWORKSYNC_HPP
+#define EGTTOOLS_FINITEPOPULATIONS_STRUCTURE_NETWORKSYNC_HPP
 
 #include <egttools/SeedGenerator.h>
 #include <egttools/Types.h>
@@ -34,11 +34,11 @@
 
 namespace egttools::FinitePopulations::structure {
     template<class GameType, class CacheType = egttools::Utils::LRUCache<std::string, double>>
-    class Network final : public AbstractNetworkStructure {
+    class NetworkSync final : public AbstractNetworkStructure {
     public:
-        Network(int nb_strategies, double beta, double mu,
-                NodeDictionary &network, GameType &game,
-                int cache_size = 1000);
+        NetworkSync(int nb_strategies, double beta, double mu,
+                    NodeDictionary &network, GameType &game,
+                    int cache_size = 1000);
 
         void initialize() override;
         void initialize_state(VectorXui &state) override;
@@ -78,6 +78,7 @@ namespace egttools::FinitePopulations::structure {
 
         // Population holder
         std::vector<int> population_;
+        std::vector<int> population_new;
 
         // Mean state
         VectorXui mean_population_state_;
@@ -93,21 +94,22 @@ namespace egttools::FinitePopulations::structure {
     };
 
     template<class GameType, class CacheType>
-    Network<GameType, CacheType>::Network(int nb_strategies,
-                                          double beta,
-                                          double mu,
-                                          NodeDictionary &network,
-                                          GameType &game,
-                                          int cache_size) : nb_strategies_(nb_strategies),
-                                                            beta_(beta),
-                                                            mu_(mu),
-                                                            network_(std::move(network)),
-                                                            game_(game),
-                                                            cache_(cache_size) {
+    NetworkSync<GameType, CacheType>::NetworkSync(int nb_strategies,
+                                                  double beta,
+                                                  double mu,
+                                                  NodeDictionary &network,
+                                                  GameType &game,
+                                                  int cache_size) : nb_strategies_(nb_strategies),
+                                                                    beta_(beta),
+                                                                    mu_(mu),
+                                                                    network_(std::move(network)),
+                                                                    game_(game),
+                                                                    cache_(cache_size) {
 
         // The population size must be equal to the number of nodes in the network
         population_size_ = network_.size();
         population_ = std::vector<int>(population_size_);
+        population_new = std::vector<int>(population_size_);
 
         // Initialize the vector that will hold the mean population state
         // That is, the number of individuals adopting each strategy
@@ -120,7 +122,7 @@ namespace egttools::FinitePopulations::structure {
     }
 
     template<class GameType, class CacheType>
-    void Network<GameType, CacheType>::initialize() {
+    void NetworkSync<GameType, CacheType>::initialize() {
         for (int i = 0; i < population_size_; ++i) {
             auto strategy_index = strategy_sampler_(generator_);
             population_[i] = strategy_index;
@@ -131,7 +133,7 @@ namespace egttools::FinitePopulations::structure {
     }
 
     template<class GameType, class CacheType>
-    void Network<GameType, CacheType>::initialize_state(egttools::VectorXui &state) {
+    void NetworkSync<GameType, CacheType>::initialize_state(egttools::VectorXui &state) {
         // We first fill the population with the number of strategies indicated by state in order
         mean_population_state_ = state;
         int index = 0;
@@ -146,7 +148,7 @@ namespace egttools::FinitePopulations::structure {
     }
 
     template<class GameType, class CacheType>
-    Vector Network<GameType, CacheType>::calculate_average_gradient_of_selection() {
+    Vector NetworkSync<GameType, CacheType>::calculate_average_gradient_of_selection() {
         // For every node, we need to calculate:
         // 1. probability of changing strategy
         // 2. probability of changing to a specific strategy
@@ -185,55 +187,48 @@ namespace egttools::FinitePopulations::structure {
     }
 
     template<class GameType, class CacheType>
-    void Network<GameType, CacheType>::update_population() {
-        // At the moment we will consider only an asynchronous update
-        // In the future we should make this adaptable between sync and
-        // async
+    void NetworkSync<GameType, CacheType>::update_population() {
+        for (int i = 0; i < population_size_; ++i) {
+            // check if a mutation event occurs
+            if (real_rand_(generator_) < mu_) {
+                auto new_strategy = strategy_sampler_(generator_);
+                while (new_strategy == population_[i]) new_strategy = strategy_sampler_(generator_);
 
-        // NOTE: make sure to add a check for when the population reaches a
-        // homogenous state. In that case, the simulation should be advanced
-        // several rounds - This can be done from the evolver side
+                mean_population_state_(population_[i]) -= 1;
+                mean_population_state_(new_strategy) += 1;
 
-        // select randomly an individual to die
-        auto focal_player = population_sampler_(generator_);
+                population_new[i] = new_strategy;
+                continue;
+            }// if not we continue
 
-        // check if a mutation event occurs
-        if (real_rand_(generator_) < mu_) {
-            auto new_strategy = strategy_sampler_(generator_);
-            while (new_strategy == population_[focal_player]) new_strategy = strategy_sampler_(generator_);
+            // select a random neighbour
+            auto dist = std::uniform_int_distribution<int>(0, network_[i].size() - 1);
+            auto neighbor_index = dist(generator_);
+            int neighbor = network_[i][neighbor_index];
 
-            mean_population_state_(population_[focal_player]) -= 1;
-            mean_population_state_(new_strategy) += 1;
+            // If the strategies are the same, there is no change in the population
+            if (population_[i] == population_[neighbor]) continue;
 
-            population_[focal_player] = new_strategy;
-            return;
-        }// if not we continue
+            // Get the fitness of both players
+            auto fitness_focal = calculate_fitness(i);
+            auto fitness_neighbor = calculate_fitness(neighbor);
 
-        // select a random neighbour
-        auto dist = std::uniform_int_distribution<int>(0, network_[focal_player].size() - 1);
-        auto neighbor_index = dist(generator_);
-        int neighbor = network_[focal_player][neighbor_index];
+            // Check if update happens
+            if (real_rand_(generator_) < egttools::FinitePopulations::fermi(beta_, fitness_focal, fitness_neighbor)) {
+                // update mean counts
+                mean_population_state_(population_[i]) -= 1;
+                mean_population_state_(population_[neighbor]) += 1;
 
-        // If the strategies are the same, there is no change in the population
-        if (population_[focal_player] == population_[neighbor]) return;
-
-        // Get the fitness of both players
-        auto fitness_focal = calculate_fitness(focal_player);
-        auto fitness_neighbor = calculate_fitness(neighbor);
-
-        // Check if update happens
-        if (real_rand_(generator_) < egttools::FinitePopulations::fermi(beta_, fitness_focal, fitness_neighbor)) {
-            // update mean counts
-            mean_population_state_(population_[focal_player]) -= 1;
-            mean_population_state_(population_[neighbor]) += 1;
-
-            // update focal player strategy
-            population_[focal_player] = population_[neighbor];
+                // update focal player strategy
+                population_new[i] = population_[neighbor];
+            }
         }
+        for (int i = 0; i < population_size_; ++i)
+            population_[i] = population_new[i];
     }
 
     template<class GameType, class CacheType>
-    double Network<GameType, CacheType>::calculate_fitness(int index) {
+    double NetworkSync<GameType, CacheType>::calculate_fitness(int index) {
         double fitness;
 
         // Let's get the neighborhood strategies
@@ -262,36 +257,36 @@ namespace egttools::FinitePopulations::structure {
     }
 
     template<class GameType, class CacheType>
-    int Network<GameType, CacheType>::population_size() {
+    int NetworkSync<GameType, CacheType>::population_size() {
         return population_size_;
     }
 
     template<class GameType, class CacheType>
-    int Network<GameType, CacheType>::nb_strategies() {
+    int NetworkSync<GameType, CacheType>::nb_strategies() {
         return nb_strategies_;
     }
 
     template<class GameType, class CacheType>
-    NodeDictionary &Network<GameType, CacheType>::network() {
+    NodeDictionary &NetworkSync<GameType, CacheType>::network() {
         return network_;
     }
 
     template<class GameType, class CacheType>
-    std::vector<int> Network<GameType, CacheType>::population_strategies() const {
+    std::vector<int> NetworkSync<GameType, CacheType>::population_strategies() const {
         return population_;
     }
 
     template<class GameType, class CacheType>
-    VectorXui &Network<GameType, CacheType>::mean_population_state() {
+    VectorXui &NetworkSync<GameType, CacheType>::mean_population_state() {
         return mean_population_state_;
     }
 
     template<class GameType, class CacheType>
-    GameType &Network<GameType, CacheType>::game() {
+    GameType &NetworkSync<GameType, CacheType>::game() {
         return game_;
     }
 
 
 }// namespace egttools::FinitePopulations::structure
 
-#endif//EGTTOOLS_FINITEPOPULATIONS_STRUCTURE_NETWORK_HPP
+#endif//EGTTOOLS_FINITEPOPULATIONS_STRUCTURE_NETWORKSYNC_HPP

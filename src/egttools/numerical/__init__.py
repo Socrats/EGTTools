@@ -7,5 +7,6 @@ except Exception:
 else:
     from .numerical_ import PairwiseComparisonNumerical
     from .numerical_ import GeneralPopulationEvolver
+    from .numerical_ import NetworkEvolver
 
-__all__ = ['numerical', 'PairwiseComparisonNumerical', 'GeneralPopulationEvolver']
+__all__ = ['numerical', 'PairwiseComparisonNumerical', 'GeneralPopulationEvolver', 'NetworkEvolver']

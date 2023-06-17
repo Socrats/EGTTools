@@ -3,14 +3,13 @@
 //
 #include <egttools/Types.h>
 #include <egttools/finite_populations/games/OneShotCRDNetworkGame.hpp>
-
-#include <egttools/finite_populations/evolvers/GeneralPopulationEvolver.hpp>
+#include <egttools/finite_populations/evolvers/NetworkEvolver.hpp>
 #include <egttools/finite_populations/structure/Network.hpp>
 
 using NodeDictionary = egttools::FinitePopulations::structure::NodeDictionary;
 using OneShotCRDNetworkGame = egttools::FinitePopulations::games::OneShotCRDNetworkGame;
 using NetworkStructure = egttools::FinitePopulations::structure::Network<OneShotCRDNetworkGame>;
-using Evolver = egttools::FinitePopulations::evolvers::GeneralPopulationEvolver;
+using Evolver = egttools::FinitePopulations::evolvers::NetworkEvolver;
 
 int main() {
     double beta = 1, mu = 0.01;
@@ -39,7 +38,10 @@ int main() {
 
     Evolver evolver(network_structure);
 
-    auto result = evolver.run(100000 + 1000000, 100000);
+    egttools::VectorXui initial_state(2);
+    initial_state << 5, 5;
 
-    std::cout << result << std::endl;
+    auto gradient = evolver.calculate_average_gradient_of_selection(initial_state, 10, 10);
+
+    std::cout << gradient << std::endl;
 }
