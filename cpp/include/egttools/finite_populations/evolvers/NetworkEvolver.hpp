@@ -22,27 +22,46 @@ namespace egttools::FinitePopulations::evolvers {
 
     class NetworkEvolver {
     public:
-        explicit NetworkEvolver(AbstractNetworkStructure &structure);
-
-
         /**
          * Evolves the population in structure for `nb_generations`.
          *
          * This method only returns the last total counts of strategies in the population.
          *
          * @param nb_generations : the number of generations for which evolution is run.
+         * @param network : the network structure to evolve
+         *
          * @return the final count of strategies in the population.
          */
-        VectorXui evolve(int_fast64_t nb_generations);
+        static VectorXui evolve(int_fast64_t nb_generations, AbstractNetworkStructure &network);
+
+        static VectorXui evolve(int_fast64_t nb_generations, VectorXui &initial_state, AbstractNetworkStructure &network);
+
+        /**
+         * Evolves the population in structure for `nb_generations` and returns all states.
+         *
+         * This method returns the counts of strategies in the population for every generation
+         * after the transitory period has passed.
+         *
+         * @param nb_generations : the number of generations for which evolution is run.
+         * @param transitory : the transitory period.
+         * @param network : the network structure to evolve
+         *
+         * @return the count of strategies of the population for every generation after `transitory`.
+         */
+        static MatrixXui2D run(int_fast64_t nb_generations, int_fast64_t transitory, AbstractNetworkStructure &network);
+
+        static MatrixXui2D run(int_fast64_t nb_generations, int_fast64_t transitory, VectorXui &initial_state, AbstractNetworkStructure &network);
 
         /**
          * Calculates the average gradient of selection for a single network at a given state.
          * @param state
          * @param nb_simulations
          * @param nb_generations
+         * @param network : the network structure to evolve
+         *
          * @return avg. gradient of selection
          */
-        Vector calculate_average_gradient_of_selection(VectorXui &state, int_fast64_t nb_simulations, int_fast64_t nb_generations);
+        static Vector calculate_average_gradient_of_selection(VectorXui &state, int_fast64_t nb_simulations, int_fast64_t nb_generations, AbstractNetworkStructure &network);
 
         /**
          * Calculates the average gradient of selection for multiple networks at a given state.
@@ -57,25 +76,8 @@ namespace egttools::FinitePopulations::evolvers {
          * @param networks : a list of networks classes to be used in the simulations
          * @return
          */
-        Vector calculate_average_gradient_of_selection(VectorXui &state, int_fast64_t nb_simulations,
-                                                       int_fast64_t nb_generations, std::vector<AbstractNetworkStructure *> networks);
-
-        /**
-         * Evolves the population in structure for `nb_generations` and returns all states.
-         *
-         * This method returns the counts of strategies in the population for every generation
-         * after the transitory period has passed.
-         *
-         * @param nb_generations : the number of generations for which evolution is run.
-         * @param transitory : the transitory period.
-         * @return the count of strategies of the population for every generation after `transitory`.
-         */
-        MatrixXui2D run(int_fast64_t nb_generations, int_fast64_t transitory);
-
-        [[nodiscard]] std::shared_ptr<AbstractNetworkStructure> structure();
-
-    private:
-        AbstractNetworkStructure &structure_;
+        static Vector calculate_average_gradient_of_selection(VectorXui &state, int_fast64_t nb_simulations,
+                                                              int_fast64_t nb_generations, std::vector<AbstractNetworkStructure *> networks);
     };
 }// namespace egttools::FinitePopulations::evolvers
 

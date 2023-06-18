@@ -36,12 +36,14 @@ int main() {
     OneShotCRDNetworkGame game(endowment, cost, risk, min_nb_cooperators);
     NetworkStructure network_structure(2, beta, mu, network, game);
 
-    Evolver evolver(network_structure);
-
     egttools::VectorXui initial_state(2);
     initial_state << 5, 5;
 
-    auto gradient = evolver.calculate_average_gradient_of_selection(initial_state, 10, 10);
+    auto result = Evolver::run(50, 0, initial_state, network_structure);
+
+    std::cout << result << std::endl;
+
+    auto gradient = Evolver::calculate_average_gradient_of_selection(initial_state, 10, 10, network_structure);
 
     std::cout << gradient << std::endl;
 }
