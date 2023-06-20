@@ -177,9 +177,10 @@ egttools::Matrix2D egttools::FinitePopulations::evolvers::NetworkEvolver::calcul
     state_iterator.set_prefix("Iterating over states: ");
 
     for (int_fast64_t initial_state_index : state_iterator) {
-        Vector average_gradient_of_selection = Vector::Zero(states[initial_state_index].size());
-#pragma omp parallel for reduction(+ : average_gradient_of_selection) default(none) shared(networks, nb_generations, nb_simulations, states, initial_state_index)
+#pragma omp parallel for reduction(+ : average_gradients_of_selection) default(none) shared(networks, nb_generations, nb_simulations, states, initial_state_index)
         for (auto &network : networks) {
+            Vector average_gradient_of_selection = Vector::Zero(states[initial_state_index].size());
+
             for (int_fast64_t i = 0; i < nb_simulations; ++i) {
                 // Initialize the structure
                 network->initialize_state(states[initial_state_index]);
@@ -189,8 +190,8 @@ egttools::Matrix2D egttools::FinitePopulations::evolvers::NetworkEvolver::calcul
                     average_gradient_of_selection += network->calculate_average_gradient_of_selection_and_update_population();
                 }
             }
+            average_gradients_of_selection.row(initial_state_index) += average_gradient_of_selection;
         }
-        average_gradients_of_selection.row(initial_state_index) = average_gradient_of_selection;
     }
 
     //    for (int_fast64_t initial_state_index = 0; initial_state_index < nb_initial_states; ++initial_state_index) {
