@@ -115,15 +115,18 @@ egttools::Vector egttools::FinitePopulations::evolvers::NetworkEvolver::calculat
 
 #pragma omp parallel for reduction(+ : average_gradient_of_selection) default(none) shared(networks, nb_generations, nb_simulations, state)
     for (auto &network : networks) {
+        Vector average_gradient_of_selection_tmp = Vector::Zero(state.size());
+
         for (int_fast64_t i = 0; i < nb_simulations; ++i) {
             // Initialize the structure
             network->initialize_state(state);
 
             for (int_fast64_t j = 0; j < nb_generations; ++j) {
                 // Calculate average gradient at the current generation
-                average_gradient_of_selection += network->calculate_average_gradient_of_selection_and_update_population();
+                average_gradient_of_selection_tmp += network->calculate_average_gradient_of_selection_and_update_population();
             }
         }
+        average_gradient_of_selection += average_gradient_of_selection_tmp;
     }
 
 
@@ -177,7 +180,7 @@ egttools::Matrix2D egttools::FinitePopulations::evolvers::NetworkEvolver::calcul
     state_iterator.set_prefix("Iterating over states: ");
 
     for (int_fast64_t initial_state_index : state_iterator) {
-#pragma omp parallel for default(none) shared(average_gradients_of_selection, networks, nb_generations, nb_simulations, states, initial_state_index)
+#pragma omp parallel for reduction(+ : average_gradients_of_selection) default(none) shared(networks, nb_generations, nb_simulations, states, initial_state_index)
         for (auto &network : networks) {
             Vector average_gradient_of_selection = Vector::Zero(states[initial_state_index].size());
 
@@ -190,7 +193,7 @@ egttools::Matrix2D egttools::FinitePopulations::evolvers::NetworkEvolver::calcul
                     average_gradient_of_selection += network->calculate_average_gradient_of_selection_and_update_population();
                 }
             }
-            average_gradients_of_selection.row(initial_state_index) = average_gradient_of_selection;
+            average_gradients_of_selection.row(initial_state_index) += average_gradient_of_selection;
         }
     }
 
