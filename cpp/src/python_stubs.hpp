@@ -567,6 +567,19 @@ namespace stubs {
         }
 
         /* Trampoline (need one for each virtual function) */
+        void update_node(int node) override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
+            PYBIND11_OVERRIDE_PURE(
+                    void,                                                             /* Return type */
+                    egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
+                    update_node,                                                      /* Name of function in C++ (must match Python name) */
+                    node                                                              /* Argument(s) */
+            );
+        }
+
+        /* Trampoline (need one for each virtual function) */
         egttools::Vector calculate_average_gradient_of_selection() override {
             /* Acquire GIL before calling Python code */
             py::gil_scoped_acquire acquire;
@@ -575,6 +588,19 @@ namespace stubs {
                     egttools::Vector,                                                 /* Return type */
                     egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
                     calculate_average_gradient_of_selection,                          /* Name of function in C++ (must match Python name) */
+                                                                                      /* Argument(s) */
+            );
+        }
+
+        /* Trampoline (need one for each virtual function) */
+        egttools::Vector calculate_average_gradient_of_selection_and_update_population() override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
+            PYBIND11_OVERRIDE_PURE(
+                    egttools::Vector,                                                 /* Return type */
+                    egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
+                    calculate_average_gradient_of_selection_and_update_population,    /* Name of function in C++ (must match Python name) */
                                                                                       /* Argument(s) */
             );
         }

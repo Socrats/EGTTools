@@ -1248,5 +1248,62 @@ void init_methods(py::module_ &m) {
                     See Also
                     --------
                     egttools.numerical.PairwiseComparisonNumerical.evolve
+                )pbdoc")
+            .def_static("calculate_average_gradients_of_selection", static_cast<egttools::Matrix2D (*)(std::vector<egttools::VectorXui> &states, int_fast64_t, int_fast64_t, egttools::FinitePopulations::structure::AbstractNetworkStructure &)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::calculate_average_gradients_of_selection),
+                        py::arg("states"), py::arg("nb_simulations"),
+                        py::arg("nb_generations"), py::arg("network"),
+                        py::return_value_policy::move,
+                        R"pbdoc(
+                    Estimates the average gradients of selection averaging over multiple simulations and generations
+                    for each state given for all the given initial states.
+
+                    Parameters
+                    ----------
+                    states : List[numpy.ndarray]
+                        A list of population states for which to calculate the gradients.
+                    nb_simulations : int
+                        The number of simulations to perform for the given state
+                    nb_generations : int
+                        Maximum number of generations.
+                    network : AbstractNetworkStructure
+                        A network structure.
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        A 2D numpy array containing the gradients for each state given (each row is one gradient).
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical.evolve
+                )pbdoc")
+            .def_static("calculate_average_gradients_of_selection", static_cast<egttools::Matrix2D (*)(std::vector<egttools::VectorXui> &states, int_fast64_t, int_fast64_t, std::vector<egttools::FinitePopulations::structure::AbstractNetworkStructure *>)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::calculate_average_gradients_of_selection),
+                        py::arg("states"), py::arg("nb_simulations"),
+                        py::arg("nb_generations"), py::arg("networks"),
+                        py::return_value_policy::move,
+                        py::call_guard<py::gil_scoped_release>(),
+                        R"pbdoc(
+                    Estimates the average gradient of selection averaging over multiple simulations, generations
+                    and network for each state given state.
+
+                    Parameters
+                    ----------
+                    states : List[numpy.ndarray]
+                        A list of population states for which to calculate the gradients.
+                    nb_simulations : int
+                        The number of simulations to perform for the given state
+                    nb_generations : int
+                        Maximum number of generations.
+                    network : List[AbstractNetworkStructure]
+                        A list of network structures.
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        A 2D numpy array containing the gradients for each state given (each row is one gradient).
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical.evolve
                 )pbdoc");
 }

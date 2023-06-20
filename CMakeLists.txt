@@ -159,7 +159,9 @@ endif ()
 
 set(Python_FIND_IMPLEMENTATIONS CPython PyPy)
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
+# Add external dependencies
 add_subdirectory(pybind11)
+
 
 message(STATUS "${Python_INCLUDE_DIRS}")
 

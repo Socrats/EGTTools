@@ -78,6 +78,12 @@ namespace egttools::FinitePopulations::evolvers {
          */
         static Vector calculate_average_gradient_of_selection(VectorXui &state, int_fast64_t nb_simulations,
                                                               int_fast64_t nb_generations, std::vector<AbstractNetworkStructure *> networks);
+
+        static Matrix2D calculate_average_gradients_of_selection(std::vector<VectorXui> &states, int_fast64_t nb_simulations,
+                                                                 int_fast64_t nb_generations, AbstractNetworkStructure &network);
+
+        static Matrix2D calculate_average_gradients_of_selection(std::vector<VectorXui> &states, int_fast64_t nb_simulations,
+                                                                 int_fast64_t nb_generations, std::vector<AbstractNetworkStructure *> networks);
     };
 }// namespace egttools::FinitePopulations::evolvers
 

@@ -92,7 +92,7 @@ void init_structure(py::module_ &m) {
                     with the black strategy.
                     )pbdoc")
             .def("update_population", &egttools::FinitePopulations::structure::AbstractStructure::update_population, R"pbdoc(
-                    Updates the strategy of an individual inside of the population.
+                    Updates the population for one generation.
 
                     The developer has freedom to implement this method. All that is required
                     is that it applies some change to the population every time it is called
@@ -172,6 +172,15 @@ void init_structure(py::module_ &m) {
                     state : numpy.ndarray
                         A numpy array containing the counts of each strategy in the population
                     )pbdoc")
+            .def("update_node", &egttools::FinitePopulations::structure::AbstractNetworkStructure::update_node,
+                 py::arg("node"), R"pbdoc(
+                    Updates the strategy of a given `node`.
+
+                    Parameters
+                    ----------
+                    node : int
+                        Node to update.
+                    )pbdoc")
             .def("calculate_average_gradient_of_selection", &egttools::FinitePopulations::structure::AbstractNetworkStructure::calculate_average_gradient_of_selection,
                  R"pbdoc(
                     Calculates the average gradient of selection at the current state of the network.
@@ -182,6 +191,25 @@ void init_structure(py::module_ &m) {
                     To obtain the true gradient of selection for a given average network state, this method must be
                     run multiple times with different initializations of the network. In the limit, the best calculation would be
                     obtained by averaging the computations at any possible initialization of the network in a given aggregated state.
+
+                    Returns
+                    ----------
+                    numpy.array
+                        The averaged gradient of selection for each strategy in the population at the current network structure.
+                    )pbdoc")
+            .def("calculate_average_gradient_of_selection_and_update_population", &egttools::FinitePopulations::structure::AbstractNetworkStructure::calculate_average_gradient_of_selection_and_update_population,
+                 R"pbdoc(
+                    Calculates the average gradient of selection at the current state of the network and updates the population.
+
+                    This method averages the difference in transition probabilities of increasing and decreasing
+                    the count of each strategy in the population at each node of the network. It runs a single trial.
+
+                    To obtain the true gradient of selection for a given average network state, this method must be
+                    run multiple times with different initializations of the network. In the limit, the best calculation would be
+                    obtained by averaging the computations at any possible initialization of the network in a given aggregated state.
+
+                    This method also updates the population. This is useful when calculating the average gradient of selection over time,
+                    as it reduces the number of required loops from 2 to 1.
 
                     Returns
                     ----------
@@ -277,13 +305,39 @@ void init_structure(py::module_ &m) {
                     )pbdoc")
             .def("update_population", &NetworkStructure::update_population,
                  R"pbdoc(
-                    Initializes each element of the structure.
+                        Updates the population for one generation.
 
-                    Each individual will adopt any of the available strategies with equal probability.
-                    If the population is big enough and divisible by the number of strategies,
-                    This should result in a roughly equal distribution of each strategy.
+                        The developer has freedom to implement this method. All that is required
+                        is that it applies some change to the population every time it is called
+                        given the current population state.
+                    )pbdoc")
+            .def("update_node", &NetworkStructure::update_node, py::arg("node"),
+                 R"pbdoc(
+                        Updates the strategy of a given `node`.
+
+                        Parameters
+                        ----------
+                        node : int
+                            Node to update.
                     )pbdoc")
             .def("calculate_average_gradient_of_selection", &NetworkStructure::calculate_average_gradient_of_selection,
+                 py::return_value_policy::move,
+                 R"pbdoc(
+                    Calculates the average gradient of selection at the current state of the network.
+
+                    This method averages the difference in transition probabilities of increasing and decreasing
+                    the count of each strategy in the population at each node of the network. It runs a single trial.
+
+                    To obtain the true gradient of selection for a given average network state, this method must be
+                    run multiple times with different initializations of the network. In the limit, the best calculation would be
+                    obtained by averaging the computations at any possible initialization of the network in a given aggregated state.
+
+                    Returns
+                    ----------
+                    numpy.array
+                        The averaged gradient of selection for each strategy in the population at the current network structure.
+                    )pbdoc")
+            .def("calculate_average_gradient_of_selection_and_update_population", &NetworkStructure::calculate_average_gradient_of_selection_and_update_population,
                  py::return_value_policy::move,
                  R"pbdoc(
                     Calculates the average gradient of selection at the current state of the network.
@@ -316,7 +370,6 @@ void init_structure(py::module_ &m) {
                     float
                         The fitness of the individual at the node `index`.
                     )pbdoc")
-
             .def("population_size", &NetworkStructure::population_size,
                  R"pbdoc(
                     Returns the number of individuals in the population.
@@ -449,11 +502,20 @@ void init_structure(py::module_ &m) {
                     )pbdoc")
             .def("update_population", &NetworkGroupStructure::update_population,
                  R"pbdoc(
-                    Initializes each element of the structure.
+                        Updates the population for one generation.
 
-                    Each individual will adopt any of the available strategies with equal probability.
-                    If the population is big enough and divisible by the number of strategies,
-                    This should result in a roughly equal distribution of each strategy.
+                        The developer has freedom to implement this method. All that is required
+                        is that it applies some change to the population every time it is called
+                        given the current population state.
+                    )pbdoc")
+            .def("update_node", &NetworkGroupStructure::update_node, py::arg("node"),
+                 R"pbdoc(
+                        Updates the strategy of a given `node`.
+
+                        Parameters
+                        ----------
+                        node : int
+                            Node to update.
                     )pbdoc")
             .def("calculate_average_gradient_of_selection", &NetworkGroupStructure::calculate_average_gradient_of_selection,
                  py::return_value_policy::move,
@@ -472,8 +534,24 @@ void init_structure(py::module_ &m) {
                     numpy.array
                         The averaged gradient of selection for each strategy in the population at the current network structure.
                     )pbdoc")
+            .def("calculate_average_gradient_of_selection_and_update_population", &NetworkGroupStructure::calculate_average_gradient_of_selection_and_update_population,
+                 py::return_value_policy::move,
+                 R"pbdoc(
+                    Calculates the average gradient of selection at the current state of the network.
+
+                    This method averages the difference in transition probabilities of increasing and decreasing
+                    the count of each strategy in the population at each node of the network. It runs a single trial.
+
+                    To obtain the true gradient of selection for a given average network state, this method must be
+                    run multiple times with different initializations of the network. In the limit, the best calculation would be
+                    obtained by averaging the computations at any possible initialization of the network in a given aggregated state.
+
+                    Returns
+                    ----------
+                    numpy.array
+                        The averaged gradient of selection for each strategy in the population at the current network structure.
+                    )pbdoc")
             .def("calculate_fitness", &NetworkGroupStructure::calculate_fitness,
-                 py::call_guard<py::gil_scoped_release>(),
                  R"pbdoc(
                     Calculates the fitness of a strategy given a neighborhood state.
 
@@ -641,13 +719,39 @@ void init_structure(py::module_ &m) {
                     )pbdoc")
             .def("update_population", &NetworkStructureSync::update_population,
                  R"pbdoc(
-                    Initializes each element of the structure.
+                        Updates the population for one generation.
 
-                    Each individual will adopt any of the available strategies with equal probability.
-                    If the population is big enough and divisible by the number of strategies,
-                    This should result in a roughly equal distribution of each strategy.
+                        The developer has freedom to implement this method. All that is required
+                        is that it applies some change to the population every time it is called
+                        given the current population state.
+                    )pbdoc")
+            .def("update_node", &NetworkStructureSync::update_node, py::arg("node"),
+                 R"pbdoc(
+                        Updates the strategy of a given `node`.
+
+                        Parameters
+                        ----------
+                        node : int
+                            Node to update.
                     )pbdoc")
             .def("calculate_average_gradient_of_selection", &NetworkStructureSync::calculate_average_gradient_of_selection,
+                 py::return_value_policy::move,
+                 R"pbdoc(
+                    Calculates the average gradient of selection at the current state of the network.
+
+                    This method averages the difference in transition probabilities of increasing and decreasing
+                    the count of each strategy in the population at each node of the network. It runs a single trial.
+
+                    To obtain the true gradient of selection for a given average network state, this method must be
+                    run multiple times with different initializations of the network. In the limit, the best calculation would be
+                    obtained by averaging the computations at any possible initialization of the network in a given aggregated state.
+
+                    Returns
+                    ----------
+                    numpy.array
+                        The averaged gradient of selection for each strategy in the population at the current network structure.
+                    )pbdoc")
+            .def("calculate_average_gradient_of_selection_and_update_population", &NetworkStructureSync::calculate_average_gradient_of_selection_and_update_population,
                  py::return_value_policy::move,
                  R"pbdoc(
                     Calculates the average gradient of selection at the current state of the network.
@@ -680,7 +784,6 @@ void init_structure(py::module_ &m) {
                     float
                         The fitness of the individual at the node `index`.
                     )pbdoc")
-
             .def("population_size", &NetworkStructureSync::population_size,
                  R"pbdoc(
                     Returns the number of individuals in the population.
@@ -813,11 +916,20 @@ void init_structure(py::module_ &m) {
                     )pbdoc")
             .def("update_population", &NetworkGroupStructureSync::update_population,
                  R"pbdoc(
-                    Initializes each element of the structure.
+                        Updates the population for one generation.
 
-                    Each individual will adopt any of the available strategies with equal probability.
-                    If the population is big enough and divisible by the number of strategies,
-                    This should result in a roughly equal distribution of each strategy.
+                        The developer has freedom to implement this method. All that is required
+                        is that it applies some change to the population every time it is called
+                        given the current population state.
+                    )pbdoc")
+            .def("update_node", &NetworkGroupStructureSync::update_node, py::arg("node"),
+                 R"pbdoc(
+                        Updates the strategy of a given `node`.
+
+                        Parameters
+                        ----------
+                        node : int
+                            Node to update.
                     )pbdoc")
             .def("calculate_average_gradient_of_selection", &NetworkGroupStructureSync::calculate_average_gradient_of_selection,
                  py::return_value_policy::move,
@@ -836,8 +948,24 @@ void init_structure(py::module_ &m) {
                     numpy.array
                         The averaged gradient of selection for each strategy in the population at the current network structure.
                     )pbdoc")
+            .def("calculate_average_gradient_of_selection_and_update_population", &NetworkGroupStructureSync::calculate_average_gradient_of_selection_and_update_population,
+                 py::return_value_policy::move,
+                 R"pbdoc(
+                    Calculates the average gradient of selection at the current state of the network.
+
+                    This method averages the difference in transition probabilities of increasing and decreasing
+                    the count of each strategy in the population at each node of the network. It runs a single trial.
+
+                    To obtain the true gradient of selection for a given average network state, this method must be
+                    run multiple times with different initializations of the network. In the limit, the best calculation would be
+                    obtained by averaging the computations at any possible initialization of the network in a given aggregated state.
+
+                    Returns
+                    ----------
+                    numpy.array
+                        The averaged gradient of selection for each strategy in the population at the current network structure.
+                    )pbdoc")
             .def("calculate_fitness", &NetworkGroupStructureSync::calculate_fitness,
-                 py::call_guard<py::gil_scoped_release>(),
                  R"pbdoc(
                     Calculates the fitness of a strategy given a neighborhood state.
 
