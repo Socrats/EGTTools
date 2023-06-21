@@ -182,6 +182,7 @@ void init_structure(py::module_ &m) {
                         Node to update.
                     )pbdoc")
             .def("calculate_average_gradient_of_selection", &egttools::FinitePopulations::structure::AbstractNetworkStructure::calculate_average_gradient_of_selection,
+                 py::return_value_policy::reference_internal,
                  R"pbdoc(
                     Calculates the average gradient of selection at the current state of the network.
 
@@ -198,6 +199,7 @@ void init_structure(py::module_ &m) {
                         The averaged gradient of selection for each strategy in the population at the current network structure.
                     )pbdoc")
             .def("calculate_average_gradient_of_selection_and_update_population", &egttools::FinitePopulations::structure::AbstractNetworkStructure::calculate_average_gradient_of_selection_and_update_population,
+                 py::return_value_policy::reference_internal,
                  R"pbdoc(
                     Calculates the average gradient of selection at the current state of the network and updates the population.
 
@@ -321,7 +323,7 @@ void init_structure(py::module_ &m) {
                             Node to update.
                     )pbdoc")
             .def("calculate_average_gradient_of_selection", &NetworkStructure::calculate_average_gradient_of_selection,
-                 py::return_value_policy::move,
+                 py::return_value_policy::reference_internal,
                  R"pbdoc(
                     Calculates the average gradient of selection at the current state of the network.
 
@@ -338,7 +340,7 @@ void init_structure(py::module_ &m) {
                         The averaged gradient of selection for each strategy in the population at the current network structure.
                     )pbdoc")
             .def("calculate_average_gradient_of_selection_and_update_population", &NetworkStructure::calculate_average_gradient_of_selection_and_update_population,
-                 py::return_value_policy::move,
+                 py::return_value_policy::reference_internal,
                  R"pbdoc(
                     Calculates the average gradient of selection at the current state of the network.
 
@@ -518,7 +520,7 @@ void init_structure(py::module_ &m) {
                             Node to update.
                     )pbdoc")
             .def("calculate_average_gradient_of_selection", &NetworkGroupStructure::calculate_average_gradient_of_selection,
-                 py::return_value_policy::move,
+                 py::return_value_policy::reference_internal,
                  R"pbdoc(
                     Calculates the average gradient of selection at the current state of the network.
 
@@ -535,7 +537,7 @@ void init_structure(py::module_ &m) {
                         The averaged gradient of selection for each strategy in the population at the current network structure.
                     )pbdoc")
             .def("calculate_average_gradient_of_selection_and_update_population", &NetworkGroupStructure::calculate_average_gradient_of_selection_and_update_population,
-                 py::return_value_policy::move,
+                 py::return_value_policy::reference_internal,
                  R"pbdoc(
                     Calculates the average gradient of selection at the current state of the network.
 
@@ -735,7 +737,7 @@ void init_structure(py::module_ &m) {
                             Node to update.
                     )pbdoc")
             .def("calculate_average_gradient_of_selection", &NetworkStructureSync::calculate_average_gradient_of_selection,
-                 py::return_value_policy::move,
+                 py::return_value_policy::reference_internal,
                  R"pbdoc(
                     Calculates the average gradient of selection at the current state of the network.
 
@@ -752,7 +754,7 @@ void init_structure(py::module_ &m) {
                         The averaged gradient of selection for each strategy in the population at the current network structure.
                     )pbdoc")
             .def("calculate_average_gradient_of_selection_and_update_population", &NetworkStructureSync::calculate_average_gradient_of_selection_and_update_population,
-                 py::return_value_policy::move,
+                 py::return_value_policy::reference_internal,
                  R"pbdoc(
                     Calculates the average gradient of selection at the current state of the network.
 
@@ -932,7 +934,7 @@ void init_structure(py::module_ &m) {
                             Node to update.
                     )pbdoc")
             .def("calculate_average_gradient_of_selection", &NetworkGroupStructureSync::calculate_average_gradient_of_selection,
-                 py::return_value_policy::move,
+                 py::return_value_policy::reference_internal,
                  R"pbdoc(
                     Calculates the average gradient of selection at the current state of the network.
 
@@ -949,7 +951,7 @@ void init_structure(py::module_ &m) {
                         The averaged gradient of selection for each strategy in the population at the current network structure.
                     )pbdoc")
             .def("calculate_average_gradient_of_selection_and_update_population", &NetworkGroupStructureSync::calculate_average_gradient_of_selection_and_update_population,
-                 py::return_value_policy::move,
+                 py::return_value_policy::reference_internal,
                  R"pbdoc(
                     Calculates the average gradient of selection at the current state of the network.
 

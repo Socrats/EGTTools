@@ -33,9 +33,9 @@ namespace egttools::FinitePopulations::structure {
          *
          * @return the average gradient of selection for the current network
          */
-        virtual Vector calculate_average_gradient_of_selection() = 0;
+        virtual Vector &calculate_average_gradient_of_selection() = 0;
 
-        virtual Vector calculate_average_gradient_of_selection_and_update_population() = 0;
+        virtual Vector &calculate_average_gradient_of_selection_and_update_population() = 0;
 
         /**
          *

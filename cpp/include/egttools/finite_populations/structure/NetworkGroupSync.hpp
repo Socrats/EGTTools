@@ -72,8 +72,8 @@ namespace egttools::FinitePopulations::structure {
          *
          * @return the average gradient of selection for the current network
          */
-        Vector calculate_average_gradient_of_selection() override;
-        Vector calculate_average_gradient_of_selection_and_update_population() override;
+        Vector &calculate_average_gradient_of_selection() override;
+        Vector &calculate_average_gradient_of_selection_and_update_population() override;
 
         double calculate_fitness(int index);
         double calculate_game_payoff(int index);
@@ -111,6 +111,13 @@ namespace egttools::FinitePopulations::structure {
         std::uniform_int_distribution<int> population_sampler_;
         std::uniform_real_distribution<double> real_rand_;
 
+        // Helper vectors
+        Vector average_gradient_of_selection_ = Vector::Zero(nb_strategies_);
+        Vector transition_probability_ = Vector::Zero(nb_strategies_);
+        // T+ and T- for every strategy
+        Vector transitions_plus_ = Vector::Zero(nb_strategies_);
+        Vector transitions_minus_ = Vector::Zero(nb_strategies_);
+
         std::mt19937_64 generator_{egttools::Random::SeedGenerator::getInstance().getSeed()};
     };
 
@@ -140,6 +147,14 @@ namespace egttools::FinitePopulations::structure {
         strategy_sampler_ = std::uniform_int_distribution<int>(0, nb_strategies_ - 1);
         population_sampler_ = std::uniform_int_distribution<int>(0, population_size_ - 1);
         real_rand_ = std::uniform_real_distribution<double>(0.0, 1.0);
+
+        // Initialize helper vectors
+        // Helper vectors
+        average_gradient_of_selection_ = Vector::Zero(nb_strategies_);
+        transition_probability_ = Vector::Zero(nb_strategies_);
+        // T+ and T- for every strategy
+        transitions_plus_ = Vector::Zero(nb_strategies_);
+        transitions_minus_ = Vector::Zero(nb_strategies_);
     }
 
     template<class GameType, class CacheType>
@@ -169,88 +184,90 @@ namespace egttools::FinitePopulations::structure {
     }
 
     template<class GameType, class CacheType>
-    Vector NetworkGroupSync<GameType, CacheType>::calculate_average_gradient_of_selection() {
+    Vector &NetworkGroupSync<GameType, CacheType>::calculate_average_gradient_of_selection() {
         // For every node, we need to calculate:
         // 1. probability of changing strategy
         // 2. probability of changing to a specific strategy
-        Vector average_gradient_of_selection = Vector::Zero(nb_strategies_);
+        average_gradient_of_selection_.setZero();
         // T+ and T- for every strategy
-        Matrix2D transitions_plus_minus = Matrix2D::Zero(nb_strategies_, 2);
+        transitions_plus_.setZero();
+        transitions_minus_.setZero();
 
         // Iterate through every node
         for (int i = 0; i < population_size_; ++i) {
             // Calculate the probability of changing behavior of that node T
             auto fitness_focal = calculate_fitness(i);
             double transition_probability_unconditional = 0.;
-            Vector transition_probability = Vector::Zero(nb_strategies_);
+            transition_probability_.setZero();
+
             for (size_t j = 0; j < network_[i].size(); ++j) {
                 if (population_[network_[i][j]] == population_[i]) continue;
                 // Get the fitness of both players
                 auto fitness_neighbor = calculate_fitness(j);
                 auto prob = egttools::FinitePopulations::fermi(beta_, fitness_focal, fitness_neighbor);
                 transition_probability_unconditional += prob;
-                transition_probability(population_[network_[i][j]]) += prob;
+                transition_probability_(population_[network_[i][j]]) += prob;
             }
             transition_probability_unconditional /= network_[i].size();
-            transition_probability /= network_[i].size();
+            transition_probability_ /= network_[i].size();
 
             // Now add these transition probabilities to T+ and T-
             // T+ is the probability that there will be an increase in the strategy sk, so any other strategy must change to sk
-            transitions_plus_minus.col(0) += transition_probability;
+            transitions_plus_ += transition_probability_;
             // T- is the probability that there will be a decrease in the strategy sk
-            transitions_plus_minus(population_[i], 1) += transition_probability_unconditional;
+            transitions_minus_(population_[i]) += transition_probability_unconditional;
         }
 
-        transitions_plus_minus /= population_size_;
-        average_gradient_of_selection = transitions_plus_minus.col(0) - transitions_plus_minus.col(1);
+        average_gradient_of_selection_ = (transitions_plus_ - transitions_minus_) / population_size_;
 
-        return average_gradient_of_selection;
+        return average_gradient_of_selection_;
     }
 
     template<class GameType, class CacheType>
-    Vector NetworkGroupSync<GameType, CacheType>::calculate_average_gradient_of_selection_and_update_population() {
+    Vector &NetworkGroupSync<GameType, CacheType>::calculate_average_gradient_of_selection_and_update_population() {
         // For every node, we need to calculate:
         // 1. probability of changing strategy
         // 2. probability of changing to a specific strategy
-        Vector average_gradient_of_selection = Vector::Zero(nb_strategies_);
+        average_gradient_of_selection_.setZero();
         // T+ and T- for every strategy
-        Matrix2D transitions_plus_minus = Matrix2D::Zero(nb_strategies_, 2);
+        transitions_plus_.setZero();
+        transitions_minus_.setZero();
 
         // Iterate through every node
         for (int i = 0; i < population_size_; ++i) {
             // Calculate the probability of changing behavior of that node T
             auto fitness_focal = calculate_fitness(i);
             double transition_probability_unconditional = 0.;
-            Vector transition_probability = Vector::Zero(nb_strategies_);
+            transition_probability_.setZero();
+
             for (size_t j = 0; j < network_[i].size(); ++j) {
                 if (population_[network_[i][j]] == population_[i]) continue;
                 // Get the fitness of both players
                 auto fitness_neighbor = calculate_fitness(j);
                 auto prob = egttools::FinitePopulations::fermi(beta_, fitness_focal, fitness_neighbor);
                 transition_probability_unconditional += prob;
-                transition_probability(population_[network_[i][j]]) += prob;
+                transition_probability_(population_[network_[i][j]]) += prob;
             }
             transition_probability_unconditional /= network_[i].size();
-            transition_probability /= network_[i].size();
+            transition_probability_ /= network_[i].size();
 
             // Now add these transition probabilities to T+ and T-
             // T+ is the probability that there will be an increase in the strategy sk, so any other strategy must change to sk
-            transitions_plus_minus.col(0) += transition_probability;
+            transitions_plus_ += transition_probability_;
             // T- is the probability that there will be a decrease in the strategy sk
-            transitions_plus_minus(population_[i], 1) += transition_probability_unconditional;
+            transitions_minus_(population_[i]) += transition_probability_unconditional;
 
             // Update node
             update_node(i);
         }
 
-        transitions_plus_minus /= population_size_;
-        average_gradient_of_selection = transitions_plus_minus.col(0) - transitions_plus_minus.col(1);
+        average_gradient_of_selection_ = (transitions_plus_ - transitions_minus_) / population_size_;
 
         // update all population
         for (int i = 0; i < population_size_; ++i)
             population_[i] = population_new[i];
 
-        return average_gradient_of_selection;
+        return average_gradient_of_selection_;
     }
 
     template<class GameType, class CacheType>
