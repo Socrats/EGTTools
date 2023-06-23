@@ -111,7 +111,8 @@ namespace egttools::FinitePopulations::structure {
         std::uniform_real_distribution<double> real_rand_;
 
         // Helper vectors
-        Vector average_gradient_of_selection_ = Vector::Zero(nb_strategies_);
+        Vector average_gradient_of_selection_;
+        VectorXui neighbourhood_state_;
 
         std::mt19937_64 generator_{egttools::Random::SeedGenerator::getInstance().getSeed()};
     };
@@ -144,6 +145,8 @@ namespace egttools::FinitePopulations::structure {
 
         // Initialize helper vectors
         average_gradient_of_selection_ = Vector::Zero(nb_strategies_);
+
+        neighbourhood_state_ = VectorXui::Zero(nb_strategies_);
     }
 
     template<class GameType, class CacheType>
@@ -361,19 +364,19 @@ namespace egttools::FinitePopulations::structure {
 
         // Let's get the neighborhood strategies
         // @note: this needs to be done more efficiently!
-        VectorXui neighborhood_state = VectorXui::Zero(nb_strategies_);
+        neighbourhood_state_.setZero();
         for (int &i : network_[index]) {
-            neighborhood_state(population_[i]) += 1;
+            neighbourhood_state_(population_[i]) += 1;
         }
 
         std::stringstream result;
-        result << neighborhood_state;
+        result << neighbourhood_state_;
 
         std::string key = std::to_string(population_[index]) + result.str();
 
         // First we check if fitness value is in the lookup table
         if (!cache_.exists(key)) {
-            payoff = game_.calculate_fitness(population_[index], neighborhood_state);
+            payoff = game_.calculate_fitness(population_[index], neighbourhood_state_);
 
             // Store the fitness in the cache
             cache_.insert(key, payoff);
