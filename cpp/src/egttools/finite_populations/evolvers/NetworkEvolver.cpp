@@ -187,17 +187,19 @@ egttools::Matrix2D egttools::FinitePopulations::evolvers::NetworkEvolver::calcul
     auto state_iterator = tq::trange(nb_initial_states);
     state_iterator.set_prefix("Iterating over simulations: ");
 
-    for (auto state_index: state_iterator) {
+    for (auto state_index : state_iterator) {
         Vector average_gradient_of_selection = Vector::Zero(states[state_index].size());
 
 #pragma omp parallel for reduction(+ : average_gradient_of_selection) default(none) shared(networks, nb_generations, nb_simulations, states, state_index)
         for (auto &network : networks) {
-            // Initialize the structure
-            network->initialize_state(states[state_index]);
+            for (int_fast64_t simulation = 0; simulation < nb_simulations; ++simulation) {
+                // Initialize the structure
+                network->initialize_state(states[state_index]);
 
-            // run simulation
-            for (int_fast64_t i = 0; i < nb_generations; ++i) {
-                average_gradient_of_selection += network->calculate_average_gradient_of_selection_and_update_population();
+                // run simulation
+                for (int_fast64_t i = 0; i < nb_generations; ++i) {
+                    average_gradient_of_selection += network->calculate_average_gradient_of_selection_and_update_population();
+                }
             }
         }
 
