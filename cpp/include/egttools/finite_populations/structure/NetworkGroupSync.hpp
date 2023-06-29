@@ -222,7 +222,7 @@ namespace egttools::FinitePopulations::structure {
             transitions_minus_(population_[i]) += transition_probability_unconditional;
         }
 
-        average_gradient_of_selection_ = (transitions_plus_ - transitions_minus_) / population_size_;
+        average_gradient_of_selection_ = transitions_plus_ - transitions_minus_;
 
         return average_gradient_of_selection_;
     }
@@ -265,7 +265,7 @@ namespace egttools::FinitePopulations::structure {
             update_node(i);
         }
 
-        average_gradient_of_selection_ = (transitions_plus_ - transitions_minus_) / population_size_;
+        average_gradient_of_selection_ = transitions_plus_ - transitions_minus_;
 
         // update all population
         for (int i = 0; i < population_size_; ++i)

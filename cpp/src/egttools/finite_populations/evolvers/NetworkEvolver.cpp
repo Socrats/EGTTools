@@ -83,128 +83,197 @@ egttools::MatrixXui2D egttools::FinitePopulations::evolvers::NetworkEvolver::run
 
     return results;
 }
-egttools::Vector egttools::FinitePopulations::evolvers::NetworkEvolver::calculate_average_gradient_of_selection(egttools::VectorXui &state,
-                                                                                                                int_fast64_t nb_simulations,
-                                                                                                                int_fast64_t nb_generations,
-                                                                                                                AbstractNetworkStructure &network) {
-    if (static_cast<int>(state.sum()) != network.population_size())
-        throw std::invalid_argument("state must sum to population_size.");
+egttools::Matrix2D egttools::FinitePopulations::evolvers::NetworkEvolver::estimate_time_dependent_average_gradients_of_selection(std::vector<VectorXui> &initial_states,
+                                                                                                                                 int_fast64_t nb_simulations,
+                                                                                                                                 int_fast64_t generation_start,
+                                                                                                                                 int_fast64_t generation_stop,
+                                                                                                                                 AbstractNetworkStructure &network) {
+
+    for (auto &state : initial_states)
+        if (static_cast<int>(state.sum()) != network.population_size())
+            throw std::invalid_argument("each state must sum to population_size.");
     if (nb_simulations < 1)
         throw std::invalid_argument("the number of simulations must at least be 1.");
-    if (nb_generations < 1)
-        throw std::invalid_argument("the number of generations must at least be 1.");
+    if (generation_start < 0)
+        throw std::invalid_argument("the generation_start must be at least 0.");
+    if (generation_stop <= generation_start)
+        throw std::invalid_argument("generation_stop must be > generation_start.");
 
-    Vector average_gradient_of_selection = Vector::Zero(state.size());
+    auto nb_initial_states = static_cast<int_fast64_t>(initial_states.size());
+    auto nb_population_states = egttools::starsBars(network.population_size(), network.nb_strategies());
+    egttools::Matrix2D average_gradients_of_selection = egttools::Matrix2D::Zero(nb_population_states, network.nb_strategies());
 
-    for (int_fast64_t i = 0; i < nb_simulations; ++i) {
-        // Initialize the structure
-        network.initialize_state(state);
-
-        for (int_fast64_t j = 0; j < nb_generations; ++j) {
-            // Calculate average gradient at the current generation
-            average_gradient_of_selection += network.calculate_average_gradient_of_selection_and_update_population();
-        }
-    }
-
-
-    return average_gradient_of_selection / (nb_simulations * nb_generations);
-}
-egttools::Vector egttools::FinitePopulations::evolvers::NetworkEvolver::calculate_average_gradient_of_selection(egttools::VectorXui &state,
-                                                                                                                int_fast64_t nb_simulations,
-                                                                                                                int_fast64_t nb_generations,
-                                                                                                                std::vector<AbstractNetworkStructure *> networks) {
-    if (nb_simulations < 1)
-        throw std::invalid_argument("the number of simulations must at least be 1.");
-    if (nb_generations < 1)
-        throw std::invalid_argument("the number of generations must at least be 1.");
-
-    Vector average_gradient_of_selection = Vector::Zero(state.size());
-
-#pragma omp parallel for reduction(+ : average_gradient_of_selection) default(none) shared(networks, nb_generations, nb_simulations, state)
-    for (auto &network : networks) {
-        for (int_fast64_t i = 0; i < nb_simulations; ++i) {
-            // Initialize the structure
-            network->initialize_state(state);
-
-            for (int_fast64_t j = 0; j < nb_generations; ++j) {
-                // Calculate average gradient at the current generation
-                average_gradient_of_selection += network->calculate_average_gradient_of_selection_and_update_population();
-            }
-        }
-    }
-
-
-    return average_gradient_of_selection / (nb_simulations * networks.size() * nb_generations);
-}
-egttools::Matrix2D egttools::FinitePopulations::evolvers::NetworkEvolver::calculate_average_gradients_of_selection(std::vector<egttools::VectorXui> &states,
-                                                                                                                   int_fast64_t nb_simulations,
-                                                                                                                   int_fast64_t nb_generations,
-                                                                                                                   AbstractNetworkStructure &network) {
-    if (nb_simulations < 1)
-        throw std::invalid_argument("the number of simulations must at least be 1.");
-    if (nb_generations < 1)
-        throw std::invalid_argument("the number of generations must at least be 1.");
-
-    auto nb_initial_states = static_cast<int_fast64_t>(states.size());
-    egttools::Matrix2D average_gradients_of_selection = egttools::Matrix2D::Zero(nb_initial_states, states[0].size());
 
     // setup tqdm
     auto state_iterator = tq::trange(nb_initial_states);
     state_iterator.set_prefix("Iterating over states: ");
 
-    for (int_fast64_t initial_state_index : state_iterator) {
+    for (auto state_index : state_iterator) {
         for (int_fast64_t i = 0; i < nb_simulations; ++i) {
             // Initialize the structure
-            network.initialize_state(states[initial_state_index]);
+            network.initialize_state(initial_states[state_index]);
+
+            // Evolve until generation_start
+            for (int_fast64_t j = 0; j < generation_start; ++j) {
+                network.update_population();
+            }
+
+            for (int_fast64_t j = generation_start; j < generation_stop; ++j) {
+                // calculate current state
+                auto current_state_index = static_cast<int_fast64_t>(egttools::FinitePopulations::calculate_state(network.population_size(),
+                                                                                                                  network.mean_population_state()));
+
+                // Compute the gradient of selection and update population
+                average_gradients_of_selection.row(current_state_index) += network.calculate_average_gradient_of_selection_and_update_population();
+            }
+        }
+    }
+
+    return average_gradients_of_selection / (nb_simulations * (generation_stop - generation_start) * nb_initial_states);
+}
+egttools::Matrix2D egttools::FinitePopulations::evolvers::NetworkEvolver::estimate_time_dependent_average_gradients_of_selection(std::vector<VectorXui> &initial_states,
+                                                                                                                                 int_fast64_t nb_simulations,
+                                                                                                                                 int_fast64_t generation_start,
+                                                                                                                                 int_fast64_t generation_stop,
+                                                                                                                                 std::vector<AbstractNetworkStructure *> networks) {
+
+    auto population_size = networks[0]->population_size();
+    auto nb_strategies = networks[0]->nb_strategies();
+    for (auto &network : networks) {
+        if (network->population_size() != population_size)
+            throw std::invalid_argument("All networks must have the same population size!");
+        if (network->nb_strategies() != nb_strategies)
+            throw std::invalid_argument("All networks must have the same number of strategies!");
+    }
+    for (auto &state : initial_states)
+        if (static_cast<int>(state.sum()) != population_size)
+            throw std::invalid_argument("each state must sum to population_size.");
+    if (nb_simulations < 1)
+        throw std::invalid_argument("the number of simulations must at least be 1.");
+    if (generation_start < 0)
+        throw std::invalid_argument("the generation_start must be at least 0.");
+    if (generation_stop <= generation_start)
+        throw std::invalid_argument("generation_stop must be > generation_start.");
+
+    auto nb_initial_states = static_cast<int_fast64_t>(initial_states.size());
+    auto nb_population_states = egttools::starsBars(population_size, nb_strategies);
+    egttools::Matrix2D average_gradients_of_selection = egttools::Matrix2D::Zero(nb_population_states, nb_strategies);
+
+    // setup tqdm
+    auto state_iterator = tq::trange(nb_initial_states);
+    state_iterator.set_prefix("Iterating over states: ");
+
+    for (auto state_index : state_iterator) {
+#pragma omp parallel for reduction(+ : average_gradients_of_selection) default(none) shared(initial_states, networks, nb_simulations, generation_start, generation_stop, state_index)
+        for (auto &network : networks) {
+            for (int_fast64_t i = 0; i < nb_simulations; ++i) {
+                // Initialize the structure
+                network->initialize_state(initial_states[state_index]);
+
+                // Evolve until generation_start
+                for (int_fast64_t j = 0; j < generation_start; ++j) {
+                    network->update_population();
+                }
+
+                for (int_fast64_t j = generation_start; j < generation_stop; ++j) {
+                    // calculate current state
+                    auto current_state_index = static_cast<int_fast64_t>(egttools::FinitePopulations::calculate_state(network->population_size(),
+                                                                                                                      network->mean_population_state()));
+
+                    // Compute the gradient of selection and update population
+                    average_gradients_of_selection.row(current_state_index) += network->calculate_average_gradient_of_selection_and_update_population();
+                }
+            }
+        }
+    }
+
+    return average_gradients_of_selection / (nb_simulations * (generation_stop - generation_start) * networks.size() * nb_initial_states);
+}
+egttools::Matrix2D egttools::FinitePopulations::evolvers::NetworkEvolver::estimate_time_independent_average_gradients_of_selection(std::vector<egttools::VectorXui> &initial_states,
+                                                                                                                                   int_fast64_t nb_simulations,
+                                                                                                                                   int_fast64_t nb_generations,
+                                                                                                                                   AbstractNetworkStructure &network) {
+    for (auto &state : initial_states)
+        if (static_cast<int>(state.sum()) != network.population_size())
+            throw std::invalid_argument("each state must sum to population_size.");
+    if (nb_simulations < 1)
+        throw std::invalid_argument("the number of simulations must at least be 1.");
+    if (nb_generations < 1)
+        throw std::invalid_argument("the number of generations must be at least 1.");
+
+    auto nb_initial_states = static_cast<int_fast64_t>(initial_states.size());
+    auto nb_population_states = egttools::starsBars(network.population_size(), network.nb_strategies());
+    egttools::Matrix2D average_gradients_of_selection = egttools::Matrix2D::Zero(nb_population_states, network.nb_strategies());
+
+    // setup tqdm
+    auto state_iterator = tq::trange(nb_initial_states);
+    state_iterator.set_prefix("Iterating over states: ");
+
+    for (auto state_index : state_iterator) {
+        for (int_fast64_t i = 0; i < nb_simulations; ++i) {
+            // Initialize the structure
+            network.initialize_state(initial_states[state_index]);
 
             for (int_fast64_t j = 0; j < nb_generations; ++j) {
-                // Calculate average gradient at the current generation
-                average_gradients_of_selection.row(initial_state_index) += network.calculate_average_gradient_of_selection_and_update_population();
+                // calculate current state
+                auto current_state_index = static_cast<int_fast64_t>(egttools::FinitePopulations::calculate_state(network.population_size(),
+                                                                                                                  network.mean_population_state()));
+
+                // Compute the gradient of selection and update population
+                average_gradients_of_selection.row(current_state_index) += network.calculate_average_gradient_of_selection_and_update_population();
             }
         }
     }
 
 
-    return average_gradients_of_selection / (nb_simulations * nb_generations);
+    return average_gradients_of_selection / (nb_simulations * nb_generations * nb_initial_states);
 }
-egttools::Matrix2D egttools::FinitePopulations::evolvers::NetworkEvolver::calculate_average_gradients_of_selection(std::vector<egttools::VectorXui> &states,
-                                                                                                                   int_fast64_t nb_simulations,
-                                                                                                                   int_fast64_t nb_generations,
-                                                                                                                   std::vector<AbstractNetworkStructure *> networks) {
+egttools::Matrix2D egttools::FinitePopulations::evolvers::NetworkEvolver::estimate_time_independent_average_gradients_of_selection(std::vector<egttools::VectorXui> &initial_states,
+                                                                                                                                   int_fast64_t nb_simulations,
+                                                                                                                                   int_fast64_t nb_generations,
+                                                                                                                                   std::vector<AbstractNetworkStructure *> networks) {
+    auto population_size = networks[0]->population_size();
+    auto nb_strategies = networks[0]->nb_strategies();
+    for (auto &network : networks) {
+        if (network->population_size() != population_size)
+            throw std::invalid_argument("All networks must have the same population size!");
+        if (network->nb_strategies() != nb_strategies)
+            throw std::invalid_argument("All networks must have the same number of strategies!");
+    }
+    for (auto &state : initial_states)
+        if (static_cast<int>(state.sum()) != population_size)
+            throw std::invalid_argument("each state must sum to population_size.");
     if (nb_simulations < 1)
         throw std::invalid_argument("the number of simulations must at least be 1.");
     if (nb_generations < 1)
-        throw std::invalid_argument("the number of generations must at least be 1.");
-    if (networks.empty())
-        throw std::invalid_argument("There must be at least one network.");
-    if (states.empty())
-        throw std::invalid_argument("There must be at least one state.");
+        throw std::invalid_argument("the number of generations must be at least 1.");
 
-    auto nb_initial_states = static_cast<int_fast64_t>(states.size());
-    egttools::Matrix2D average_gradients_of_selection = egttools::Matrix2D::Zero(nb_initial_states, states[0].size());
+    auto nb_initial_states = static_cast<int_fast64_t>(initial_states.size());
+    auto nb_population_states = egttools::starsBars(population_size, nb_strategies);
+    egttools::Matrix2D average_gradients_of_selection = egttools::Matrix2D::Zero(nb_population_states, nb_strategies);
 
     // setup tqdm
     auto state_iterator = tq::trange(nb_initial_states);
     state_iterator.set_prefix("Iterating over simulations: ");
 
     for (auto state_index : state_iterator) {
-        Vector average_gradient_of_selection = Vector::Zero(states[state_index].size());
-
-#pragma omp parallel for reduction(+ : average_gradient_of_selection) default(none) shared(networks, nb_generations, nb_simulations, states, state_index)
+#pragma omp parallel for reduction(+ : average_gradients_of_selection) default(none) shared(initial_states, networks, nb_simulations, nb_generations, state_index)
         for (auto &network : networks) {
-            for (int_fast64_t simulation = 0; simulation < nb_simulations; ++simulation) {
+            for (int_fast64_t i = 0; i < nb_simulations; ++i) {
                 // Initialize the structure
-                network->initialize_state(states[state_index]);
+                network->initialize_state(initial_states[state_index]);
 
-                // run simulation
-                for (int_fast64_t i = 0; i < nb_generations; ++i) {
-                    average_gradient_of_selection += network->calculate_average_gradient_of_selection_and_update_population();
+                for (int_fast64_t j = 0; j < nb_generations; ++j) {
+                    // calculate current state
+                    auto current_state_index = static_cast<int_fast64_t>(egttools::FinitePopulations::calculate_state(network->population_size(),
+                                                                                                                      network->mean_population_state()));
+
+                    // Compute the gradient of selection and update population
+                    average_gradients_of_selection.row(current_state_index) += network->calculate_average_gradient_of_selection_and_update_population();
                 }
             }
         }
-
-        average_gradients_of_selection.row(state_index) = average_gradient_of_selection;
     }
 
-    return average_gradients_of_selection / (nb_simulations * nb_generations * networks.size());
+    return average_gradients_of_selection / (nb_simulations * nb_generations * networks.size() * nb_initial_states);
 }

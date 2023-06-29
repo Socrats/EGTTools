@@ -27,6 +27,7 @@
 #include <egttools/finite_populations/Utils.hpp>
 #include <egttools/finite_populations/structure/AbstractNetworkStructure.hpp>
 #include <map>
+#include <memory>
 #include <random>
 #include <stdexcept>
 #include <string>
@@ -116,7 +117,7 @@ namespace egttools::FinitePopulations::structure {
                                                   int cache_size) : nb_strategies_(nb_strategies),
                                                                     beta_(beta),
                                                                     mu_(mu),
-                                                                    network_(std::move(network)),
+                                                                    network_(network),
                                                                     game_(game),
                                                                     cache_(cache_size) {
 
@@ -161,7 +162,11 @@ namespace egttools::FinitePopulations::structure {
         // We first fill the population with the number of strategies indicated by state in order
         mean_population_state_ = state;
         std::unordered_set<int> container(population_size_);
-        egttools::sampling::sample_without_replacement<size_t, int>(0, population_size_, population_size_, container, generator_);
+        egttools::sampling::sample_without_replacement<size_t, int>(0,
+                                                                    population_size_,
+                                                                    population_size_,
+                                                                    container,
+                                                                    generator_);
 
         auto iterator = container.begin();
         for (int s = 0; s < nb_strategies_; ++s) {
@@ -207,7 +212,7 @@ namespace egttools::FinitePopulations::structure {
             transitions_minus_(population_[i]) += transition_probability_unconditional;
         }
 
-        average_gradient_of_selection_ = (transitions_plus_ - transitions_minus_) / population_size_;
+        average_gradient_of_selection_ = (transitions_plus_ - transitions_minus_);
 
         return average_gradient_of_selection_;
     }
@@ -250,9 +255,9 @@ namespace egttools::FinitePopulations::structure {
             update_node(i);
         }
 
-        average_gradient_of_selection_ = (transitions_plus_ - transitions_minus_) / population_size_;
+        average_gradient_of_selection_ = transitions_plus_ - transitions_minus_;
 
-        // update all population
+        // update all strategies in the population
         for (int i = 0; i < population_size_; ++i)
             population_[i] = population_new[i];
 

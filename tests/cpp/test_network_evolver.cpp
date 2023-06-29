@@ -38,12 +38,14 @@ int main() {
 
     egttools::VectorXui initial_state(2);
     initial_state << 5, 5;
+    std::vector<egttools::VectorXui> initial_states;
+    initial_states.push_back(initial_state);
 
     auto result = Evolver::run(50, 0, initial_state, network_structure);
 
     std::cout << result << std::endl;
 
-    auto gradient = Evolver::calculate_average_gradient_of_selection(initial_state, 10, 10, network_structure);
+    auto gradient = Evolver::estimate_time_independent_average_gradients_of_selection(initial_states, 10, 10, network_structure);
 
     std::cout << gradient << std::endl;
 }

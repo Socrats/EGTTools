@@ -91,6 +91,10 @@ namespace egttools::FinitePopulations::structure {
 
         // Helper vectors
         Vector average_gradient_of_selection_;
+        Vector transition_probability_;
+        // T+ and T- for every strategy
+        Vector transitions_plus_;
+        Vector transitions_minus_;
         VectorXui neighbourhood_state_;
 
         std::mt19937_64 generator_{egttools::Random::SeedGenerator::getInstance().getSeed()};
@@ -124,6 +128,10 @@ namespace egttools::FinitePopulations::structure {
         real_rand_ = std::uniform_real_distribution<double>(0.0, 1.0);
 
         // Initialize helper vectors
+        transition_probability_ = Vector::Zero(nb_strategies_);
+        // T+ and T- for every strategy
+        transitions_plus_ = Vector::Zero(nb_strategies_);
+        transitions_minus_ = Vector::Zero(nb_strategies_);
         average_gradient_of_selection_ = Vector::Zero(nb_strategies_);
         neighbourhood_state_ = VectorXui::Zero(nb_strategies_);
     }
@@ -156,69 +164,83 @@ namespace egttools::FinitePopulations::structure {
 
     template<class GameType, class CacheType>
     Vector &Network<GameType, CacheType>::calculate_average_gradient_of_selection() {
-        // For a randomly selected node, we calculate:
+        // For every node, we need to calculate:
         // 1. probability of changing strategy
         // 2. probability of changing to a specific strategy
         average_gradient_of_selection_.setZero();
+        // T+ and T- for every strategy
+        transitions_plus_.setZero();
+        transitions_minus_.setZero();
 
-        // select randomly an individual from the population
-        auto focal_player = population_sampler_(generator_);
+        // Iterate through every node
+        for (int i = 0; i < population_size_; ++i) {
+            // Calculate the probability of changing behavior of that node T
+            auto fitness_focal = calculate_fitness(i);
+            double transition_probability_unconditional = 0.;
+            transition_probability_.setZero();
 
-        // Calculate the probability of changing behavior of that node T
-        auto fitness_focal = calculate_fitness(focal_player);
-        double transition_probability_unconditional = 0.;
-        for (size_t j = 0; j < network_[focal_player].size(); ++j) {
-            if (population_[network_[focal_player][j]] == population_[focal_player]) continue;
-            // Get the fitness of both players
-            auto fitness_neighbor = calculate_fitness(j);
-            auto prob = egttools::FinitePopulations::fermi(beta_, fitness_focal, fitness_neighbor);
-            transition_probability_unconditional += prob;
-            average_gradient_of_selection_(population_[network_[focal_player][j]]) += prob;
+            for (size_t j = 0; j < network_[i].size(); ++j) {
+                if (population_[network_[i][j]] == population_[i]) continue;
+                // Get the fitness of both players
+                auto fitness_neighbor = calculate_fitness(j);
+                auto prob = egttools::FinitePopulations::fermi(beta_, fitness_focal, fitness_neighbor);
+                transition_probability_unconditional += prob;
+                transition_probability_(population_[network_[i][j]]) += prob;
+            }
+            transition_probability_unconditional /= network_[i].size();
+            transition_probability_ /= network_[i].size();
+
+            // Now add these transition probabilities to T+ and T-
+            // T+ is the probability that there will be an increase in the strategy sk, so any other strategy must change to sk
+            transitions_plus_ += transition_probability_;
+            // T- is the probability that there will be a decrease in the strategy sk
+            transitions_minus_(population_[i]) += transition_probability_unconditional;
         }
-        transition_probability_unconditional /= network_[focal_player].size();
-        average_gradient_of_selection_ /= network_[focal_player].size();
 
-        // T- is the probability that there will be a decrease in the strategy sk
-        // So we do T+ - T-, and we only have T- for the strategy of the focal node
-        average_gradient_of_selection_(population_[focal_player]) -= transition_probability_unconditional;
-        average_gradient_of_selection_ /= population_size_;
+        average_gradient_of_selection_ = (transitions_plus_ - transitions_minus_) / population_size_;
 
-        // We need to multiply by the probability of selecting the current node for update (1/population_size)
         return average_gradient_of_selection_;
     }
 
     template<class GameType, class CacheType>
     Vector &Network<GameType, CacheType>::calculate_average_gradient_of_selection_and_update_population() {
-        // For a randomly selected node, we calculate:
+        // For every node, we need to calculate:
         // 1. probability of changing strategy
         // 2. probability of changing to a specific strategy
         average_gradient_of_selection_.setZero();
+        // T+ and T- for every strategy
+        transitions_plus_.setZero();
+        transitions_minus_.setZero();
 
-        // select randomly an individual from the population
-        auto focal_player = population_sampler_(generator_);
+        // Iterate through every node
+        for (int i = 0; i < population_size_; ++i) {
+            // Calculate the probability of changing behavior of that node T
+            auto fitness_focal = calculate_fitness(i);
+            double transition_probability_unconditional = 0.;
+            transition_probability_.setZero();
 
-        // Calculate the probability of changing behavior of that node T
-        auto fitness_focal = calculate_fitness(focal_player);
-        double transition_probability_unconditional = 0.;
-        for (size_t j = 0; j < network_[focal_player].size(); ++j) {
-            if (population_[network_[focal_player][j]] == population_[focal_player]) continue;
-            // Get the fitness of both players
-            auto fitness_neighbor = calculate_fitness(j);
-            auto prob = egttools::FinitePopulations::fermi(beta_, fitness_focal, fitness_neighbor);
-            transition_probability_unconditional += prob;
-            average_gradient_of_selection_(population_[network_[focal_player][j]]) += prob;
+            for (size_t j = 0; j < network_[i].size(); ++j) {
+                if (population_[network_[i][j]] == population_[i]) continue;
+                // Get the fitness of both players
+                auto fitness_neighbor = calculate_fitness(j);
+                auto prob = egttools::FinitePopulations::fermi(beta_, fitness_focal, fitness_neighbor);
+                transition_probability_unconditional += prob;
+                transition_probability_(population_[network_[i][j]]) += prob;
+            }
+            transition_probability_unconditional /= network_[i].size();
+            transition_probability_ /= network_[i].size();
+
+            // Now add these transition probabilities to T+ and T-
+            // T+ is the probability that there will be an increase in the strategy sk, so any other strategy must change to sk
+            transitions_plus_ += transition_probability_;
+            // T- is the probability that there will be a decrease in the strategy sk
+            transitions_minus_(population_[i]) += transition_probability_unconditional;
         }
-        transition_probability_unconditional /= network_[focal_player].size();
-        average_gradient_of_selection_ /= network_[focal_player].size();
-
-        // T- is the probability that there will be a decrease in the strategy sk
-        // So we do T+ - T-, and we only have T- for the strategy of the focal node
-        average_gradient_of_selection_(population_[focal_player]) -= transition_probability_unconditional;
 
         // Now update this node in the population
-        update_node(focal_player);
+        update_population();
 
-        average_gradient_of_selection_ /= population_size_;
+        average_gradient_of_selection_ = (transitions_plus_ - transitions_minus_) / population_size_;
 
         // We need to multiply by the probability of selecting the current node for update (1/population_size)
         return average_gradient_of_selection_;
