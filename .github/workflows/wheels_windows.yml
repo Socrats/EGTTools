@@ -22,6 +22,9 @@ jobs:
           # Run 32 and 64 bit version in parallel for Linux and Windows
           - runs-on: windows-latest
             cibw-arch: win_amd64
+#          - runs-on: windows-latest
+#            cibw-arch: win32
+#            python-arch: x86
 
     name: Wheels • ${{ matrix.cibw-arch }}
     runs-on: ${{ matrix.runs-on }}
@@ -51,7 +54,12 @@ jobs:
           CIBW_BEFORE_ALL: pip install --upgrade pip
           CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3_windows.sh
           CIBW_ENVIRONMENT: CMAKE_BUILD_PARALLEL_LEVEL=2
-          CIBW_ENVIRONMENT_WINDOWS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_ARCH="${{ matrix.platform_id == 'win32' && '-A Win32' || '' }}"
+          CIBW_ENVIRONMENT_WINDOWS: |
+            CMAKE_BUILD_PARALLEL_LEVEL=2 
+            CMAKE_ARCH="${{ matrix.platform_id == 'win32' && '-A Win32' || '' }}"
+            BOOST_ROOT=c:/local/boost_1_82_0
+            BOOST_LIBRARYDIR=c:/local/boost_1_82_0/lib64-msvc-14.3
+
           CIBW_TEST_REQUIRES: pytest
           CIBW_BEFORE_TEST_WINDOWS: cd .. && cp -r {package}/tests/ {project}\tests\
           CIBW_TEST_COMMAND: pytest {project}/tests

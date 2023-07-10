@@ -16,6 +16,3 @@ export EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'
 
 choco install boost-msvc-14.3
 
-export BOOST_ROOT=C:/local/boost_1_82_0
-export BOOST_LIBRARYDIR=C:/local/boost_1_82_0/lib64-msvc-14.3
-

@@ -50,7 +50,7 @@ if (MSVC)
         add_compile_options(/d2FH4-) # Because we don't want to link against VCRUNTIME140_1.dll (see https://cibuildwheel.readthedocs.io/en/stable/faq/#importerror-dll-load-failed-the-specific-module-could-not-be-found-error-on-windows)
     endif ()
     # important for finding boost on windows 64 bit
-    set(Boost_ARCHITECTURE '-x64')
+#    set(Boost_ARCHITECTURE '-x64')
 endif ()
 
 if(APPLE)
