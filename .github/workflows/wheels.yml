@@ -114,7 +114,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.9
+          python-version: 3.10
           architecture: ${{ matrix.python-arch }}
 
       - name: Setup CMake
@@ -125,7 +125,7 @@ jobs:
         env:
           CIBW_BUILD_FRONTEND: "build"
           CIBW_BUILD: "cp*-${{ matrix.cibw-arch }}"
-          CIBW_SKIP: "cp38-win32 cp39-win32 cp310-win32 cp311-win32"
+          CIBW_SKIP: "cp37* cp38-win32 cp39-win32 cp310-win32 cp311-win32"
           CIBW_ARCHS_MACOS: "x86_64 arm64"
           CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_BEFORE_ALL: pip install --upgrade pip
