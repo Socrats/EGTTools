@@ -38,11 +38,13 @@
 #define uint_type_ boost::multiprecision::uint128_t
 #define float_type_ boost::multiprecision::cpp_dec_float_100
 #define binomial_coeff_ binomial_precision
+#define CONVERT_TO_(object, type) object.convert_to<type>()
 #else
 #define int_type_ int64_t
 #define uint_type_ size_t
 #define float_type_ double
 #define binomial_coeff_ egttools::binomialCoeff<double, size_t>
+#define CONVERT_TO_(object, type) static_cast<type>(object)
 #endif
 
 namespace egttools {

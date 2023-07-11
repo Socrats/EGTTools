@@ -52,8 +52,7 @@ egttools::multivariateHypergeometricPDF(size_t m, size_t k, size_t n, const std:
         res *= binomial_coeff_(population_counts[i], sample_counts[i]);
     }
 
-
-    return static_cast<double>(res.convert_to<float_type_>() / denominator.convert_to<float_type_>());
+    return static_cast<double>(CONVERT_TO_(res, float_type_) / CONVERT_TO_(denominator, float_type_));
 }
 
 double
@@ -70,7 +69,7 @@ egttools::multivariateHypergeometricPDF(size_t m, size_t k, size_t n, const std:
         res *= binomial_coeff_(population_counts(i), sample_counts[i]);
     }
 
-    return static_cast<double>(res.convert_to<float_type_>() / denominator.convert_to<float_type_>());
+    return static_cast<double>(CONVERT_TO_(res, float_type_) / CONVERT_TO_(denominator, float_type_));
 }
 
 double
@@ -87,7 +86,7 @@ egttools::multivariateHypergeometricPDF(size_t m, size_t k, size_t n, const Eige
         res *= binomial_coeff_(population_counts(i), sample_counts(i));
     }
 
-    return static_cast<double>(res.convert_to<float_type_>() / denominator.convert_to<float_type_>());
+    return static_cast<double>(CONVERT_TO_(res, float_type_) / CONVERT_TO_(denominator, float_type_));
 }
 
 #if (HAS_BOOST)
