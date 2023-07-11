@@ -57,7 +57,6 @@ jobs:
           CIBW_ENVIRONMENT_WINDOWS: >
             PATH="C:\\local\\boost_1_82_0;$PATH"
             CMAKE_BUILD_PARALLEL_LEVEL=2 
-            EGTTOOLS_EXTRA_CMAKE_ARGS="-DBOOST_ROOT='c:/local/boost_1_82_0'"
             BUILD_ARCH=${{ matrix.cibw-arch }}
           CIBW_TEST_REQUIRES: pytest
           CIBW_BEFORE_TEST_WINDOWS: cd .. && cp -r {package}/tests/ {project}\tests\
