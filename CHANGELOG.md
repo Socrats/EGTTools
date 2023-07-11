@@ -10,10 +10,16 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 ### Fixed
 - Fixed issue with link to Simplex2D class
 - Match scatter output to matplotlib API changes [by cvanelteren]
+- Fixed issue with compiling `Distributions.cpp` without Boost
 
 ### Changed
-- Removed MACOSX_DEPLOYMENT_TARGET constraint
+- Removed support for `Python 3.7`
+- Dropped support for `Win32` architectures
+- Removed `MACOSX_DEPLOYMENT_TARGET` constraint
 - Updated egttools citation
+- Skip `multivariate_hypergeometric` tests when compiling without Boost
+- Upgraded cibuildwheel to v2.14.0
+- Set minimum Boost version to 1.70.0
 
 ### Added
 - Added basic unittests for plotting [by cvanelteren]
