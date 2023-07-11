@@ -6,6 +6,7 @@
 
 #include <egttools/finite_populations/evolvers/GeneralPopulationEvolver.hpp>
 #include <egttools/finite_populations/structure/Network.hpp>
+#include <iostream>
 
 using NodeDictionary = egttools::FinitePopulations::structure::NodeDictionary;
 using NormalFormNetworkGame = egttools::FinitePopulations::games::NormalFormNetworkGame;
