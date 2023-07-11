@@ -54,9 +54,11 @@ jobs:
           CIBW_BEFORE_ALL: pip install --upgrade pip
           CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3_windows.sh
           CIBW_ENVIRONMENT: CMAKE_BUILD_PARALLEL_LEVEL=2
-          CIBW_ENVIRONMENT_WINDOWS: |
+          CIBW_ENVIRONMENT_WINDOWS: >
+            PATH="C:\\local\\boost_1_82_0;$PATH"
             CMAKE_BUILD_PARALLEL_LEVEL=2 
-            EGTTOOLS_EXTRA_CMAKE_ARGS="-DBOOST_ROOT='c:\local\boost_1_82_0'"
+            EGTTOOLS_EXTRA_CMAKE_ARGS="-DBOOST_ROOT='c:/local/boost_1_82_0'"
+            BUILD_ARCH=${{ matrix.cibw-arch }}
           CIBW_TEST_REQUIRES: pytest
           CIBW_BEFORE_TEST_WINDOWS: cd .. && cp -r {package}/tests/ {project}\tests\
           CIBW_TEST_COMMAND: pytest {project}/tests
