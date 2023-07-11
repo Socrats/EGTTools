@@ -39,6 +39,11 @@ PYBIND11_MODULE(numerical_, m) {
     m.attr("__init__") = py::str(
             "The `numerical` module contains optimized "
             "functions and classes to simulate evolutionary dynamics in large populations.");
+#if (HAS_BOOST)
+    m.attr("USES_BOOST") = true;
+#else
+    m.attr("USES_BOOST") = false;
+#endif
 
     m.doc() =
             "The `numerical` module contains optimized functions and classes to simulate "
