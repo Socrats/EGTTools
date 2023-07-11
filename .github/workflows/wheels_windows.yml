@@ -56,7 +56,7 @@ jobs:
           CIBW_ENVIRONMENT: CMAKE_BUILD_PARALLEL_LEVEL=2
           CIBW_ENVIRONMENT_WINDOWS: |
             CMAKE_BUILD_PARALLEL_LEVEL=2 
-            EGTTOOLS_EXTRA_CMAKE_ARGS="-DBOOST_ROOT='c:/local/boost_1_82_0'"
+            EGTTOOLS_EXTRA_CMAKE_ARGS="-DBOOST_ROOT='c:\local\boost_1_82_0'"
           CIBW_TEST_REQUIRES: pytest
           CIBW_BEFORE_TEST_WINDOWS: cd .. && cp -r {package}/tests/ {project}\tests\
           CIBW_TEST_COMMAND: pytest {project}/tests
