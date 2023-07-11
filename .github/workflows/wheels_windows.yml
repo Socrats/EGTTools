@@ -56,7 +56,6 @@ jobs:
           CIBW_ENVIRONMENT: CMAKE_BUILD_PARALLEL_LEVEL=2
           CIBW_ENVIRONMENT_WINDOWS: |
             CMAKE_BUILD_PARALLEL_LEVEL=2 
-            CMAKE_ARCH="${{ matrix.platform_id == 'win32' && '-A Win32' || '' }}"
             BOOST_ROOT=c:/local/boost_1_82_0
             BOOST_LIBRARYDIR=c:/local/boost_1_82_0/lib64-msvc-14.3
 
