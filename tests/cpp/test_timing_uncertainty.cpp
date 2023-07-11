@@ -14,7 +14,7 @@ int main() {
     std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
     auto tu = egttools::utils::TimingUncertainty(1. / 3);
 
-    int avg_rounds = 0;
+    [[maybe_unused]] int avg_rounds = 0;
 
     for (int i = 0; i < 10000; ++i) {
         avg_rounds += tu.calculate_full_end(8, generator);
