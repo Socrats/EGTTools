@@ -1,9 +1,11 @@
 from egttools.distributions import multivariate_hypergeometric_pdf
-from egttools import sample_simplex, calculate_nb_states
+from egttools import sample_simplex, calculate_nb_states, USES_BOOST
 from scipy.stats import multivariate_hypergeom
 import numpy as np
+import pytest
 
 
+@pytest.mark.skipif(USES_BOOST is False, reason="requires egttools to be compiled with Boost C++")
 def test_multivariate_hypergeometric_distribution_two_strategies():
     population_size = 500
     group_size = 10
@@ -25,6 +27,7 @@ def test_multivariate_hypergeometric_distribution_two_strategies():
             assert np.isclose(prob_egttools, prob_scipy)
 
 
+@pytest.mark.skipif(USES_BOOST is False, reason="requires egttools to be compiled with Boost C++")
 def test_multivariate_hypergeometric_distribution_three_strategies():
     population_size = 50
     group_size = 4
