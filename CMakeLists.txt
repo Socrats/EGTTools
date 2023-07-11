@@ -14,16 +14,13 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
-
+cmake_policy(SET CMP0054 NEW)
 cmake_minimum_required(VERSION 3.17)
 project(egttools LANGUAGES CXX)
-cmake_policy(SET CMP0054 NEW)
 
-#set(SKIP_OPENMP TRUE)
-
-# Set PYTHONPATH
-
-#set(PYTHONPATH src/:${PYTHONPATH})
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # For additional Find library scripts
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules/")
@@ -68,18 +65,6 @@ endif()
 # Necessary for certain MacOX versions to find homebrew OpenMP
 if (APPLE AND NOT SKIP_OPENMP)
     message("-- Try to install OpenMP")
-#    message(STATUS "BUILD_ARCH=$ENV{BUILD_ARCH}")
-#    if ("$ENV{BUILD_ARCH}" MATCHES "macosx_x86_64|macosx_universal2")
-#        message(STATUS "Using ANACONDA OpenMP")
-#        set(OPENMP_URL "https://anaconda.org/conda-forge/llvm-openmp/11.1.0/download/osx-64/llvm-openmp-11.1.0-hda6cdc1_1.tar.bz2")
-#        execute_process(COMMAND conda install ${OPENMP_URL})
-#        set(LIBOMP_DIR $ENV{CONDA_PREFIX})
-#    else()
-#        execute_process(COMMAND brew install libomp)
-#        execute_process(COMMAND brew --prefix libomp OUTPUT_VARIABLE LIBOMP_DIR)
-#        string(STRIP ${LIBOMP_DIR} LIBOMP_DIR)
-#    endif()
-
     execute_process(COMMAND brew install libomp)
     execute_process(COMMAND brew --prefix libomp OUTPUT_VARIABLE LIBOMP_DIR)
     string(STRIP ${LIBOMP_DIR} LIBOMP_DIR)
@@ -107,10 +92,6 @@ if (NOT WIN32)
     )
 endif ()
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
 set(EIGEN_VERSION_REQUIRED 3.3)
 
 find_package(Eigen3 ${EIGEN_VERSION_REQUIRED} QUIET CONFIG)
@@ -126,7 +107,7 @@ if (EIGEN3_FOUND)
     message(STATUS "Eigen found")
 endif ()
 
-find_package(Boost)
+find_package(Boost 1.80.0)
 if (Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIR})
     add_definitions( "-DHAS_BOOST" )
