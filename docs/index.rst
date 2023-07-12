@@ -1,7 +1,3 @@
-.. EGTtools documentation master file, created by sphinx-quickstart on Tue Oct  6 16:03:26 2020. You can adapt this file
-    completely to your liking, but it should at least contain the root
-    `toctree` directive.
-
 .. image:: images/logo-full.png
 
 EGTtools -- Toolbox for Evolutionary Game Theory
