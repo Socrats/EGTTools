@@ -82,6 +82,6 @@ order to attest that you have the rights to submit the code in your patches.
 The code still remains yours (or of whoever it was originally). This is pretty
 much all the extra that is needed.
 
-Acknowledgements
-----------------
-These guidenlines were copied from https://github.com/Svalorzen/AI-Toolbox/blob/master/CONTRIBUTING.md
+Attribution
+-----------
+These guidenlines were adapted from https://github.com/Svalorzen/AI-Toolbox/blob/master/CONTRIBUTING.md
