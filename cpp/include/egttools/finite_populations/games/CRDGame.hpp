@@ -98,7 +98,7 @@ namespace egttools::FinitePopulations {
                                                Vector3d &polarization);
 
         /**
-        * @brief Calculates the fraction of players that invest >, < or = to E/2.
+        * @brief Calculates the fraction of players that invest >, < or = to E/2 in successful groups.
         *
         * Calculates the fraction of players that invest above, below or equal to the fair donation
         * given a population state.
@@ -121,7 +121,8 @@ namespace egttools::FinitePopulations {
         Vector3d calculate_polarization(size_t pop_size, const Eigen::Ref<const Vector> &stationary_distribution);
 
         /**
-         * @brief calculates the fraction of players that invest (<, =, >) than E/2 given a stationary distribution.
+         * @brief calculates the fraction of players that invest (<, =, >) than E/2 given a stationary
+         * distribution in successful groups.
          * @param pop_size : size of the population
          * @param stationary_distribution
          * @return the polarization vector
