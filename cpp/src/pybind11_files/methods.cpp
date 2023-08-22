@@ -483,6 +483,44 @@ void init_methods(py::module_ &m) {
                     again. Hopefully, this will be fixed in the future.
                 )pbdoc",
                  py::arg("population_size"), py::arg("game"), py::keep_alive<1, 2>())
+            .def(py::init<int, egttools::FinitePopulations::AbstractGame &, size_t>(),
+                 R"pbdoc(
+                    A class containing methods to study analytically the evolutionary dynamics using the Pairwise comparison rule.
+
+                    This class defines methods to compute fixation probabilities, transition matrices in the Small Mutation
+                    Limit (SML), gradients of selection, and the full transition matrices of the system when considering
+                    mutation > 0.
+
+                    Parameters
+                    ----------
+                    population_size : int
+                        Size of the population.
+                    game : egttools.games.AbstractGame
+                        A game object which must implement the abstract class `egttools.games.AbstractGame`.
+                        This game will contain the expected payoffs for each strategy in the game, or at least
+                        a method to compute it, and a method to calculate the fitness of each strategy for a given
+                        population state.
+                    cache_size : in
+                        The size of the Cache.
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical,
+                    egttools.analytical.StochDynamics,
+                    egttools.games.AbstractGame
+
+                    Note
+                    -----
+                    Analytical computations should be avoided for problems with very large state spaces.
+                    This means very big populations with many strategies. The bigger the state space, the
+                    more memory and time these methods will require!
+
+                    Also, for now it is not possible to update the game without having to instantiate PairwiseComparison
+                    again. Hopefully, this will be fixed in the future.
+                )pbdoc",
+                 py::arg("population_size"), py::arg("game"), py::arg("cache_size"), py::keep_alive<1, 2>())
+            .def("pre_calculate_edge_fitnesses", &egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_edge_fitnesses,
+                 "pre calculates the payoffs of the edges of the simplex.")
             .def("calculate_transition_matrix",
                  &egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_matrix,
                  R"pbdoc(

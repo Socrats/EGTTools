@@ -20,7 +20,9 @@
 
 egttools::FinitePopulations::analytical::PairwiseComparison::PairwiseComparison(int population_size,
                                                                                 egttools::FinitePopulations::AbstractGame &game) : population_size_(population_size),
-                                                                                                                                   game_(game) {
+                                                                                                                                   cache_size_(100),
+                                                                                                                                   game_(game),
+                                                                                                                                   cache_(cache_size_) {
     if (population_size <= 0) {
         throw std::invalid_argument(
                 "The size of the population must be a positive integer");
@@ -28,6 +30,68 @@ egttools::FinitePopulations::analytical::PairwiseComparison::PairwiseComparison(
 
     nb_strategies_ = static_cast<int>(game.nb_strategies());
     nb_states_ = egttools::starsBars(population_size_, nb_strategies_);
+}
+
+egttools::FinitePopulations::analytical::PairwiseComparison::PairwiseComparison(int population_size,
+                                                                                egttools::FinitePopulations::AbstractGame &game, size_t cache_size) : population_size_(population_size),
+                                                                                                                                                      cache_size_(cache_size),
+                                                                                                                                                      game_(game),
+                                                                                                                                                      cache_(cache_size) {
+    if (population_size <= 0) {
+        throw std::invalid_argument(
+                "The size of the population must be a positive integer");
+    }
+
+    nb_strategies_ = static_cast<int>(game.nb_strategies());
+    nb_states_ = egttools::starsBars(population_size_, nb_strategies_);
+}
+
+void egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_edge_fitnesses() {
+    Matrix2D fitnesses = Matrix2D::Zero(nb_strategies_, (population_size_ - 1) * nb_strategies_);
+    int nb_elements = population_size_ - 2;
+
+#pragma omp parallel for default(none) shared(fitnesses, nb_strategies_, population_size_, game_, nb_elements)
+    for (int i = 0; i < nb_strategies_; ++i) {
+        VectorXui population_state = VectorXui::Zero(nb_strategies_);
+        for (int j = i; j < nb_strategies_; ++j) {
+            for (int z = 1; z < population_size_; ++z) {
+                population_state(i) = z;
+                population_state(j) = population_size_ - z;
+
+                // calculate fitness of invading strategy
+                population_state(i) -= 1;
+                fitnesses(i, j * nb_elements + (z - 1)) = game_.calculate_fitness(i, population_size_, population_state);
+                population_state(i) += 1;
+
+                population_state(j) -= 1;
+                fitnesses(j, i * nb_elements + (population_size_ - z - 1)) = game_.calculate_fitness(j, population_size_, population_state);
+            }
+            population_state(j) = 0;
+        }
+    }
+
+    std::string key1, key2;
+
+    // Now we add the to cache
+    VectorXui population_state = VectorXui::Zero(nb_strategies_);
+    for (int i = 0; i < nb_strategies_; ++i) {
+        for (int j = i; j < nb_strategies_; ++j) {
+            for (int z = 1; z < population_size_; ++z) {
+                population_state(i) = z;
+                population_state(j) = population_size_ - z;
+                // add fitness value to cache
+                std::stringstream result;
+                result << population_state;
+                key1 = std::to_string(i) + result.str();
+                key2 = std::to_string(j) + result.str();
+
+                cache_.insert(key1, fitnesses(i, j * nb_elements + (z - 1)));
+                cache_.insert(key2, fitnesses(j, i * nb_elements + (population_size_ - z - 1)));
+            }
+            population_state(j) = 0;
+        }
+        population_state(i) = 0;
+    }
 }
 
 egttools::SparseMatrix2D egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_matrix(double beta, double mu) {
@@ -250,7 +314,7 @@ std::tuple<egttools::Matrix2D, egttools::Matrix2D> egttools::FinitePopulations::
     Matrix2D transitions = Matrix2D::Zero(nb_strategies_, nb_strategies_);
     Matrix2D fixation_probabilities = Matrix2D::Zero(nb_strategies_, nb_strategies_);
 
-//#pragma omp parallel for default(none) shared(beta, nb_strategies_, population_size_, transitions, fixation_probabilities)
+    //#pragma omp parallel for default(none) shared(beta, nb_strategies_, population_size_, transitions, fixation_probabilities)
     for (int i = 0; i < nb_strategies_; ++i) {
         double transition_stay = 1;
         for (int j = 0; j < nb_strategies_; ++j) {
@@ -258,7 +322,7 @@ std::tuple<egttools::Matrix2D, egttools::Matrix2D> egttools::FinitePopulations::
                 auto fixation_probability = calculate_fixation_probability(j, i, beta);
                 fixation_probabilities(i, j) = fixation_probability;
                 transitions(i, j) = fixation_probability / (nb_strategies_ - 1);
-//#pragma omp atomic update
+                //#pragma omp atomic update
                 transition_stay -= transitions(i, j);
             }
         }
@@ -329,10 +393,23 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_lo
 }
 
 double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fitness_(int &strategy_index, egttools::VectorXui &state) {
-    // TODO: This is extremely slow. Improve efficiency by adding a cache and other techniques
-    state(strategy_index) -= 1;
-    auto fitness = game_.calculate_fitness(strategy_index, population_size_, state);
-    state(strategy_index) += 1;
+    double fitness;
+    std::stringstream result;
+    result << state;
+
+    std::string key = std::to_string(strategy_index) + result.str();
+
+    // First we check if fitness value is in the lookup table
+    if (!cache_.exists(key)) {
+        state(strategy_index) -= 1;
+        fitness = game_.calculate_fitness(strategy_index, population_size_, state);
+        state(strategy_index) += 1;
+
+        // Finally we store the new fitness in the Cache. We also keep a Cache for the payoff given each group combination
+        cache_.insert(key, fitness);
+    } else {
+        fitness = cache_.get(key);
+    }
 
     return fitness;
 }

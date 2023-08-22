@@ -54,6 +54,9 @@ namespace egttools::FinitePopulations {
         calculate_fitness(const int &player_type, const size_t &pop_size,
                           const Eigen::Ref<const VectorXui> &strategies) override;
 
+        double calculate_fitness_edge(const int &strategy_1, const int &strategy_2,
+                                                          const size_t &pop_size, const Eigen::Ref<const VectorXui> &strategies);
+
         /**
          * @brief Calculates the group achievement for all possible groups
          *

@@ -115,3 +115,6 @@ target_link_libraries(testOneShotNetworkGame egttoolsNumerical)
 
 add_executable(testNetworkEvolver cpp/test_network_evolver.cpp)
 target_link_libraries(testNetworkEvolver egttoolsNumerical)
+
+add_executable(testFixations cpp/test_calculate_fixation_probabilities.cpp)
+target_link_libraries(testFixations egttoolsNumerical)
