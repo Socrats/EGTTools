@@ -5,14 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres
 to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.13] - 29-9-2022
+
+### Fixed
+
+- fixed issue with environmental variables not working on MacOS builds in Github Actions
+
+### Changes
+
+- now openmp is linked dynamically to avoid conflicts on MacOS
+- increased minimum required cmake version to 3.18
+
+### Added
+
+- added NetworkSync evolver
+- added more support for network simulations
+- added Cache to accelerate PairwiseComparison
+
 ## [0.1.12.patch1] - 7-07-2022
 
 ### Fixed
+
 - Fixed issue with link to Simplex2D class
 - Match scatter output to matplotlib API changes [by cvanelteren]
 - Fixed issue with compiling `Distributions.cpp` without Boost
 
 ### Changed
+
 - Removed support for `Python 3.7`
 - Dropped support for `Win32` architectures
 - Removed `MACOSX_DEPLOYMENT_TARGET` constraint
@@ -22,6 +41,7 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 - Set minimum Boost version to 1.70.0
 
 ### Added
+
 - Added basic unittests for plotting [by cvanelteren]
 
 ## [0.1.12] - 15-12-2022
