@@ -1,5 +1,5 @@
 """
-API reference documentation for `sed_analytical` submodule.
+API reference documentation for the `analytical` submodule.
 """
 
 try:

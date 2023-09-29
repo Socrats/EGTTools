@@ -2,7 +2,7 @@
 The :mod:`egttools` package implements methods to study evolutionary dynamics.
 """
 # Workaround for mac OSX
-import numpy
+# import numpy
 
 try:
     import egttools.numerical as numerical
@@ -10,7 +10,7 @@ except Exception:
     raise Exception("numerical package not initialized")
 else:
     # Now we delete the pre-loaded numpy, as it is not necessary
-    del numpy
+    # del numpy
     from .numerical.numerical_ import __version__
     from .numerical.numerical_ import VERSION
     from .numerical.numerical_ import Random

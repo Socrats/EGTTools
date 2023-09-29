@@ -115,32 +115,79 @@ double egttools::FinitePopulations::CRDGame::calculate_fitness(const int &player
                                                                const Eigen::Ref<const VectorXui> &strategies) {
     // This function assumes that the strategy counts given in @param strategies does not include
     // the player with @param player_type strategy.
-
     double fitness = 0.0, payoff;
-    std::vector<size_t> sample_counts(nb_strategies_, 0);
 
-    // If it isn't, then we must calculate the fitness for every possible group combination
-    for (int64_t i = 0; i < nb_states_; ++i) {
-        // Update sample counts based on the current state
-        egttools::FinitePopulations::sample_simplex(i, group_size_, nb_strategies_, sample_counts);
+    // First detect if we are in an edge
+    int strategy_1 = player_type;
+    int strategy_2;
+    int nb_non_zero_strategies = 0;
+    for (int ind = 0; ind < nb_strategies_; ++ind) {
+        if (strategies(ind) > 0) {
+            nb_non_zero_strategies++;
+            if (ind != strategy_1) strategy_2 = ind;
+        }
+    }
+    if (nb_non_zero_strategies == 2) {
+        fitness = calculate_fitness_edge(strategy_1, strategy_2, pop_size, strategies);
+    } else {
+        std::vector<size_t> sample_counts(nb_strategies_, 0);
 
-        // If the focal player is not in the group, then the payoff should be zero
-        if (sample_counts[player_type] > 0) {
-            // First update sample_counts with new group composition
-            payoff = expected_payoffs_(static_cast<int>(player_type), i);
-            sample_counts[player_type] -= 1;
+        // If it isn't, then we must calculate the fitness for every possible group combination
+        for (int64_t i = 0; i < nb_states_; ++i) {
+            // Update sample counts based on the current state
+            egttools::FinitePopulations::sample_simplex(i, group_size_, nb_strategies_, sample_counts);
 
-            // Calculate probability of encountering the current group
-            auto prob = egttools::multivariateHypergeometricPDF(pop_size - 1, nb_strategies_, group_size_ - 1,
-                                                                sample_counts,
-                                                                strategies);
-            sample_counts[player_type] += 1;
+            // If the focal player is not in the group, then the payoff should be zero
+            if (sample_counts[player_type] > 0) {
+                // First update sample_counts with new group composition
+                payoff = expected_payoffs_(player_type, i);
+                sample_counts[player_type] -= 1;
 
-            fitness += payoff * prob;
+                // Calculate probability of encountering the current group
+                auto prob = egttools::multivariateHypergeometricPDF(pop_size - 1, nb_strategies_, group_size_ - 1,
+                                                                    sample_counts,
+                                                                    strategies);
+                sample_counts[player_type] += 1;
+
+                fitness += payoff * prob;
+            }
         }
     }
 
     return fitness;
+}
+
+double egttools::FinitePopulations::CRDGame::calculate_fitness_edge(const int &strategy_1, const int &strategy_2,
+                                                                    const size_t &pop_size, const Eigen::Ref<const VectorXui> &strategies) {
+    // This function assumes that the strategy counts given in @param strategies does not include
+    // the player with @param player_type strategy.
+
+    double fitness_strategy_1 = 0.0, payoff_strategy_1;
+    std::vector<size_t> sample_counts(nb_strategies_, 0);
+
+    // Instead of iterating over all group compositions, we only iterate over group compositions that contain the
+    // two strategies
+    for (int64_t i = 1; i <= group_size_; ++i) {
+        sample_counts[strategy_1] = i;
+        sample_counts[strategy_2] = group_size_ - i;
+
+        // get index
+        int64_t index = static_cast<int64_t>(egttools::FinitePopulations::calculate_state(group_size_, sample_counts));
+
+        // calculate fitness
+        payoff_strategy_1 = expected_payoffs_(strategy_1, index);
+
+        sample_counts[strategy_1] -= 1;
+        // Calculate probability of encountering the current group
+        auto prob = egttools::multivariateHypergeometricPDF(pop_size - 1, nb_strategies_, group_size_ - 1,
+                                                            sample_counts,
+                                                            strategies);
+        sample_counts[strategy_1] += 1;
+
+        fitness_strategy_1 += payoff_strategy_1 * prob;
+    }
+
+    return fitness_strategy_1;
 }
 
 void egttools::FinitePopulations::CRDGame::save_payoffs(std::string file_name) const {
@@ -283,8 +330,7 @@ double egttools::FinitePopulations::CRDGame::calculate_group_achievement(size_t 
                                                                          const Eigen::Ref<const egttools::Vector> &stationary_distribution) {
     double group_achievement = 0;
 
-#pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_) reduction(+ \
-                                                                                                           : group_achievement)
+#pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_) reduction(+ : group_achievement)
     for (long int i = 0; i < stationary_distribution.size(); ++i) {
         VectorXui strategies = VectorXui::Zero(nb_strategies_);
         egttools::FinitePopulations::sample_simplex(i, pop_size, nb_strategies_, strategies);
@@ -337,8 +383,7 @@ egttools::Vector3d egttools::FinitePopulations::CRDGame::calculate_polarization(
                                                                                 const Eigen::Ref<const egttools::Vector> &stationary_distribution) {
     egttools::Vector3d polarization = egttools::Vector3d::Zero();
 
-#pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_) reduction(+ \
-                                                                                                           : polarization)
+#pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_) reduction(+ : polarization)
     for (long int i = 0; i < stationary_distribution.size(); ++i) {
         egttools::Vector3d container = egttools::Vector3d::Zero();
         VectorXui strategies = VectorXui::Zero(nb_strategies_);
@@ -354,8 +399,7 @@ egttools::Vector3d egttools::FinitePopulations::CRDGame::calculate_polarization_
                                                                                         const Eigen::Ref<const egttools::Vector> &stationary_distribution) {
     egttools::Vector3d polarization = egttools::Vector3d::Zero();
 
-#pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_) reduction(+ \
-                                                                                                           : polarization)
+#pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_) reduction(+ : polarization)
     for (long int i = 0; i < stationary_distribution.size(); ++i) {
         egttools::Vector3d container = egttools::Vector3d::Zero();
         VectorXui strategies = VectorXui::Zero(nb_strategies_);

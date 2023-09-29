@@ -17,6 +17,7 @@
 #include <egttools/finite_populations/games/MatrixNPlayerGameHolder.hpp>
 #include <egttools/finite_populations/games/NPlayerStagHunt.hpp>
 #include <egttools/finite_populations/games/OneShotCRD.hpp>
+#include <egttools/finite_populations/games/OneShotCRDNetworkGame.hpp>
 
 #include "egttools_common.hpp"
 #include "python_stubs.hpp"

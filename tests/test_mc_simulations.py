@@ -57,7 +57,7 @@ def test_pairwise_moran_run(setup_hawk_dove_parameters) -> None:
     game = NormalFormGame(1, payoffs)
 
     pop_size = 100
-    cache_size = 1000000
+    cache_size = 10000
     nb_generations = int(1e6)
     beta = 1
     mu = 1e-3
@@ -78,7 +78,7 @@ def test_pairwise_moran_stationary_distribution(setup_hawk_dove_parameters) -> N
     game = NormalFormGame(1, payoffs)
 
     pop_size = 100
-    cache_size = 1000000
+    cache_size = 10000
     nb_generations = int(1e3)
     transitory = int(1e3)
     beta = 10
@@ -101,7 +101,7 @@ def test_pairwise_moran_stationary_distribution_sparse(setup_hawk_dove_parameter
     game = NormalFormGame(1, payoffs)
 
     pop_size = 100
-    cache_size = 1000000
+    cache_size = 10000
     nb_generations = int(1e3)
     transitory = int(1e3)
     beta = 10

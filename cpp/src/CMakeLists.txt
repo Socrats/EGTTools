@@ -51,7 +51,8 @@ target_include_directories(numerical_ SYSTEM INTERFACE ${CMAKE_SOURCE_DIR})
 
 if (OPENMP_FOUND)
     message("-- linking OpenMP to target numerical_")
-    target_link_libraries(numerical_ PRIVATE OpenMP::OpenMP_CXX)
+    # TODO: Make sure that having dynamic linking will work on Pypi
+    target_link_libraries(numerical_ PUBLIC OpenMP::OpenMP_CXX)
 else ()
     target_link_libraries(numerical_)
 endif ()

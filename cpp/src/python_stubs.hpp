@@ -27,6 +27,7 @@
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <egttools/finite_populations/games/AbstractNPlayerGame.hpp>
 #include <egttools/finite_populations/games/AbstractSpatialGame.hpp>
+#include <egttools/finite_populations/structure/AbstractNetworkStructure.hpp>
 #include <egttools/finite_populations/structure/AbstractStructure.hpp>
 
 namespace py = pybind11;
@@ -420,8 +421,7 @@ namespace stubs {
                     egttools::FinitePopulations::games::AbstractSpatialGame, /* Parent class */
                     calculate_fitness,                                       /* Name of function in C++ (must match Python name) */
                     strategy_index,                                          /* Argument(s) */
-                    state
-            );
+                    state);
         }
 
         /* Trampoline (need one for each virtual function) */
@@ -518,6 +518,142 @@ namespace stubs {
                     egttools::FinitePopulations::structure::AbstractStructure, /* Parent class */
                     nb_strategies,                                             /* Name of function in C++ (must match Python name) */
                                                                                /* Argument(s) */
+            );
+        }
+    };
+
+    class PyAbstractNetworkStructure : public egttools::FinitePopulations::structure::AbstractNetworkStructure {
+    public:
+        /* Inherit the constructors */
+        using egttools::FinitePopulations::structure::AbstractNetworkStructure::AbstractNetworkStructure;
+
+        /* Trampoline (need one for each virtual function) */
+        void initialize() override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
+            PYBIND11_OVERRIDE_PURE(
+                    void,                                                             /* Return type */
+                    egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
+                    initialize,                                                       /* Name of function in C++ (must match Python name) */
+                                                                                      /* Argument(s) */
+            );
+        }
+
+        /* Trampoline (need one for each virtual function) */
+        void initialize_state(egttools::VectorXui &state) override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
+            PYBIND11_OVERRIDE_PURE(
+                    void,                                                             /* Return type */
+                    egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
+                    initialize_state,                                                 /* Name of function in C++ (must match Python name) */
+                    state                                                             /* Argument(s) */
+            );
+        }
+
+        /* Trampoline (need one for each virtual function) */
+        void update_population() override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
+            PYBIND11_OVERRIDE_PURE(
+                    void,                                                             /* Return type */
+                    egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
+                    update_population,                                                /* Name of function in C++ (must match Python name) */
+                                                                                      /* Argument(s) */
+            );
+        }
+
+        /* Trampoline (need one for each virtual function) */
+        void update_node(int node) override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
+            PYBIND11_OVERRIDE_PURE(
+                    void,                                                             /* Return type */
+                    egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
+                    update_node,                                                      /* Name of function in C++ (must match Python name) */
+                    node                                                              /* Argument(s) */
+            );
+        }
+
+        /* Trampoline (need one for each virtual function) */
+        egttools::Vector &calculate_average_gradient_of_selection() override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
+            PYBIND11_OVERRIDE_PURE(
+                    egttools::Vector &,                                               /* Return type */
+                    egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
+                    calculate_average_gradient_of_selection,                          /* Name of function in C++ (must match Python name) */
+                                                                                      /* Argument(s) */
+            );
+        }
+
+        /* Trampoline (need one for each virtual function) */
+        egttools::Vector &calculate_average_gradient_of_selection_and_update_population() override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
+            PYBIND11_OVERRIDE_PURE(
+                    egttools::Vector &,                                               /* Return type */
+                    egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
+                    calculate_average_gradient_of_selection_and_update_population,    /* Name of function in C++ (must match Python name) */
+                                                                                      /* Argument(s) */
+            );
+        }
+
+        /* Trampoline (need one for each virtual function) */
+        egttools::VectorXui &mean_population_state() override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
+            PYBIND11_OVERRIDE_PURE(
+                    egttools::VectorXui &,                                            /* Return type */
+                    egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
+                    mean_population_state,                                            /* Name of function in C++ (must match Python name) */
+                                                                                      /* Argument(s) */
+            );
+        }
+
+        /* Trampoline (need one for each virtual function) */
+        int nb_strategies() override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
+            PYBIND11_OVERRIDE_PURE(
+                    int,                                                              /* Return type */
+                    egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
+                    nb_strategies,                                                    /* Name of function in C++ (must match Python name) */
+                                                                                      /* Argument(s) */
+            );
+        }
+
+        /* Trampoline (need one for each virtual function) */
+        int population_size() override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
+            PYBIND11_OVERRIDE_PURE(
+                    int,                                                              /* Return type */
+                    egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
+                    population_size,                                                  /* Name of function in C++ (must match Python name) */
+                                                                                      /* Argument(s) */
+            );
+        }
+
+        /* Trampoline (need one for each virtual function) */
+        egttools::FinitePopulations::structure::NodeDictionary &network() override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
+            PYBIND11_OVERRIDE_PURE(
+                    egttools::FinitePopulations::structure::NodeDictionary &,         /* Return type */
+                    egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
+                    network,                                                          /* Name of function in C++ (must match Python name) */
+                                                                                      /* Argument(s) */
             );
         }
     };

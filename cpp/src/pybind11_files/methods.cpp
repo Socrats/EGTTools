@@ -483,6 +483,44 @@ void init_methods(py::module_ &m) {
                     again. Hopefully, this will be fixed in the future.
                 )pbdoc",
                  py::arg("population_size"), py::arg("game"), py::keep_alive<1, 2>())
+            .def(py::init<int, egttools::FinitePopulations::AbstractGame &, size_t>(),
+                 R"pbdoc(
+                    A class containing methods to study analytically the evolutionary dynamics using the Pairwise comparison rule.
+
+                    This class defines methods to compute fixation probabilities, transition matrices in the Small Mutation
+                    Limit (SML), gradients of selection, and the full transition matrices of the system when considering
+                    mutation > 0.
+
+                    Parameters
+                    ----------
+                    population_size : int
+                        Size of the population.
+                    game : egttools.games.AbstractGame
+                        A game object which must implement the abstract class `egttools.games.AbstractGame`.
+                        This game will contain the expected payoffs for each strategy in the game, or at least
+                        a method to compute it, and a method to calculate the fitness of each strategy for a given
+                        population state.
+                    cache_size : in
+                        The size of the Cache.
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical,
+                    egttools.analytical.StochDynamics,
+                    egttools.games.AbstractGame
+
+                    Note
+                    -----
+                    Analytical computations should be avoided for problems with very large state spaces.
+                    This means very big populations with many strategies. The bigger the state space, the
+                    more memory and time these methods will require!
+
+                    Also, for now it is not possible to update the game without having to instantiate PairwiseComparison
+                    again. Hopefully, this will be fixed in the future.
+                )pbdoc",
+                 py::arg("population_size"), py::arg("game"), py::arg("cache_size"), py::keep_alive<1, 2>())
+            .def("pre_calculate_edge_fitnesses", &egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_edge_fitnesses,
+                 "pre calculates the payoffs of the edges of the simplex.")
             .def("calculate_transition_matrix",
                  &egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_matrix,
                  R"pbdoc(
@@ -582,6 +620,7 @@ void init_methods(py::module_ &m) {
                 )pbdoc",
                  py::arg("invading_strategy_index"), py::arg("resident_strategy_index"), py::arg("beta"))
             .def("calculate_transition_and_fixation_matrix_sml", &egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_and_fixation_matrix_sml,
+                 py::call_guard<py::gil_scoped_release>(),
                  R"pbdoc(
                     Calculates the transition matrix of the reduced Markov Chain that emerges when assuming SML.
 
@@ -1030,6 +1069,7 @@ void init_methods(py::module_ &m) {
                     egttools.numerical.PairwiseComparisonNumerical
                 )pbdoc")
             .def("evolve", &egttools::FinitePopulations::evolvers::GeneralPopulationEvolver::evolve,
+                 py::call_guard<py::gil_scoped_release>(),
                  py::arg("nb_generations"), py::return_value_policy::move,
                  R"pbdoc(
                     Evolves the population in structure for `nb_generations`.
@@ -1051,6 +1091,7 @@ void init_methods(py::module_ &m) {
                     egttools.numerical.PairwiseComparisonNumerical.evolve
                 )pbdoc")
             .def("run", &egttools::FinitePopulations::evolvers::GeneralPopulationEvolver::run,
+                 py::call_guard<py::gil_scoped_release>(),
                  py::arg("nb_generations"), py::arg("transitory"), py::return_value_policy::move,
                  R"pbdoc(
                     Evolves the population in structure for `nb_generations`.
@@ -1068,6 +1109,280 @@ void init_methods(py::module_ &m) {
                     -------
                     numpy.ndarray
                         An array with the final count of strategies in the population.
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical.evolve
+                )pbdoc")
+            .def("structure", &egttools::FinitePopulations::evolvers::GeneralPopulationEvolver::structure);
+
+    py::class_<egttools::FinitePopulations::evolvers::NetworkEvolver>(m, "NetworkEvolver")
+            .def_static("evolve", static_cast<egttools::VectorXui (*)(int_fast64_t, egttools::FinitePopulations::structure::AbstractNetworkStructure &)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::evolve),
+                        py::arg("nb_generations"),
+                        py::arg("network"),
+                        py::return_value_policy::move,
+                        R"pbdoc(
+                    Evolves an `AbstractNetworkStructure` for `nb_generations`.
+
+                    This method only returns the last total counts of strategies in the population.
+
+                    Parameters
+                    ----------
+                    nb_generations : int
+                        Maximum number of generations.
+                    network : egttools.numerical.structure.AbstractNetworkStructure
+                        A network structure containing a population to evolve
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        An array with the final count of strategies in the population.
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical.evolve
+                )pbdoc")
+            .def_static("evolve", static_cast<egttools::VectorXui (*)(int_fast64_t, egttools::VectorXui &, egttools::FinitePopulations::structure::AbstractNetworkStructure &)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::evolve),
+                        py::arg("nb_generations"),
+                        py::arg("initial_state"),
+                        py::arg("network"),
+                        py::return_value_policy::move,
+                        R"pbdoc(
+                    Evolves an `AbstractNetworkStructure` for `nb_generations`.
+
+                    This method only returns the last total counts of strategies in the population.
+
+                    Parameters
+                    ----------
+                    nb_generations : int
+                        Maximum number of generations.
+                    initial_state : numpy.ndarray
+                        The initial counts of each strategy in the populations
+                    network : egttools.numerical.structure.AbstractNetworkStructure
+                        A network structure containing a population to evolve
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        An array with the final count of strategies in the population.
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical.evolve
+                )pbdoc")
+            .def_static("run", static_cast<egttools::MatrixXui2D (*)(int_fast64_t, int_fast64_t, egttools::FinitePopulations::structure::AbstractNetworkStructure &)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::run),
+                        py::arg("nb_generations"),
+                        py::arg("transitory"),
+                        py::arg("network"),
+                        py::return_value_policy::move,
+                        R"pbdoc(
+                    Simulates the evolution of an `AbstractNetworkStructure` for `nb_generations`.
+
+                    This method returns all the states the population goes through between `transient` and
+                    `nb_generations`.
+
+                    Parameters
+                    ----------
+                    nb_generations : int
+                        Maximum number of generations.
+                    transitory : int
+                        The transitory period. The generations until transitory are not taken into account.
+                    network : egttools.numerical.structure.AbstractNetworkStructure
+                        A network structure containing a population to evolve
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        An array with the final count of strategies in the population.
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical.evolve
+                )pbdoc")
+            .def_static("run", static_cast<egttools::MatrixXui2D (*)(int_fast64_t, int_fast64_t, egttools::VectorXui &, egttools::FinitePopulations::structure::AbstractNetworkStructure &)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::run),
+                        py::arg("nb_generations"),
+                        py::arg("transitory"),
+                        py::arg("initial_state"),
+                        py::arg("network"),
+                        py::return_value_policy::move,
+                        R"pbdoc(
+                    Simulates the evolution of an `AbstractNetworkStructure` for `nb_generations`.
+
+                    This method returns all the states the population goes through between `transient` and
+                    `nb_generations`.
+
+                    Parameters
+                    ----------
+                    nb_generations : int
+                        Maximum number of generations.
+                    transitory : int
+                        The transitory period. The generations until transitory are not taken into account.
+                    initial_state : numpy.ndarray
+                        The initial counts of each strategy in the population
+                    network : egttools.numerical.structure.AbstractNetworkStructure
+                        A network structure containing a population to evolve
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        An array with the final count of strategies in the population.
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical.evolve
+                )pbdoc")
+            .def_static("estimate_time_dependent_average_gradients_of_selection", static_cast<egttools::Matrix2D (*)(std::vector<VectorXui> &, int_fast64_t, int_fast64_t, int_fast64_t, egttools::FinitePopulations::structure::AbstractNetworkStructure &)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::estimate_time_dependent_average_gradients_of_selection),
+                        py::arg("states"), py::arg("nb_simulations"),
+                        py::arg("generation_start"),
+                        py::arg("generation_stop"),
+                        py::arg("network"),
+                        py::return_value_policy::move,
+                        R"pbdoc(
+                    Estimates the time-dependant gradient of selection
+
+                    This method will first evolve the population for (generation - 1) generations. Afterwards,
+                    it will average the gradient of selection observed for each state the population goes though in
+                    the next generation. This means, that if the update is asynchronous, the population will be
+                    evolved for population_size time-steps and the gradient will be computed for each time-step
+                    and averaged over other simulations in which the population has gone through the same aggregated
+                    state.
+
+                    Note
+                    ----
+                    We recommend only using this method with asynchronous updates.
+
+                    Parameters
+                    ----------
+                    initial_states : List[numpy.ndarray]
+                        A list of population states for which to calculate the gradients.
+                    nb_simulations : int
+                        The number of simulations to perform for the given state
+                    generation_start : int
+                        the generation at which we start to calculate the average gradient of selection
+                    generation_stop : int
+                        the final generation of the simulation
+                    network : egttools.numerical.structure.AbstractNetworkStructure
+                        A network structure containing a population to evolve
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        A matrix with the final count of strategies in the population for each possible initial state.
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical.evolve
+                )pbdoc")
+            .def_static("estimate_time_dependent_average_gradients_of_selection", static_cast<egttools::Matrix2D (*)(std::vector<VectorXui> &, int_fast64_t, int_fast64_t, int_fast64_t, std::vector<egttools::FinitePopulations::structure::AbstractNetworkStructure *>)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::estimate_time_dependent_average_gradients_of_selection),
+                        py::arg("states"), py::arg("nb_simulations"),
+                        py::arg("generation_start"),
+                        py::arg("generation_stop"),
+                        py::arg("networks"),
+                        py::call_guard<py::gil_scoped_release>(),
+                        py::return_value_policy::move,
+                        R"pbdoc(
+                    Estimates the time-dependant gradient of selection
+
+                    This method will first evolve the population for (generation - 1) generations. Afterwards,
+                    it will average the gradient of selection observed for each state the population goes though in
+                    the next generation. This means, that if the update is asynchronous, the population will be
+                    evolved for population_size time-steps and the gradient will be computed for each time-step
+                    and averaged over other simulations in which the population has gone through the same aggregated
+                    state.
+
+                    Note
+                    ----
+                    We recommend only using this method with asynchronous updates.
+
+                    Parameters
+                    ----------
+                    initial_states : List[numpy.ndarray]
+                        A list of population states for which to calculate the gradients.
+                    nb_simulations : int
+                        The number of simulations to perform for the given state
+                    generation_start : int
+                        the generation at which we start to calculate the average gradient of selection
+                    generation_stop : int
+                        the final generation of the simulation
+                    networks : List[egttools.numerical.structure.AbstractNetworkStructure]
+                        A list of network structures containing a population to evolve
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        A matrix with the final count of strategies in the population for each possible initial state.
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical.evolve
+                )pbdoc")
+            .def_static("estimate_time_independent_average_gradients_of_selection", static_cast<egttools::Matrix2D (*)(std::vector<egttools::VectorXui> &states, int_fast64_t, int_fast64_t, egttools::FinitePopulations::structure::AbstractNetworkStructure &)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::estimate_time_independent_average_gradients_of_selection),
+                        py::arg("states"), py::arg("nb_simulations"),
+                        py::arg("nb_generations"), py::arg("network"),
+                        py::return_value_policy::move,
+                        R"pbdoc(
+                    Estimates the time independent average gradient of selection.
+
+                    It is important here that the user takes into account that generations have a slightly different meaning if
+                    the network updates are synchronous or asynchronous. In a synchronous case, in each generation, there is
+                    a simultaneous update of every member of the population, thus, there a Z (population_size) steps.
+
+                    In the asynchronous case, we will adopt the definition used in Pinheiro, Pacheco and Santos 2012,
+                    and assume that 1 generation = Z time-steps (Z asynchronous updates of the population). Thus, a simulation
+                    with 25 generations and with 1000 individuals, will run for 25000 time-steps.
+
+                    This method will run a total of simulations * networks.size() simulations. The final gradients are averaged over
+                    simulations * networks.size() * nb_generations * nb_initial_states.
+
+                    Warning
+                    -------
+                    Don't use this method if the population has too many possible states, since it will likely take both a long time,
+                    produce a bad estimation, and possible your computer will run out of memory.
+
+                    Parameters
+                    ----------
+                    initial_states : List[numpy.ndarray]
+                        A list of population states for which to calculate the gradients.
+                    nb_simulations : int
+                        The number of simulations to perform for the given state
+                    nb_generations : int
+                        Maximum number of generations.
+                    network : AbstractNetworkStructure
+                        A network structure.
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        A 2D numpy array containing the averaged gradients for each state given (each row is one gradient).
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical.evolve
+                )pbdoc")
+            .def_static("estimate_time_independent_average_gradients_of_selection", static_cast<egttools::Matrix2D (*)(std::vector<egttools::VectorXui> &states, int_fast64_t, int_fast64_t, std::vector<egttools::FinitePopulations::structure::AbstractNetworkStructure *>)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::estimate_time_independent_average_gradients_of_selection),
+                        py::arg("states"), py::arg("nb_simulations"),
+                        py::arg("nb_generations"), py::arg("networks"),
+                        py::return_value_policy::move,
+                        py::call_guard<py::gil_scoped_release>(),
+                        R"pbdoc(
+                    Estimates the average gradient of selection averaging over multiple simulations, generations
+                    and network for each state given state.
+
+                    Parameters
+                    ----------
+                    states : List[numpy.ndarray]
+                        A list of population states for which to calculate the gradients.
+                    nb_simulations : int
+                        The number of simulations to perform for the given state
+                    nb_generations : int
+                        Maximum number of generations.
+                    network : List[AbstractNetworkStructure]
+                        A list of network structures.
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        A 2D numpy array containing the averaged gradients for each state given (each row is one gradient).
 
                     See Also
                     --------

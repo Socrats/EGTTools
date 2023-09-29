@@ -34,6 +34,9 @@
 #pragma omp declare reduction (+: egttools::Vector3d: omp_out=omp_out+omp_in)\
      initializer(omp_priv=egttools::Vector3d::Zero(omp_orig.size()))
 
+#pragma omp declare reduction (+: egttools::Matrix2D: omp_out=omp_out+omp_in)\
+     initializer(omp_priv=egttools::Matrix2D::Zero(omp_orig.rows(), omp_orig.cols()))
+
 #pragma omp declare reduction (+: egttools::SparseMatrix2DXui: omp_out=omp_out+omp_in)\
      initializer(omp_priv=egttools::SparseMatrix2DXui(omp_orig.rows(), omp_orig.cols()))
 

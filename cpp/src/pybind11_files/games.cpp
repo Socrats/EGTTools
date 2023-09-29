@@ -1275,4 +1275,67 @@ void init_games(py::module_ &mGames) {
                  "the type of game.")
             .def("strategies", &egttools::FinitePopulations::games::NormalFormNetworkGame::strategies,
                  "The strategies that play the game.");
+
+    py::class_<egttools::FinitePopulations::games::OneShotCRDNetworkGame, egttools::FinitePopulations::games::AbstractSpatialGame>(mGames, "OneShotCRDNetworkGame")
+            .def(py::init<double, double, double, int>(),
+                 R"pbdoc(
+                    One-Shot Collective Risk Dilemma (CRD) in Networks.
+
+                    The full description of the One-shot CRD can be found in:
+                    Santos and Pacheco, ‘Risk of Collective Failure Provides an Escape from the Tragedy of the Commons’.
+
+                    Parameters
+                    ----------
+                    endowment : float
+                        Initial endowment for all players. This is parameter `b` in the mentioned article.
+                    cost : float
+                        Cost of cooperation.
+                    risk : float
+                        The probability that all members will lose their remaining endowment if the threshold is not achieved.
+                    min_nb_cooperators: int
+                        Minimum number of cooperators required to avoid the risk of collective loss.
+
+                    See Also
+                    --------
+                    egttools.games.AbstractGame
+                    egttools.games.OneShotCRD
+                    egttools.games.NormalFormGame
+                    egttools.games.NormalFormNetworkGame
+                    )pbdoc",
+                 py::arg("endowment"),
+                 py::arg("cost"),
+                 py::arg("risk"),
+                 py::arg("min_nb_cooperators"), py::return_value_policy::reference_internal)
+            .def("calculate_fitness", &egttools::FinitePopulations::games::OneShotCRDNetworkGame::calculate_fitness,
+                 py::arg("strategy_index"),
+                 py::arg("state"),
+                 R"pbdoc(
+                    Calculates the fitness of the `strategy_index` at a given neighborhood state.
+
+                    Parameters
+                    ----------
+                    strategy_index: int
+                        The index of the strategy adopted by the individual's whose payoff must be calculated.
+                    state: numpy.ndarray
+                        An array of integers containing the counts of strategies in the neighborhood.
+
+                    Returns
+                    -------
+                    double
+                        The fitness of `strategy_index` at the neighborhood `state`.
+                    )pbdoc")
+            .def("nb_strategies", &egttools::FinitePopulations::games::OneShotCRDNetworkGame::nb_strategies,
+                 "Returns the number of strategies in the population.")
+            .def("endowment", &egttools::FinitePopulations::games::OneShotCRDNetworkGame::endowment,
+                 "Returns the endowment.")
+            .def("cost", &egttools::FinitePopulations::games::OneShotCRDNetworkGame::cost,
+                 "Returns the cost of cooperation.")
+            .def("risk", &egttools::FinitePopulations::games::OneShotCRDNetworkGame::risk,
+                 "Returns the risk.")
+            .def("min_nb_cooperators", &egttools::FinitePopulations::games::OneShotCRDNetworkGame::min_nb_cooperators,
+                 "Returns the minimum number of cooperators.")
+            .def("__str__", &egttools::FinitePopulations::games::OneShotCRDNetworkGame::toString,
+                 "A string representation of the game.")
+            .def("type", &egttools::FinitePopulations::games::OneShotCRDNetworkGame::type,
+                 "the type of game.");
 }

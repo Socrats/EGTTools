@@ -26,7 +26,7 @@ namespace egttools::FinitePopulations::evolvers {
          * @param nb_generations : the number of generations for which evolution is run.
          * @return the final count of strategies in the population.
          */
-        VectorXui evolve(int nb_generations);
+        VectorXui evolve(int_fast64_t nb_generations);
 
         /**
          * Evolves the population in structure for `nb_generations` and returns all states.
@@ -38,7 +38,7 @@ namespace egttools::FinitePopulations::evolvers {
          * @param transitory : the transitory period.
          * @return the count of strategies of the population for every generation after `transitory`.
          */
-        MatrixXui2D run(int nb_generations, int transitory);
+        MatrixXui2D run(int_fast64_t nb_generations, int_fast64_t transitory);
 
         [[nodiscard]] std::shared_ptr<AbstractStructure> structure();
 

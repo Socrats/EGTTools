@@ -24,6 +24,7 @@
 #include <egttools/Types.h>
 
 #include <cmath>
+#include <egttools/LruCache.hpp>
 #include <egttools/finite_populations/Utils.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <egttools/finite_populations/games/Matrix2PlayerGameHolder.hpp>
@@ -35,11 +36,16 @@
 #include <boost/multiprecision/cpp_dec_float.hpp>
 #endif
 
+#if defined(_OPENMP)
+#include <egttools/OpenMPUtils.hpp>
+#endif
+
 
 namespace egttools::FinitePopulations::analytical {
 #if (HAS_BOOST)
     using cpp_dec_float_100 = boost::multiprecision::cpp_dec_float_100;
 #endif
+    using Cache = egttools::Utils::LRUCache<std::string, double>;
 
     /**
      * @brief Provides analytical methods to study evolutionary dynamics in finite populations
@@ -69,7 +75,11 @@ namespace egttools::FinitePopulations::analytical {
          */
         PairwiseComparison(int population_size, egttools::FinitePopulations::AbstractGame &game);
 
+        PairwiseComparison(int population_size, egttools::FinitePopulations::AbstractGame &game, size_t cache_size);
+
         ~PairwiseComparison() = default;
+
+        void pre_calculate_edge_fitnesses();
 
         /**
          * @brief computes the transition matrix of the Markov Chain which defines the population dynamics.
@@ -143,8 +153,11 @@ namespace egttools::FinitePopulations::analytical {
 
     private:
         int population_size_, nb_strategies_;
+        size_t cache_size_;
         int64_t nb_states_;
         egttools::FinitePopulations::AbstractGame &game_;
+
+        Cache cache_;
 
         /**
          * @brief calculates a transition probability.

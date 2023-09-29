@@ -42,9 +42,11 @@ add_library(egttoolsNumerical
         ../cpp/src/egttools/finite_populations/games/CRDGameTU.cpp
         ../cpp/src/egttools/finite_populations/games/OneShotCRD.cpp
         ../cpp/src/egttools/finite_populations/games/NormalFormNetworkGame.cpp
+        ../cpp/src/egttools/finite_populations/games/OneShotCRDNetworkGame.cpp
         ../cpp/src/egttools/finite_populations/behaviors/NFGStrategies.cpp
         ../cpp/src/egttools/finite_populations/behaviors/CRDStrategies.cpp
         ../cpp/src/egttools/finite_populations/evolvers/GeneralPopulationEvolver.cpp
+        ../cpp/src/egttools/finite_populations/evolvers/NetworkEvolver.cpp
         )
 
 set_target_properties(egttoolsNumerical PROPERTIES
@@ -107,3 +109,12 @@ target_link_libraries(testGameHolders egttoolsNumerical)
 
 add_executable(testGeneralEvolverNetwork cpp/test_general_evolver_network.cpp)
 target_link_libraries(testGeneralEvolverNetwork egttoolsNumerical)
+
+add_executable(testOneShotNetworkGame cpp/test_one_shot_network_game.cpp)
+target_link_libraries(testOneShotNetworkGame egttoolsNumerical)
+
+add_executable(testNetworkEvolver cpp/test_network_evolver.cpp)
+target_link_libraries(testNetworkEvolver egttoolsNumerical)
+
+add_executable(testFixations cpp/test_calculate_fixation_probabilities.cpp)
+target_link_libraries(testFixations egttoolsNumerical)

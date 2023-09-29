@@ -14,15 +14,15 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
-cmake_minimum_required(VERSION 3.18)
+
+cmake_minimum_required(VERSION 3.17)
 project(egttools LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+#set(SKIP_OPENMP TRUE)
 
-cmake_policy(SET CMP0069 NEW)
-cmake_policy(SET CMP0076 NEW)
+# Set PYTHONPATH
+
+#set(PYTHONPATH src/:${PYTHONPATH})
 
 # For additional Find library scripts
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules/")
@@ -49,8 +49,6 @@ if (MSVC)
     if (MSVC_VERSION GREATER_EQUAL 1920)
         add_compile_options(/d2FH4-) # Because we don't want to link against VCRUNTIME140_1.dll (see https://cibuildwheel.readthedocs.io/en/stable/faq/#importerror-dll-load-failed-the-specific-module-could-not-be-found-error-on-windows)
     endif ()
-    # important for finding boost on windows 64 bit
-#    set(Boost_ARCHITECTURE '-x64')
 endif ()
 
 if(APPLE)
@@ -66,10 +64,22 @@ endif()
 
 # Necessary for certain MacOX versions to find homebrew OpenMP
 if (APPLE AND NOT SKIP_OPENMP)
-    message("-- Try to install OpenMP")
-    execute_process(COMMAND brew install libomp)
-    execute_process(COMMAND brew --prefix libomp OUTPUT_VARIABLE LIBOMP_DIR)
-    string(STRIP ${LIBOMP_DIR} LIBOMP_DIR)
+#    message("-- Try to install OpenMP")
+#    message(STATUS "BUILD_ARCH=$ENV{BUILD_ARCH}")
+#    if ("$ENV{BUILD_ARCH}" MATCHES "macosx_x86_64|macosx_universal2")
+#        message(STATUS "Using ANACONDA OpenMP")
+#        set(OPENMP_URL "https://anaconda.org/conda-forge/llvm-openmp/11.1.0/download/osx-64/llvm-openmp-11.1.0-hda6cdc1_1.tar.bz2")
+#        execute_process(COMMAND conda install ${OPENMP_URL})
+#        set(LIBOMP_DIR $ENV{CONDA_PREFIX})
+#    else()
+#        execute_process(COMMAND brew install libomp)
+#        execute_process(COMMAND brew --prefix libomp OUTPUT_VARIABLE LIBOMP_DIR)
+#        string(STRIP ${LIBOMP_DIR} LIBOMP_DIR)
+#    endif()
+
+#    execute_process(COMMAND brew install libomp)
+#    execute_process(COMMAND brew --prefix libomp OUTPUT_VARIABLE LIBOMP_DIR)
+#    string(STRIP ${LIBOMP_DIR} LIBOMP_DIR)
 
     if (CMAKE_C_COMPILER_ID MATCHES "Clang\$")
         set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${LIBOMP_DIR}/include")
@@ -84,7 +94,6 @@ if (APPLE AND NOT SKIP_OPENMP)
         set(OpenMP_omp_LIBRARY ${LIBOMP_DIR}/lib/libomp.dylib)
         set(LDFLAGS "$LDFLAGS -Wl,-rpath,${LIBOMP_DIR}/lib -L${LIBOMP_DIR}/lib -lomp")
     endif ()
-
 endif ()
 
 if (NOT WIN32)
@@ -94,7 +103,11 @@ if (NOT WIN32)
     )
 endif ()
 
-set(EIGEN_VERSION_REQUIRED 3.3)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+#set(EIGEN_VERSION_REQUIRED 3.3)
 
 find_package(Eigen3 ${EIGEN_VERSION_REQUIRED} QUIET CONFIG)
 if (NOT EIGEN3_FOUND)
@@ -109,7 +122,7 @@ if (EIGEN3_FOUND)
     message(STATUS "Eigen found")
 endif ()
 
-find_package(Boost 1.70.0)
+find_package(Boost)
 if (Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIR})
     add_definitions( "-DHAS_BOOST" )
@@ -146,7 +159,11 @@ endif ()
 
 set(Python_FIND_IMPLEMENTATIONS CPython PyPy)
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
+# Add external dependencies
 add_subdirectory(pybind11)
+
+
+message(STATUS "${Python_INCLUDE_DIRS}")
 
 include_directories(${PROJECT_SOURCE_DIR}/cpp/include)
 add_subdirectory(${PROJECT_SOURCE_DIR}/cpp/src)

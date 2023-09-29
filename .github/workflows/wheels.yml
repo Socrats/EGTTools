@@ -14,6 +14,7 @@ on:
       - stable
       - actions*
       - docs
+      - feature_networks
     tags:
       - v*
 
@@ -92,6 +93,8 @@ jobs:
           # Run 32 and 64 bit version in parallel for Linux and Windows
           - runs-on: windows-latest
             cibw-arch: win_amd64
+          - runs-on: windows-latest
+            cibw-arch: win32
             python-arch: x86
           - runs-on: ubuntu-latest
             cibw-arch: manylinux_x86_64
@@ -112,33 +115,25 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: 3.9
           architecture: ${{ matrix.python-arch }}
 
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.14
 
       - name: Build and test wheels
-        uses: pypa/cibuildwheel@v2.14.1
+        uses: pypa/cibuildwheel@v2.12.3
         env:
           CIBW_BUILD_FRONTEND: "build"
           CIBW_BUILD: "cp*-${{ matrix.cibw-arch }}"
-          CIBW_SKIP: "cp37*"
+          CIBW_SKIP: "cp38-win32 cp39-win32 cp310-win32 cp311-win32"
           CIBW_ARCHS_MACOS: "x86_64 arm64"
-          CIBW_ARCHS_WINDOWS: "AMD64"
-          CIBW_BEFORE_ALL: pip install --upgrade pip
+          CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_BEFORE_ALL_MACOS: bash build_tools/github/before_build_mac.sh
           CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
           CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3_windows.sh
-          CIBW_ENVIRONMENT: CMAKE_BUILD_PARALLEL_LEVEL=2
-          CIBW_ENVIRONMENT_WINDOWS: >
-            PATH="C:\\local\\boost_1_82_0;$PATH"
-            CMAKE_BUILD_PARALLEL_LEVEL=2 
-            BUILD_ARCH=${{ matrix.cibw-arch }}
-          CIBW_ENVIRONMENT_MACOS: >
-            CMAKE_BUILD_PARALLEL_LEVEL=2 
-            CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch == 'macosx_x86_64' && 'x86_64' || matrix.cibw-arch == 'macosx_arm64' && 'arm64' || matrix.cibw-arch == 'macosx_universal2' && '"arm64;x86_64"' || '' }} 
-            BUILD_ARCH=${{ matrix.cibw-arch }}
+          CIBW_ENVIRONMENT_WINDOWS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_ARCH="${{ matrix.platform_id == 'win32' && '-A Win32' || '' }}"
+          CIBW_ENVIRONMENT_MACOS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch == 'macosx_x86_64' && 'x86_64' || matrix.cibw-arch == 'macosx_arm64' && 'arm64' || matrix.cibw-arch == 'macosx_universal2' && '"arm64;x86_64"' || '' }} BUILD_ARCH=${{ matrix.cibw-arch }} EGTTOOLS_EXTRA_CMAKE_ARGS="-DLIBOMP_DIR='$(brew --prefix libomp)'"
           CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
           CIBW_TEST_REQUIRES: pytest
           CIBW_BEFORE_TEST_MACOS: cd .. && cp -r {package}/tests/ {project}/tests/
