@@ -13,6 +13,7 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 - fixed gradient of selection estimation algorithm
 - fixed issue with multiple libomp.dylib copies loading
 - fixed issue with the citation of current version of egttools
+- fixed link to anaconda documentation
 
 ### Changes
 
