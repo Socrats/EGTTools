@@ -101,7 +101,7 @@ Python distributions
 --------------------
 
 Anaconda
-    If you use the Anaconda distribution of Python, you can use the same ``pip`` command in a terminal of the appropriate Anaconda environment, either activated through the `Anaconda Navigator <https://docs.continuum.io/anaconda/navigator/tutorials/manage-environments/#using-an-environment>`_ or `conda tool <https://conda.io/projects/continuumio-conda/en/latest/user-guide/tasks/manage-environments.html#activating-an-environment>`_.
+    If you use the Anaconda distribution of Python, you can use the same ``pip`` command in a terminal of the appropriate Anaconda environment, either activated through the `Anaconda Navigator <https://docs.continuum.io/free/navigator/tutorials/manage-environments/#using-an-environment%3E>`_ or `conda tool <https://conda.io/activation>`_.
 
 PyPy
     Recent versions of PyPy are supported by the `pybind11 project <https://github.com/pybind/pybind11>`_ and should thus also be supported by EGTtools.
