@@ -16,12 +16,19 @@ if [[ $(uname) == "Darwin" ]]; then
     export MACOSX_DEPLOYMENT_TARGET=12.0
     export EGTTOOLS_EGTTOOLS_EXTRA_CMAKE_ARGS='-DMACOSX_DEPLOYMENT_TARGET=12.0'
     echo "MACOSX_DEPLOYMENT_TARGET=12.0" >>"$GITHUB_ENV"
+
+    brew reinstall libomp
+
   else
     export MACOSX_DEPLOYMENT_TARGET=10.15
     export EGTTOOLS_EGTTOOLS_EXTRA_CMAKE_ARGS='-DMACOSX_DEPLOYMENT_TARGET=10.15'
     echo "MACOSX_DEPLOYMENT_TARGET=10.15" >>"$GITHUB_ENV"
+
+    brew reinstall libomp
   fi
 fi
+
+export EGTTOOLS_EXTRA_CMAKE_ARGS="-DLIBOMP_DIR='$(brew --prefix libomp)'"
 
 # First we download the correct eigen3 version
 curl -O https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
