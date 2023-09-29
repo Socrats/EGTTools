@@ -10,17 +10,23 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 ### Fixed
 
 - fixed issue with environmental variables not working on MacOS builds in Github Actions
+- fixed gradient of selection estimation algorithm
+- fixed issue with multiple libomp.dylib copies loading
+- fixed issue with the citation of current version of egttools
 
 ### Changes
 
 - now openmp is linked dynamically to avoid conflicts on MacOS
 - increased minimum required cmake version to 3.18
+- changed int to int_fast64_t to support larger number of generations
 
 ### Added
 
 - added NetworkSync evolver
 - added more support for network simulations
 - added Cache to accelerate PairwiseComparison
+- added calculation of the averaged gradient of selection
+- added OneShotCRDNetworkGame
 
 ## [0.1.12.patch1] - 7-07-2022
 
