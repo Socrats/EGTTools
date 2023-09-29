@@ -129,11 +129,9 @@ jobs:
           CIBW_SKIP: "cp38-win32 cp39-win32 cp310-win32 cp311-win32"
           CIBW_ARCHS_MACOS: "x86_64 arm64"
           CIBW_ARCHS_WINDOWS: "AMD64 x86"
-          CIBW_BEFORE_ALL: pip install --upgrade pip
           CIBW_BEFORE_ALL_MACOS: bash build_tools/github/before_build_mac.sh
           CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
           CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3_windows.sh
-          CIBW_ENVIRONMENT: CMAKE_BUILD_PARALLEL_LEVEL=2
           CIBW_ENVIRONMENT_WINDOWS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_ARCH="${{ matrix.platform_id == 'win32' && '-A Win32' || '' }}"
           CIBW_ENVIRONMENT_MACOS: |
             CMAKE_BUILD_PARALLEL_LEVEL=2 
