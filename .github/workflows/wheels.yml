@@ -139,7 +139,7 @@ jobs:
             CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch == 'macosx_x86_64' && 'x86_64' || matrix.cibw-arch == 'macosx_arm64' && 'arm64' || matrix.cibw-arch == 'macosx_universal2' && '"arm64;x86_64"' || '' }} 
             BUILD_ARCH=${{ matrix.cibw-arch }} 
             MACOSX_DEPLOYMENT_TARGET=${{ matrix.cibw-arch == 'macosx_arm64' && 12.0 || 10.15 }} 
-            EGTTOOLS_EXTRA_CMAKE_ARGS=${{ matrix.cibw-arch == 'macosx_arm64' && '-DLIBOMP_DIR=$(brew --prefix libomp) -DMACOSX_DEPLOYMENT_TARGET=12.0' || matrix.cibw-arch == 'macosx_x86_64' && '-DLIBOMP_DIR='$(brew --prefix libomp) -DMACOSX_DEPLOYMENT_TARGET=10.5' || '-DSKIP_OPENMP=TRUE' }}
+            EGTTOOLS_EXTRA_CMAKE_ARGS=${{ matrix.cibw-arch == 'macosx_arm64' && '-DLIBOMP_DIR=(brew --prefix libomp) -DMACOSX_DEPLOYMENT_TARGET=12.0' || matrix.cibw-arch == 'macosx_x86_64' && '-DLIBOMP_DIR=(brew --prefix libomp) -DMACOSX_DEPLOYMENT_TARGET=10.5' || '-DSKIP_OPENMP=TRUE' }}
           CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
           CIBW_TEST_REQUIRES: pytest
           CIBW_BEFORE_TEST_MACOS: cd .. && cp -r {package}/tests/ {project}/tests/
