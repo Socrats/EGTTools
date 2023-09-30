@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres
 to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [0.1.13-patch1] - 30-9-2022
+## [0.1.13-patch2] - 30-9-2022
 
 ### Fixed
 - fixed issue with dynamic linking of OpenMP
