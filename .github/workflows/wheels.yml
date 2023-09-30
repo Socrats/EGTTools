@@ -14,7 +14,7 @@ on:
       - stable
       - actions*
       - docs
-      - feature_networks
+      - patch_openmp_segfault
     tags:
       - v*
 
