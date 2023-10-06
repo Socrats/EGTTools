@@ -14,6 +14,7 @@ include bld.bat
 include build.sh
 include install_dependencies.sh
 include meta.yaml
+include vcpkg.json
 
 include CMakeLists.txt
 include requirements.txt
