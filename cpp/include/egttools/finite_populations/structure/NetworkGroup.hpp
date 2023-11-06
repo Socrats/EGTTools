@@ -302,29 +302,29 @@ namespace egttools::FinitePopulations::structure {
             mean_population_state_(new_strategy) += 1;
 
             population_[focal_player] = new_strategy;
-            return;
-        }// if not we continue
+        } else {// if not we continue
 
-        // select a random neighbour
-        auto dist = std::uniform_int_distribution<int>(0, network_[focal_player].size() - 1);
-        auto neighbor_index = dist(generator_);
-        int neighbor = network_[focal_player][neighbor_index];
+            // select a random neighbour
+            auto dist = std::uniform_int_distribution<int>(0, network_[focal_player].size() - 1);
+            auto neighbor_index = dist(generator_);
+            int neighbor = network_[focal_player][neighbor_index];
 
-        // If the strategies are the same, there is no change in the population
-        if (population_[focal_player] == population_[neighbor]) return;
+            // If the strategies are the same, there is no change in the population
+            if (population_[focal_player] == population_[neighbor]) return;
 
-        // Get the fitness of both players
-        auto fitness_focal = calculate_fitness(focal_player);
-        auto fitness_neighbor = calculate_fitness(neighbor);
+            // Get the fitness of both players
+            auto fitness_focal = calculate_fitness(focal_player);
+            auto fitness_neighbor = calculate_fitness(neighbor);
 
-        // Check if update happens
-        if (real_rand_(generator_) < egttools::FinitePopulations::fermi(beta_, fitness_focal, fitness_neighbor)) {
-            // update mean counts
-            mean_population_state_(population_[focal_player]) -= 1;
-            mean_population_state_(population_[neighbor]) += 1;
+            // Check if update happens
+            if (real_rand_(generator_) < egttools::FinitePopulations::fermi(beta_, fitness_focal, fitness_neighbor)) {
+                // update mean counts
+                mean_population_state_(population_[focal_player]) -= 1;
+                mean_population_state_(population_[neighbor]) += 1;
 
-            // update focal player strategy
-            population_[focal_player] = population_[neighbor];
+                // update focal player strategy
+                population_[focal_player] = population_[neighbor];
+            }
         }
     }
 
@@ -339,29 +339,29 @@ namespace egttools::FinitePopulations::structure {
             mean_population_state_(new_strategy) += 1;
 
             population_[node] = new_strategy;
-            return;
-        }// if not we continue
+        } else {// if not we continue
 
-        // select a random neighbour
-        auto dist = std::uniform_int_distribution<int>(0, network_[node].size() - 1);
-        auto neighbor_index = dist(generator_);
-        int neighbor = network_[node][neighbor_index];
+            // select a random neighbour
+            auto dist = std::uniform_int_distribution<int>(0, network_[node].size() - 1);
+            auto neighbor_index = dist(generator_);
+            int neighbor = network_[node][neighbor_index];
 
-        // If the strategies are the same, there is no change in the population
-        if (population_[node] == population_[neighbor]) return;
+            // If the strategies are the same, there is no change in the population
+            if (population_[node] == population_[neighbor]) return;
 
-        // Get the fitness of both players
-        auto fitness_focal = calculate_fitness(node);
-        auto fitness_neighbor = calculate_fitness(neighbor);
+            // Get the fitness of both players
+            auto fitness_focal = calculate_fitness(node);
+            auto fitness_neighbor = calculate_fitness(neighbor);
 
-        // Check if update happens
-        if (real_rand_(generator_) < egttools::FinitePopulations::fermi(beta_, fitness_focal, fitness_neighbor)) {
-            // update mean counts
-            mean_population_state_(population_[node]) -= 1;
-            mean_population_state_(population_[neighbor]) += 1;
+            // Check if update happens
+            if (real_rand_(generator_) < egttools::FinitePopulations::fermi(beta_, fitness_focal, fitness_neighbor)) {
+                // update mean counts
+                mean_population_state_(population_[node]) -= 1;
+                mean_population_state_(population_[neighbor]) += 1;
 
-            // update focal player strategy
-            population_[node] = population_[neighbor];
+                // update focal player strategy
+                population_[node] = population_[neighbor];
+            }
         }
     }
 

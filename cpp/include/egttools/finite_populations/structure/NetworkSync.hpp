@@ -171,7 +171,8 @@ namespace egttools::FinitePopulations::structure {
         auto iterator = container.begin();
         for (int s = 0; s < nb_strategies_; ++s) {
             for (size_t i = 0; i < state[s]; ++i) {
-                population_[*iterator] = s;
+                population_[*iterator] = s;    // both arrays must be equally initialized
+                population_new[*iterator] = s; // so that we only need to update the changes
                 iterator++;
             }
         }
@@ -276,29 +277,29 @@ namespace egttools::FinitePopulations::structure {
                 mean_population_state_(new_strategy) += 1;
 
                 population_new[i] = new_strategy;
-                continue;
-            }// if not we continue
+            } else {// if not we continue
 
-            // select a random neighbour
-            auto dist = std::uniform_int_distribution<int>(0, network_[i].size() - 1);
-            auto neighbor_index = dist(generator_);
-            int neighbor = network_[i][neighbor_index];
+                // select a random neighbour
+                auto dist = std::uniform_int_distribution<int>(0, network_[i].size() - 1);
+                auto neighbor_index = dist(generator_);
+                int neighbor = network_[i][neighbor_index];
 
-            // If the strategies are the same, there is no change in the population
-            if (population_[i] == population_[neighbor]) continue;
+                // If the strategies are the same, there is no change in the population
+                if (population_[i] == population_[neighbor]) continue;
 
-            // Get the fitness of both players
-            auto fitness_focal = calculate_fitness(i);
-            auto fitness_neighbor = calculate_fitness(neighbor);
+                // Get the fitness of both players
+                auto fitness_focal = calculate_fitness(i);
+                auto fitness_neighbor = calculate_fitness(neighbor);
 
-            // Check if update happens
-            if (real_rand_(generator_) < egttools::FinitePopulations::fermi(beta_, fitness_focal, fitness_neighbor)) {
-                // update mean counts
-                mean_population_state_(population_[i]) -= 1;
-                mean_population_state_(population_[neighbor]) += 1;
+                // Check if update happens
+                if (real_rand_(generator_) < egttools::FinitePopulations::fermi(beta_, fitness_focal, fitness_neighbor)) {
+                    // update mean counts
+                    mean_population_state_(population_[i]) -= 1;
+                    mean_population_state_(population_[neighbor]) += 1;
 
-                // update focal player strategy
-                population_new[i] = population_[neighbor];
+                    // update focal player strategy
+                    population_new[i] = population_[neighbor];
+                }
             }
         }
         for (int i = 0; i < population_size_; ++i)
@@ -317,29 +318,29 @@ namespace egttools::FinitePopulations::structure {
             mean_population_state_(new_strategy) += 1;
 
             population_new[node] = new_strategy;
-            return;
-        }// if not we continue
+        } else {// if not we continue
 
-        // select a random neighbour
-        auto dist = std::uniform_int_distribution<int>(0, network_[node].size() - 1);
-        auto neighbor_index = dist(generator_);
-        int neighbor = network_[node][neighbor_index];
+            // select a random neighbour
+            auto dist = std::uniform_int_distribution<int>(0, network_[node].size() - 1);
+            auto neighbor_index = dist(generator_);
+            int neighbor = network_[node][neighbor_index];
 
-        // If the strategies are the same, there is no change in the population
-        if (population_[node] == population_[neighbor]) return;
+            // If the strategies are the same, there is no change in the population
+            if (population_[node] == population_[neighbor]) return;
 
-        // Get the fitness of both players
-        auto fitness_focal = calculate_fitness(node);
-        auto fitness_neighbor = calculate_fitness(neighbor);
+            // Get the fitness of both players
+            auto fitness_focal = calculate_fitness(node);
+            auto fitness_neighbor = calculate_fitness(neighbor);
 
-        // Check if update happens
-        if (real_rand_(generator_) < egttools::FinitePopulations::fermi(beta_, fitness_focal, fitness_neighbor)) {
-            // update mean counts
-            mean_population_state_(population_[node]) -= 1;
-            mean_population_state_(population_[neighbor]) += 1;
+            // Check if update happens
+            if (real_rand_(generator_) < egttools::FinitePopulations::fermi(beta_, fitness_focal, fitness_neighbor)) {
+                // update mean counts
+                mean_population_state_(population_[node]) -= 1;
+                mean_population_state_(population_[neighbor]) += 1;
 
-            // update focal player strategy
-            population_new[node] = population_[neighbor];
+                // update focal player strategy
+                population_new[node] = population_[neighbor];
+            }
         }
     }
 
