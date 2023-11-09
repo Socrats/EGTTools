@@ -1,0 +1,13 @@
+{
+  "name" : "egttools",
+  "version-string" : "0.1.13.2",
+  "builtin-baseline" : "c65198892b732f3f00712ce8bd56cc9297d110d5",
+  "dependencies" : [ {
+    "name" : "boost",
+    "version>=" : "1.82.0#1"
+  }, {
+    "name" : "eigen3",
+    "version>=" : "3.4.0#2",
+    "$comment" : "    # this is heuristically generated, and may not be correct\n\n    find_package(Eigen3 CONFIG REQUIRED)\n\n    target_link_libraries(main PRIVATE Eigen3::Eigen)\n"
+  } ]
+}
