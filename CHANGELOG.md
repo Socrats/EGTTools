@@ -5,17 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres
 to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.13-patch4] - 12-11-2023
+
+### Fixed
+
+- Fixed segfault in PairwiseComparisonNumerical run method. when called using a transient period, the function surpass
+  the array index limit, thus causing a bad memory access and a segfault
+
+### Added
+- Added a version of run with transient and no mutation
+- Added new argument checks
+
+### Changes
+- Changed the generation and transient parameter types from int to int_fast64_t
+- The methods that have a mutation parameter enforce that mu>0 to avoid errors
+- There will be a bad argument error if the beta parameter used in the python call is not explicitly a float
+
 ## [0.1.13-patch3] - 9-11-2023
 
 ### Fixed
+
 - fixed NetworkSync and NetworkGroupSync structures updates
 
 ## [0.1.13-patch2] - 30-9-2023
 
 ### Fixed
+
 - fixed issue with dynamic linking of OpenMP
 
 ### Changes
+
 - dropped support for OpenMP on macOS temporally
 - now OpenMP is linked statically again for linux
 
