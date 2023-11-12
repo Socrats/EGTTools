@@ -28,7 +28,7 @@ int main() {
     // Initialise selection mutation process
     auto smProcess = egttools::FinitePopulations::PairwiseMoran(pop_size, game, 1000000);
 
-    auto dist = smProcess.run(1000, 1, 0.001, init_state);
+    auto dist = smProcess.run(1000, 1.0, 0.001, init_state);
 
     assert(dist.rows() == 1001);
     assert(dist.cols() == nb_strategies);

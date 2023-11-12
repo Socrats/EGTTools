@@ -937,7 +937,7 @@ void init_methods(py::module_ &m) {
         options.disable_function_signatures();
 
         pair_comp.def("run",
-                      static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int, double,
+                      static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int_fast64_t, double,
                                                                                 const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
                       R"pbdoc(
                     Runs the evolutionary process and returns a matrix with all the states the system went through.
@@ -969,7 +969,7 @@ void init_methods(py::module_ &m) {
                       py::arg("beta"),
                       py::arg("init_state"), py::return_value_policy::move);
         pair_comp.def("run",
-                      static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int, int, double, double,
+                      static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int_fast64_t, int_fast64_t, double, double,
                                                                                 const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
                       R"pbdoc(
                     Runs the evolutionary process and returns a matrix with all the states the system went through.
@@ -1009,7 +1009,46 @@ void init_methods(py::module_ &m) {
                       py::arg("mu"),
                       py::arg("init_state"), py::return_value_policy::move);
         pair_comp.def("run",
-                      static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int, double, double,
+                      static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int_fast64_t, int_fast64_t, double,
+                                                                                const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
+                      R"pbdoc(
+                    Runs the evolutionary process and returns a matrix with all the states the system went through.
+
+                    Mutation events will happen with rate :param mu, and the transient states will not be returned.
+
+                    Parameters
+                    ----------
+                    nb_generations : int
+                        Maximum number of generations.
+                    transient : int
+                        Transient period. Amount of generations that should not be skipped in the return vector.
+                    beta : float
+                        Intensity of selection.
+                    mu : float
+                        Mutation rate.
+                    init_state: numpy.ndarray
+                        Initial state of the population. This must be a vector of integers of shape (nb_strategies,),
+                        containing the counts of each strategy in the population. It serves as the initial state
+                        from which the evolutionary process will start.
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        A matrix containing all the states the system when through, including also the initial state.
+                        The shape of the matrix is (nb_generations - transient, nb_strategies).
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical.evolve,
+                    egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution_sparse,
+                    egttools.numerical.PairwiseComparisonNumerical.estimate_strategy_distribution
+                )pbdoc",
+                      py::arg("nb_generations"),
+                      py::arg("transient"),
+                      py::arg("beta"),
+                      py::arg("init_state"), py::return_value_policy::move);
+        pair_comp.def("run",
+                      static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int_fast64_t, double, double,
                                                                                 const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
                       R"pbdoc(
                     Runs the evolutionary process and returns a matrix with all the states the system went through.

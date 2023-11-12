@@ -59,12 +59,12 @@ def test_pairwise_moran_run(setup_hawk_dove_parameters) -> None:
     pop_size = 100
     cache_size = 10000
     nb_generations = int(1e6)
-    beta = 1
+    beta = 1.0
     mu = 1e-3
     initial_state = [50, 50]
 
     evolver = PairwiseComparisonNumerical(pop_size, game, cache_size)
-    result = evolver.run(nb_generations, beta, mu, initial_state)
+    result = evolver.run(nb_generations, beta=beta, mu=mu, init_state=initial_state)
 
     assert result.shape == (nb_generations + 1, game.nb_strategies())
 

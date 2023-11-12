@@ -17,7 +17,7 @@ def test_plot_gradient_none_input():
 
 def test_draw_invasion_diagram():
     # preliminary from the examples
-    T, R, P, S, beta, Z = 2, 1, 0, 1, 1, 100
+    T, R, P, S, beta, Z = 2, 1, 0, 1, .01, 100
     A = np.array([[P, T], [S, R]])
 
     strategies = [
