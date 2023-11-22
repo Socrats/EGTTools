@@ -34,6 +34,9 @@ namespace egttools::sampling {
  * DISCLAIMER: This function has been obtained from a Stack overflow post and is based on the algorithm
  * by Robert Floyd that can be found at:
  * https://www.nowherenearithaca.com/2013/05/robert-floyds-tiny-and-beautiful.html.
+     *
+     * k < high !
+     * You should not care about order
  *
  * @tparam SizeType : type of variables that define the set bounds and size
  * @tparam SampleType : type of the sampled values
@@ -54,7 +57,7 @@ namespace egttools::sampling {
             // that we could've picked something that big.
 
             if (!container.insert(v).second) {
-                container.insert(r);
+                container.insert(v);
             }
         }
     }

@@ -1186,10 +1186,8 @@ namespace egttools::FinitePopulations {
 
             // Then we sample a random population state
             VectorXui strategies = VectorXui::Zero(_nb_strategies);
-            egttools::FinitePopulations::sample_simplex_direct_method<size_t, size_t, VectorXui, std::mt19937_64>(_nb_strategies,
-                                                                                                                  _pop_size,
-                                                                                                                  strategies,
-                                                                                                                  generator);
+            auto current_state = _state_sampler(generator);
+            egttools::FinitePopulations::sample_simplex(current_state, _pop_size, _nb_strategies, strategies);
 
             int die = 0, birth = 0, strategy_p1 = 0, strategy_p2 = 0;
             // Check if state is homogeneous
