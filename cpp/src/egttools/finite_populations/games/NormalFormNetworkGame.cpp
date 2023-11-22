@@ -164,3 +164,7 @@ std::string egttools::FinitePopulations::games::NormalFormNetworkGame::type() co
 const egttools::FinitePopulations::games::NFGStrategyVector &egttools::FinitePopulations::games::NormalFormNetworkGame::strategies() const {
     return strategies_;
 }
+
+const egttools::Matrix2D &egttools::FinitePopulations::games::NormalFormNetworkGame::expected_payoffs() const {
+    return expected_payoffs_;
+}

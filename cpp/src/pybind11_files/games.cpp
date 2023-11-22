@@ -1273,6 +1273,8 @@ void init_games(py::module_ &mGames) {
                  "A string representation of the game.")
             .def("type", &egttools::FinitePopulations::games::NormalFormNetworkGame::type,
                  "the type of game.")
+            .def("expected_payoffs", &egttools::FinitePopulations::games::NormalFormNetworkGame::expected_payoffs,
+                 "Expected payoffs.")
             .def("strategies", &egttools::FinitePopulations::games::NormalFormNetworkGame::strategies,
                  "The strategies that play the game.");
 

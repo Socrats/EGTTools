@@ -74,6 +74,7 @@ namespace egttools::FinitePopulations::games {
         [[nodiscard]] std::string toString() const override;
         [[nodiscard]] std::string type() const override;
         [[nodiscard]] const NFGStrategyVector &strategies() const;
+        [[nodiscard]] const Matrix2D &expected_payoffs() const;
 
         // setters
         //        void set_strategies(NFGStrategyVector &strategies);
