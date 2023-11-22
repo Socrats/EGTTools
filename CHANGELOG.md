@@ -13,10 +13,12 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   the array index limit, thus causing a bad memory access and a segfault
 
 ### Added
+
 - Added a version of run with transient and no mutation
 - Added new argument checks
 
-### Changes
+### Changed
+
 - Changed the generation and transient parameter types from int to int_fast64_t
 - The methods that have a mutation parameter enforce that mu>0 to avoid errors
 - There will be a bad argument error if the beta parameter used in the python call is not explicitly a float
@@ -33,7 +35,7 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 - fixed issue with dynamic linking of OpenMP
 
-### Changes
+### Changed
 
 - dropped support for OpenMP on macOS temporally
 - now OpenMP is linked statically again for linux
@@ -48,7 +50,7 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 - fixed issue with the citation of current version of egttools
 - fixed link to anaconda documentation
 
-### Changes
+### Changed
 
 - now openmp is linked dynamically to avoid conflicts on MacOS
 - increased minimum required cmake version to 3.18

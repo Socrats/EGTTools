@@ -110,6 +110,9 @@ target_link_libraries(testGameHolders egttoolsNumerical)
 add_executable(testGeneralEvolverNetwork cpp/test_general_evolver_network.cpp)
 target_link_libraries(testGeneralEvolverNetwork egttoolsNumerical)
 
+add_executable(testNetworkSync cpp/test_network_sync.cpp)
+target_link_libraries(testNetworkSync egttoolsNumerical)
+
 add_executable(testOneShotNetworkGame cpp/test_one_shot_network_game.cpp)
 target_link_libraries(testOneShotNetworkGame egttoolsNumerical)
 

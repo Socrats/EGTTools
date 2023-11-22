@@ -161,21 +161,20 @@ namespace egttools::FinitePopulations::structure {
     void NetworkSync<GameType, CacheType>::initialize_state(egttools::VectorXui &state) {
         // We first fill the population with the number of strategies indicated by state in order
         mean_population_state_ = state;
-        std::unordered_set<int> container(population_size_);
-        egttools::sampling::sample_without_replacement<size_t, int>(0,
-                                                                    population_size_,
-                                                                    population_size_,
-                                                                    container,
-                                                                    generator_);
-
-        auto iterator = container.begin();
+        int index = 0;
         for (int s = 0; s < nb_strategies_; ++s) {
             for (size_t i = 0; i < state[s]; ++i) {
-                population_[*iterator] = s;    // both arrays must be equally initialized
-                population_new[*iterator] = s; // so that we only need to update the changes
-                iterator++;
+                population_[index] = s;
+                index++;
             }
         }
+        // Finally we shuffle
+        std::shuffle(population_.begin(), population_.end(), generator_);
+
+        for (int_fast64_t i = 0; i < population_size_; ++i) {
+            population_new[i] = population_[i];
+        }
+
     }
 
     template<class GameType, class CacheType>
