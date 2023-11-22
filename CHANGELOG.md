@@ -5,11 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres
 to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.13-patch5] - 22-11-2023
+
+### Fixed
+
+- Fixed state initialization in `NetworkSync` and `NetworkGroupSync`. The state was not being randomly initialized.
+- Fixed incorrect use of `sample_without_replacement`. It must only be used when the sample is smaller than the
+  population.
+
+### Changed
+
+- Exposed the expected payoffs of `NormalFormNetworkGame` to Python
+
 ## [0.1.13-patch4] - 12-11-2023
 
 ### Fixed
 
-- Fixed segfault in PairwiseComparisonNumerical run method. when called using a transient period, the function surpass
+- Fixed segfault in `PairwiseComparisonNumerical` run method. when called using a `transient` period, the function surpass
   the array index limit, thus causing a bad memory access and a segfault
 
 ### Added
@@ -19,7 +31,7 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- Changed the generation and transient parameter types from int to int_fast64_t
+- Changed the generation and transient parameter types from `int` to `int_fast64_t`
 - The methods that have a mutation parameter enforce that mu>0 to avoid errors
 - There will be a bad argument error if the beta parameter used in the python call is not explicitly a float
 
@@ -27,17 +39,17 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- fixed NetworkSync and NetworkGroupSync structures updates
+- fixed `NetworkSync` and `NetworkGroupSync` structures updates
 
 ## [0.1.13-patch2] - 30-9-2023
 
 ### Fixed
 
-- fixed issue with dynamic linking of OpenMP
+- fixed issue with dynamic linking of `OpenMP`
 
 ### Changed
 
-- dropped support for OpenMP on macOS temporally
+- dropped support for `OpenMP` on macOS temporally
 - now OpenMP is linked statically again for linux
 
 ## [0.1.13] - 29-9-2023
@@ -46,21 +58,21 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 - fixed issue with environmental variables not working on MacOS builds in Github Actions
 - fixed gradient of selection estimation algorithm
-- fixed issue with multiple libomp.dylib copies loading
+- fixed issue with multiple `libomp.dylib` copies loading
 - fixed issue with the citation of current version of egttools
 - fixed link to anaconda documentation
 
 ### Changed
 
 - now openmp is linked dynamically to avoid conflicts on MacOS
-- increased minimum required cmake version to 3.18
-- changed int to int_fast64_t to support larger number of generations
+- increased minimum required cmake version to `3.18`
+- changed int to `int_fast64_t` to support larger number of generations
 
 ### Added
 
 - added NetworkSync evolver
 - added more support for network simulations
-- added Cache to accelerate PairwiseComparison
+- added Cache to accelerate `PairwiseComparison`
 - added calculation of the averaged gradient of selection
 - added OneShotCRDNetworkGame
 
@@ -93,7 +105,7 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 - Fixed stability plot and minor syntax issues.
 - Fixed issue with fitness calculations of strategies with 0 counts in the population.
 - Fixed LNK2005 error on windows.
-- Fixed version naming convesion to adhere to PEP440.
+- Fixed version naming convention to adhere to PEP440.
 
 ### Changed
 
