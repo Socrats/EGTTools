@@ -189,9 +189,8 @@ class MemoryOneStrategy(AbstractNFGStrategy):
             if not self.is_stochastic_strategy:
                 self.action_prev_self_ = self.action_first_round_
             else:
-                self.action_prev_self_ = 1 if self.random_device.random() < self.strategy_[
-                    (self.action_prev_self_, action_prev)] else 0
-            return self.action_first_round_
+                self.action_prev_self_ = 1 if self.random_device.random() < self.action_first_round_ else 0
+            return self.action_prev_self_
         else:
             if not self.is_stochastic_strategy:
                 action = self.strategy_[(self.action_prev_self_, action_prev)]
@@ -200,7 +199,8 @@ class MemoryOneStrategy(AbstractNFGStrategy):
             self.action_prev_self_ = action
             return action
 
-    def type(self):
+    @staticmethod
+    def type():
         return "NFGStrategies::MemoryOneStrategy"
 
     def is_stochastic(self):
