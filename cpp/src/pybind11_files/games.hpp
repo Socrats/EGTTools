@@ -18,6 +18,7 @@
 #include <egttools/finite_populations/games/NPlayerStagHunt.hpp>
 #include <egttools/finite_populations/games/OneShotCRD.hpp>
 #include <egttools/finite_populations/games/OneShotCRDNetworkGame.hpp>
+#include <egttools/finite_populations/games/Matrix2PlayerNetworkGameHolder.hpp>
 
 #include "egttools_common.hpp"
 #include "python_stubs.hpp"

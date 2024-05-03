@@ -8,5 +8,7 @@ else:
     from .numerical_ import PairwiseComparisonNumerical
     from .numerical_ import GeneralPopulationEvolver
     from .numerical_ import NetworkEvolver
+    from .numerical_ import calculate_strategies_distribution, calculate_expected_indicator
 
-__all__ = ['numerical', 'PairwiseComparisonNumerical', 'GeneralPopulationEvolver', 'NetworkEvolver']
+__all__ = ['numerical', 'PairwiseComparisonNumerical', 'GeneralPopulationEvolver', 'calculate_expected_indicator',
+           'NetworkEvolver']

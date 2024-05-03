@@ -1337,7 +1337,56 @@ void init_games(py::module_ &mGames) {
             .def("min_nb_cooperators", &egttools::FinitePopulations::games::OneShotCRDNetworkGame::min_nb_cooperators,
                  "Returns the minimum number of cooperators.")
             .def("__str__", &egttools::FinitePopulations::games::OneShotCRDNetworkGame::toString,
-                 "A string representation of the game.")
+                 "One-shot CRD on networks")
             .def("type", &egttools::FinitePopulations::games::OneShotCRDNetworkGame::type,
-                 "the type of game.");
+                 "egttools.games.OneShotCRDNetworkGame");
+
+    py::class_<egttools::FinitePopulations::games::Matrix2PlayerNetworkGameHolder, egttools::FinitePopulations::games::AbstractSpatialGame>(mGames, "Matrix2PlayerNetworkGameHolder")
+            .def(py::init<int, const Eigen::Ref<const egttools::Matrix2D>>(),
+                 R"pbdoc(
+                    A Game Holder class.
+
+                    This class allows the user to input any payoff matrix for 2-player games and simulate it using the Network Simulation classes.
+
+                    Parameters
+                    ----------
+                    nb_strategies : int
+                        The number of strategies.
+                    expected payoffs : numpy.ndarray
+                        An array of shape (nb_strategies, nb_strategies) which contains the expected payoffs between every two strategies.
+                        The matrix always reads the payoff of the row strategy vs the column strategy.
+
+                    See Also
+                    --------
+                    egttools.games.AbstractGame
+                    egttools.games.OneShotCRD
+                    egttools.games.NormalFormGame
+                    egttools.games.NormalFormNetworkGame
+                    )pbdoc",
+                 py::arg("nb_strategies"),
+                 py::arg("expected_payoffs"), py::return_value_policy::reference_internal)
+            .def("calculate_fitness", &egttools::FinitePopulations::games::Matrix2PlayerNetworkGameHolder::calculate_fitness,
+                 py::arg("strategy_index"),
+                 py::arg("state"),
+                 R"pbdoc(
+                    Calculates the fitness of the `strategy_index` at a given neighborhood state.
+
+                    Parameters
+                    ----------
+                    strategy_index: int
+                        The index of the strategy adopted by the individual's whose payoff must be calculated.
+                    state: numpy.ndarray
+                        An array of integers containing the counts of strategies in the neighborhood.
+
+                    Returns
+                    -------
+                    double
+                        The fitness of `strategy_index` at the neighborhood `state`.
+                    )pbdoc")
+            .def("nb_strategies", &egttools::FinitePopulations::games::Matrix2PlayerNetworkGameHolder::nb_strategies,
+                 "Returns the number of strategies in the population.")
+            .def("__str__", &egttools::FinitePopulations::games::Matrix2PlayerNetworkGameHolder::toString,
+                 "A 2-player matrix game holder.")
+            .def("type", &egttools::FinitePopulations::games::Matrix2PlayerNetworkGameHolder::type,
+                 "egttools.games.Matrix2PlayerNetworkGameHolder");
 }

@@ -61,13 +61,11 @@ void init_methods(py::module_ &m) {
                             egttools.Random
                                 An instance of the random seed generator.
            )pbdoc")
-            .def_static(
-                    "init", [](unsigned long int seed) {
+            .def_static("init", [](unsigned long int seed) {
                         auto instance = std::unique_ptr<Random::SeedGenerator, py::nodelete>(&Random::SeedGenerator::getInstance());
                         instance->setMainSeed(seed);
-                        return instance;
-                    },
-                    R"pbdoc(
+                        return instance; },
+                        R"pbdoc(
                             This static method initializes the random seed generator from seed.
 
                             This static method initializes the random seed generator from seed
@@ -84,17 +82,10 @@ void init_methods(py::module_ &m) {
                             egttools.Random
                                 An instance of the random seed generator.
                     )pbdoc",
-                    py::arg("seed"))
-            .def_property_readonly_static(
-                    "_seed", [](const py::object &) {
-                        return egttools::Random::SeedGenerator::getInstance().getMainSeed();
-                    },
-                    "The initial seed of `egttools.Random`.")
-            .def_static(
-                    "generate", []() {
-                        return egttools::Random::SeedGenerator::getInstance().getSeed();
-                    },
-                    R"pbdoc(
+                        py::arg("seed"))
+            .def_property_readonly_static("_seed", [](const py::object &) { return egttools::Random::SeedGenerator::getInstance().getMainSeed(); }, "The initial seed of `egttools.Random`.")
+            .def_static("generate", []() { return egttools::Random::SeedGenerator::getInstance().getSeed(); },
+                        R"pbdoc(
                     Generates a random seed.
 
                     The generated seed can be used to seed other pseudo-random generators,
@@ -108,11 +99,8 @@ void init_methods(py::module_ &m) {
                     int
                         A random seed which can be used to seed new random generators.
                     )pbdoc")
-            .def_static(
-                    "seed", [](unsigned long int seed) {
-                        egttools::Random::SeedGenerator::getInstance().setMainSeed(seed);
-                    },
-                    R"pbdoc(
+            .def_static("seed", [](unsigned long int seed) { egttools::Random::SeedGenerator::getInstance().setMainSeed(seed); },
+                        R"pbdoc(
                     This static methods changes the seed of `egttools.Random`.
 
                     Parameters
@@ -121,7 +109,7 @@ void init_methods(py::module_ &m) {
                         The new seed for the `egttools.Random` module which is used to seed
                         every other pseudo-random generation in the `egttools` package.
                     )pbdoc",
-                    py::arg("seed"));
+                        py::arg("seed"));
 
     {
         py::options options;
@@ -344,6 +332,45 @@ void init_methods(py::module_ &m) {
                 egttools.numerical.calculate_nb_states, egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution_sparse
                 )pbdoc",
           py::arg("pop_size"), py::arg("nb_strategies"), py::arg("stationary_distribution"));
+    m.def("calculate_expected_indicator",
+          static_cast<double (*)(int64_t, int64_t, egttools::SparseMatrix2D &, egttools::Matrix2D &)>(&egttools::utils::calculate_expected_indicator),
+          R"pbdoc(
+                Calculates the expected value of an indicator in the population.
+
+                This method will calculate the expected indicator given the stationary distribution of the population.
+                For that, this function will calculate the average indicator at any given population state and then
+                multiply it for the probability of the state (given by the stationary distribution).
+
+                To calculate the average indicator at a given population state, this method needs to calculate the
+                cooperation rate for any possible group configuration and multiply it by the likelihood of the group
+                occurring at the given population state.
+
+                This version is only for 2-player games.
+
+                Parameters
+                ----------
+                pop_size : int
+                    Size of the population.
+                nb_strategies : int
+                    Number of strategies that can be assigned to players.
+                stationary_distribution : scipy.sparse.csr_matrix
+                    A sparse matrix which contains the stationary distribution (the frequency with which the evolutionary system visits each
+                    stationary state).
+                expected_indicator_matrix: numpy.ndarray
+                    A matrix containing the expected indicator of a strategy playing against another strategy
+
+                Returns
+                -------
+                float
+                    The expected indicator given the stationary distribution.
+
+                See Also
+                --------
+                egttools.numerical.calculate_state, egttools.numerical.sample_simplex,
+                egttools.numerical.calculate_nb_states, egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution,
+                egttools.numerical.calculate_nb_states, egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution_sparse
+                )pbdoc",
+          py::arg("pop_size"), py::arg("nb_strategies"), py::arg("stationary_distribution"), py::arg("expected_indicator_matrix"));
 
     m.def("replicator_equation", &egttools::infinite_populations::replicator_equation,
           py::arg("frequencies"), py::arg("payoff_matrix"),

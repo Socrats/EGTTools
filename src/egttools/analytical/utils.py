@@ -257,7 +257,6 @@ def find_roots_and_stability(gradient_function: Callable[[np.ndarray], np.ndarra
 
                     # now we check the stability of the roots using the jacobian
                     eigenvalues = eigvals(sol.fjac)
-                    print(eigenvalues)
                     # If all eigenvalues are negatives or zero it's stable
                     if (eigenvalues.real < -atol_neg).all() or np.array(
                             [np.isclose(el, 0., atol=atol_zero) for el in
