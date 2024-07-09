@@ -996,7 +996,7 @@ namespace egttools::FinitePopulations {
                 if (homogeneous) {
                     k = geometric(generator);
                     // Update state count by k steps
-                    sdist(static_cast<int64_t>(current_state)) += k + 1;
+                    sdist(static_cast<int64_t>(current_state)) += k;
                     mutate_(generator, birth, idx_homo);
 
                     strategies(static_cast<int64_t>(birth)) += 1;
@@ -1111,7 +1111,7 @@ namespace egttools::FinitePopulations {
                 if (homogeneous) {
                     k = geometric(generator);
                     // Update state count by k steps
-                    sdist.coeffRef(0, static_cast<signed long>(current_state)) += k + 1;
+                    sdist.coeffRef(0, static_cast<signed long>(current_state)) += k;
                     mutate_(generator, birth, idx_homo);
 
                     strategies(static_cast<int>(birth)) += 1;
