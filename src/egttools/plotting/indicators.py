@@ -134,9 +134,9 @@ def plot_gradients(gradients: numpy.ndarray, fig_title: Optional[str] = None,
 
     ax.plot(x_values, gradients, color=color, linewidth=linewidth_gradient, label=linelabel, zorder=1)
     if marker is not None:
-        [ ax.scatter(x_values[::marker_plot_freq], gradient[::marker_plot_freq], 
-marker=marker, s=marker_size, facecolors=marker_facecolor,
-			   edgecolors=marker_edgecolor, linewidths=marker_linewidth, zorder=1.5) for gradient in gradients.T]
+        [ax.scatter(x_values[::marker_plot_freq], gradient[::marker_plot_freq],
+                    marker=marker, s=marker_size, facecolors=marker_facecolor,
+                    edgecolors=marker_edgecolor, linewidths=marker_linewidth, zorder=1.5) for gradient in gradients.T]
     # if stability is given, draw the stable points and arrows
     if stability is not None:
         if roots is None:
@@ -476,4 +476,3 @@ def draw_invasion_diagram(strategies: List[str], drift: float, fixation_probabil
                     horizontalalignment='center', fontsize=font_size_sd_labels)
 
     return G
-

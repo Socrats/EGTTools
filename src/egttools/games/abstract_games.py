@@ -83,6 +83,7 @@ class AbstractNPlayerGameExpectedPayoff(AbstractNPlayerGame):
         return self.payoffs()
 
 
+# TODO: Move this to C++ to fix issues
 class AbstractTwoPLayerGame(AbstractGame):
     """
     This abstract Game class can be used in most scenarios where the fitness of a strategy is calculated as its
@@ -209,6 +210,7 @@ class AbstractTwoPLayerGame(AbstractGame):
     def nb_strategies(self) -> int:
         return self.nb_strategies_
 
+    @staticmethod
     def type(self) -> str:
         return "AbstractTwoPLayerGame"
 
