@@ -41,11 +41,11 @@ jobs:
             arch: x64
             release: true
             name-extra: ' (Release)'
-          - runs-on: macos-latest
+          - runs-on: macos-13
             python: 3.8
             arch: x64
             name-extra: ' No OpenMP'
-          - runs-on: macos-latest
+          - runs-on: macos-13
             python: 3.9
             arch: x64
             release: true
