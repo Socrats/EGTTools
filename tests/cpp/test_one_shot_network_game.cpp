@@ -2,10 +2,11 @@
 // Created by Elias Fernandez on 08/01/2023.
 //
 #include <egttools/Types.h>
-#include <egttools/finite_populations/games/OneShotCRDNetworkGame.hpp>
 
 #include <egttools/finite_populations/evolvers/GeneralPopulationEvolver.hpp>
+#include <egttools/finite_populations/games/OneShotCRDNetworkGame.hpp>
 #include <egttools/finite_populations/structure/Network.hpp>
+#include <iostream>
 
 using NodeDictionary = egttools::FinitePopulations::structure::NodeDictionary;
 using OneShotCRDNetworkGame = egttools::FinitePopulations::games::OneShotCRDNetworkGame;
