@@ -3,8 +3,8 @@
 //
 #include <egttools/finite_populations/games/Matrix2PlayerGameHolder.hpp>
 
-egttools::FinitePopulations::Matrix2PlayerGameHolder::Matrix2PlayerGameHolder(int nb_strategies, Matrix2D payoff_matrix) : nb_strategies_(nb_strategies),
-                                                                                                                           expected_payoffs_(payoff_matrix) {
+egttools::FinitePopulations::Matrix2PlayerGameHolder::Matrix2PlayerGameHolder(int nb_strategies, const Eigen::Ref<const egttools::Matrix2D> &payoff_matrix) : nb_strategies_(nb_strategies),
+                                                                                                                                                              expected_payoffs_(payoff_matrix) {
 
     if (payoff_matrix.rows() != payoff_matrix.cols()) {
         throw std::invalid_argument(

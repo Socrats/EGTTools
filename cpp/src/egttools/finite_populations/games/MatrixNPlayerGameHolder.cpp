@@ -5,9 +5,9 @@
 
 egttools::FinitePopulations::MatrixNPlayerGameHolder::MatrixNPlayerGameHolder(int nb_strategies,
                                                                               int group_size,
-                                                                              Matrix2D payoff_matrix) : nb_strategies_(nb_strategies),
-                                                                                                        group_size_(group_size),
-                                                                                                        expected_payoffs_(payoff_matrix) {
+                                                                              const Eigen::Ref<const egttools::Matrix2D> &payoff_matrix) : nb_strategies_(nb_strategies),
+                                                                                                                                           group_size_(group_size),
+                                                                                                                                           expected_payoffs_(payoff_matrix) {
 
     if (group_size <= 2) {
         throw std::invalid_argument(

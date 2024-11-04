@@ -32,7 +32,7 @@ namespace egttools::FinitePopulations {
          * @param payoff_matrix : matrix of shape (nb_strategies, nb_strategies) containing the payoffs
          *                        of each strategy against any other strategy.
          */
-        Matrix2PlayerGameHolder(int nb_strategies, Matrix2D payoff_matrix);
+        Matrix2PlayerGameHolder(int nb_strategies, const Eigen::Ref<const egttools::Matrix2D> &payoff_matrix);
 
         void play(const egttools::FinitePopulations::StrategyCounts &group_composition,
                   PayoffVector &game_payoffs) final;

@@ -50,7 +50,7 @@ void egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_
     Matrix2D fitnesses = Matrix2D::Zero(nb_strategies_, (population_size_ - 1) * nb_strategies_);
     int nb_elements = population_size_ - 2;
 
-#pragma omp parallel for default(none) shared(fitnesses, nb_strategies_, population_size_, game_, nb_elements)
+#pragma omp parallel for default(none) shared(fitnesses, nb_strategies_, population_size_, game_, nb_elements, Eigen::Dynamic)
     for (int i = 0; i < nb_strategies_; ++i) {
         VectorXui population_state = VectorXui::Zero(nb_strategies_);
         for (int j = i; j < nb_strategies_; ++j) {

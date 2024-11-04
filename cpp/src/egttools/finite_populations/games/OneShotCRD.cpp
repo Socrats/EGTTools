@@ -172,8 +172,8 @@ double egttools::FinitePopulations::OneShotCRD::calculate_group_achievement(size
                                                                             const Eigen::Ref<const egttools::Vector> &stationary_distribution) {
     double group_achievement = 0;
 
-#pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_) reduction(+ \
-                                                                                                           : group_achievement)
+#pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_, nb_group_compositions_, group_size_, group_achievement_, Eigen::Dynamic) reduction(+ : group_achievement)
+
     for (int64_t i = 0; i < stationary_distribution.size(); ++i) {
         VectorXui strategies = VectorXui::Zero(nb_strategies_);
         egttools::FinitePopulations::sample_simplex(i, pop_size, nb_strategies_, strategies);

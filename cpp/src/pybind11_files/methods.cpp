@@ -482,7 +482,7 @@ void init_methods(py::module_ &m) {
                     Also, for now it is not possible to update the game without having to instantiate PairwiseComparison
                     again. Hopefully, this will be fixed in the future.
                 )pbdoc",
-                 py::arg("population_size"), py::arg("game"), py::keep_alive<1, 2>())
+                 py::arg("population_size"), py::arg("game"), py::keep_alive<0, 2>())
             .def(py::init<int, egttools::FinitePopulations::AbstractGame &, size_t>(),
                  R"pbdoc(
                     A class containing methods to study analytically the evolutionary dynamics using the Pairwise comparison rule.
@@ -518,7 +518,7 @@ void init_methods(py::module_ &m) {
                     Also, for now it is not possible to update the game without having to instantiate PairwiseComparison
                     again. Hopefully, this will be fixed in the future.
                 )pbdoc",
-                 py::arg("population_size"), py::arg("game"), py::arg("cache_size"), py::keep_alive<1, 2>())
+                 py::arg("population_size"), py::arg("game"), py::arg("cache_size"), py::keep_alive<0, 2>())
             .def("pre_calculate_edge_fitnesses", &egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_edge_fitnesses,
                  "pre calculates the payoffs of the edges of the simplex.")
             .def("calculate_transition_matrix",
@@ -705,7 +705,7 @@ void init_methods(py::module_ &m) {
                     is only advisable for systems with a smaller number of states (i.e., not too big population size or number of strategies).
                     Otherwise, the calculations might require too much memory.
                 )pbdoc",
-                                      py::arg("pop_size"), py::arg("game"), py::arg("cache_size"), py::keep_alive<1, 3>())
+                                      py::arg("pop_size"), py::arg("game"), py::arg("cache_size"), py::keep_alive<0, 2>())
                                  .def("evolve",
                                       static_cast<egttools::VectorXui (PairwiseComparison::*)(size_t, double, double,
                                                                                               const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::evolve),

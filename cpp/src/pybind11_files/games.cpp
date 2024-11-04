@@ -358,7 +358,7 @@ void init_games(py::module_ &mGames) {
                     egttools.behaviors.NormalForm.TwoActions
                     )pbdoc",
                  py::arg("nb_rounds"),
-                 py::arg("payoff_matrix"), py::return_value_policy::reference_internal)
+                 py::arg("payoff_matrix"), py::return_value_policy::reference_internal, py::keep_alive<0, 2>())
             .def(py::init(&egttools::init_normal_form_game_from_python_list),
                  R"pbdoc(
                     Normal Form Game.
@@ -551,7 +551,7 @@ void init_games(py::module_ &mGames) {
                  py::arg("group_size"),
                  py::arg("risk"),
                  py::arg("enhancement_factor"),
-                 py::arg("strategies"), py::return_value_policy::reference_internal)
+                 py::arg("strategies"), py::return_value_policy::reference_internal, py::keep_alive<0, 7>())
             .def("play", &egttools::FinitePopulations::CRDGame::play,
                  R"pbdoc(
                     Updates the vector of payoffs with the payoffs of each player after playing the game.
@@ -721,7 +721,7 @@ void init_games(py::module_ &mGames) {
                  py::arg("group_size"),
                  py::arg("risk"),
                  py::arg("tu"),
-                 py::arg("strategies"), py::return_value_policy::reference_internal)
+                 py::arg("strategies"), py::return_value_policy::reference_internal, py::keep_alive<0, 7>())
             .def("play", &egttools::FinitePopulations::games::CRDGameTU::play,
                  R"pbdoc(
                     Plays the One-shop CRD and update the game_payoffs given the group_composition.
@@ -953,7 +953,7 @@ void init_games(py::module_ &mGames) {
                  "Saves the payoff matrix in a txt file.");
 
     py::class_<egttools::FinitePopulations::Matrix2PlayerGameHolder, egttools::FinitePopulations::AbstractGame>(mGames, "Matrix2PlayerGameHolder")
-            .def(py::init<int, egttools::Matrix2D>(),
+            .def(py::init<int, const Eigen::Ref<const egttools::Matrix2D> &>(),
                  R"pbdoc(
                     Holder class for 2-player games for which the expected payoff between strategies has already been calculated.
 
@@ -974,7 +974,7 @@ void init_games(py::module_ &mGames) {
                     egttools.games.AbstractGame
                     )pbdoc",
                  py::arg("nb_strategies"),
-                 py::arg("payoff_matrix"), py::return_value_policy::reference_internal)
+                 py::arg("payoff_matrix"), py::return_value_policy::reference_internal, py::keep_alive<0, 2>())
             .def("play", &egttools::FinitePopulations::Matrix2PlayerGameHolder::play,
                  R"pbdoc(
                     Plays the One-shop CRD and update the game_payoffs given the group_composition.
@@ -1041,7 +1041,7 @@ void init_games(py::module_ &mGames) {
                  "Saves the payoff matrix in a txt file.");
 
     py::class_<egttools::FinitePopulations::MatrixNPlayerGameHolder, egttools::FinitePopulations::AbstractGame>(mGames, "MatrixNPlayerGameHolder")
-            .def(py::init<int, int, egttools::Matrix2D>(),
+            .def(py::init<int, int, const Eigen::Ref<const egttools::Matrix2D> &>(),
                  R"pbdoc(
                     Holder class for N-player games for which the expected payoff between strategies has already been calculated.
 
@@ -1064,7 +1064,7 @@ void init_games(py::module_ &mGames) {
                     egttools.games.AbstractGame
                     )pbdoc",
                  py::arg("nb_strategies"), py::arg("group_size"),
-                 py::arg("payoff_matrix"), py::return_value_policy::reference_internal)
+                 py::arg("payoff_matrix"), py::return_value_policy::reference_internal, py::keep_alive<0, 3>())
             .def("play", &egttools::FinitePopulations::MatrixNPlayerGameHolder::play,
                  R"pbdoc(
                     Plays the One-shop CRD and update the game_payoffs given the group_composition.
@@ -1201,7 +1201,7 @@ void init_games(py::module_ &mGames) {
                     egttools.behaviors.NormalForm.TwoActions
                     )pbdoc",
                  py::arg("nb_rounds"),
-                 py::arg("payoff_matrix"), py::return_value_policy::reference_internal)
+                 py::arg("payoff_matrix"), py::return_value_policy::reference_internal, py::keep_alive<0, 2>())
             .def(py::init(&egttools::init_normal_form_network_game_from_python_list),
                  R"pbdoc(
                     Normal Form Network Game.
@@ -1223,7 +1223,7 @@ void init_games(py::module_ &mGames) {
                     egttools.games.AbstractGame
                     )pbdoc",
                  py::arg("nb_rounds"),
-                 py::arg("payoff_matrix"), py::arg("strategies"), py::return_value_policy::reference_internal)
+                 py::arg("payoff_matrix"), py::arg("strategies"), py::return_value_policy::reference_internal, py::keep_alive<0, 2>())
             .def("calculate_payoffs", &egttools::FinitePopulations::games::NormalFormNetworkGame::calculate_payoffs,
                  "calculates the expected payoff matrix.")
             .def("calculate_fitness", &egttools::FinitePopulations::games::NormalFormNetworkGame::calculate_fitness,
