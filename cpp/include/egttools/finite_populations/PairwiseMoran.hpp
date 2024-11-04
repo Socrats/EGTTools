@@ -406,7 +406,7 @@ namespace egttools::FinitePopulations {
 
         VectorXui strategies(_nb_strategies);
         // Initialise strategies from init_state
-        strategies.array() = init_state;
+        strategies.array() = init_state.eval();
 
         // Avg. number of rounds for a mutation to happen
         std::geometric_distribution<size_t> geometric(mu);
@@ -495,7 +495,7 @@ namespace egttools::FinitePopulations {
 
         VectorXui strategies(_nb_strategies);
         // Initialise strategies from init_state
-        strategies.array() = init_state;
+        strategies.array() = init_state.eval();
 
         // Avg. number of rounds for a mutation to happen
         std::geometric_distribution<size_t> geometric(mu);
@@ -550,8 +550,8 @@ namespace egttools::FinitePopulations {
         MatrixXui2D states = MatrixXui2D::Zero(nb_generations + 1, _nb_strategies);
         VectorXui strategies(_nb_strategies);
         // initialise initial state
-        states.row(0).array() = init_state;
-        strategies.array() = init_state;
+        states.row(0).array() = init_state.eval();
+        strategies.array() = init_state.eval();
 
         // Distribution number of generations for a mutation to happen
         std::geometric_distribution<int_fast64_t> geometric(mu);
@@ -637,7 +637,7 @@ namespace egttools::FinitePopulations {
         MatrixXui2D states = MatrixXui2D::Zero(total_counting_generations, _nb_strategies);
         VectorXui strategies(_nb_strategies);
         // initialise initial state
-        strategies.array() = init_state;
+        strategies.array() = init_state.eval();
 
         // Distribution number of generations for a mutation to happen
         std::geometric_distribution<int_fast64_t> geometric(mu);
@@ -745,7 +745,7 @@ namespace egttools::FinitePopulations {
         MatrixXui2D states = MatrixXui2D::Zero(total_counting_generations, _nb_strategies);
         // initialise initial state
         VectorXui strategies(_nb_strategies);
-        strategies.array() = init_state;
+        strategies.array() = init_state.eval();
 
         // Check if state is homogeneous
         auto [homogeneous, idx_homo] = _is_homogeneous(strategies);
@@ -808,8 +808,8 @@ namespace egttools::FinitePopulations {
         MatrixXui2D states = MatrixXui2D::Zero(nb_generations + 1, _nb_strategies);
         VectorXui strategies(_nb_strategies);
         // initialise initial state
-        states.row(0).array() = init_state;
-        strategies.array() = init_state;
+        states.row(0).array() = init_state.eval();
+        strategies.array() = init_state.eval();
 
         // Check if state is homogeneous
         auto [homogeneous, idx_homo] = _is_homogeneous(strategies);
