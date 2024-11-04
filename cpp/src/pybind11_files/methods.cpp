@@ -206,7 +206,7 @@ void init_methods(py::module_ &m) {
             egttools.numerical.calculate_state, egttools.numerical.calculate_nb_states
                     )pbdoc",
           py::arg("index"), py::arg("pop_size"),
-          py::arg("nb_strategies"));
+          py::arg("nb_strategies"), py::return_value_policy::move);
     m.def("sample_simplex_directly",
           &sample_simplex_directly,
           R"pbdoc(
@@ -231,7 +231,7 @@ void init_methods(py::module_ &m) {
                     egttools.numerical.calculate_state, egttools.numerical.calculate_nb_states, egttools.numerical.sample_simplex
                     )pbdoc",
           py::arg("nb_strategies"),
-          py::arg("pop_size"));
+          py::arg("pop_size"), py::return_value_policy::move);
     m.def("sample_unit_simplex",
           &sample_unit_simplex,
           R"pbdoc(
@@ -251,7 +251,7 @@ void init_methods(py::module_ &m) {
                     --------
                     egttools.numerical.calculate_state, egttools.numerical.calculate_nb_states, egttools.numerical.sample_simplex
                     )pbdoc",
-          py::arg("nb_strategies"));
+          py::arg("nb_strategies"), py::return_value_policy::move);
 
 #if (HAS_BOOST)
     m.def(
@@ -343,7 +343,7 @@ void init_methods(py::module_ &m) {
                 egttools.numerical.calculate_nb_states, egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution,
                 egttools.numerical.calculate_nb_states, egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution_sparse
                 )pbdoc",
-          py::arg("pop_size"), py::arg("nb_strategies"), py::arg("stationary_distribution"));
+          py::arg("pop_size"), py::arg("nb_strategies"), py::arg("stationary_distribution"), py::return_value_policy::move);
 
     m.def("replicator_equation", &egttools::infinite_populations::replicator_equation,
           py::arg("frequencies"), py::arg("payoff_matrix"),
