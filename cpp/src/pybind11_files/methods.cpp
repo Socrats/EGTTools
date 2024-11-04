@@ -967,7 +967,7 @@ void init_methods(py::module_ &m) {
                 )pbdoc",
                       py::arg("nb_generations"),
                       py::arg("beta"),
-                      py::arg("init_state"), py::return_value_policy::move, py::keep_alive<1, 4>());
+                      py::arg("init_state"), py::return_value_policy::move);
         pair_comp.def("run",
                       static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int_fast64_t, int_fast64_t, double, double,
                                                                                 const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
@@ -1007,7 +1007,7 @@ void init_methods(py::module_ &m) {
                       py::arg("transient"),
                       py::arg("beta"),
                       py::arg("mu"),
-                      py::arg("init_state"), py::return_value_policy::move, py::keep_alive<1, 6>());
+                      py::arg("init_state"), py::return_value_policy::move);
         pair_comp.def("run",
                       static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int_fast64_t, int_fast64_t, double,
                                                                                 const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
@@ -1046,7 +1046,7 @@ void init_methods(py::module_ &m) {
                       py::arg("nb_generations"),
                       py::arg("transient"),
                       py::arg("beta"),
-                      py::arg("init_state"), py::return_value_policy::move, py::keep_alive<1, 5>());
+                      py::arg("init_state"), py::return_value_policy::move);
         pair_comp.def("run",
                       static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int_fast64_t, double, double,
                                                                                 const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
@@ -1083,7 +1083,7 @@ void init_methods(py::module_ &m) {
                       py::arg("nb_generations"),
                       py::arg("beta"),
                       py::arg("mu"),
-                      py::arg("init_state"), py::return_value_policy::move, py::keep_alive<1, 5>());
+                      py::arg("init_state"), py::return_value_policy::move);
 
         options.enable_function_signatures();
     }
