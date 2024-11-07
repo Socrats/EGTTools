@@ -45,7 +45,7 @@ jobs:
             ./vcpkg_installed  # Cached path for packages
             ./vcpkg/buildtrees
             ./vcpkg/downloads
-          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}-v2
           restore-keys: |
             ${{ runner.os }}-vcpkg-
 
@@ -55,7 +55,7 @@ jobs:
 
       - name: Install dependencies with vcpkg
         run: |
-          ./vcpkg/vcpkg install
+          ./vcpkg/vcpkg install --clean-after-build
 
       - name: Install requirements
         run: |
