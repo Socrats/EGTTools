@@ -6,19 +6,19 @@
 egttools::FinitePopulations::evolvers::GeneralPopulationEvolver::GeneralPopulationEvolver(AbstractStructure &structure) : structure_(structure) {
 }
 
-egttools::VectorXui egttools::FinitePopulations::evolvers::GeneralPopulationEvolver::evolve(int_fast64_t nb_generations) {
+egttools::VectorXui egttools::FinitePopulations::evolvers::GeneralPopulationEvolver::evolve(int64_t nb_generations) {
     // First initialize the structure
     structure_.initialize();
 
     // Then iterate for all the generations and return the final mean state
-    for (int_fast64_t i = 0; i < nb_generations; ++i) {
+    for (int64_t i = 0; i < nb_generations; ++i) {
         structure_.update_population();
     }
 
     return structure_.mean_population_state();
 }
 
-egttools::MatrixXui2D egttools::FinitePopulations::evolvers::GeneralPopulationEvolver::run(int_fast64_t nb_generations, int_fast64_t transitory) {
+egttools::MatrixXui2D egttools::FinitePopulations::evolvers::GeneralPopulationEvolver::run(int64_t nb_generations, int64_t transitory) {
     if (nb_generations <= transitory)
         throw std::invalid_argument("The transitory period must be strictly smaller than the total number of generations.");
 
@@ -28,14 +28,14 @@ egttools::MatrixXui2D egttools::FinitePopulations::evolvers::GeneralPopulationEv
     // First initialize the structure
     structure_.initialize();
 
-    for (int_fast64_t i = 0; i < transitory; ++i) {
+    for (int64_t i = 0; i < transitory; ++i) {
         structure_.update_population();
     }
 
     results.row(0).array() = structure_.mean_population_state().array();
 
     // Then iterate for all the generations and return the final mean state
-    for (int_fast64_t i = 0; i < nb_generations - transitory; ++i) {
+    for (int64_t i = 0; i < nb_generations - transitory; ++i) {
         structure_.update_population();
         results.row(i).array() = structure_.mean_population_state().array();
     }

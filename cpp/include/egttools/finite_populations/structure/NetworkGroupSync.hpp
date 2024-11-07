@@ -189,7 +189,7 @@ namespace egttools::FinitePopulations::structure {
         // Finally we shuffle
         std::shuffle(population_.begin(), population_.end(), generator_);
 
-        for (int_fast64_t i = 0; i < population_size_; ++i) {
+        for (int64_t i = 0; i < population_size_; ++i) {
             population_new[i] = population_[i];
         }
     }

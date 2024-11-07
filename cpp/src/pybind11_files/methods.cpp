@@ -20,7 +20,7 @@
 
 
 using namespace egttools;
-using PairwiseComparison = egttools::FinitePopulations::PairwiseMoran<egttools::Utils::LRUCache<std::string, double>>;
+using PairwiseComparison = egttools::FinitePopulations::PairwiseMoran<egttools::Utils::ThreadSafeLRUCache<std::string, double>>;
 
 namespace egttools {
     egttools::VectorXli sample_simplex_directly(int64_t nb_strategies, int64_t pop_size) {
@@ -61,13 +61,11 @@ void init_methods(py::module_ &m) {
                             egttools.Random
                                 An instance of the random seed generator.
            )pbdoc")
-            .def_static(
-                    "init", [](unsigned long int seed) {
+            .def_static("init", [](unsigned long int seed) {
                         auto instance = std::unique_ptr<Random::SeedGenerator, py::nodelete>(&Random::SeedGenerator::getInstance());
                         instance->setMainSeed(seed);
-                        return instance;
-                    },
-                    R"pbdoc(
+                        return instance; },
+                        R"pbdoc(
                             This static method initializes the random seed generator from seed.
 
                             This static method initializes the random seed generator from seed
@@ -84,17 +82,10 @@ void init_methods(py::module_ &m) {
                             egttools.Random
                                 An instance of the random seed generator.
                     )pbdoc",
-                    py::arg("seed"))
-            .def_property_readonly_static(
-                    "_seed", [](const py::object &) {
-                        return egttools::Random::SeedGenerator::getInstance().getMainSeed();
-                    },
-                    "The initial seed of `egttools.Random`.")
-            .def_static(
-                    "generate", []() {
-                        return egttools::Random::SeedGenerator::getInstance().getSeed();
-                    },
-                    R"pbdoc(
+                        py::arg("seed"))
+            .def_property_readonly_static("_seed", [](const py::object &) { return egttools::Random::SeedGenerator::getInstance().getMainSeed(); }, "The initial seed of `egttools.Random`.")
+            .def_static("generate", []() { return egttools::Random::SeedGenerator::getInstance().getSeed(); },
+                        R"pbdoc(
                     Generates a random seed.
 
                     The generated seed can be used to seed other pseudo-random generators,
@@ -108,11 +99,8 @@ void init_methods(py::module_ &m) {
                     int
                         A random seed which can be used to seed new random generators.
                     )pbdoc")
-            .def_static(
-                    "seed", [](unsigned long int seed) {
-                        egttools::Random::SeedGenerator::getInstance().setMainSeed(seed);
-                    },
-                    R"pbdoc(
+            .def_static("seed", [](unsigned long int seed) { egttools::Random::SeedGenerator::getInstance().setMainSeed(seed); },
+                        R"pbdoc(
                     This static methods changes the seed of `egttools.Random`.
 
                     Parameters
@@ -121,7 +109,7 @@ void init_methods(py::module_ &m) {
                         The new seed for the `egttools.Random` module which is used to seed
                         every other pseudo-random generation in the `egttools` package.
                     )pbdoc",
-                    py::arg("seed"));
+                        py::arg("seed"));
 
     {
         py::options options;
@@ -707,8 +695,8 @@ void init_methods(py::module_ &m) {
                 )pbdoc",
                                       py::arg("pop_size"), py::arg("game"), py::arg("cache_size"), py::keep_alive<0, 2>())
                                  .def("evolve",
-                                      static_cast<egttools::VectorXui (PairwiseComparison::*)(size_t, double, double,
-                                                                                              const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::evolve),
+                                      static_cast<egttools::VectorXui (PairwiseComparison:: *)(size_t, double, double,
+                                                                                               const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::evolve),
                                       R"pbdoc(
                     Runs the moran process for a given number of generations.
 
@@ -936,9 +924,9 @@ void init_methods(py::module_ &m) {
         py::options options;
         options.disable_function_signatures();
 
-        pair_comp.def("run",
-                      static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int_fast64_t, double,
-                                                                                const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
+        pair_comp.def("run_without_mutation",
+                      static_cast<egttools::MatrixXui2D (PairwiseComparison:: *)(int64_t, double,
+                                                                                 const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
                       R"pbdoc(
                     Runs the evolutionary process and returns a matrix with all the states the system went through.
 
@@ -968,9 +956,48 @@ void init_methods(py::module_ &m) {
                       py::arg("nb_generations"),
                       py::arg("beta"),
                       py::arg("init_state"), py::return_value_policy::move);
-        pair_comp.def("run",
-                      static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int_fast64_t, int_fast64_t, double, double,
-                                                                                const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
+        pair_comp.def("run_without_mutation",
+                      static_cast<egttools::MatrixXui2D (PairwiseComparison:: *)(int64_t, int64_t, double,
+                                                                                 const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
+                      R"pbdoc(
+                    Runs the evolutionary process and returns a matrix with all the states the system went through.
+
+                    Mutation events will happen with rate :param mu, and the transient states will not be returned.
+
+                    Parameters
+                    ----------
+                    nb_generations : int
+                        Maximum number of generations.
+                    transient : int
+                        Transient period. Amount of generations that should not be skipped in the return vector.
+                    beta : float
+                        Intensity of selection.
+                    mu : float
+                        Mutation rate.
+                    init_state: numpy.ndarray
+                        Initial state of the population. This must be a vector of integers of shape (nb_strategies,),
+                        containing the counts of each strategy in the population. It serves as the initial state
+                        from which the evolutionary process will start.
+
+                    Returns
+                    -------
+                    numpy.ndarray
+                        A matrix containing all the states the system when through, including also the initial state.
+                        The shape of the matrix is (nb_generations - transient, nb_strategies).
+
+                    See Also
+                    --------
+                    egttools.numerical.PairwiseComparisonNumerical.evolve,
+                    egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution_sparse,
+                    egttools.numerical.PairwiseComparisonNumerical.estimate_strategy_distribution
+                )pbdoc",
+                      py::arg("nb_generations"),
+                      py::arg("transient"),
+                      py::arg("beta"),
+                      py::arg("init_state"), py::return_value_policy::move);
+        pair_comp.def("run_with_mutation",
+                      static_cast<egttools::MatrixXui2D (PairwiseComparison:: *)(int64_t, int64_t, double, double,
+                                                                                 const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
                       R"pbdoc(
                     Runs the evolutionary process and returns a matrix with all the states the system went through.
 
@@ -1008,48 +1035,9 @@ void init_methods(py::module_ &m) {
                       py::arg("beta"),
                       py::arg("mu"),
                       py::arg("init_state"), py::return_value_policy::move);
-        pair_comp.def("run",
-                      static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int_fast64_t, int_fast64_t, double,
-                                                                                const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
-                      R"pbdoc(
-                    Runs the evolutionary process and returns a matrix with all the states the system went through.
-
-                    Mutation events will happen with rate :param mu, and the transient states will not be returned.
-
-                    Parameters
-                    ----------
-                    nb_generations : int
-                        Maximum number of generations.
-                    transient : int
-                        Transient period. Amount of generations that should not be skipped in the return vector.
-                    beta : float
-                        Intensity of selection.
-                    mu : float
-                        Mutation rate.
-                    init_state: numpy.ndarray
-                        Initial state of the population. This must be a vector of integers of shape (nb_strategies,),
-                        containing the counts of each strategy in the population. It serves as the initial state
-                        from which the evolutionary process will start.
-
-                    Returns
-                    -------
-                    numpy.ndarray
-                        A matrix containing all the states the system when through, including also the initial state.
-                        The shape of the matrix is (nb_generations - transient, nb_strategies).
-
-                    See Also
-                    --------
-                    egttools.numerical.PairwiseComparisonNumerical.evolve,
-                    egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution_sparse,
-                    egttools.numerical.PairwiseComparisonNumerical.estimate_strategy_distribution
-                )pbdoc",
-                      py::arg("nb_generations"),
-                      py::arg("transient"),
-                      py::arg("beta"),
-                      py::arg("init_state"), py::return_value_policy::move);
-        pair_comp.def("run",
-                      static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(int_fast64_t, double, double,
-                                                                                const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
+        pair_comp.def("run_with_mutation",
+                      static_cast<egttools::MatrixXui2D (PairwiseComparison:: *)(int64_t, double, double,
+                                                                                 const Eigen::Ref<const egttools::VectorXui> &)>(&PairwiseComparison::run),
                       R"pbdoc(
                     Runs the evolutionary process and returns a matrix with all the states the system went through.
 
@@ -1084,6 +1072,9 @@ void init_methods(py::module_ &m) {
                       py::arg("beta"),
                       py::arg("mu"),
                       py::arg("init_state"), py::return_value_policy::move);
+        pair_comp.def("run", [](pybind11::object &self, py::args args) -> void {
+            PyErr_WarnEx(PyExc_DeprecationWarning, "DEPRECATED. Use run_without_mutation or run_with_mutation instead.", 1);
+        });
 
         options.enable_function_signatures();
     }
@@ -1156,7 +1147,7 @@ void init_methods(py::module_ &m) {
             .def("structure", &egttools::FinitePopulations::evolvers::GeneralPopulationEvolver::structure);
 
     py::class_<egttools::FinitePopulations::evolvers::NetworkEvolver>(m, "NetworkEvolver")
-            .def_static("evolve", static_cast<egttools::VectorXui (*)(int_fast64_t, egttools::FinitePopulations::structure::AbstractNetworkStructure &)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::evolve),
+            .def_static("evolve", static_cast<egttools::VectorXui (*)(int64_t, egttools::FinitePopulations::structure::AbstractNetworkStructure &)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::evolve),
                         py::arg("nb_generations"),
                         py::arg("network"),
                         py::return_value_policy::move,
@@ -1181,7 +1172,7 @@ void init_methods(py::module_ &m) {
                     --------
                     egttools.numerical.PairwiseComparisonNumerical.evolve
                 )pbdoc")
-            .def_static("evolve", static_cast<egttools::VectorXui (*)(int_fast64_t, egttools::VectorXui &, egttools::FinitePopulations::structure::AbstractNetworkStructure &)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::evolve),
+            .def_static("evolve", static_cast<egttools::VectorXui (*)(int64_t, egttools::VectorXui &, egttools::FinitePopulations::structure::AbstractNetworkStructure &)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::evolve),
                         py::arg("nb_generations"),
                         py::arg("initial_state"),
                         py::arg("network"),
@@ -1209,7 +1200,7 @@ void init_methods(py::module_ &m) {
                     --------
                     egttools.numerical.PairwiseComparisonNumerical.evolve
                 )pbdoc")
-            .def_static("run", static_cast<egttools::MatrixXui2D (*)(int_fast64_t, int_fast64_t, egttools::FinitePopulations::structure::AbstractNetworkStructure &)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::run),
+            .def_static("run", static_cast<egttools::MatrixXui2D (*)(int64_t, int64_t, egttools::FinitePopulations::structure::AbstractNetworkStructure &)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::run),
                         py::arg("nb_generations"),
                         py::arg("transitory"),
                         py::arg("network"),
@@ -1238,7 +1229,7 @@ void init_methods(py::module_ &m) {
                     --------
                     egttools.numerical.PairwiseComparisonNumerical.evolve
                 )pbdoc")
-            .def_static("run", static_cast<egttools::MatrixXui2D (*)(int_fast64_t, int_fast64_t, egttools::VectorXui &, egttools::FinitePopulations::structure::AbstractNetworkStructure &)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::run),
+            .def_static("run", static_cast<egttools::MatrixXui2D (*)(int64_t, int64_t, egttools::VectorXui &, egttools::FinitePopulations::structure::AbstractNetworkStructure &)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::run),
                         py::arg("nb_generations"),
                         py::arg("transitory"),
                         py::arg("initial_state"),
@@ -1270,7 +1261,7 @@ void init_methods(py::module_ &m) {
                     --------
                     egttools.numerical.PairwiseComparisonNumerical.evolve
                 )pbdoc")
-            .def_static("estimate_time_dependent_average_gradients_of_selection", static_cast<egttools::Matrix2D (*)(std::vector<VectorXui> &, int_fast64_t, int_fast64_t, int_fast64_t, egttools::FinitePopulations::structure::AbstractNetworkStructure &)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::estimate_time_dependent_average_gradients_of_selection),
+            .def_static("estimate_time_dependent_average_gradients_of_selection", static_cast<egttools::Matrix2D (*)(std::vector<VectorXui> &, int64_t, int64_t, int64_t, egttools::FinitePopulations::structure::AbstractNetworkStructure &)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::estimate_time_dependent_average_gradients_of_selection),
                         py::arg("states"), py::arg("nb_simulations"),
                         py::arg("generation_start"),
                         py::arg("generation_stop"),
@@ -1312,7 +1303,7 @@ void init_methods(py::module_ &m) {
                     --------
                     egttools.numerical.PairwiseComparisonNumerical.evolve
                 )pbdoc")
-            .def_static("estimate_time_dependent_average_gradients_of_selection", static_cast<egttools::Matrix2D (*)(std::vector<VectorXui> &, int_fast64_t, int_fast64_t, int_fast64_t, std::vector<egttools::FinitePopulations::structure::AbstractNetworkStructure *>)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::estimate_time_dependent_average_gradients_of_selection),
+            .def_static("estimate_time_dependent_average_gradients_of_selection", static_cast<egttools::Matrix2D (*)(std::vector<VectorXui> &, int64_t, int64_t, int64_t, std::vector<egttools::FinitePopulations::structure::AbstractNetworkStructure *>)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::estimate_time_dependent_average_gradients_of_selection),
                         py::arg("states"), py::arg("nb_simulations"),
                         py::arg("generation_start"),
                         py::arg("generation_stop"),
@@ -1355,7 +1346,7 @@ void init_methods(py::module_ &m) {
                     --------
                     egttools.numerical.PairwiseComparisonNumerical.evolve
                 )pbdoc")
-            .def_static("estimate_time_independent_average_gradients_of_selection", static_cast<egttools::Matrix2D (*)(std::vector<egttools::VectorXui> &states, int_fast64_t, int_fast64_t, egttools::FinitePopulations::structure::AbstractNetworkStructure &)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::estimate_time_independent_average_gradients_of_selection),
+            .def_static("estimate_time_independent_average_gradients_of_selection", static_cast<egttools::Matrix2D (*)(std::vector<egttools::VectorXui> &states, int64_t, int64_t, egttools::FinitePopulations::structure::AbstractNetworkStructure &)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::estimate_time_independent_average_gradients_of_selection),
                         py::arg("states"), py::arg("nb_simulations"),
                         py::arg("nb_generations"), py::arg("network"),
                         py::return_value_policy::move,
@@ -1398,7 +1389,7 @@ void init_methods(py::module_ &m) {
                     --------
                     egttools.numerical.PairwiseComparisonNumerical.evolve
                 )pbdoc")
-            .def_static("estimate_time_independent_average_gradients_of_selection", static_cast<egttools::Matrix2D (*)(std::vector<egttools::VectorXui> &states, int_fast64_t, int_fast64_t, std::vector<egttools::FinitePopulations::structure::AbstractNetworkStructure *>)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::estimate_time_independent_average_gradients_of_selection),
+            .def_static("estimate_time_independent_average_gradients_of_selection", static_cast<egttools::Matrix2D (*)(std::vector<egttools::VectorXui> &states, int64_t, int64_t, std::vector<egttools::FinitePopulations::structure::AbstractNetworkStructure *>)>(&egttools::FinitePopulations::evolvers::NetworkEvolver::estimate_time_independent_average_gradients_of_selection),
                         py::arg("states"), py::arg("nb_simulations"),
                         py::arg("nb_generations"), py::arg("networks"),
                         py::return_value_policy::move,

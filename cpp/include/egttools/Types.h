@@ -40,7 +40,7 @@ namespace egttools {
 
     using Vector = Eigen::Matrix<double, Eigen::Dynamic, 1>;
     using VectorXi = Eigen::Matrix<int, Eigen::Dynamic, 1>;
-    using VectorXli = Eigen::Matrix<int_fast64_t, Eigen::Dynamic, 1>;
+    using VectorXli = Eigen::Matrix<int64_t, Eigen::Dynamic, 1>;
     using VectorXui = Eigen::Matrix<size_t, Eigen::Dynamic, 1>;
     using SparseVectorXi = Eigen::SparseVector<int, Eigen::RowMajor>;
     using SparseVectorXui =  Eigen::SparseVector<size_t, Eigen::RowMajor>;
@@ -54,7 +54,7 @@ namespace egttools {
     using SparseMatrix2DXi = Eigen::SparseMatrix<long, Eigen::RowMajor, signed long>;
     using SparseMatrix2DXui = Eigen::SparseMatrix<size_t, Eigen::RowMajor, signed long>;
     using MatrixXui2D = Eigen::Matrix<size_t, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor | Eigen::AutoAlign>;
-    using MatrixXl2D = Eigen::Matrix<int_fast64_t, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor | Eigen::AutoAlign>;
+    using MatrixXl2D = Eigen::Matrix<int64_t, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor | Eigen::AutoAlign>;
 
     using Matrix3D       = std::vector<Matrix2D>;
     using SparseMatrix3D = std::vector<SparseMatrix2D>;

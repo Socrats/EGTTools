@@ -34,9 +34,9 @@ namespace egttools::FinitePopulations::evolvers {
          *
          * @return the final count of strategies in the population.
          */
-        static VectorXui evolve(int_fast64_t nb_generations, AbstractNetworkStructure &network);
+        static VectorXui evolve(int64_t nb_generations, AbstractNetworkStructure &network);
 
-        static VectorXui evolve(int_fast64_t nb_generations, VectorXui &initial_state, AbstractNetworkStructure &network);
+        static VectorXui evolve(int64_t nb_generations, VectorXui &initial_state, AbstractNetworkStructure &network);
 
         /**
          * Evolves the population in structure for `nb_generations` and returns all states.
@@ -50,9 +50,9 @@ namespace egttools::FinitePopulations::evolvers {
          *
          * @return the count of strategies of the population for every generation after `transitory`.
          */
-        static MatrixXui2D run(int_fast64_t nb_generations, int_fast64_t transitory, AbstractNetworkStructure &network);
+        static MatrixXui2D run(int64_t nb_generations, int64_t transitory, AbstractNetworkStructure &network);
 
-        static MatrixXui2D run(int_fast64_t nb_generations, int_fast64_t transitory, VectorXui &initial_state, AbstractNetworkStructure &network);
+        static MatrixXui2D run(int64_t nb_generations, int64_t transitory, VectorXui &initial_state, AbstractNetworkStructure &network);
 
 
         /**
@@ -73,8 +73,8 @@ namespace egttools::FinitePopulations::evolvers {
          * @param network : the network to evolve
          * @return the time-dependent average gradient of selection
          */
-        static Matrix2D estimate_time_dependent_average_gradients_of_selection(std::vector<VectorXui> &states, int_fast64_t nb_simulations,
-                                                                               int_fast64_t generation_start, int_fast64_t generation_stop,
+        static Matrix2D estimate_time_dependent_average_gradients_of_selection(std::vector<VectorXui> &states, int64_t nb_simulations,
+                                                                               int64_t generation_start, int64_t generation_stop,
                                                                                AbstractNetworkStructure &network);
 
         /**
@@ -96,8 +96,8 @@ namespace egttools::FinitePopulations::evolvers {
          * @param networks : a vector containing shared pointers to the networks to use
          * @return the time-dependent average gradient of selection
          */
-        static Matrix2D estimate_time_dependent_average_gradients_of_selection(std::vector<VectorXui> &states, int_fast64_t nb_simulations,
-                                                                               int_fast64_t generation_start, int_fast64_t generation_stop,
+        static Matrix2D estimate_time_dependent_average_gradients_of_selection(std::vector<VectorXui> &states, int64_t nb_simulations,
+                                                                               int64_t generation_start, int64_t generation_stop,
                                                                                std::vector<AbstractNetworkStructure *> networks);
 
         /**
@@ -124,8 +124,8 @@ namespace egttools::FinitePopulations::evolvers {
          * @return The average gradient of selection for each possible population state.
          */
         static Matrix2D estimate_time_independent_average_gradients_of_selection(std::vector<VectorXui> &initial_states,
-                                                                                 int_fast64_t nb_simulations,
-                                                                                 int_fast64_t nb_generations,
+                                                                                 int64_t nb_simulations,
+                                                                                 int64_t nb_generations,
                                                                                  AbstractNetworkStructure &network);
 
         /**
@@ -152,8 +152,8 @@ namespace egttools::FinitePopulations::evolvers {
          * @return The average gradient of selection for each possible population state.
          */
         static Matrix2D estimate_time_independent_average_gradients_of_selection(std::vector<VectorXui> &initial_states,
-                                                                                 int_fast64_t nb_simulations,
-                                                                                 int_fast64_t nb_generations,
+                                                                                 int64_t nb_simulations,
+                                                                                 int64_t nb_generations,
                                                                                  std::vector<AbstractNetworkStructure *> networks);
     };
 }// namespace egttools::FinitePopulations::evolvers

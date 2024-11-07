@@ -121,3 +121,6 @@ target_link_libraries(testNetworkEvolver egttoolsNumerical)
 
 add_executable(testFixations cpp/test_calculate_fixation_probabilities.cpp)
 target_link_libraries(testFixations egttoolsNumerical)
+
+add_executable(testTSLRUCache cpp/test_thread_safe_lru_cache.cpp)
+target_link_libraries(testTSLRUCache egttoolsNumerical)

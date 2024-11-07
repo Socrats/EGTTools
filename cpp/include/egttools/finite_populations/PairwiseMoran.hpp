@@ -19,14 +19,21 @@
 #ifndef EGTTOOLS_FINITEPOPULATIONS_PAIRWISEMORAN_HPP
 #define EGTTOOLS_FINITEPOPULATIONS_PAIRWISEMORAN_HPP
 
+#include <egttools/Distributions.h>
 #include <egttools/SeedGenerator.h>
 #include <egttools/Types.h>
-#include <egttools/Distributions.h>
 
-#include <egttools/LruCache.hpp>
+#include <algorithm>
+#include <chrono>
 #include <egttools/finite_populations/Utils.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
+#include <egttools/utils/ThreadSafeLRUCache.hpp>
+#include <limits>
+#include <memory>
+#include <optional>
+#include <random>
 #include <stdexcept>
+#include <vector>
 
 #if defined(_OPENMP)
 #include <egttools/OpenMPUtils.hpp>
@@ -39,7 +46,7 @@ namespace egttools::FinitePopulations {
         *
         * @tparam Cache
         */
-    template<class Cache = egttools::Utils::LRUCache<std::string, double>>
+    template<class Cache = egttools::Utils::ThreadSafeLRUCache<std::string, double>>
     class PairwiseMoran {
     public:
         /**
@@ -112,7 +119,7 @@ namespace egttools::FinitePopulations {
          * @param init_state : initial state of the population
          * @return a matrix with all the states the system went through during the simulation
          */
-        MatrixXui2D run(int_fast64_t nb_generations, double beta, const Eigen::Ref<const VectorXui> &init_state);
+        MatrixXui2D run(int64_t nb_generations, double beta, const Eigen::Ref<const VectorXui> &init_state);
 
         /**
          * @brief Runs a moran process with social imitation
@@ -126,7 +133,7 @@ namespace egttools::FinitePopulations {
          * @param init_state : initial state of the population
          * @return a matrix with all the states the system went through during the simulation
          */
-        MatrixXui2D run(int_fast64_t nb_generations, double beta, double mu, const Eigen::Ref<const VectorXui> &init_state);
+        MatrixXui2D run(int64_t nb_generations, double beta, double mu, const Eigen::Ref<const VectorXui> &init_state);
 
         /**
          * @brief Runs a moran process with social imitation
@@ -141,7 +148,7 @@ namespace egttools::FinitePopulations {
          * @param init_state : initial state of the population
          * @return a matrix with all the states the system went through during the simulation
          */
-        MatrixXui2D run(int_fast64_t nb_generations, int_fast64_t transient, double beta, const Eigen::Ref<const VectorXui> &init_state);
+        MatrixXui2D run(int64_t nb_generations, int64_t transient, double beta, const Eigen::Ref<const VectorXui> &init_state);
 
         /**
          * @brief Runs a moran process with social imitation
@@ -157,7 +164,7 @@ namespace egttools::FinitePopulations {
          * @param init_state : initial state of the population
          * @return a matrix with all the states the system went through during the simulation
          */
-        MatrixXui2D run(int_fast64_t nb_generations, int_fast64_t transient, double beta, double mu, const Eigen::Ref<const VectorXui> &init_state);
+        MatrixXui2D run(int64_t nb_generations, int64_t transient, double beta, double mu, const Eigen::Ref<const VectorXui> &init_state);
 
         /**
          * @brieff Estimates the gradient of selection between 2 strategies.
@@ -525,7 +532,7 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    MatrixXui2D PairwiseMoran<Cache>::run(int_fast64_t nb_generations, double beta, double mu,
+    MatrixXui2D PairwiseMoran<Cache>::run(int64_t nb_generations, double beta, double mu,
                                           const Eigen::Ref<const VectorXui> &init_state) {
 
 
@@ -554,7 +561,7 @@ namespace egttools::FinitePopulations {
         strategies.array() = init_state.eval();
 
         // Distribution number of generations for a mutation to happen
-        std::geometric_distribution<int_fast64_t> geometric(mu);
+        std::geometric_distribution<int64_t> geometric(mu);
 
         // Check if state is homogeneous
         auto [homogeneous, idx_homo] = _is_homogeneous(strategies);
@@ -564,18 +571,18 @@ namespace egttools::FinitePopulations {
         int k;
 
         // Imitation process
-        for (int_fast64_t  j = 1; j < nb_generations + 1; ++j) {
+        for (int64_t j = 1; j < nb_generations + 1; ++j) {
             // Update with mutation and return how many steps should be added to the current
             // generation if the only change in the population could have been a mutation
             if (homogeneous) {
                 k = geometric(_mt);
                 // Update states matrix
                 if (k == 0) states.row(j) = strategies;
-                else if ((j + k) <= nb_generations) {
-                    for (int_fast64_t  z = j; z <= j + k; ++z)
+                else if ((j + k) < nb_generations + 1) {
+                    for (int64_t z = j; z <= j + k; ++z)
                         states.row(z).array() = strategies;
                 } else {
-                    for (int_fast64_t  z = j; z <= nb_generations; ++z)
+                    for (int64_t z = j; z < nb_generations + 1; ++z)
                         states.row(z).array() = strategies;
                 }
 
@@ -590,7 +597,7 @@ namespace egttools::FinitePopulations {
                 // Update state count by k steps
                 j += k + 1;
                 // Update state after mutation
-                if (j <= nb_generations)
+                if (j < nb_generations + 1)
                     states.row(j).array() = strategies;
             } else {
                 // First we pick 2 players randomly
@@ -607,7 +614,7 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    MatrixXui2D PairwiseMoran<Cache>::run(int_fast64_t nb_generations, int_fast64_t transient, double beta, double mu,
+    MatrixXui2D PairwiseMoran<Cache>::run(int64_t nb_generations, int64_t transient, double beta, double mu,
                                           const Eigen::Ref<const VectorXui> &init_state) {
 
         if (mu <= 0) {
@@ -640,7 +647,7 @@ namespace egttools::FinitePopulations {
         strategies.array() = init_state.eval();
 
         // Distribution number of generations for a mutation to happen
-        std::geometric_distribution<int_fast64_t> geometric(mu);
+        std::geometric_distribution<int64_t> geometric(mu);
 
         // Check if state is homogeneous
         auto [homogeneous, idx_homo] = _is_homogeneous(strategies);
@@ -649,7 +656,7 @@ namespace egttools::FinitePopulations {
         Cache cache(_cache_size);
         int k;
 
-        for (int_fast64_t  j = 0; j < transient; ++j) {
+        for (int64_t j = 0; j < transient; ++j) {
             // Update with mutation and return how many steps should be added to the current
             // generation if the only change in the population could have been a mutation
             if (homogeneous) {
@@ -676,7 +683,7 @@ namespace egttools::FinitePopulations {
         }
 
         // Imitation process
-        for (int_fast64_t  j = 0; j < total_counting_generations; ++j) {
+        for (int64_t j = 0; j < total_counting_generations; ++j) {
             // Update with mutation and return how many steps should be added to the current
             // generation if the only change in the population could have been a mutation
             if (homogeneous) {
@@ -684,10 +691,10 @@ namespace egttools::FinitePopulations {
                 // Update states matrix
                 if (k == 0) states.row(j) = strategies;
                 else if ((j + k) < total_counting_generations) {
-                    for (int_fast64_t  z = j; z <= j + k; ++z)
+                    for (int64_t z = j; z <= j + k; ++z)
                         states.row(z).array() = strategies;
                 } else {
-                    for (int_fast64_t  z = j; z < total_counting_generations; ++z)
+                    for (int64_t z = j; z < total_counting_generations; ++z)
                         states.row(z).array() = strategies;
                 }
 
@@ -721,7 +728,7 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    MatrixXui2D PairwiseMoran<Cache>::run(int_fast64_t nb_generations, int_fast64_t transient, double beta,
+    MatrixXui2D PairwiseMoran<Cache>::run(int64_t nb_generations, int64_t transient, double beta,
                                           const Eigen::Ref<const VectorXui> &init_state) {
 
         // Check that there is the length of init_state is the same as the number of strategies
@@ -760,25 +767,25 @@ namespace egttools::FinitePopulations {
         // Creates a cache for the fitness data
         Cache cache(_cache_size);
 
-        for (int_fast64_t  j = 0; j < transient; ++j) {
+        for (int64_t j = 0; j < transient; ++j) {
             // First we pick 2 players randomly
             _sample_players(strategy_p1, strategy_p2, strategies, _mt);
 
             if (_update_step(strategy_p1, strategy_p2, beta,
                              birth, die, strategies, cache, _mt)) {
-                for (int_fast64_t  z = 0; z < total_counting_generations; ++z)
+                for (int64_t z = 0; z < total_counting_generations; ++z)
                     states(z, birth) = strategies(birth);
                 return states;
             }
         }
 
-        for (int_fast64_t  j = 0; j < total_counting_generations; ++j) {
+        for (int64_t j = 0; j < total_counting_generations; ++j) {
             // First we pick 2 players randomly
             _sample_players(strategy_p1, strategy_p2, strategies, _mt);
 
             if (_update_step(strategy_p1, strategy_p2, beta,
                              birth, die, strategies, cache, _mt)) {
-                for (int_fast64_t  z = j; z < total_counting_generations; ++z)
+                for (int64_t z = j; z < total_counting_generations; ++z)
                     states(z, birth) = strategies(birth);
                 break;
             }
@@ -790,7 +797,7 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    MatrixXui2D PairwiseMoran<Cache>::run(int_fast64_t nb_generations, double beta,
+    MatrixXui2D PairwiseMoran<Cache>::run(int64_t nb_generations, double beta,
                                           const Eigen::Ref<const VectorXui> &init_state) {
 
         // Check that there is the length of init_state is the same as the number of strategies
@@ -824,13 +831,13 @@ namespace egttools::FinitePopulations {
         // Creates a cache for the fitness data
         Cache cache(_cache_size);
 
-        for (int_fast64_t  j = current_generation; j <= nb_generations; ++j) {
+        for (int64_t j = current_generation; j <= nb_generations; ++j) {
             // First we pick 2 players randomly
             _sample_players(strategy_p1, strategy_p2, strategies, _mt);
 
             if (_update_step(strategy_p1, strategy_p2, beta,
                              birth, die, strategies, cache, _mt)) {
-                for (int_fast64_t  z = j; z <= nb_generations; ++z)
+                for (int64_t z = j; z <= nb_generations; ++z)
                     states(z, birth) = strategies(birth);
                 break;
             }
@@ -855,8 +862,7 @@ namespace egttools::FinitePopulations {
         long int r2r = 0;// resident to resident count
 
         // This loop can be done in parallel
-#pragma omp parallel for reduction(+ \
-                                   : r2m, r2r) default(none) shared(resident, invader, runs, nb_generations, beta)
+#pragma omp parallel for reduction(+ : r2m, r2r) default(none) shared(resident, invader, runs, nb_generations, beta)
         for (size_t i = 0; i < runs; ++i) {
             // Random generators - each thread should have its own generator
             std::mt19937_64 generator(egttools::Random::SeedGenerator::getInstance().getSeed());
@@ -891,9 +897,8 @@ namespace egttools::FinitePopulations {
         VectorXi t_minus = VectorXi::Zero(_pop_size + 1);
 
 // This loop can be done in parallel
-#pragma omp parallel for reduction(+                                                                \
-                                   : t_plus, t_minus) default(none) shared(invader, resident, runs, \
-                                                                           _pop_size, _nb_strategies)
+#pragma omp parallel for reduction(+ : t_plus, t_minus) default(none) shared(invader, resident, runs, \
+                                                                                     _pop_size, _nb_strategies)
         for (size_t run = 0; run < runs; ++run) {
             for (size_t k = 1; k < _pop_size; ++k) {// Loops over all population configurations
                 // Random generators - each thread should have its own generator
@@ -945,8 +950,10 @@ namespace egttools::FinitePopulations {
         // Distribution number of generations for a mutation to happen
         std::geometric_distribution<size_t> geometric(mu);
 
-#pragma omp parallel for reduction(+ \
-                                   : sdist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu)
+        // Creates a cache for the fitness data
+        Cache cache(_cache_size);
+
+#pragma omp parallel for reduction(+ : sdist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu, cache)
         for (size_t i = 0; i < nb_runs; ++i) {
             // Random generators - each thread should have its own generator
             std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
@@ -968,8 +975,6 @@ namespace egttools::FinitePopulations {
                 homogeneous = false;
             }
 
-            // Creates a cache for the fitness data
-            Cache cache(_cache_size);
             size_t k, j;
 
             // First we run the simulations for a @param transitory number of generations
@@ -1060,8 +1065,10 @@ namespace egttools::FinitePopulations {
         // Distribution number of generations for a mutation to happen
         std::geometric_distribution<size_t> geometric(mu);
 
-#pragma omp parallel for reduction(+ \
-                                   : sdist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu)
+        // Creates a cache for the fitness data
+        Cache cache(_cache_size);
+
+#pragma omp parallel for reduction(+ : sdist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu, cache)
         for (size_t i = 0; i < nb_runs; ++i) {
             // Random generators - each thread should have its own generator
             std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
@@ -1083,8 +1090,6 @@ namespace egttools::FinitePopulations {
                 homogeneous = false;
             }
 
-            // Creates a cache for the fitness data
-            Cache cache(_cache_size);
             size_t k, j;
 
             // First we run the simulations for a @param transitory number of generations
@@ -1177,8 +1182,7 @@ namespace egttools::FinitePopulations {
         // Distribution number of generations for a mutation to happen
         std::geometric_distribution<size_t> geometric(mu);
 
-#pragma omp parallel for reduction(+ \
-                                   : strategy_dist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu)
+#pragma omp parallel for reduction(+ : strategy_dist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu)
         for (size_t i = 0; i < nb_runs; ++i) {
 
             // Random generators - each thread should have its own generator
@@ -1473,15 +1477,15 @@ namespace egttools::FinitePopulations {
         std::string key = std::to_string(player_type) + result.str();
 
         // First we check if fitness value is in the lookup table
-        if (!cache.exists(key)) {
+        if (auto value = cache.get(key); value) {
+            fitness = *value;
+        } else {
             strategies(player_type) -= 1;
             fitness = _game.calculate_fitness(player_type, _pop_size, strategies);
             strategies(player_type) += 1;
 
             // Finally we store the new fitness in the Cache. We also keep a Cache for the payoff given each group combination
-            cache.insert(key, fitness);
-        } else {
-            fitness = cache.get(key);
+            cache.put(key, fitness);
         }
 
         return fitness;

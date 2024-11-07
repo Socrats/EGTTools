@@ -8,7 +8,6 @@
 #include <egttools/SeedGenerator.h>
 #include <egttools/utils/CalculateExpectedIndicators.h>
 
-#include <egttools/LruCache.hpp>
 #include <egttools/finite_populations/PairwiseMoran.hpp>
 #include <egttools/finite_populations/analytical/PairwiseComparison.hpp>
 #include <egttools/finite_populations/evolvers/GeneralPopulationEvolver.hpp>
@@ -16,7 +15,10 @@
 #include <egttools/finite_populations/structure/AbstractNetworkStructure.hpp>
 #include <egttools/finite_populations/structure/AbstractStructure.hpp>
 #include <egttools/infinite_populations/ReplicatorDynamics.hpp>
+#include <egttools/utils/ThreadSafeLRUCache.hpp>
 #include <memory>
+#include <optional>
+#include <string>
 
 #include "egttools_common.hpp"
 
