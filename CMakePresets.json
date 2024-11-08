@@ -17,21 +17,21 @@
   ],
   "buildPresets": [
     {
-      "name": "ninja-vcpkg-debug",
+      "name": "debug",
       "configurePreset": "ninja-multi-vcpkg",
       "displayName": "Build (Debug)",
       "description": "Build with Ninja/vcpkg (Debug)",
       "configuration": "Debug"
     },
     {
-      "name": "ninja-vcpkg-release",
+      "name": "release",
       "configurePreset": "ninja-multi-vcpkg",
       "displayName": "Build (Release)",
       "description": "Build with Ninja/vcpkg (Release)",
       "configuration": "Release"
     },
     {
-      "name": "ninja-vcpkg",
+      "name": "default",
       "configurePreset": "ninja-multi-vcpkg",
       "displayName": "Build",
       "description": "Build with Ninja/vcpkg"

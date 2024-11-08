@@ -38,7 +38,10 @@ jobs:
         with:
           python-version: '3.12'
 
-      - uses: lukka/get-cmake@latest
+      - name: Setup cmake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '3.27.x'
 
       - name: Restore from cache and setup vcpkg executable and data files.
         uses: lukka/run-vcpkg@v11
@@ -52,11 +55,8 @@ jobs:
       #   testPreset: 'ninja-vcpkg'
       #   testPresetAdditionalArgs: "[`--config`, `Release`]"
       - name: Run CMake+vcpkg+Ninja+CTest to build packages and generate/build/test the code.
-        uses: lukka/run-cmake@v10
-        with:
-          configurePreset: 'ninja-multi-vcpkg'
-          buildPreset: 'ninja-vcpkg-release'
-          testPreset: 'test-release'
+        run: |
+          cmake --build --preset release
 
       - name: Install requirements
         run: |
