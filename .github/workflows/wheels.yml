@@ -56,6 +56,10 @@ jobs:
       #   testPresetAdditionalArgs: "[`--config`, `Release`]"
       - name: Run CMake+vcpkg+Ninja+CTest to build packages and generate/build/test the code.
         run: |
+          mkdir -p build
+          cd build
+          mkdir -p release
+          cd release
           cmake --build --preset release
 
       - name: Install requirements
