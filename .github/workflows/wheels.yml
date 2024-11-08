@@ -14,7 +14,7 @@ on:
       - stable
       - actions*
       - docs
-      - patch_openmp_segfault
+      - fix-*
     tags:
       - v*
 
@@ -25,37 +25,37 @@ jobs:
     if: startsWith(github.ref, 'refs/heads/docs') != true
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
+
+      - uses: lukka/get-cmake@latest
+
+      - name: Restore from cache and setup vcpkg executable and data files.
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgJsonGlob: 'vcpkg.json'
 
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v2.0
 
-      - name: Setup cache for vcpkg
-        id: cache-vcpkg
-        uses: actions/cache@v3
+      # Note: if the preset misses the "configuration", it is possible to explicitly select the
+      # configuration with the additional `--config` flag, e.g.:
+      #   buildPreset: 'ninja-vcpkg'
+      #   buildPresetAdditionalArgs: "[`--config`, `Release`]"
+      #   testPreset: 'ninja-vcpkg'
+      #   testPresetAdditionalArgs: "[`--config`, `Release`]"
+      - name: Run CMake+vcpkg+Ninja+CTest to build packages and generate/build/test the code.
+        uses: lukka/run-cmake@v11
         with:
-          path: |
-            ./vcpkg_installed  # Cached path for packages
-            ./vcpkg/buildtrees
-            ./vcpkg/downloads
-          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}-v2
-          restore-keys: |
-            ${{ runner.os }}-vcpkg-
-
-      - name: Bootstrap vcpkg
-        run: |
-          ./vcpkg/bootstrap-vcpkg.sh
-
-      - name: Install dependencies with vcpkg
-        run: |
-          ./vcpkg/vcpkg install --clean-after-build
+          configurePreset: 'ninja-multi-vcpkg'
+          buildPreset: 'ninja-vcpkg-release'
+          testPreset: 'test-release'
 
       - name: Install requirements
         run: |
