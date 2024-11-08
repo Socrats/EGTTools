@@ -29,7 +29,7 @@
     {
       "name": "release",
       "inherits": "default",
-      "binaryDir": "${sourceDir}/builds/release",
+      "binaryDir": "${sourceDir}/builds/release"
     }
   ],
   "buildPresets": [
