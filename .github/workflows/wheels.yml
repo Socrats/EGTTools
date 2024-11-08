@@ -43,10 +43,26 @@ jobs:
         with:
           cmake-version: '3.27.x'
 
-      - name: Restore from cache and setup vcpkg executable and data files.
-        uses: lukka/run-vcpkg@v11
+      - name: Setup cache for vcpkg
+        id: cache-vcpkg
+        uses: actions/cache@v3
         with:
-          vcpkgJsonGlob: 'vcpkg.json'
+          path: |
+            ./vcpkg_installed  # Cached path for packages
+            ./vcpkg/buildtrees
+            ./vcpkg/downloads
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-
+
+      - name: Bootstrap vcpkg
+        run: |
+          ./vcpkg/bootstrap-vcpkg.sh
+
+      - name: Install dependencies with vcpkg
+        run: |
+          ./vcpkg/vcpkg install --clean-after-build
+          ./vcpkg/vcpkg install --json vcpkg.json  
 
       # Note: if the preset misses the "configuration", it is possible to explicitly select the
       # configuration with the additional `--config` flag, e.g.:
@@ -54,10 +70,10 @@ jobs:
       #   buildPresetAdditionalArgs: "[`--config`, `Release`]"
       #   testPreset: 'ninja-vcpkg'
       #   testPresetAdditionalArgs: "[`--config`, `Release`]"
-      - name: Run CMake+vcpkg+Ninja+CTest to build packages and generate/build/test the code.
-        run: |
-          mkdir -p builds/release
-          cmake --build --preset release
+#      - name: Run CMake+vcpkg+Ninja+CTest to build packages and generate/build/test the code.
+#        run: |
+#          mkdir -p builds/release
+#          cmake --build --preset release
 
       - name: Install requirements
         run: |
