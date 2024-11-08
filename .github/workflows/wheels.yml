@@ -51,7 +51,7 @@ jobs:
       #   testPreset: 'ninja-vcpkg'
       #   testPresetAdditionalArgs: "[`--config`, `Release`]"
       - name: Run CMake+vcpkg+Ninja+CTest to build packages and generate/build/test the code.
-        uses: lukka/run-cmake@v11
+        uses: lukka/run-cmake@v10
         with:
           configurePreset: 'ninja-multi-vcpkg'
           buildPreset: 'ninja-vcpkg-release'
