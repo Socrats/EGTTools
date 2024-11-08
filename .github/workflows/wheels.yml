@@ -14,7 +14,7 @@ on:
       - stable
       - actions*
       - docs
-      - patch_openmp_segfault
+      - fix_*
     tags:
       - v*
 
@@ -25,27 +25,29 @@ jobs:
     if: startsWith(github.ref, 'refs/heads/docs') != true
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          submodules: recursive
+          submodules: 'recursive'
 
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v2.0
+        with:
+          cmake-version: '3.27.x'
 
       - name: Setup cache for vcpkg
         id: cache-vcpkg
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ./vcpkg_installed  # Cached path for packages
             ./vcpkg/buildtrees
             ./vcpkg/downloads
-          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}-v2
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
           restore-keys: |
             ${{ runner.os }}-vcpkg-
 
@@ -54,6 +56,7 @@ jobs:
           ./vcpkg/bootstrap-vcpkg.sh
 
       - name: Install dependencies with vcpkg
+
         run: |
           ./vcpkg/vcpkg install --clean-after-build
 
@@ -105,7 +108,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -117,16 +120,18 @@ jobs:
 
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v2.0
+        with:
+          cmake-version: '3.27.x'
 
       - name: Setup cache for vcpkg
         id: cache-vcpkg
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ./vcpkg_installed  # Cached path for packages
             ./vcpkg/buildtrees
             ./vcpkg/downloads
-          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}-v2
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
           restore-keys: |
             ${{ runner.os }}-vcpkg-
 

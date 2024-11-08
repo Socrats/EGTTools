@@ -118,3 +118,6 @@ venv.bak/
 
 # skbuild stuff
 _skbuild
+
+# cmake stuff
+CMakeUserPresets.json

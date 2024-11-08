@@ -1,6 +1,6 @@
 {
   "name" : "egttools",
-  "version-string" : "0.1.13.2",
+  "version-string" : "latest",
   "builtin-baseline" : "c65198892b732f3f00712ce8bd56cc9297d110d5",
   "dependencies" : [ {
     "name" : "boost",
