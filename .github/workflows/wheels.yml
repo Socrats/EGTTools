@@ -14,7 +14,7 @@ on:
       - stable
       - actions*
       - docs
-      - fix-*
+      - fix_*
     tags:
       - v*
 
