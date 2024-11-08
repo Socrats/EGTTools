@@ -59,24 +59,6 @@
       "name": "test-ninja-vcpkg",
       "configurePreset": "default",
       "hidden": true
-    },
-    {
-      "name": "test-debug",
-      "description": "Test (Debug)",
-      "displayName": "Test (Debug)",
-      "configuration": "Debug",
-      "inherits": [
-        "debug"
-      ]
-    },
-    {
-      "name": "test-release",
-      "description": "Test (Release)",
-      "displayName": "Test (Release)",
-      "configuration": "Release",
-      "inherits": [
-        "release"
-      ]
     }
   ]
 }
