@@ -45,7 +45,7 @@ jobs:
             ./vcpkg_installed  # Cached path for packages
             ./vcpkg/buildtrees
             ./vcpkg/downloads
-          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}-v2
           restore-keys: |
             ${{ runner.os }}-vcpkg-
 
@@ -126,7 +126,7 @@ jobs:
             ./vcpkg_installed  # Cached path for packages
             ./vcpkg/buildtrees
             ./vcpkg/downloads
-          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}-v2
           restore-keys: |
             ${{ runner.os }}-vcpkg-
 
