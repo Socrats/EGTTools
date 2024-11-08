@@ -29,6 +29,10 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Make sure submodules are updated
+        run: |
+          git submodule update --force --recursive --init --remote
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
@@ -40,9 +44,6 @@ jobs:
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgJsonGlob: 'vcpkg.json'
-
-      - name: Setup CMake
-        uses: jwlawson/actions-setup-cmake@v2.0
 
       # Note: if the preset misses the "configuration", it is possible to explicitly select the
       # configuration with the additional `--config` flag, e.g.:
@@ -83,139 +84,139 @@ jobs:
           name: wheels
           path: wheelhouse/*.tar.gz
 
-  build_wheels:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runs-on: windows-latest
-            cibw-arch: win_amd64
-          - runs-on: windows-latest
-            cibw-arch: win32
-            python-arch: x86
-          - runs-on: ubuntu-latest
-            cibw-arch: manylinux_x86_64
-          - runs-on: macos-13
-            cibw-arch: macosx_x86_64
-          - runs-on: macos-13
-            cibw-arch: macosx_arm64
-
-    name: Wheels • ${{ matrix.cibw-arch }}
-    runs-on: ${{ matrix.runs-on }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
-          architecture: ${{ matrix.python-arch }}
-
-      - name: Setup CMake
-        uses: jwlawson/actions-setup-cmake@v2.0
-
-      - name: Setup cache for vcpkg
-        id: cache-vcpkg
-        uses: actions/cache@v3
-        with:
-          path: |
-            ./vcpkg_installed  # Cached path for packages
-            ./vcpkg/buildtrees
-            ./vcpkg/downloads
-          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}-v2
-          restore-keys: |
-            ${{ runner.os }}-vcpkg-
-
-      - name: Bootstrap vcpkg
-        run: |
-          ./vcpkg/bootstrap-vcpkg.sh
-
-      - name: Install dependencies with vcpkg
-        run: |
-          ./vcpkg/vcpkg install
-
-      - name: Build and test wheels
-        uses: pypa/cibuildwheel@v2.21.3
-        env:
-          CIBW_BUILD_FRONTEND: "build"
-          CIBW_BUILD: "cp*-${{ matrix.cibw-arch }}"
-          CIBW_SKIP: "cp38-win32 cp39-win32 cp310-win32 cp311-win32 cp312-win32"
-          CIBW_ARCHS_MACOS: "x86_64 arm64"
-          CIBW_ARCHS_WINDOWS: "AMD64 x86"
-          CIBW_BEFORE_ALL_MACOS: bash build_tools/github/before_all_mac.sh
-          CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
-          CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3_windows.sh
-          CIBW_ENVIRONMENT_WINDOWS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_ARCH="${{ matrix.platform_id == 'win32' && '-A Win32' || '' }}"
-          CIBW_ENVIRONMENT_MACOS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch == 'macosx_x86_64' && 'x86_64' || matrix.cibw-arch == 'macosx_arm64' && 'arm64' || matrix.cibw-arch == 'macosx_universal2' && '"arm64;x86_64"' || '' }} BUILD_ARCH=${{ matrix.cibw-arch }} EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP=TRUE -DMACOSX_DEPLOYMENT_TARGET=10.5'
-          CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
-          CIBW_TEST_REQUIRES: pytest
-          CIBW_BEFORE_TEST_MACOS: cd .. && cp -r {package}/tests/ {project}/tests/
-          CIBW_BEFORE_TEST_WINDOWS: cd .. && cp -r {package}/tests/ {project}\tests\
-          CIBW_TEST_COMMAND: pytest {project}/tests
-          CIBW_BUILD_VERBOSITY: 1
-
-      - name: Upload wheels
-        if: startsWith(github.ref, 'refs/heads/docs') != true
-        uses: actions/upload-artifact@v3
-        with:
-          name: wheels
-          path: wheelhouse/egttools-*.whl
-          if-no-files-found: error
-
-      - name: Upload wheel for ReadTheDocs
-        if: runner.os == 'Linux' && matrix.cibw-arch == 'manylinux_x86_64' && startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
-        uses: actions/upload-artifact@v3
-        with:
-          name: rtd-wheel
-          path: wheelhouse/egttools-*-cp38-cp38-*manylinux2014_x86_64*.whl
-          if-no-files-found: error
-
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ failure() && github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
-        with:
-          limit-access-to-actor: true
-
-  trigger_rtd:
-    name: Trigger ReadTheDocs build
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
-    needs: [ build_wheels ]
-
-    steps:
-      - name: Get branch name
-        id: get_branch
-        run: |
-          echo "::set-output name=branch::${GITHUB_REF##refs/heads/}"
-      - name: Trigger ReadTheDocs webhook
-        run: |
-          curl -X POST -d "branches=${{ steps.get_branch.outputs.branch }}" -d "token=${{ secrets.READTHEDOCS_WEBHOOK_TOKEN }}" https://readthedocs.org/api/v2/webhook/egttools/180432/
-
-  create_release:
-    name: Create release
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: [ build_sdist, build_wheels ]
-
-    steps:
-      - name: Collect sdist and wheels
-        uses: actions/download-artifact@v4.1.7
-        with:
-          name: wheels
-          path: wheelhouse
-
-      - name: Get release name
-        id: get_version
-        run: |
-          echo "::set-output name=version::${GITHUB_REF##refs/tags/v}"
-      - name: Upload sdist and wheels to release
-        uses: ncipollo/release-action@v1.14.0
-        with:
-          name: ${{ steps.get_version.outputs.version }}
-          draft: true
-          artifacts: wheelhouse/*
-          token: ${{ secrets.GITHUB_TOKEN }}
+#  build_wheels:
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        include:
+#          - runs-on: windows-latest
+#            cibw-arch: win_amd64
+#          - runs-on: windows-latest
+#            cibw-arch: win32
+#            python-arch: x86
+#          - runs-on: ubuntu-latest
+#            cibw-arch: manylinux_x86_64
+#          - runs-on: macos-13
+#            cibw-arch: macosx_x86_64
+#          - runs-on: macos-13
+#            cibw-arch: macosx_arm64
+#
+#    name: Wheels • ${{ matrix.cibw-arch }}
+#    runs-on: ${{ matrix.runs-on }}
+#
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v3
+#        with:
+#          submodules: recursive
+#
+#      - name: Setup Python
+#        uses: actions/setup-python@v4
+#        with:
+#          python-version: 3.9
+#          architecture: ${{ matrix.python-arch }}
+#
+#      - name: Setup CMake
+#        uses: jwlawson/actions-setup-cmake@v2.0
+#
+#      - name: Setup cache for vcpkg
+#        id: cache-vcpkg
+#        uses: actions/cache@v3
+#        with:
+#          path: |
+#            ./vcpkg_installed  # Cached path for packages
+#            ./vcpkg/buildtrees
+#            ./vcpkg/downloads
+#          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}-v2
+#          restore-keys: |
+#            ${{ runner.os }}-vcpkg-
+#
+#      - name: Bootstrap vcpkg
+#        run: |
+#          ./vcpkg/bootstrap-vcpkg.sh
+#
+#      - name: Install dependencies with vcpkg
+#        run: |
+#          ./vcpkg/vcpkg install
+#
+#      - name: Build and test wheels
+#        uses: pypa/cibuildwheel@v2.21.3
+#        env:
+#          CIBW_BUILD_FRONTEND: "build"
+#          CIBW_BUILD: "cp*-${{ matrix.cibw-arch }}"
+#          CIBW_SKIP: "cp38-win32 cp39-win32 cp310-win32 cp311-win32 cp312-win32"
+#          CIBW_ARCHS_MACOS: "x86_64 arm64"
+#          CIBW_ARCHS_WINDOWS: "AMD64 x86"
+#          CIBW_BEFORE_ALL_MACOS: bash build_tools/github/before_all_mac.sh
+#          CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
+#          CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3_windows.sh
+#          CIBW_ENVIRONMENT_WINDOWS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_ARCH="${{ matrix.platform_id == 'win32' && '-A Win32' || '' }}"
+#          CIBW_ENVIRONMENT_MACOS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch == 'macosx_x86_64' && 'x86_64' || matrix.cibw-arch == 'macosx_arm64' && 'arm64' || matrix.cibw-arch == 'macosx_universal2' && '"arm64;x86_64"' || '' }} BUILD_ARCH=${{ matrix.cibw-arch }} EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP=TRUE -DMACOSX_DEPLOYMENT_TARGET=10.5'
+#          CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
+#          CIBW_TEST_REQUIRES: pytest
+#          CIBW_BEFORE_TEST_MACOS: cd .. && cp -r {package}/tests/ {project}/tests/
+#          CIBW_BEFORE_TEST_WINDOWS: cd .. && cp -r {package}/tests/ {project}\tests\
+#          CIBW_TEST_COMMAND: pytest {project}/tests
+#          CIBW_BUILD_VERBOSITY: 1
+#
+#      - name: Upload wheels
+#        if: startsWith(github.ref, 'refs/heads/docs') != true
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: wheels
+#          path: wheelhouse/egttools-*.whl
+#          if-no-files-found: error
+#
+#      - name: Upload wheel for ReadTheDocs
+#        if: runner.os == 'Linux' && matrix.cibw-arch == 'manylinux_x86_64' && startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: rtd-wheel
+#          path: wheelhouse/egttools-*-cp38-cp38-*manylinux2014_x86_64*.whl
+#          if-no-files-found: error
+#
+#      - name: Setup tmate session
+#        uses: mxschmitt/action-tmate@v3
+#        if: ${{ failure() && github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+#        with:
+#          limit-access-to-actor: true
+#
+#  trigger_rtd:
+#    name: Trigger ReadTheDocs build
+#    runs-on: ubuntu-latest
+#    if: startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
+#    needs: [ build_wheels ]
+#
+#    steps:
+#      - name: Get branch name
+#        id: get_branch
+#        run: |
+#          echo "::set-output name=branch::${GITHUB_REF##refs/heads/}"
+#      - name: Trigger ReadTheDocs webhook
+#        run: |
+#          curl -X POST -d "branches=${{ steps.get_branch.outputs.branch }}" -d "token=${{ secrets.READTHEDOCS_WEBHOOK_TOKEN }}" https://readthedocs.org/api/v2/webhook/egttools/180432/
+#
+#  create_release:
+#    name: Create release
+#    runs-on: ubuntu-latest
+#    if: startsWith(github.ref, 'refs/tags/v')
+#    needs: [ build_sdist, build_wheels ]
+#
+#    steps:
+#      - name: Collect sdist and wheels
+#        uses: actions/download-artifact@v4.1.7
+#        with:
+#          name: wheels
+#          path: wheelhouse
+#
+#      - name: Get release name
+#        id: get_version
+#        run: |
+#          echo "::set-output name=version::${GITHUB_REF##refs/tags/v}"
+#      - name: Upload sdist and wheels to release
+#        uses: ncipollo/release-action@v1.14.0
+#        with:
+#          name: ${{ steps.get_version.outputs.version }}
+#          draft: true
+#          artifacts: wheelhouse/*
+#          token: ${{ secrets.GITHUB_TOKEN }}
