@@ -40,6 +40,7 @@ jobs:
 
       - name: Fetch submodules with full history
         run: |
+          git pull
           git submodule sync --recursive
           git submodule update --init --recursive
           cd vcpkg
@@ -66,12 +67,13 @@ jobs:
       - name: Bootstrap vcpkg
         run: |
           ./vcpkg/bootstrap-vcpkg.sh
-          ./vcpkg/vcpkg x-update-baseline --add-initial-baseline
+          ./vcpkg/vcpkg update
+#          ./vcpkg/vcpkg x-update-baseline --add-initial-baseline
 
       - name: Install dependencies with vcpkg
         run: |
           ./vcpkg/vcpkg install --clean-after-build
-          ./vcpkg/vcpkg install --json vcpkg.json  
+#          ./vcpkg/vcpkg install --json vcpkg.json
 
       # Note: if the preset misses the "configuration", it is possible to explicitly select the
       # configuration with the additional `--config` flag, e.g.:
