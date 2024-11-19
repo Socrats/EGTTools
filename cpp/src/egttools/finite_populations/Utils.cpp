@@ -18,8 +18,8 @@
 
 #include <egttools/finite_populations/Utils.hpp>
 
-double egttools::FinitePopulations::fermi(double beta, double a, double b) {
-    return 1 / (1 + std::exp(beta * (a - b)));
+double egttools::FinitePopulations::fermi(double beta, double die, double birth) {
+    return 1 / (1 + std::exp(beta * (die - birth)));
 }
 
 double egttools::FinitePopulations::contest_success(double z, double a, double b) {

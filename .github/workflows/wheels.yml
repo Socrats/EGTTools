@@ -70,6 +70,7 @@ jobs:
       - name: Bootstrap vcpkg
         run: |
           ./vcpkg/bootstrap-vcpkg.sh
+          export EGTTOOLS_VCPKG_ROOT="--preset release"
 #          ./vcpkg/vcpkg update
 #          ./vcpkg/vcpkg x-update-baseline --add-initial-baseline
 

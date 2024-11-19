@@ -37,11 +37,11 @@ namespace egttools::FinitePopulations {
      * @brief returns the imitation probability calculated according to the fermi function.
      *
      * @param beta intensity of selection
-     * @param a fitness of player A
-     * @param b fitness fo player B
+     * @param die fitness of player A (the one to imitate)
+     * @param birth fitness fo player B (the one to be imitated)
      * @return probability of imitation
      */
-    double fermi(double beta, double a, double b);
+    double fermi(double beta, double die, double birth);
 
     /**
      * @brief contest success function that compares 2 payoffs according to a payoff importance z
