@@ -71,7 +71,7 @@ jobs:
       - name: Bootstrap vcpkg
         run: |
           ./vcpkg/bootstrap-vcpkg.sh
-          export EGTTOOLS_EXTRA_CMAKE_ARGS=="--preset release DPython3_EXECUTABLE=$(which python3) -DPython3_INCLUDE_DIR=$(python3-config --includes | awk '{print $1}') -DPython3_LIBRARY=$(python3-config --ldflags | awk '{print $1}')"
+          export EGTTOOLS_EXTRA_CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=$(pwd)/vcpkg/scripts/buildsystems/vcpkg.cmake"
       #          ./vcpkg/vcpkg update
       #          ./vcpkg/vcpkg x-update-baseline --add-initial-baseline
 

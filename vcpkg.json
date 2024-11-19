@@ -4,7 +4,7 @@
   "builtin-baseline": "6046e48163a26252f7a8f4aa036cbdd9eb793c20",
   "dependencies": [
     {
-      "name": "boost",
+      "name": "boost-multiprecision",
       "version>=": "1.82.0"
     },
     {
