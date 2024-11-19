@@ -71,7 +71,6 @@ jobs:
       - name: Bootstrap vcpkg
         run: |
           ./vcpkg/bootstrap-vcpkg.sh
-          export EGTTOOLS_EXTRA_CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=$(pwd)/vcpkg/scripts/buildsystems/vcpkg.cmake"
       #          ./vcpkg/vcpkg update
       #          ./vcpkg/vcpkg x-update-baseline --add-initial-baseline
 
