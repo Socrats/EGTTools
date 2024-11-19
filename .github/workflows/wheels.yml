@@ -46,6 +46,10 @@ jobs:
           git fetch --all --unshallow || true
           cd ..
 
+      - name: Install necessary packages for vcpkg to manage python
+        run: |
+          sudo apt-get install autoconf automake autoconf-archive
+
       - name: Setup cmake
         uses: jwlawson/actions-setup-cmake@v2
         with:
