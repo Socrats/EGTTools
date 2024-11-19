@@ -57,7 +57,7 @@ jobs:
 
       - name: Setup cache for vcpkg
         id: cache-vcpkg
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ./vcpkg_installed  # Cached path for packages
@@ -77,6 +77,17 @@ jobs:
       - name: Install dependencies with vcpkg
         run: |
           ./vcpkg/vcpkg install --x-binarycaching
+
+      - name: Save vcpkg to cache
+        id: save-vcpkg-cache
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ./vcpkg_installed  # Cached path for packages
+            ./vcpkg/buildtrees
+            ./vcpkg/downloads
+            ./vcpkg/packages
+          key: ${{ steps.cache-vcpkg.outputs.cache-primary-key }}
       #          ./vcpkg/vcpkg install --json vcpkg.json
 
       # Note: if the preset misses the "configuration", it is possible to explicitly select the
