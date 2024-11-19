@@ -63,6 +63,7 @@ jobs:
             ./vcpkg_installed  # Cached path for packages
             ./vcpkg/buildtrees
             ./vcpkg/downloads
+            ./vcpkg/packages
           key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
           restore-keys: |
             ${{ runner.os }}-vcpkg-
@@ -70,14 +71,14 @@ jobs:
       - name: Bootstrap vcpkg
         run: |
           ./vcpkg/bootstrap-vcpkg.sh
-          export EGTTOOLS_VCPKG_ROOT="--preset release"
-#          ./vcpkg/vcpkg update
-#          ./vcpkg/vcpkg x-update-baseline --add-initial-baseline
+          export EGTTOOLS_VCPKG_ROOT="--preset release DPython3_EXECUTABLE=$(which python3) -DPython3_INCLUDE_DIR=$(python3-config --includes | awk '{print $1}') -DPython3_LIBRARY=$(python3-config --ldflags | awk '{print $1}')"
+      #          ./vcpkg/vcpkg update
+      #          ./vcpkg/vcpkg x-update-baseline --add-initial-baseline
 
       - name: Install dependencies with vcpkg
         run: |
-          ./vcpkg/vcpkg install --clean-after-build
-#          ./vcpkg/vcpkg install --json vcpkg.json
+          ./vcpkg/vcpkg install --x-binarycaching
+      #          ./vcpkg/vcpkg install --json vcpkg.json
 
       # Note: if the preset misses the "configuration", it is possible to explicitly select the
       # configuration with the additional `--config` flag, e.g.:
@@ -85,10 +86,10 @@ jobs:
       #   buildPresetAdditionalArgs: "[`--config`, `Release`]"
       #   testPreset: 'ninja-vcpkg'
       #   testPresetAdditionalArgs: "[`--config`, `Release`]"
-#      - name: Run CMake+vcpkg+Ninja+CTest to build packages and generate/build/test the code.
-#        run: |
-#          mkdir -p builds/release
-#          cmake --build --preset release
+      #      - name: Run CMake+vcpkg+Ninja+CTest to build packages and generate/build/test the code.
+      #        run: |
+      #          mkdir -p builds/release
+      #          cmake --build --preset release
 
       - name: Install requirements
         run: |
