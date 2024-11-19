@@ -40,11 +40,10 @@ jobs:
 
       - name: Fetch submodules with full history
         run: |
-          git pull
           git submodule sync --recursive
-          git submodule update --init --recursive
+          git submodule update --init --recursive --force
           cd vcpkg
-          git fetch --unshallow || true
+          git fetch --all --unshallow || true
           cd ..
 
       - name: Setup cmake
