@@ -66,6 +66,7 @@ jobs:
       - name: Bootstrap vcpkg
         run: |
           ./vcpkg/bootstrap-vcpkg.sh
+          ./vcpkg/vcpkg x-update-baseline --add-initial-baseline
 
       - name: Install dependencies with vcpkg
         run: |

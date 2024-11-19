@@ -1,13 +1,16 @@
 {
-  "name" : "egttools",
-  "version-string" : "0.1.13.2",
-  "builtin-baseline" : "6046e48163a26252f7a8f4aa036cbdd9eb793c20",
-  "dependencies" : [ {
-    "name" : "boost",
-    "version>=" : "1.82.0#1"
-  }, {
-    "name" : "eigen3",
-    "version>=" : "3.4.0#2",
-    "$comment" : "    # this is heuristically generated, and may not be correct\n\n    find_package(Eigen3 CONFIG REQUIRED)\n\n    target_link_libraries(main PRIVATE Eigen3::Eigen)\n"
-  } ]
+  "name": "egttools",
+  "version-string": "0.1.13.2",
+  "builtin-baseline": "6046e48163a26252f7a8f4aa036cbdd9eb793c20",
+  "dependencies": [
+    {
+      "name": "boost",
+      "version>=": "1.82.0"
+    },
+    {
+      "name": "eigen3",
+      "version>=": "3.4.0",
+      "$comment": "    # this is heuristically generated, and may not be correct\n\n    find_package(Eigen3 CONFIG REQUIRED)\n\n    target_link_libraries(main PRIVATE Eigen3::Eigen)\n"
+    }
+  ]
 }
