@@ -177,9 +177,14 @@ jobs:
             ${{ runner.os }}-vcpkg-
 
       - name: Bootstrap vcpkg
-        if: steps.cache-vcpkg.outputs.cache-hit != 'true'
+        if: steps.cache-vcpkg.outputs.cache-hit != 'true' && runner.os != 'Windows'
         run: |
           ./vcpkg/bootstrap-vcpkg.sh
+
+      - name: Bootstrap vcpkg
+        if: steps.cache-vcpkg.outputs.cache-hit != 'true' && runner.os == 'Windows'
+        run: |
+          ./vcpkg/bootstrap-vcpkg.bat
 
       - name: Install dependencies with vcpkg
         if: steps.cache-vcpkg.outputs.cache-hit != 'true'
