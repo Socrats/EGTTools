@@ -56,6 +56,21 @@ else()
     message(STATUS "vcpkg is already bootstrapped.")
 endif()
 
+if (EXISTS ${VCPKG_EXECUTABLE})
+    message(STATUS "Installing dependencies with vcpkg...")
+    execute_process(
+            COMMAND ${VCPKG_EXECUTABLE} install
+            WORKING_DIRECTORY ${VCPKG_ROOT}
+            RESULT_VARIABLE VCPKG_INSTALL_RESULT
+    )
+    # Check for errors
+    if(NOT VCPKG_INSTALL_RESULT EQUAL 0)
+        message(FATAL_ERROR "vcpkg failed to install dependencies. Result: ${VCPKG_INSTALL_RESULT}")
+    endif()
+
+    message(STATUS "vcpkg dependencies installed successfully.")
+endif ()
+
 # Use vcpkg toolchain file
 set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
 message(STATUS "Using vcpkg toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
