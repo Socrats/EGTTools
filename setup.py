@@ -69,7 +69,7 @@ setup(
                  'egttools.distributions': "src/egttools/distributions",
                  'egttools.datastructures': "src/egttools/datastructures"
                  },
-    cmake_args=shlex.split(os.environ.get('EGTTOOLS_EXTRA_CMAKE_ARGS', f"EGTTOOLS_EXTRA_CMAKE_ARGS=-DCMAKE_TOOLCHAIN_FILE={os.getcwd()}/vcpkg/scripts/buildsystems/vcpkg.cmake")),
+    cmake_args=shlex.split(os.environ.get('EGTTOOLS_EXTRA_CMAKE_ARGS', f"-DCMAKE_TOOLCHAIN_FILE={os.getcwd()}/vcpkg/scripts/buildsystems/vcpkg.cmake")),
     cmake_install_dir="src/egttools/numerical",
     cmake_with_sdist=True,
 )
