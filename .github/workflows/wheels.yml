@@ -93,13 +93,9 @@ jobs:
         run: |
           python -m check_manifest --verbose
 
-      - name: Build sdist and wheel
+      - name: Build sdist
         run: |
           python -m build --sdist --outdir wheelhouse
-
-      - name: Install from wheel
-        run: |
-          pip install --user wheelhouse/*.whl
 
       - name: Check sdist metadata
         run: |
