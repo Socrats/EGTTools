@@ -89,13 +89,13 @@ jobs:
         run: |
           pip install --user check-manifest twine
 
+      - name: Run check-manifest
+        run: |
+          python -m check_manifest --verbose
+
       - name: Build sdist
         run: |
           python -m build --sdist --outdir wheelhouse
-
-      - name: Run check-manifest
-        run: |
-          python -m check_manifest
 
       - name: Install from sdist
         run: |

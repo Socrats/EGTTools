@@ -45,7 +45,15 @@ include pytest.ini
 
 graft docs
 prune docs/_build
+prune docs/_autosummary
+prune docker
 prune _skbuild
+prune vcpkg
+prune dist
+prune .pytest_cache
+prune *.egg-info
+prune __pycache__
+recursive-exclude vcpkg *
 
 # exclude from sdist
 global-exclude __pycache__
@@ -54,7 +62,15 @@ global-exclude *.pyc
 global-exclude .DS_Store
 global-exclude .ipynb_checkpoints/*
 global-exclude *.so
+exclude .dockerignore
+exclude Dockerfile
 exclude pybind11/.git
 exclude build_tools
 recursive-exclude build_tools *
 exclude src/egttools/plotting/barplots.py
+exclude vcpkg
+
+# added by check-manifest
+include *.json
+include *.yaml
+include *.yml
