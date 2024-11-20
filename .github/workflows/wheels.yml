@@ -34,26 +34,26 @@ jobs:
           git submodule update --force --recursive --init --remote
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Fetch submodules with full history
-        run: |
-          git submodule sync --recursive
-          git submodule update --init --recursive --force
-          cd vcpkg
-          git fetch --all --unshallow || true
-          cd ..
-
-      - name: Install necessary packages for vcpkg to manage python
-        run: |
-          sudo apt-get install autoconf automake autoconf-archive
+#      - name: Fetch submodules with full history
+#        run: |
+#          git submodule sync --recursive
+#          git submodule update --init --recursive --force
+#          cd vcpkg
+#          git fetch --all --unshallow || true
+#          cd ..
 
       - name: Setup cmake
         uses: jwlawson/actions-setup-cmake@v2
         with:
           cmake-version: '3.27.x'
+
+      - name: Install necessary packages for vcpkg to manage python
+        run: |
+          sudo apt-get install autoconf automake autoconf-archive
 
       - name: Setup cache for vcpkg
         id: cache-vcpkg
@@ -69,37 +69,16 @@ jobs:
             ${{ runner.os }}-vcpkg-
 
       - name: Bootstrap vcpkg
+        if: steps.cache-vcpkg.outputs.cache-hit != 'true'
         run: |
           ./vcpkg/bootstrap-vcpkg.sh
       #          ./vcpkg/vcpkg update
       #          ./vcpkg/vcpkg x-update-baseline --add-initial-baseline
 
       - name: Install dependencies with vcpkg
+        if: steps.cache-vcpkg.outputs.cache-hit != 'true'
         run: |
           ./vcpkg/vcpkg install --x-binarycaching
-
-      - name: Save vcpkg to cache
-        id: save-vcpkg-cache
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            ./vcpkg_installed  # Cached path for packages
-            ./vcpkg/buildtrees
-            ./vcpkg/downloads
-            ./vcpkg/packages
-          key: ${{ steps.cache-vcpkg.outputs.cache-primary-key }}
-      #          ./vcpkg/vcpkg install --json vcpkg.json
-
-      # Note: if the preset misses the "configuration", it is possible to explicitly select the
-      # configuration with the additional `--config` flag, e.g.:
-      #   buildPreset: 'ninja-vcpkg'
-      #   buildPresetAdditionalArgs: "[`--config`, `Release`]"
-      #   testPreset: 'ninja-vcpkg'
-      #   testPresetAdditionalArgs: "[`--config`, `Release`]"
-      #      - name: Run CMake+vcpkg+Ninja+CTest to build packages and generate/build/test the code.
-      #        run: |
-      #          mkdir -p builds/release
-      #          cmake --build --preset release
 
       - name: Install requirements
         run: |
@@ -122,7 +101,7 @@ jobs:
           python -m twine check wheelhouse/*
 
       - name: Upload sdist
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: wheels
           path: wheelhouse/*.tar.gz
@@ -139,9 +118,9 @@ jobs:
 #            python-arch: x86
 #          - runs-on: ubuntu-latest
 #            cibw-arch: manylinux_x86_64
-#          - runs-on: macos-13
+#          - runs-on: macos-latest
 #            cibw-arch: macosx_x86_64
-#          - runs-on: macos-13
+#          - runs-on: macos-latest
 #            cibw-arch: macosx_arm64
 #
 #    name: Wheels • ${{ matrix.cibw-arch }}
