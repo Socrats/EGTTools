@@ -106,7 +106,7 @@ jobs:
 
   build_wheels:
     name: Build wheel for ${{ matrix.platform_id }}-${{ matrix.manylinux_image }}
-    runs-on: ${{ matrix.os }
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
