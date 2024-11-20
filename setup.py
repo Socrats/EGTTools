@@ -23,14 +23,67 @@ import io
 import os
 import re
 import shlex
+import subprocess
 import sys
+import shutil
 
 try:
     from skbuild import setup
+    from setuptools import find_packages
+    from setuptools.command.sdist import sdist as _sdist
 except ImportError:
     print("Please update pip to pip 10 or greater, or a manually install the PEP 518 requirements in pyproject.toml",
           file=sys.stderr)
     raise
+
+
+def find_folder_recursively(start_path, folder_name):
+    """
+    Recursively search for a folder with the specified name starting from the given path.
+
+    :param start_path: The root directory to start the search.
+    :param folder_name: The name of the folder to find.
+    :return: A list of full paths to matching folders.
+    """
+    matching_folders = []
+    for root, dirs, files in os.walk(start_path):
+        if folder_name in dirs:
+            matching_folders.append(os.path.join(root, folder_name))
+    return matching_folders
+
+
+class sdist(_sdist):
+    def run(self):
+        if not os.path.exists("vcpkg"):
+            print("Cloning vcpkg...")
+            subprocess.check_call(["git", "clone", "https://github.com/microsoft/vcpkg.git"])
+            subprocess.check_call(["./vcpkg/bootstrap-vcpkg.sh"])
+            print("vcpkg is ready.")
+        print("Installing vcpkg dependencies...")
+        subprocess.check_call(["./vcpkg/vcpkg", "install"])
+
+        # Path to vcpkg installed libraries
+        vcpkg_lib_path = os.path.join('vcpkg_installed')
+        package_lib_path = os.path.join('external')
+
+        found_folders = find_folder_recursively(os.getcwd(), "vcpkg_installed")
+
+        if type(found_folders) is not list or len(found_folders) == 0:
+            raise FileNotFoundError("Could not find the vcpkg_installed folder. Make sure you have run the install_vcpkg.sh script.")
+        elif len(found_folders) > 1:
+            # Ensure the package lib directory exists
+            os.makedirs(package_lib_path, exist_ok=True)
+
+            # Copy vcpkg libraries to the package directory
+            if os.path.isdir(found_folders[0]):
+                # Recursively copy subdirectories
+                shutil.copytree(found_folders[0], package_lib_path, dirs_exist_ok=True)
+            else:
+                # Copy files
+                shutil.copy2(found_folders[0], package_lib_path)
+
+        # Run the original sdist command
+        _sdist.run(self)
 
 
 def find_version():
@@ -68,7 +121,8 @@ setup(
                  'egttools.datastructures': "src/egttools/datastructures"
                  },
     cmake_args=shlex.split(
-        f"{os.environ.get('EGTTOOLS_EXTRA_CMAKE_ARGS', '')} -DCMAKE_TOOLCHAIN_FILE={os.getcwd()}/vcpkg/scripts/buildsystems/vcpkg.cmake"),
+        os.environ.get('EGTTOOLS_EXTRA_CMAKE_ARGS', '')),
     cmake_install_dir="src/egttools/numerical",
     cmake_with_sdist=False,
+    cmdclass={'sdist': sdist},
 )
