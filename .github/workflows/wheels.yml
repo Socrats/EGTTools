@@ -110,7 +110,8 @@ jobs:
     strategy:
       matrix:
         # macos-13 is an intel runner, macos-14 is apple silicon
-        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
+        os: [ ubuntu-latest, windows-latest, macos-13, macos-14 ]
+        arch: [ x86_64, arm64 ]
 
     steps:
       - name: Checkout code
@@ -136,9 +137,20 @@ jobs:
         with:
           cmake-version: '3.27.x'
 
-      - name: Install necessary packages for vcpkg to manage python
+      - name: Install necessary packages for vcpkg to manage python (Linux)
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get install autoconf automake autoconf-archive
+
+      - name: Install necessary packages for vcpkg to manage python (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install autoconf automake autoconf-archive
+
+      - name: Install necessary packages for vcpkg to manage python (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install autoconf automake autoconf-archive
 
       - name: Setup cache for vcpkg
         id: cache-vcpkg
@@ -149,8 +161,9 @@ jobs:
             ./vcpkg/buildtrees
             ./vcpkg/downloads
             ./vcpkg/packages
-          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
+          key: ${{ runner.os }}-vcpkg-${{ matrix.arch }}-${{ hashFiles('vcpkg.json') }}
           restore-keys: |
+            ${{ runner.os }}-vcpkg-${{ matrix.arch }}-
             ${{ runner.os }}-vcpkg-
 
       - name: Bootstrap vcpkg
@@ -169,10 +182,12 @@ jobs:
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.21.3
+        env:
+          CIBW_ARCHS: ${{ matrix.arch }}
 
       - uses: actions/upload-artifact@v4
         with:
-          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          name: cibw-wheels-${{ matrix.os }}-${{ matrix.arch }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
 
 #      - name: Build and test wheels
