@@ -31,7 +31,7 @@ jobs:
 
       - name: Make sure submodules are updated
         run: |
-          it submodule sync --recursive
+          git submodule sync --recursive
           git submodule update --init --recursive --force
           cd vcpkg
           git fetch --all --unshallow || true
