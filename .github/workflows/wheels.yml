@@ -185,6 +185,7 @@ jobs:
         uses: pypa/cibuildwheel@v2.21.3
         env:
           CIBW_ARCHS: ${{ matrix.arch }}
+          CIBW_ENVIRONMENT: "VCPKG_PATH=$(pwd)"
 
       - uses: actions/upload-artifact@v4
         with:
