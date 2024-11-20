@@ -85,6 +85,10 @@ jobs:
         run: |
           ./vcpkg/vcpkg install --x-binarycaching
 
+      - name: Set VCPKG_PATH environment variable
+        run: |
+          echo "VCPKG_PATH=$(pwd)" >> $GITHUB_ENV
+
       - name: Install requirements
         run: |
           pip install --user check-manifest twine
