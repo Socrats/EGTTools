@@ -32,8 +32,6 @@ except ImportError:
           file=sys.stderr)
     raise
 
-from setuptools import find_packages
-
 
 def find_version():
     with io.open(os.path.join(os.path.dirname(__file__), "cpp/src", "version.h"), encoding='utf8') as f:
@@ -69,7 +67,8 @@ setup(
                  'egttools.distributions': "src/egttools/distributions",
                  'egttools.datastructures': "src/egttools/datastructures"
                  },
-    cmake_args=shlex.split(os.environ.get('EGTTOOLS_EXTRA_CMAKE_ARGS', f"-DCMAKE_TOOLCHAIN_FILE={os.getcwd()}/vcpkg/scripts/buildsystems/vcpkg.cmake")),
+    cmake_args=shlex.split(os.environ.get('EGTTOOLS_EXTRA_CMAKE_ARGS',
+                                          f"-DCMAKE_TOOLCHAIN_FILE={os.getcwd()}/vcpkg/scripts/buildsystems/vcpkg.cmake")),
     cmake_install_dir="src/egttools/numerical",
     cmake_with_sdist=False,
 )

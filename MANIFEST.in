@@ -69,7 +69,6 @@ exclude pybind11/.git
 exclude build_tools
 recursive-exclude build_tools *
 exclude src/egttools/plotting/barplots.py
-exclude vcpkg
 
 # added by check-manifest
 include *.json

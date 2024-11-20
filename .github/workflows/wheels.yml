@@ -99,7 +99,7 @@ jobs:
 
       - name: Install from sdist
         run: |
-          pip install --user wheelhouse/*.tar.gz --no-build-isolation
+          pip install --user wheelhouse/*.tar.gz
 
       - name: Check sdist metadata
         run: |
