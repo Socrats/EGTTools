@@ -38,7 +38,7 @@ graft pybind11
 graft tests
 
 prune vcpkg
-graft vcpkg_installed
+prune vcpkg_installed
 
 include .gitmodules
 
