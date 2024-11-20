@@ -105,14 +105,20 @@ jobs:
           path: wheelhouse/*.tar.gz
 
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    name: Wheels • ${{ matrix.cibw-arch }}
+    runs-on: ${{ matrix.runs-on }}
     strategy:
       fail-fast: false
       matrix:
-        # macos-13 is an intel runner, macos-14 is apple silicon
-        os: [ ubuntu-latest ]
-        platform: [manylinux2014_x86_64, manylinux2014_aarch64]
+        include:
+        - runs-on: windows-latest
+          cibw-arch: win_amd64
+        - runs-on: ubuntu-latest
+          cibw-arch: manylinux_x86_64
+        - runs-on: macos-13
+          cibw-arch: macosx_x86_64
+        - runs-on: macos-14
+          cibw-arch: macosx_arm64
 
     steps:
       - name: Checkout code
