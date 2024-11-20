@@ -26,3 +26,6 @@ ignore = [
     "enkinsfile",
     "*.mo",
 ]
+
+[tool.cibuildwheel]
+build-frontend = "build"

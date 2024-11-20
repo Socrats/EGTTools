@@ -15,7 +15,6 @@ include bld.bat
 include build.sh
 include install_dependencies.sh
 include meta.yaml
-include vcpkg.json
 
 include CMakeLists.txt
 include requirements.txt
@@ -49,12 +48,10 @@ prune docs/_build
 prune docs/_autosummary
 prune docker
 prune _skbuild
-prune vcpkg
 prune dist
 prune .pytest_cache
 prune *.egg-info
 prune __pycache__
-recursive-exclude vcpkg *
 
 # exclude from sdist
 global-exclude __pycache__
