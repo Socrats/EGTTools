@@ -105,20 +105,28 @@ jobs:
           path: wheelhouse/*.tar.gz
 
   build_wheels:
-    name: Wheels • ${{ matrix.cibw-arch }}
-    runs-on: ${{ matrix.runs-on }}
+    name: Build wheel for ${{ matrix.platform_id }}-${{ matrix.manylinux_image }}
+    runs-on: ${{ matrix.os }
     strategy:
       fail-fast: false
       matrix:
         include:
-        - runs-on: windows-latest
-          cibw-arch: win_amd64
-        - runs-on: ubuntu-latest
-          cibw-arch: manylinux_x86_64
-        - runs-on: macos-13
-          cibw-arch: macosx_x86_64
-        - runs-on: macos-14
-          cibw-arch: macosx_arm64
+          # Window 64 bit
+          - os: windows-latest
+            platform_id: win_amd64
+
+          # Linux 64 bit manylinux2014
+          - os: ubuntu-latest
+            platform_id: manylinux_x86_64
+            manylinux_image: manylinux2014
+
+          # MacOS x86_64
+          - os: macos-13
+            platform_id: macosx_x86_64
+
+          # MacOS arm64
+          - os: macos-14
+            platform_id: macosx_arm64
 
     steps:
       - name: Checkout code
@@ -181,11 +189,17 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.21.3
         env:
-          CIBW_ARCHS: ${{ matrix.platform }}
+          CIBW_ARCHS: all
           CIBW_ENVIRONMENT_LINUX: VCPKG_PATH=$(pwd) CFLAGS="-fopenmp" LDFLAGS="-fopenmp"
           CIBW_ENVIRONMENT_MACOS: VCPKG_PATH=$(pwd) CFLAGS="-Xpreprocessor -fopenmp -I/usr/local/include" LDFLAGS="-L/usr/local/lib -lomp"
-          CIBW_ENVIRONMENT_WINDOWS: VCPKG_PATH=$(pwd) CFLAGS="/openmp" LDFLAGS="/openmp"
-          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
+          CIBW_ENVIRONMENT_WINDOWS: VCPKG_PATH=$(pwd) CFLAGS="-Xclang -fopenmp" LDFLAGS="/openmp"
+          CIBW_BUILD: "cp39--${{ matrix.platform_id }} cp310--${{ matrix.platform_id }} cp311--${{ matrix.platform_id }} cp312--${{ matrix.platform_id }} cp312--${{ matrix.platform_id }}"
+          CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
+          CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
+          # Needed on Windows CI to compile with Visual Studio compiler
+          # otherwise Meson detects a MINGW64 platform and use MINGW64
+          # toolchain
+          CIBW_CONFIG_SETTINGS_WINDOWS: "setup-args=--vsenv"
           CIBW_BEFORE_ALL_MACOS: brew install libomp
 
       - uses: actions/upload-artifact@v4
