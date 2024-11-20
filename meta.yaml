@@ -19,16 +19,16 @@ build:
 
 requirements:
   host:
-    - python >=3.7
+    - python >=3.8
     - pip
     - build
   run:
-    - python >=3.7
-    - numpy >=1.7.0
-    - scipy >=1.5.0
-    - matplotlib-base >=3.3.0
-    - networkx
-    - seaborn >=0.11.2
+    - python >=3.8
+    - numpy~=1.26.3
+    - scipy~=1.12.0
+    - matplotlib>=3.8.2
+    - seaborn>=0.13.2
+    - networkx>=3.2.1
   build-system:
     - setuptools>=44
     - wheel

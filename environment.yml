@@ -2,7 +2,7 @@ name: egttools-env
 channels:
   - conda-forge
 dependencies:
-  - python>=3.7
+  - python>=3.8
   - numpy>=1.7.*
   - scipy>=1.5.*
   - matplotlib>=3.3.*
