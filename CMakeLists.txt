@@ -18,6 +18,63 @@
 cmake_minimum_required(VERSION 3.27)
 project(egttools LANGUAGES CXX)
 
+set(VCPKG_ROOT "${CMAKE_SOURCE_DIR}/vcpkg")
+set(VCPKG_BOOTSTRAP "${VCPKG_ROOT}/bootstrap-vcpkg.sh")
+set(VCPKG_EXECUTABLE "${VCPKG_ROOT}/vcpkg")
+
+# Check if vcpkg is already cloned
+if (NOT EXISTS ${VCPKG_ROOT})
+    message(STATUS "Cloning vcpkg...")
+    execute_process(
+            COMMAND git clone https://github.com/microsoft/vcpkg.git ${VCPKG_ROOT}
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            RESULT_VARIABLE GIT_CLONE_RESULT
+    )
+    if (NOT GIT_CLONE_RESULT EQUAL 0)
+        message(FATAL_ERROR "Failed to clone vcpkg repository.")
+    endif ()
+else ()
+    message(STATUS "vcpkg already present.")
+endif ()
+
+# Bootstrap vcpkg if necessary
+if (NOT EXISTS ${VCPKG_BOOTSTRAP})
+    message(FATAL_ERROR "Bootstrap script not found in vcpkg. The clone may be corrupted.")
+endif ()
+
+if (NOT EXISTS ${VCPKG_EXECUTABLE})
+    message(STATUS "Bootstrapping vcpkg...")
+    execute_process(
+            COMMAND ${CMAKE_COMMAND} -E chdir ${VCPKG_ROOT} ${VCPKG_BOOTSTRAP}
+            WORKING_DIRECTORY ${VCPKG_ROOT}
+            RESULT_VARIABLE BOOTSTRAP_RESULT
+    )
+    if (NOT BOOTSTRAP_RESULT EQUAL 0)
+        message(FATAL_ERROR "Failed to bootstrap vcpkg.")
+    endif ()
+else ()
+    message(STATUS "vcpkg is already bootstrapped.")
+endif ()
+
+if (EXISTS ${VCPKG_EXECUTABLE})
+    message(STATUS "Installing dependencies with vcpkg...")
+    execute_process(
+            COMMAND ${VCPKG_EXECUTABLE} install
+            WORKING_DIRECTORY ${VCPKG_ROOT}
+            RESULT_VARIABLE VCPKG_INSTALL_RESULT
+    )
+    # Check for errors
+    if (NOT VCPKG_INSTALL_RESULT EQUAL 0)
+        message(FATAL_ERROR "vcpkg failed to install dependencies. Result: ${VCPKG_INSTALL_RESULT}")
+    endif ()
+
+    message(STATUS "vcpkg dependencies installed successfully.")
+endif ()
+
+# Use vcpkg toolchain file
+set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
+message(STATUS "Using vcpkg toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
+
 #set(SKIP_OPENMP TRUE)
 
 # Set PYTHONPATH
