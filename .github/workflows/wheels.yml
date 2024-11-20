@@ -112,7 +112,6 @@ jobs:
       matrix:
         # macos-13 is an intel runner, macos-14 is apple silicon
         os: [ ubuntu-latest ]
-        arch: [ x86_64 ]
         platform: [manylinux2014_x86_64, manylinux2014_aarch64]
 
     steps:
@@ -149,11 +148,6 @@ jobs:
         run: |
           brew install autoconf automake autoconf-archive
 
-      - name: Install necessary packages for vcpkg to manage python (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          choco install autoconf automake autoconf-archive
-
       - name: Setup cache for vcpkg
         id: cache-vcpkg
         uses: actions/cache@v4
@@ -163,9 +157,9 @@ jobs:
             ./vcpkg/buildtrees
             ./vcpkg/downloads
             ./vcpkg/packages
-          key: ${{ runner.os }}-vcpkg-${{ matrix.platform }}-${{ matrix.arch }}-${{ hashFiles('vcpkg.json') }}
+          key: ${{ runner.os }}-vcpkg-${{ matrix.platform }}-${{ hashFiles('vcpkg.json') }}
           restore-keys: |
-            ${{ runner.os }}-vcpkg-${{ matrix.platform }}-${{ matrix.arch }}-
+            ${{ runner.os }}-vcpkg-${{ matrix.platform }}-
             ${{ runner.os }}-vcpkg-
 
       - name: Bootstrap vcpkg
@@ -181,15 +175,16 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.21.3
         env:
-          CIBW_ARCHS: ${{ matrix.arch }}
+          CIBW_ARCHS: ${{ matrix.platform }}
           CIBW_ENVIRONMENT_LINUX: VCPKG_PATH=$(pwd) CFLAGS="-fopenmp" LDFLAGS="-fopenmp"
           CIBW_ENVIRONMENT_MACOS: VCPKG_PATH=$(pwd) CFLAGS="-Xpreprocessor -fopenmp -I/usr/local/include" LDFLAGS="-L/usr/local/lib -lomp"
           CIBW_ENVIRONMENT_WINDOWS: VCPKG_PATH=$(pwd) CFLAGS="/openmp" LDFLAGS="/openmp"
           CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
+          CIBW_BEFORE_ALL_MACOS: brew install libomp
 
       - uses: actions/upload-artifact@v4
         with:
-          name: cibw-wheels-${{ matrix.os }}-${{ matrix.arch }}-${{ strategy.job-index }}
+          name: cibw-wheels-${{ matrix.os }}-${{ matrix.platform }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
 
 #      - name: Build and test wheels
