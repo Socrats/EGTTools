@@ -8,6 +8,7 @@ include setup.cfg
 include setup.py
 include .clang-format
 include environment.yml
+include vcpkg.json
 
 # Anaconda files
 include bld.bat
