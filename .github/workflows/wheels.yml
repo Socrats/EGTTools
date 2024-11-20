@@ -193,7 +193,7 @@ jobs:
           CIBW_ENVIRONMENT_LINUX: VCPKG_PATH=$(pwd) CFLAGS="-fopenmp" LDFLAGS="-fopenmp"
           CIBW_ENVIRONMENT_MACOS: VCPKG_PATH=$(pwd) CFLAGS="-Xpreprocessor -fopenmp -I/usr/local/include" LDFLAGS="-L/usr/local/lib -lomp"
           CIBW_ENVIRONMENT_WINDOWS: VCPKG_PATH=$(pwd) CFLAGS="-Xclang -fopenmp" LDFLAGS="/openmp"
-          CIBW_BUILD: "cp39--${{ matrix.platform_id }} cp310--${{ matrix.platform_id }} cp311--${{ matrix.platform_id }} cp312--${{ matrix.platform_id }} cp312--${{ matrix.platform_id }}"
+          CIBW_BUILD: "cp39-${{ matrix.platform_id }} cp310-${{ matrix.platform_id }} cp311-${{ matrix.platform_id }} cp312-${{ matrix.platform_id }} cp312-${{ matrix.platform_id }}"
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
           # Needed on Windows CI to compile with Visual Studio compiler
