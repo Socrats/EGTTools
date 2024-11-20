@@ -10,19 +10,19 @@ python -m pip install --upgrade --user pip cmake
 brew install gfortran
 brew install openblas
 brew install libomp
-brew install boost
+#brew install boost
 
 # First we download the correct eigen3 version
-curl -O https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
-tar xf eigen-3.3.9.tar.gz
-mv eigen-3.3.9 eigen3
-
-# Install eigen 3
-cd eigen3
-mkdir "build"
-cd build
-cmake ..
-make install
+#curl -O https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
+#tar xf eigen-3.3.9.tar.gz
+#mv eigen-3.3.9 eigen3
+#
+## Install eigen 3
+#cd eigen3
+#mkdir "build"
+#cd build
+#cmake ..
+#make install
 
 ## OpenMP is not present on macOS by default
 #if [[ $(uname) == "Darwin" ]]; then

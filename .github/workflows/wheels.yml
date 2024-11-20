@@ -36,20 +36,11 @@ jobs:
           cd vcpkg
           git fetch --all --unshallow || true
           cd ..
-#          git submodule update --force --recursive --init --remote
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
-#      - name: Fetch submodules with full history
-#        run: |
-#          git submodule sync --recursive
-#          git submodule update --init --recursive --force
-#          cd vcpkg
-#          git fetch --all --unshallow || true
-#          cd ..
 
       - name: Setup cmake
         uses: jwlawson/actions-setup-cmake@v2
@@ -77,8 +68,6 @@ jobs:
         if: steps.cache-vcpkg.outputs.cache-hit != 'true'
         run: |
           ./vcpkg/bootstrap-vcpkg.sh
-      #          ./vcpkg/vcpkg update
-      #          ./vcpkg/vcpkg x-update-baseline --add-initial-baseline
 
       - name: Install dependencies with vcpkg
         if: steps.cache-vcpkg.outputs.cache-hit != 'true'
@@ -115,61 +104,77 @@ jobs:
           name: wheels
           path: wheelhouse/*.tar.gz
 
-#  build_wheels:
-#    strategy:
-#      fail-fast: false
-#      matrix:
-#        include:
-#          - runs-on: windows-latest
-#            cibw-arch: win_amd64
-#          - runs-on: windows-latest
-#            cibw-arch: win32
-#            python-arch: x86
-#          - runs-on: ubuntu-latest
-#            cibw-arch: manylinux_x86_64
-#          - runs-on: macos-latest
-#            cibw-arch: macosx_x86_64
-#          - runs-on: macos-latest
-#            cibw-arch: macosx_arm64
-#
-#    name: Wheels • ${{ matrix.cibw-arch }}
-#    runs-on: ${{ matrix.runs-on }}
-#
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v3
-#        with:
-#          submodules: recursive
-#
-#      - name: Setup Python
-#        uses: actions/setup-python@v4
-#        with:
-#          python-version: 3.9
-#          architecture: ${{ matrix.python-arch }}
-#
-#      - name: Setup CMake
-#        uses: jwlawson/actions-setup-cmake@v2.0
-#
-#      - name: Setup cache for vcpkg
-#        id: cache-vcpkg
-#        uses: actions/cache@v3
-#        with:
-#          path: |
-#            ./vcpkg_installed  # Cached path for packages
-#            ./vcpkg/buildtrees
-#            ./vcpkg/downloads
-#          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}-v2
-#          restore-keys: |
-#            ${{ runner.os }}-vcpkg-
-#
-#      - name: Bootstrap vcpkg
-#        run: |
-#          ./vcpkg/bootstrap-vcpkg.sh
-#
-#      - name: Install dependencies with vcpkg
-#        run: |
-#          ./vcpkg/vcpkg install
-#
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # macos-13 is an intel runner, macos-14 is apple silicon
+        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Make sure submodules are updated
+        run: |
+          git submodule sync --recursive
+          git submodule update --init --recursive --force
+          cd vcpkg
+          git fetch --all --unshallow || true
+          cd ..
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup cmake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '3.27.x'
+
+      - name: Install necessary packages for vcpkg to manage python
+        run: |
+          sudo apt-get install autoconf automake autoconf-archive
+
+      - name: Setup cache for vcpkg
+        id: cache-vcpkg
+        uses: actions/cache@v4
+        with:
+          path: |
+            ./vcpkg_installed  # Cached path for packages
+            ./vcpkg/buildtrees
+            ./vcpkg/downloads
+            ./vcpkg/packages
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-
+
+      - name: Bootstrap vcpkg
+        if: steps.cache-vcpkg.outputs.cache-hit != 'true'
+        run: |
+          ./vcpkg/bootstrap-vcpkg.sh
+
+      - name: Install dependencies with vcpkg
+        if: steps.cache-vcpkg.outputs.cache-hit != 'true'
+        run: |
+          ./vcpkg/vcpkg install --x-binarycaching
+
+      - name: Set VCPKG_PATH environment variable
+        run: |
+          echo "VCPKG_PATH=$(pwd)" >> $GITHUB_ENV
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.21.3
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl
+
 #      - name: Build and test wheels
 #        uses: pypa/cibuildwheel@v2.21.3
 #        env:
@@ -179,8 +184,8 @@ jobs:
 #          CIBW_ARCHS_MACOS: "x86_64 arm64"
 #          CIBW_ARCHS_WINDOWS: "AMD64 x86"
 #          CIBW_BEFORE_ALL_MACOS: bash build_tools/github/before_all_mac.sh
-#          CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
-#          CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3_windows.sh
+##          CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
+##          CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3_windows.sh
 #          CIBW_ENVIRONMENT_WINDOWS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_ARCH="${{ matrix.platform_id == 'win32' && '-A Win32' || '' }}"
 #          CIBW_ENVIRONMENT_MACOS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch == 'macosx_x86_64' && 'x86_64' || matrix.cibw-arch == 'macosx_arm64' && 'arm64' || matrix.cibw-arch == 'macosx_universal2' && '"arm64;x86_64"' || '' }} BUILD_ARCH=${{ matrix.cibw-arch }} EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP=TRUE -DMACOSX_DEPLOYMENT_TARGET=10.5'
 #          CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"

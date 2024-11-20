@@ -48,6 +48,17 @@ To be able to install EGTtools, you must have:
 * Ideally, you should also install [**OpenBLAS**](https://www.openblas.net), which offers optimized implementations of
   linear algebra kernels for several processor architectures, and install numpy and scipy versions that use it.
 
+**Eigen and Boost are now installed through vcpkg, which comes included as a submodule. You must initialise vcpkg by
+running
+`./vcpkg/bootstrap-vcpkg.sh` before building the project (see [vcpkg repo](https://github.com/microsoft/vcpkg) for more
+info).**
+
+**Note**: If you want to install EGTtools from a source distribution, you must initialize the environmental variable
+`VCPKG_PATH` to the path where you have vcpkg installed. This is necessary for the setup.py script to find the necessary
+libraries. You must also initialize the environmental variable `EGTTOOLS_EXTRA_CMAKE_ARGS` with the option
+`-DLIBOMP_PATH=<path_to_libomp>` if you
+want to compile with OpenMP.
+
 ## Downloading sources
 
 When cloning the repository you should also clone the submodules so that pybind11 is downloaded. You can do that by
@@ -381,6 +392,7 @@ If you use EGTtools in your publications, please cite it in the following way wi
   doi = {https://doi.org/10.1016/j.isci.2023.106419}
 }
 ```
+
 Or in text format:
 
 ```

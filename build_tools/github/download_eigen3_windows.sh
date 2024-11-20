@@ -3,7 +3,7 @@
 set -e
 set -x
 
-choco install eigen
+#choco install eigen
 
 #curl.exe --output eigen-3.3.9.tar.gz --url https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
 #tar -zxvf eigen-3.3.9.tar.gz
@@ -14,5 +14,5 @@ choco install eigen
 export EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'
 #echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'" >> $GITHUB_ENV
 
-choco install boost-msvc-14.3
+#choco install boost-msvc-14.3
 
