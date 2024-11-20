@@ -160,7 +160,12 @@ jobs:
       - name: Install necessary packages for vcpkg to manage python (macOS)
         if: runner.os == 'macOS'
         run: |
-          brew install autoconf automake autoconf-archive
+          brew install autoconf automake autoconf-archive libomp openblas
+
+      - name: Install necessary packages for vcpkg to manage python (Linux)
+        if: runner.os == 'Windows'
+        run: |
+          choco install libomp
 
       - name: Setup cache for vcpkg
         id: cache-vcpkg
@@ -189,7 +194,7 @@ jobs:
       - name: Install dependencies with vcpkg
         if: steps.cache-vcpkg.outputs.cache-hit != 'true'
         run: |
-          ./vcpkg/vcpkg install --x-binarycaching
+          ./vcpkg/vcpkg install --x-binarycaching   
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.21.3
@@ -206,6 +211,7 @@ jobs:
           # toolchain
           CIBW_CONFIG_SETTINGS_WINDOWS: "setup-args=--vsenv"
           CIBW_BEFORE_ALL_MACOS: brew install libomp
+          CIBW_BEFORE_ALL_WINDOWS: choco install libomp
 
       - uses: actions/upload-artifact@v4
         with:
