@@ -31,6 +31,7 @@ try:
     from skbuild import setup
     from setuptools import find_packages
     from setuptools.command.sdist import sdist as _sdist
+    from setuptools.command.build_ext import build_ext as _build_ext
 except ImportError:
     print("Please update pip to pip 10 or greater, or a manually install the PEP 518 requirements in pyproject.toml",
           file=sys.stderr)
@@ -52,7 +53,40 @@ def find_folder_recursively(start_path, folder_name):
     return matching_folders
 
 
-class sdist(_sdist):
+# class sdist(_sdist):
+    # def run(self):
+    #     if not os.path.exists("vcpkg"):
+    #         print("Cloning vcpkg...")
+    #         subprocess.check_call(["git", "clone", "https://github.com/microsoft/vcpkg.git"])
+    #         subprocess.check_call(["./vcpkg/bootstrap-vcpkg.sh"])
+    #         print("vcpkg is ready.")
+    #     print("Installing vcpkg dependencies...")
+    #     subprocess.check_call(["./vcpkg/vcpkg", "install"])
+    #
+    #     # # Path to vcpkg installed libraries
+    #     # vcpkg_lib_path = os.path.join('vcpkg_installed')
+    #     # package_lib_path = os.path.join('external')
+    #     #
+    #     # found_folders = find_folder_recursively(os.getcwd(), "vcpkg_installed")
+    #     #
+    #     # if type(found_folders) is not list or len(found_folders) == 0:
+    #     #     raise FileNotFoundError("Could not find the vcpkg_installed folder. Make sure you have run the install_vcpkg.sh script.")
+    #     # elif len(found_folders) > 1:
+    #     #     # Ensure the package lib directory exists
+    #     #     os.makedirs(package_lib_path, exist_ok=True)
+    #     #
+    #     #     # Copy vcpkg libraries to the package directory
+    #     #     if os.path.isdir(found_folders[0]):
+    #     #         # Recursively copy subdirectories
+    #     #         shutil.copytree(found_folders[0], package_lib_path, dirs_exist_ok=True)
+    #     #     else:
+    #     #         # Copy files
+    #     #         shutil.copy2(found_folders[0], package_lib_path)
+    #
+    #     # Run the original sdist command
+    #     _sdist.run(self)
+
+class build_ext(_build_ext):
     def run(self):
         if not os.path.exists("vcpkg"):
             print("Cloning vcpkg...")
@@ -82,9 +116,8 @@ class sdist(_sdist):
                 # Copy files
                 shutil.copy2(found_folders[0], package_lib_path)
 
-        # Run the original sdist command
-        _sdist.run(self)
-
+        # Run the original build_ext command
+        _build_ext.run(self)
 
 def find_version():
     with io.open(os.path.join(os.path.dirname(__file__), "cpp/src", "version.h"), encoding='utf8') as f:
@@ -124,5 +157,5 @@ setup(
         os.environ.get('EGTTOOLS_EXTRA_CMAKE_ARGS', '')),
     cmake_install_dir="src/egttools/numerical",
     cmake_with_sdist=False,
-    cmdclass={'sdist': sdist},
+    cmdclass={'build_ext': build_ext},
 )

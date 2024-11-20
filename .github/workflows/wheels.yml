@@ -89,13 +89,17 @@ jobs:
         run: |
           pip install --user check-manifest twine
 
+      - name: Build sdist
+        run: |
+          python -m build --sdist --outdir wheelhouse
+
       - name: Run check-manifest
         run: |
           python -m check_manifest --verbose
 
-      - name: Build sdist
+      - name: Install from sdist
         run: |
-          python -m build --sdist --outdir wheelhouse
+          pip install --user wheelhouse/*.tar.gz
 
       - name: Check sdist metadata
         run: |

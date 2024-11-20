@@ -37,12 +37,8 @@ graft src/egttools/plotting
 graft pybind11
 graft tests
 
-graft vcpkg
-prune vcpkg/buildtrees
-prune vcpkg/downloads
-prune vcpkg/packages
-exclude vcpkg/vcpkg
-exclude vcpkg/vcpkg.disable-metrics
+prune vcpkg
+prune vcpkg_installed
 
 include .gitmodules
 
