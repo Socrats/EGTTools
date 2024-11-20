@@ -31,12 +31,12 @@ jobs:
 
       - name: Make sure submodules are updated
         run: |
-#          git submodule update --force --recursive --init --remote
           it submodule sync --recursive
           git submodule update --init --recursive --force
           cd vcpkg
           git fetch --all --unshallow || true
           cd ..
+#          git submodule update --force --recursive --init --remote
 
       - name: Setup Python
         uses: actions/setup-python@v5
