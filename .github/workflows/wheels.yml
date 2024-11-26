@@ -197,13 +197,13 @@ jobs:
           ./vcpkg/vcpkg install --x-binarycaching   
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.21.3
+        uses: pypa/cibuildwheel@v2.22.0
         env:
           CIBW_ARCHS: all
           CIBW_ENVIRONMENT_LINUX: VCPKG_PATH=$(pwd) CFLAGS="-fopenmp" LDFLAGS="-fopenmp"
-          CIBW_ENVIRONMENT_MACOS: VCPKG_PATH=$(pwd) CFLAGS="-Xpreprocessor -fopenmp -I/usr/local/include" LDFLAGS="-L/usr/local/lib -lomp -L$(brew --prefix libomp)/lib"
-          CIBW_ENVIRONMENT_WINDOWS: VCPKG_PATH=$(pwd) CFLAGS="-Xclang -fopenmp" LDFLAGS="/openmp"
-          CIBW_BUILD: "cp39-${{ matrix.platform_id }} cp310-${{ matrix.platform_id }} cp311-${{ matrix.platform_id }} cp312-${{ matrix.platform_id }} cp313-${{ matrix.platform_id }}"
+          CIBW_ENVIRONMENT_MACOS: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DSKIP_OPENMP=TRUE"
+          CIBW_ENVIRONMENT_WINDOWS: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DSKIP_OPENMP=TRUE"
+          CIBW_BUILD: "cp39-${{ matrix.platform_id }} cp310-${{ matrix.platform_id }} cp311-${{ matrix.platform_id }} cp312-${{ matrix.platform_id }}"
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
           # Needed on Windows CI to compile with Visual Studio compiler
@@ -212,6 +212,7 @@ jobs:
           CIBW_CONFIG_SETTINGS_WINDOWS: "setup-args=--vsenv"
           CIBW_BEFORE_ALL_MACOS: brew install libomp
           CIBW_BEFORE_ALL_WINDOWS: choco install libomp
+          CIBW_ENVIRONMENT_PASS_LINUX: RUNNER_OS
 
       - uses: actions/upload-artifact@v4
         with:

@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
-cmake_minimum_required(VERSION 3.27)
+cmake_minimum_required(VERSION 3.30)
 project(egttools LANGUAGES CXX)
 
 #set(SKIP_OPENMP TRUE)
@@ -52,9 +52,6 @@ if (MSVC)
 endif ()
 
 if (APPLE)
-    #    message("-- try to install eigen3 if not installed already")
-    #    execute_process(COMMAND brew install eigen)
-    #    message("----------------")
     message("-- Building for architecture ${CMAKE_OSX_ARCHITECTURES}")
     set(_msg "Checking which MACOSX_DEPLOYMENT_TARGET to use")
     message(STATUS "${_msg}")
@@ -63,24 +60,8 @@ if (APPLE)
 endif ()
 
 # Necessary for certain MacOX versions to find homebrew OpenMP
+#find_package(OpenMP)
 if (APPLE AND NOT SKIP_OPENMP)
-    #    message("-- Try to install OpenMP")
-    #    message(STATUS "BUILD_ARCH=$ENV{BUILD_ARCH}")
-    #    if ("$ENV{BUILD_ARCH}" MATCHES "macosx_x86_64|macosx_universal2")
-    #        message(STATUS "Using ANACONDA OpenMP")
-    #        set(OPENMP_URL "https://anaconda.org/conda-forge/llvm-openmp/11.1.0/download/osx-64/llvm-openmp-11.1.0-hda6cdc1_1.tar.bz2")
-    #        execute_process(COMMAND conda install ${OPENMP_URL})
-    #        set(LIBOMP_DIR $ENV{CONDA_PREFIX})
-    #    else()
-    #        execute_process(COMMAND brew install libomp)
-    #        execute_process(COMMAND brew --prefix libomp OUTPUT_VARIABLE LIBOMP_DIR)
-    #        string(STRIP ${LIBOMP_DIR} LIBOMP_DIR)
-    #    endif()
-
-    #    execute_process(COMMAND brew install libomp)
-    #    execute_process(COMMAND brew --prefix libomp OUTPUT_VARIABLE LIBOMP_DIR)
-    #    string(STRIP ${LIBOMP_DIR} LIBOMP_DIR)
-
     if (CMAKE_C_COMPILER_ID MATCHES "Clang\$")
         set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${LIBOMP_DIR}/include")
         set(OpenMP_C_LIB_NAMES "omp")
@@ -94,7 +75,12 @@ if (APPLE AND NOT SKIP_OPENMP)
         set(OpenMP_omp_LIBRARY ${LIBOMP_DIR}/lib/libomp.dylib)
         set(LDFLAGS "$LDFLAGS -Wl,-rpath,${LIBOMP_DIR}/lib -L${LIBOMP_DIR}/lib -lomp")
     endif ()
+#    set(CPPFLAGS "${CPPFLAGS} -Xpreprocessor -fopenmp")
+#    set(CFLAGS "${CFLAGS} -I${LIBOMP_DIR}/include")
+#    set(CXXFLAGS "${CXXFLAGS} -I${LIBOMP_DIR}/include")
+#    set(LDFLAGS "${LDFLAGS} -Wl,-rpath,${LIBOMP_DIR}/lib -L${LIBOMP_DIR}/lib -lomp")
 endif ()
+#find_package(OpenMP)
 
 if (NOT WIN32)
     add_definitions(
