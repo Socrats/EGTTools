@@ -84,6 +84,7 @@ jobs:
 
       - name: Build sdist
         run: |
+          echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP=TRUE'" >> $GITHUB_ENV
           python -m build --sdist --outdir wheelhouse
 
       - name: Run check-manifest
