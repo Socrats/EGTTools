@@ -32,9 +32,19 @@ except ImportError:
           file=sys.stderr)
     raise
 
+def transform_to_windows_path(path):
+    # Replace the leading backslash with the drive letter D:
+    if path.startswith('\\'):
+        path = 'D:' + path
+    # Normalize the path to handle different separators
+    normalized_path = os.path.normpath(path)
+    return normalized_path
+
 vcpkg_path = os.environ.get('VCPKG_PATH', '')
 vcpkg_toolchain_file = os.path.normpath(os.path.join(vcpkg_path, 'vcpkg', 'scripts',
                                     'buildsystems', 'vcpkg.cmake'))
+if os.name == 'nt':
+    vcpkg_toolchain_file = transform_to_windows_path(vcpkg_toolchain_file)
 cmake_args = shlex.split(os.environ.get('EGTTOOLS_EXTRA_CMAKE_ARGS', ''))
 cmake_args.append(f'-DCMAKE_TOOLCHAIN_FILE={vcpkg_toolchain_file}')
 
