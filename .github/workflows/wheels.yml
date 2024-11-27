@@ -162,10 +162,10 @@ jobs:
         run: |
           brew install autoconf automake autoconf-archive libomp openblas
 
-      - name: Install necessary packages for vcpkg to manage python (Linux)
-        if: runner.os == 'Windows'
-        run: |
-          choco install libomp
+#      - name: Install necessary packages for vcpkg to manage python (Linux)
+#        if: runner.os == 'Windows'
+#        run: |
+#          choco install libomp
 
       - name: Setup cache for vcpkg
         id: cache-vcpkg
