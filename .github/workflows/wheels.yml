@@ -65,7 +65,6 @@ jobs:
             ${{ runner.os }}-vcpkg-
 
       - name: Bootstrap vcpkg
-        if: steps.cache-vcpkg.outputs.cache-hit != 'true'
         run: |
           ./vcpkg/bootstrap-vcpkg.sh
 
@@ -183,12 +182,12 @@ jobs:
             ${{ runner.os }}-vcpkg-
 
       - name: Bootstrap vcpkg
-        if: steps.cache-vcpkg.outputs.cache-hit != 'true' && runner.os != 'Windows'
+        if: runner.os != 'Windows'
         run: |
           ./vcpkg/bootstrap-vcpkg.sh
 
       - name: Bootstrap vcpkg
-        if: steps.cache-vcpkg.outputs.cache-hit != 'true' && runner.os == 'Windows'
+        if: runner.os == 'Windows'
         run: |
           ./vcpkg/bootstrap-vcpkg.bat
 

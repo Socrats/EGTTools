@@ -33,8 +33,8 @@ except ImportError:
     raise
 
 vcpkg_path = os.environ.get('VCPKG_PATH', '')
-vcpkg_toolchain_file = os.path.join(vcpkg_path, 'vcpkg', 'scripts',
-                                    'buildsystems', 'vcpkg.cmake')
+vcpkg_toolchain_file = os.path.normpath(os.path.join(vcpkg_path, 'vcpkg', 'scripts',
+                                    'buildsystems', 'vcpkg.cmake'))
 cmake_args = shlex.split(os.environ.get('EGTTOOLS_EXTRA_CMAKE_ARGS', ''))
 cmake_args.append(f'-DCMAKE_TOOLCHAIN_FILE={vcpkg_toolchain_file}')
 
