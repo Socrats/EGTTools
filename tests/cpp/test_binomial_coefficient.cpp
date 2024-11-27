@@ -2,9 +2,7 @@
 // Created by Elias Fernandez on 07/11/2022.
 //
 #include <algorithm>
-#include <cassert>
 #include <iostream>
-//#include <boost/multiprecison/cpp_int.hpp>
 #include <egttools/Distributions.h>
 #include <egttools/Types.h>
 

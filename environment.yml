@@ -1,4 +1,4 @@
-name: egttools-env
+name: egttools
 channels:
   - conda-forge
 dependencies:

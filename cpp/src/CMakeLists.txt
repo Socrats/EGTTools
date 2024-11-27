@@ -32,7 +32,7 @@ if (UNIX)
             -Wall
             -Wextra
             -Wno-unknown-pragmas
-            )
+    )
 endif ()
 
 set_target_properties(numerical_ PROPERTIES
@@ -45,11 +45,21 @@ set_target_properties(numerical_ PROPERTIES
         # be overridden at runtime. This was likely caused by different translation units being compiled with different visibility settings."
         C_VISIBILITY_PRESET hidden
         CXX_VISIBILITY_PRESET hidden
-        )
+)
 
 target_include_directories(numerical_ SYSTEM INTERFACE ${CMAKE_SOURCE_DIR})
 
-if (OPENMP_FOUND)
+if (Boost_FOUND)
+    get_target_property(Boost_INCLUDE_DIRS Boost::multiprecision INTERFACE_INCLUDE_DIRECTORIES)
+    message(STATUS "Boost Include Directories: ${Boost_INCLUDE_DIRS}")
+    target_include_directories(numerical_ PRIVATE ${Boost_INCLUDE_DIRS})
+    target_link_libraries(numerical_ PRIVATE Boost::multiprecision)
+    add_definitions("-DHAS_BOOST")
+else()
+    message(FATAL_ERROR "Boost not found")
+endif()
+
+if (OpenMP_CXX_FOUND)
     message("-- linking OpenMP to target numerical_")
     # TODO: Make sure that having dynamic linking will work on Pypi
     target_link_libraries(numerical_ PRIVATE OpenMP::OpenMP_CXX)

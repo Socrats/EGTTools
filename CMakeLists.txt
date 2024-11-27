@@ -18,11 +18,17 @@
 cmake_minimum_required(VERSION 3.30)
 project(egttools LANGUAGES CXX)
 
+
 #set(SKIP_OPENMP TRUE)
 
 # Set PYTHONPATH
 
 #set(PYTHONPATH src/:${PYTHONPATH})
+
+# Set the vcpkg toolchain file
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
+endif()
 
 # For additional Find library scripts
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules/")
@@ -67,6 +73,8 @@ if (APPLE AND NOT SKIP_OPENMP)
         set(OpenMP_C_LIB_NAMES "omp")
         set(OpenMP_omp_LIBRARY ${LIBOMP_DIR}/lib/libomp.dylib)
         set(LDFLAGS "$LDFLAGS -Wl,-rpath,${LIBOMP_DIR}/lib -L${LIBOMP_DIR}/lib -lomp")
+        set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+        set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
     endif ()
 
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang\$")
@@ -74,6 +82,8 @@ if (APPLE AND NOT SKIP_OPENMP)
         set(OpenMP_CXX_LIB_NAMES "omp")
         set(OpenMP_omp_LIBRARY ${LIBOMP_DIR}/lib/libomp.dylib)
         set(LDFLAGS "$LDFLAGS -Wl,-rpath,${LIBOMP_DIR}/lib -L${LIBOMP_DIR}/lib -lomp")
+        set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+        set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
     endif ()
 #    set(CPPFLAGS "${CPPFLAGS} -Xpreprocessor -fopenmp")
 #    set(CFLAGS "${CFLAGS} -I${LIBOMP_DIR}/include")
@@ -111,19 +121,15 @@ if (EIGEN3_FOUND)
     message(STATUS "Eigen found")
 endif ()
 
-find_package(Boost)
-if (Boost_FOUND)
-    include_directories(${Boost_INCLUDE_DIR})
-    add_definitions("-DHAS_BOOST")
-    message(STATUS "Boost found")
-endif ()
+set(Boost_DEBUG ON)
+find_package(Boost REQUIRED COMPONENTS multiprecision)
 
 #include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
 
 # Support for OpenMP parallelization - not on windows
 if (NOT MSVC AND NOT SKIP_OPENMP)
     find_package(OpenMP)
-    if (OPENMP_FOUND)
+    if (OpenMP_CXX_FOUND)
         include_directories(SYSTEM ${OPENMP_INCLUDE_DIR})
         message(STATUS "OpenMP enabled")
         if (NOT APPLE)
@@ -161,5 +167,6 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
 add_subdirectory(${PROJECT_SOURCE_DIR}/docs)
 
 if (SKBUILD)
+    install(FILES ${LIBOMP_DIR}/lib/libomp.dylib DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
     install(TARGETS numerical_ LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX})
 endif ()
