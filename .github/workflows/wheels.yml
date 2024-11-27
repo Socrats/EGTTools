@@ -200,8 +200,9 @@ jobs:
         uses: pypa/cibuildwheel@v2.22.0
         env:
           CIBW_ARCHS: all
+          MACOSX_DEPLOYMENT_TARGET: 10.12
           CIBW_ENVIRONMENT_LINUX: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DSKIP_OPENMP=TRUE"
-          CIBW_ENVIRONMENT_MACOS: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DSKIP_OPENMP=TRUE CMAKE_OSX_DEPLOYMENT_TARGET=10.12"
+          CIBW_ENVIRONMENT_MACOS: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DSKIP_OPENMP=TRUE"
           CIBW_ENVIRONMENT_WINDOWS: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DSKIP_OPENMP=TRUE"
           CIBW_BUILD: "cp39-${{ matrix.platform_id }} cp310-${{ matrix.platform_id }} cp311-${{ matrix.platform_id }} cp312-${{ matrix.platform_id }}"
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
