@@ -212,6 +212,10 @@ jobs:
           CIBW_CONFIG_SETTINGS_WINDOWS: "setup-args=--vsenv"
           CIBW_BEFORE_ALL_MACOS: brew install libomp
           CIBW_ENVIRONMENT_PASS_LINUX: RUNNER_OS
+        with:
+          package-dir: .
+          output-dir: wheelhouse
+          config-file: "{package}/pyproject.toml"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -240,15 +244,15 @@ jobs:
       #
       - name: Upload wheels
         if: startsWith(github.ref, 'refs/heads/docs') != true
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@v4
         with:
           name: wheels
-          path: wheelhouse/egttools-*.whl
+          path: ./wheelhouse/egttools-*.whl
           if-no-files-found: error
 
       - name: Upload wheel for ReadTheDocs
         if: runner.os == 'Linux' && matrix.cibw-arch == 'manylinux_x86_64' && startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@v4
         with:
           name: rtd-wheel
           path: wheelhouse/egttools-*-cp39-cp39-*manylinux2014_x86_64*.whl
@@ -283,7 +287,7 @@ jobs:
 
     steps:
       - name: Collect sdist and wheels
-        uses: actions/download-artifact@v4.1.8
+        uses: actions/download-artifact@v4
         with:
           name: wheels
           path: wheelhouse
