@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2020  Elias Fernandez
+# Copyright (c) 2019-2025  Elias Fernandez
 #
 # This file is part of EGTtools.
 #
@@ -17,13 +17,6 @@
 
 cmake_minimum_required(VERSION 3.30)
 project(egttools LANGUAGES CXX)
-
-
-#set(SKIP_OPENMP TRUE)
-
-# Set PYTHONPATH
-
-#set(PYTHONPATH src/:${PYTHONPATH})
 
 # Set the vcpkg toolchain file
 if (NOT DEFINED CMAKE_TOOLCHAIN_FILE)
@@ -65,33 +58,6 @@ if (APPLE)
     message(STATUS "${_msg} - ${MACOSX_DEPLOYMENT_TARGET}")
 endif ()
 
-# Necessary for certain MacOX versions to find homebrew OpenMP
-#find_package(OpenMP)
-if (APPLE AND NOT SKIP_OPENMP)
-    if (CMAKE_C_COMPILER_ID MATCHES "Clang\$")
-        set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${LIBOMP_DIR}/include")
-        set(OpenMP_C_LIB_NAMES "omp")
-        set(OpenMP_omp_LIBRARY ${LIBOMP_DIR}/lib/libomp.dylib)
-        set(LDFLAGS "$LDFLAGS -Wl,-rpath,${LIBOMP_DIR}/lib -L${LIBOMP_DIR}/lib -lomp")
-        set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-        set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-    endif ()
-
-    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang\$")
-        set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${LIBOMP_DIR}/include")
-        set(OpenMP_CXX_LIB_NAMES "omp")
-        set(OpenMP_omp_LIBRARY ${LIBOMP_DIR}/lib/libomp.dylib)
-        set(LDFLAGS "$LDFLAGS -Wl,-rpath,${LIBOMP_DIR}/lib -L${LIBOMP_DIR}/lib -lomp")
-        set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-        set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-    endif ()
-    #    set(CPPFLAGS "${CPPFLAGS} -Xpreprocessor -fopenmp")
-    #    set(CFLAGS "${CFLAGS} -I${LIBOMP_DIR}/include")
-    #    set(CXXFLAGS "${CXXFLAGS} -I${LIBOMP_DIR}/include")
-    #    set(LDFLAGS "${LDFLAGS} -Wl,-rpath,${LIBOMP_DIR}/lib -L${LIBOMP_DIR}/lib -lomp")
-endif ()
-#find_package(OpenMP)
-
 if (NOT WIN32)
     add_definitions(
             -Wall
@@ -103,7 +69,54 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-#set(EIGEN_VERSION_REQUIRED 3.3)
+# Find BLAS/LAPACK and Eigen
+if (APPLE)
+    find_library(ACCELERATE_FRAMEWORK Accelerate)
+    find_library(LAPACKE_LIB lapacke PATHS /opt/local/lib ${LAPACK_DIR}/lib)
+    if (ACCELERATE_FRAMEWORK AND LAPACKE_LIB)
+        message(STATUS "Using Accelerate framework and LAPACKE")
+        add_compile_definitions(EIGEN_USE_BLAS EIGEN_USE_LAPACKE)
+    else ()
+        message(FATAL_ERROR "Accelerate framework or LAPACKE library not found")
+    endif ()
+else ()
+    find_package(BLAS REQUIRED)
+    find_package(LAPACK REQUIRED)
+    find_library(LAPACKE_LIB lapacke REQUIRED PATHS ${CMAKE_PREFIX_PATH})
+    if (BLAS_FOUND AND LAPACK_FOUND AND LAPACKE_LIB)
+        message(STATUS "BLAS, LAPACK, and LAPACKE found")
+        add_compile_definitions(EIGEN_USE_BLAS EIGEN_USE_LAPACKE)
+    else ()
+        message(FATAL_ERROR "BLAS, LAPACK, or LAPACKE not found")
+    endif ()
+endif ()
+
+# Necessary for certain MacOX versions to find homebrew OpenMP
+if (NOT SKIP_OPENMP)
+    message(STATUS "OpenMP lib at ${LIBOMP_DIR}")
+    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${LIBOMP_DIR}/include")
+    set(OpenMP_omp_LIBRARY "${LIBOMP_DIR}/lib/libomp.dylib")
+    set(LDFLAGS "$LDFLAGS -Wl,-rpath,${LIBOMP_DIR}/lib -L${LIBOMP_DIR}/lib -lomp")
+    set(OpenMP_CXX_LIB_NAMES "omp")
+    set(OpenMP_C_LIB_NAMES "omp")
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+
+    find_package(OpenMP)
+    if (OpenMP_CXX_FOUND)
+        include_directories(SYSTEM ${OPENMP_INCLUDE_DIR})
+        message(STATUS "OpenMP enabled")
+        if (NOT APPLE)
+            SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+            SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -fopenmp")
+        else ()
+            SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+            SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+        endif ()
+    else ()
+        message(STATUS "OpenMP not found!")
+    endif ()
+endif ()
 
 find_package(Eigen3 ${EIGEN_VERSION_REQUIRED} QUIET CONFIG)
 if (NOT EIGEN3_FOUND)
@@ -121,36 +134,8 @@ if (EIGEN3_FOUND)
     message(STATUS "Eigen found")
 endif ()
 
-set(Boost_DEBUG ON)
+#set(Boost_DEBUG ON)
 find_package(Boost REQUIRED COMPONENTS multiprecision)
-
-#include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
-
-# Support for OpenMP parallelization - not on windows
-if (NOT MSVC AND NOT SKIP_OPENMP)
-    find_package(OpenMP)
-    if (OpenMP_CXX_FOUND)
-        include_directories(SYSTEM ${OPENMP_INCLUDE_DIR})
-        message(STATUS "OpenMP enabled")
-        if (NOT APPLE)
-            SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-            SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -fopenmp")
-        else ()
-            SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-            SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-        endif ()
-    endif ()
-endif ()
-
-# Currently, scikit-build does not support FindPython.
-#if (SKBUILD)
-#    set(Python_EXECUTABLE "${PYTHON_EXECUTABLE}")
-#    set(Python_INCLUDE_DIR "${PYTHON_INCLUDE_DIR}")
-#    unset(PYTHON_EXECUTABLE)
-#    unset(PYTHON_INCLUDE_DIR)
-#    unset(PYTHON_LIBRARY)
-#    unset(PYTHON_VERSION_STRING)
-#endif ()
 
 set(Python_FIND_IMPLEMENTATIONS CPython PyPy)
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)

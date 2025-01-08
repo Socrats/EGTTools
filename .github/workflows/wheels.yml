@@ -160,7 +160,7 @@ jobs:
       - name: Install necessary packages for vcpkg to manage python (macOS)
         if: runner.os == 'macOS'
         run: |
-          brew install autoconf automake autoconf-archive libomp openblas
+          brew install autoconf automake autoconf-archive openblas
 
       #      - name: Install necessary packages for vcpkg to manage python (Linux)
       #        if: runner.os == 'Windows'
@@ -242,13 +242,13 @@ jobs:
       #          CIBW_TEST_COMMAND: pytest {project}/tests
       #          CIBW_BUILD_VERBOSITY: 1
       #
-      - name: Upload wheels
-        if: startsWith(github.ref, 'refs/heads/docs') != true
-        uses: actions/upload-artifact@v4
-        with:
-          name: wheels
-          path: ./wheelhouse/egttools-*.whl
-          if-no-files-found: error
+#      - name: Upload wheels
+#        if: startsWith(github.ref, 'refs/heads/docs') != true
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: wheels
+#          path: ./wheelhouse/egttools-*.whl
+#          if-no-files-found: error
 
       - name: Upload wheel for ReadTheDocs
         if: runner.os == 'Linux' && matrix.cibw-arch == 'manylinux_x86_64' && startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
