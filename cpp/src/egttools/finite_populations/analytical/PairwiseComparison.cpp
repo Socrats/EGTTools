@@ -19,13 +19,13 @@
 #include <egttools/finite_populations/analytical/PairwiseComparison.hpp>
 
 egttools::FinitePopulations::analytical::PairwiseComparison::PairwiseComparison(int population_size,
-                                                                                egttools::FinitePopulations::AbstractGame &game) : population_size_(population_size),
-                                                                                                                                   cache_size_(100),
-                                                                                                                                   game_(game),
-                                                                                                                                   cache_(cache_size_) {
+    egttools::FinitePopulations::AbstractGame &game) : population_size_(population_size),
+                                                       cache_size_(100),
+                                                       game_(game),
+                                                       cache_(cache_size_) {
     if (population_size <= 0) {
         throw std::invalid_argument(
-                "The size of the population must be a positive integer");
+            "The size of the population must be a positive integer");
     }
 
     nb_strategies_ = static_cast<int>(game.nb_strategies());
@@ -33,13 +33,13 @@ egttools::FinitePopulations::analytical::PairwiseComparison::PairwiseComparison(
 }
 
 egttools::FinitePopulations::analytical::PairwiseComparison::PairwiseComparison(int population_size,
-                                                                                egttools::FinitePopulations::AbstractGame &game, size_t cache_size) : population_size_(population_size),
-                                                                                                                                                      cache_size_(cache_size),
-                                                                                                                                                      game_(game),
-                                                                                                                                                      cache_(cache_size) {
+    egttools::FinitePopulations::AbstractGame &game, size_t cache_size) : population_size_(population_size),
+                                                                          cache_size_(cache_size),
+                                                                          game_(game),
+                                                                          cache_(cache_size) {
     if (population_size <= 0) {
         throw std::invalid_argument(
-                "The size of the population must be a positive integer");
+            "The size of the population must be a positive integer");
     }
 
     nb_strategies_ = static_cast<int>(game.nb_strategies());
@@ -60,11 +60,13 @@ void egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_
 
                 // calculate fitness of invading strategy
                 population_state(i) -= 1;
-                fitnesses(i, j * nb_elements + (z - 1)) = game_.calculate_fitness(i, population_size_, population_state);
+                fitnesses(i, j * nb_elements + (z - 1)) = game_.
+                        calculate_fitness(i, population_size_, population_state);
                 population_state(i) += 1;
 
                 population_state(j) -= 1;
-                fitnesses(j, i * nb_elements + (population_size_ - z - 1)) = game_.calculate_fitness(j, population_size_, population_state);
+                fitnesses(j, i * nb_elements + (population_size_ - z - 1)) = game_.calculate_fitness(
+                    j, population_size_, population_state);
             }
             population_state(j) = 0;
         }
@@ -85,8 +87,8 @@ void egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_
                 key1 = std::to_string(i) + result.str();
                 key2 = std::to_string(j) + result.str();
 
-                cache_.insert(key1, fitnesses(i, j * nb_elements + (z - 1)));
-                cache_.insert(key2, fitnesses(j, i * nb_elements + (population_size_ - z - 1)));
+                cache_.put(key1, fitnesses(i, j * nb_elements + (z - 1)));
+                cache_.put(key2, fitnesses(j, i * nb_elements + (population_size_ - z - 1)));
             }
             population_state(j) = 0;
         }
@@ -94,11 +96,12 @@ void egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_
     }
 }
 
-egttools::SparseMatrix2D egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_matrix(double beta, double mu) {
+egttools::SparseMatrix2D egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_matrix(
+    const double beta, const double mu) {
     // Check if beta is positive
     if (beta < 0) {
         throw std::invalid_argument(
-                "The intensity of selection beta must not be negative!");
+            "The intensity of selection beta must not be negative!");
     }
     // First we initialise the container for the stationary distribution
     auto transition_matrix = SparseMatrix2D(nb_states_, nb_states_);
@@ -114,11 +117,13 @@ egttools::SparseMatrix2D egttools::FinitePopulations::analytical::PairwiseCompar
         mutation_probability = mu;
     }
 
+    // #pragma omp parallel for reduction(+ : transition_matrix) default(none) shared(beta, mu, not_mu, mutation_probability, nb_strategies_, population_size_)
     for (int64_t current_state_index = 0; current_state_index < nb_states_; ++current_state_index) {
         double total_probability = 0.;
 
         // get current state
-        egttools::FinitePopulations::sample_simplex(current_state_index, population_size_, nb_strategies_, current_state);
+        egttools::FinitePopulations::sample_simplex(current_state_index, population_size_, nb_strategies_,
+                                                    current_state);
 
         // copy current state
         new_state = current_state;
@@ -149,7 +154,9 @@ egttools::SparseMatrix2D egttools::FinitePopulations::analytical::PairwiseCompar
             if (homomorphic) {
                 auto new_state_index = egttools::FinitePopulations::calculate_state(population_size_, new_state);
                 // update transition matrix
-                transition_matrix.coeffRef(current_state_index, static_cast<int64_t>(new_state_index)) = mutation_probability;
+
+                transition_matrix.coeffRef(current_state_index, static_cast<int64_t>(new_state_index)) =
+                        mutation_probability;
             } else {
                 // If the increasing strategy has currently 0 count, it can only
                 // increase through mutation
@@ -161,13 +168,16 @@ egttools::SparseMatrix2D egttools::FinitePopulations::analytical::PairwiseCompar
                             continue;
 
                         new_state(j) -= 1;
-                        auto new_state_index = egttools::FinitePopulations::calculate_state(population_size_, new_state);
+                        auto new_state_index =
+                                egttools::FinitePopulations::calculate_state(population_size_, new_state);
 
                         // calculate transition probability
-                        double transition_probability = (static_cast<double>(current_state(j)) / population_size_) * mutation_probability;
+                        double transition_probability =
+                                (static_cast<double>(current_state(j)) / population_size_) * mutation_probability;
 
                         // update transition matrix
-                        transition_matrix.coeffRef(current_state_index, static_cast<int64_t>(new_state_index)) = transition_probability;
+                        transition_matrix.coeffRef(current_state_index, static_cast<int64_t>(new_state_index)) =
+                                transition_probability;
 
                         total_probability += transition_probability;
                         new_state(j) += 1;
@@ -183,18 +193,24 @@ egttools::SparseMatrix2D egttools::FinitePopulations::analytical::PairwiseCompar
                             continue;
 
                         new_state(j) -= 1;
-                        auto new_state_index = egttools::FinitePopulations::calculate_state(population_size_, new_state);
+                        auto new_state_index =
+                                egttools::FinitePopulations::calculate_state(population_size_, new_state);
 
                         // calculate fitness of the decreasing strategy
                         auto fitness_decrease = calculate_fitness_(j, current_state);
 
                         // calculate transition probability
-                        double transition_probability = not_mu * (static_cast<double>(current_state(i)) / (population_size_ - 1));
-                        transition_probability *= egttools::FinitePopulations::fermi(beta, fitness_decrease, fitness_increase);
-                        transition_probability = (static_cast<double>(current_state(j)) / population_size_) * (transition_probability + mutation_probability);
+                        double transition_probability =
+                                not_mu * (static_cast<double>(current_state(i)) / (population_size_ - 1));
+                        transition_probability *= egttools::FinitePopulations::fermi(
+                            beta, fitness_decrease, fitness_increase);
+                        transition_probability =
+                                (static_cast<double>(current_state(j)) / population_size_) * (
+                                    transition_probability + mutation_probability);
 
                         // update transition matrix
-                        transition_matrix.coeffRef(current_state_index, static_cast<int64_t>(new_state_index)) = transition_probability;
+                        transition_matrix.coeffRef(current_state_index, static_cast<int64_t>(new_state_index)) =
+                                transition_probability;
 
                         total_probability += transition_probability;
                         new_state(j) += 1;
@@ -214,7 +230,8 @@ egttools::SparseMatrix2D egttools::FinitePopulations::analytical::PairwiseCompar
     return transition_matrix;
 }
 
-egttools::Vector egttools::FinitePopulations::analytical::PairwiseComparison::calculate_gradient_of_selection(double beta, const Eigen::Ref<const VectorXui> &state) {
+egttools::Vector egttools::FinitePopulations::analytical::PairwiseComparison::calculate_gradient_of_selection(
+    double beta, const Eigen::Ref<const VectorXui> &state) {
     // The gradient of selection can be calculated by summing all
     // transition incoming transition probabilities and resting all
     // outgoing transition probabilities.
@@ -248,10 +265,10 @@ egttools::Vector egttools::FinitePopulations::analytical::PairwiseComparison::ca
 }
 
 #if (HAS_BOOST)
-double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability(int index_invading_strategy, int index_resident_strategy, double beta) {
+double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability(
+    int index_invading_strategy, int index_resident_strategy, double beta) {
     cpp_dec_float_100 phi = 0;
     cpp_dec_float_100 prod = 1;
-    cpp_dec_float_100 probability_increase, probability_decrease;
 
     VectorXui population_state = VectorXui::Zero(nb_strategies_);
 
@@ -260,14 +277,18 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fi
         population_state(index_resident_strategy) = population_size_ - i;
 
         // calculate fitness of invading strategy
-        auto fitness_invading_strategy = calculate_fitness_(index_invading_strategy, population_state);
-        auto fitness_resident_strategy = calculate_fitness_(index_resident_strategy, population_state);
+        const auto fitness_invading_strategy = calculate_fitness_(index_invading_strategy, population_state);
+        const auto fitness_resident_strategy = calculate_fitness_(index_resident_strategy, population_state);
 
         // Calculate the probability that the invading strategy will increase
-        probability_increase = (static_cast<double>(population_size_ - i) / population_size_) * (static_cast<double>(i) / (population_size_ - 1));
-        probability_increase *= egttools::FinitePopulations::fermi(beta, fitness_resident_strategy, fitness_invading_strategy);
-        probability_decrease = (static_cast<double>(i) / population_size_) * (static_cast<double>(population_size_ - i) / (population_size_ - 1));
-        probability_decrease *= egttools::FinitePopulations::fermi(beta, fitness_invading_strategy, fitness_resident_strategy);
+        cpp_dec_float_100 probability_increase = (static_cast<double>(population_size_ - i) / population_size_) * (
+                                                     static_cast<double>(i) / (population_size_ - 1));
+        probability_increase *= egttools::FinitePopulations::fermi(beta, fitness_resident_strategy,
+                                                                   fitness_invading_strategy);
+        cpp_dec_float_100 probability_decrease = (static_cast<double>(i) / population_size_) * (
+                                                     static_cast<double>(population_size_ - i) / (population_size_ - 1));
+        probability_decrease *= egttools::FinitePopulations::fermi(beta, fitness_invading_strategy,
+                                                                   fitness_resident_strategy);
 
         prod *= probability_decrease / probability_increase;
         phi += prod;
@@ -310,11 +331,12 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fi
 }
 #endif
 
-std::tuple<egttools::Matrix2D, egttools::Matrix2D> egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_and_fixation_matrix_sml(double beta) {
+std::tuple<egttools::Matrix2D, egttools::Matrix2D>
+egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_and_fixation_matrix_sml(double beta) {
     Matrix2D transitions = Matrix2D::Zero(nb_strategies_, nb_strategies_);
     Matrix2D fixation_probabilities = Matrix2D::Zero(nb_strategies_, nb_strategies_);
 
-    //#pragma omp parallel for default(none) shared(beta, nb_strategies_, population_size_, transitions, fixation_probabilities)
+    #pragma omp parallel for default(none) shared(beta, nb_strategies_, population_size_, transitions, fixation_probabilities)
     for (int i = 0; i < nb_strategies_; ++i) {
         double transition_stay = 1;
         for (int j = 0; j < nb_strategies_; ++j) {
@@ -336,7 +358,7 @@ void egttools::FinitePopulations::analytical::PairwiseComparison::update_populat
     // Check if the size of the population is positive
     if (population_size <= 0) {
         throw std::invalid_argument(
-                "The size of the population must be a positive integer");
+            "The size of the population must be a positive integer");
     }
 
     population_size_ = population_size;
@@ -355,7 +377,8 @@ int egttools::FinitePopulations::analytical::PairwiseComparison::population_size
     return population_size_;
 }
 
-const egttools::FinitePopulations::AbstractGame &egttools::FinitePopulations::analytical::PairwiseComparison::game() const {
+const egttools::FinitePopulations::AbstractGame &
+egttools::FinitePopulations::analytical::PairwiseComparison::game() const {
     return game_;
 }
 
@@ -378,7 +401,8 @@ const egttools::FinitePopulations::AbstractGame &egttools::FinitePopulations::an
 //    return transition_probability;
 //}
 
-double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_local_gradient_(int decreasing_strategy, int increasing_strategy, double beta, egttools::VectorXui &state) {
+double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_local_gradient_(
+    int decreasing_strategy, int increasing_strategy, double beta, egttools::VectorXui &state) {
     state(increasing_strategy) -= 1;
     auto fitness_increasing_strategy = game_.calculate_fitness(increasing_strategy, population_size_, state);
     state(increasing_strategy) += 1;
@@ -386,13 +410,15 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_lo
     auto fitness_decreasing_strategy = game_.calculate_fitness(decreasing_strategy, population_size_, state);
     state(decreasing_strategy) += 1;
 
-    double gradient = (static_cast<double>(state(decreasing_strategy)) / population_size_) * (static_cast<double>(state(increasing_strategy)) / (population_size_ - 1));
+    double gradient = (static_cast<double>(state(decreasing_strategy)) / population_size_) * (
+                          static_cast<double>(state(increasing_strategy)) / (population_size_ - 1));
     gradient *= tanh((beta / 2) * (fitness_increasing_strategy - fitness_decreasing_strategy));
 
     return gradient;
 }
 
-double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fitness_(int &strategy_index, egttools::VectorXui &state) {
+double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fitness_(
+    int &strategy_index, egttools::VectorXui &state) {
     double fitness;
     std::stringstream result;
     result << state;
@@ -400,15 +426,15 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fi
     std::string key = std::to_string(strategy_index) + result.str();
 
     // First we check if fitness value is in the lookup table
-    if (!cache_.exists(key)) {
+    if (auto value = cache_.get(key); value) {
+        fitness = *value;
+    } else {
         state(strategy_index) -= 1;
         fitness = game_.calculate_fitness(strategy_index, population_size_, state);
         state(strategy_index) += 1;
 
         // Finally we store the new fitness in the Cache. We also keep a Cache for the payoff given each group combination
-        cache_.insert(key, fitness);
-    } else {
-        fitness = cache_.get(key);
+        cache_.put(key, fitness);
     }
 
     return fitness;

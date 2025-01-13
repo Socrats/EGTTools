@@ -39,58 +39,69 @@ uint_type_ egttools::binomial_precision(size_t n, size_t k) {
 #endif
 
 double
-egttools::multivariateHypergeometricPDF(size_t m, size_t k, size_t n, const std::vector<size_t> &sample_counts,
-                                        const std::vector<size_t> &population_counts) {
-
-    uint_type_ res = 1;
+egttools::multivariateHypergeometricPDF(const size_t m, const size_t k, const size_t n,
+                                                  const std::vector<size_t> &sample_counts,
+                                                  const std::vector<size_t> &population_counts) {
+    double res = 0;
     // First we calculate the number of unordered samples of size n chosen from the population
-    auto denominator = binomial_coeff_(m, n);
+    auto denominator = log_binomial_coefficient(m, n);
 
     // Then we calculate the multiplication of the number of all unordered subsets of a subset of the population
     // with only 1 type of object
     for (size_t i = 0; i < k; ++i) {
-        res *= binomial_coeff_(population_counts[i], sample_counts[i]);
+        if (sample_counts[i] > population_counts[i])
+            return 0;
+        res += log_binomial_coefficient(population_counts[i], sample_counts[i]);
     }
+    res -= denominator;
+    res = exp(res);
 
-    return static_cast<double>(CONVERT_TO_(res, float_type_) / CONVERT_TO_(denominator, float_type_));
+    return res;
 }
 
 double
 egttools::multivariateHypergeometricPDF(size_t m, size_t k, size_t n, const std::vector<size_t> &sample_counts,
                                         const Eigen::Ref<const VectorXui> &population_counts) {
-
-    uint_type_ res = 1;
+    double res = 0;
     // First we calculate the number of unordered samples of size n chosen from the population
-    auto denominator = binomial_coeff_(m, n);
+    auto denominator = log_binomial_coefficient(m, n);
 
     // Then we calculate the multiplication of the number of all unordered subsets of a subset of the population
     // with only 1 type of object
     for (signed long i = 0; i < static_cast<signed long>(k); ++i) {
-        res *= binomial_coeff_(population_counts(i), sample_counts[i]);
+        if (sample_counts[i] > population_counts[i])
+            return 0;
+        res += log_binomial_coefficient(population_counts(i), sample_counts[i]);
     }
+    res -= denominator;
+    res = exp(res);
 
-    return static_cast<double>(CONVERT_TO_(res, float_type_) / CONVERT_TO_(denominator, float_type_));
+    return res;
 }
 
 double
 egttools::multivariateHypergeometricPDF(size_t m, size_t k, size_t n, const Eigen::Ref<const VectorXui> &sample_counts,
                                         const Eigen::Ref<const VectorXui> &population_counts) {
-
-    uint_type_ res = 1;
+    double res = 0;
     // First we calculate the number of unordered samples of size n chosen from the population
-    auto denominator = binomial_coeff_(m, n);
+    auto denominator = log_binomial_coefficient(m, n);
 
     // Then we calculate the multiplication of the number of all unordered subsets of a subset of the population
     // with only 1 type of object
     for (signed long i = 0; i < static_cast<signed long>(k); ++i) {
-        res *= binomial_coeff_(population_counts(i), sample_counts(i));
+        if (sample_counts[i] > population_counts[i])
+            return 0;
+        res += log_binomial_coefficient(population_counts(i), sample_counts(i));
     }
+    res -= denominator;
+    res = exp(res);
 
-    return static_cast<double>(CONVERT_TO_(res, float_type_) / CONVERT_TO_(denominator, float_type_));
+    return res;
 }
 
 #if (HAS_BOOST)
-double egttools::multinomialPMF(const Eigen::Ref<const VectorXui> &group_configuration, size_t n, const Eigen::Ref<const Vector> &p) {
+double egttools::multinomialPMF(const Eigen::Ref<const VectorXui> &group_configuration, size_t n,
+                                const Eigen::Ref<const Vector> &p) {
     if (n == ULONG_MAX)
         return 0;
     // This would be an error, and probably better to throw an exception here!

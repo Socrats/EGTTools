@@ -11,9 +11,9 @@
 using namespace std;
 using namespace boost::multiprecision;
 
-double multivariateHypergeometricPDF(size_t m, size_t k, size_t n, const std::vector<size_t> &sample_counts,
-                                     const std::vector<size_t> &population_counts) {
-
+double multivariateHypergeometricPDFMultiprecision(size_t m, size_t k, size_t n,
+                                                   const std::vector<size_t> &sample_counts,
+                                                   const std::vector<size_t> &population_counts) {
     uint128_t res = 1;
     // First we calculate the number of unordered samples of size n chosen from the population
     auto denominator = egttools::binomial_precision(m, n);
@@ -46,6 +46,7 @@ int main() {
     }
 
     std::cout << "res = " << res << std::endl;
+    std::cout << "result binomial = " << egttools::binomialCoeff<cpp_int, size_t>(n, k) << std::endl;
     std::cout << "correct result = " << correct_result << std::endl;
     std::cout << "result = " << egttools::binomial_precision(n, k) << std::endl;
 
@@ -60,15 +61,28 @@ int main() {
     group_counts.push_back(7);
     group_counts.push_back(2);
 
-    std::cout << multivariateHypergeometricPDF(499, 2, 9, group_counts, population_counts) << std::endl;
-    std::cout << correct_solution1 << std::endl;
+    std::cout << "with precision" << multivariateHypergeometricPDFMultiprecision(499, 2, 9, group_counts, population_counts) << std::endl;
+    std::cout << "with new " << egttools::multivariateHypergeometricPDF(499, 2, 9, group_counts, population_counts) << std::endl;
+    std::cout << "correct results " << correct_solution1 << std::endl;
 
     std::vector<size_t> group_counts2;
     group_counts2.push_back(5);
     group_counts2.push_back(4);
 
-    std::cout << multivariateHypergeometricPDF(499, 2, 9, group_counts2, population_counts) << std::endl;
-    std::cout << correct_solution2 << std::endl;
+    std::cout << "with precision" <<  multivariateHypergeometricPDFMultiprecision(499, 2, 9, group_counts2, population_counts) << std::endl;
+    std::cout << "with new " << egttools::multivariateHypergeometricPDF(499, 2, 9, group_counts2, population_counts) << std::endl;
+    std::cout << "correct results " <<  correct_solution2 << std::endl;
+
+    std::vector<size_t> population_counts3;
+    population_counts3.push_back(498);
+    population_counts3.push_back(2);
+    std::vector<size_t> group_counts3;
+    group_counts3.push_back(10);
+    group_counts3.push_back(0);
+
+    std::cout << "3. with precision " <<  multivariateHypergeometricPDFMultiprecision(500, 2, 10, group_counts3, population_counts3) << std::endl;
+    std::cout << "3. with new " << egttools::multivariateHypergeometricPDF(500, 2, 10, group_counts3, population_counts3) << std::endl;
+    std::cout << "3. correct results " <<  0.9603607214424142 << std::endl;
 
     egttools::Vector example = egttools::Vector::Zero(3);
 
@@ -87,5 +101,4 @@ int main() {
 
     std::cout << "original = " << example << std::endl;
     std::cout << "new = " << new_example << std::endl;
-
 }

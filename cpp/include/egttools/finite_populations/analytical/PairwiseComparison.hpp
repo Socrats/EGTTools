@@ -24,7 +24,7 @@
 #include <egttools/Types.h>
 
 #include <cmath>
-#include <egttools/LruCache.hpp>
+#include <egttools/utils/ThreadSafeLRUCache.hpp>
 #include <egttools/finite_populations/Utils.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <egttools/finite_populations/games/Matrix2PlayerGameHolder.hpp>
@@ -45,7 +45,7 @@ namespace egttools::FinitePopulations::analytical {
 #if (HAS_BOOST)
     using cpp_dec_float_100 = boost::multiprecision::cpp_dec_float_100;
 #endif
-    using Cache = egttools::Utils::LRUCache<std::string, double>;
+    using Cache = egttools::Utils::ThreadSafeLRUCache<std::string, double>;
 
     /**
      * @brief Provides analytical methods to study evolutionary dynamics in finite populations
@@ -147,8 +147,11 @@ namespace egttools::FinitePopulations::analytical {
 
         // getters
         [[nodiscard]] int nb_strategies() const;
+
         [[nodiscard]] int64_t nb_states() const;
+
         [[nodiscard]] int population_size() const;
+
         [[nodiscard]] const egttools::FinitePopulations::AbstractGame &game() const;
 
     private:
@@ -174,10 +177,11 @@ namespace egttools::FinitePopulations::analytical {
          */
         //        inline double calculate_transition_(int decreasing_strategy, int increasing_strategy, double beta, double mu, VectorXui &state);
 
-        inline double calculate_local_gradient_(int decreasing_strategy, int increasing_strategy, double beta, VectorXui &state);
+        inline double calculate_local_gradient_(int decreasing_strategy, int increasing_strategy, double beta,
+                                                VectorXui &state);
 
         inline double calculate_fitness_(int &strategy_index, VectorXui &state);
     };
-}// namespace egttools::FinitePopulations::analytical
+} // namespace egttools::FinitePopulations::analytical
 
 #endif//EGTTOOLS_FINITEPOPULATIONS_ANALYTICAL_PAIRWISECOMPARISON_HPP

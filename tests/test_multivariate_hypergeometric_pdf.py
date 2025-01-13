@@ -24,6 +24,8 @@ def test_multivariate_hypergeometric_distribution_two_strategies():
                                                             group,
                                                             state)
 
+            print(state, group, prob_scipy, prob_egttools)
+
             assert np.isclose(prob_egttools, prob_scipy)
 
 
@@ -47,3 +49,23 @@ def test_multivariate_hypergeometric_distribution_three_strategies():
                                                             state)
 
             assert np.isclose(prob_egttools, prob_scipy)
+
+
+@pytest.mark.skipif(USES_BOOST is False, reason="requires egttools to be compiled with Boost C++")
+def test_multivariate_hypergeometric():
+    population_size = 500
+    group_size = 10
+    nb_strategies = 2
+    state = sample_simplex(2, population_size, nb_strategies)
+    group = sample_simplex(0, group_size, nb_strategies)
+
+    prob_scipy = multivariate_hypergeom.pmf(group, state, group_size)
+    prob_egttools = multivariate_hypergeometric_pdf(population_size,
+                                                    nb_strategies,
+                                                    group_size,
+                                                    group,
+                                                    state)
+
+    print(state, group, prob_scipy, prob_egttools)
+
+    assert np.isclose(prob_egttools, prob_scipy)

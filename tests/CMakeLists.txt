@@ -144,6 +144,12 @@ if (Boost_FOUND)
     target_link_libraries(testBinomial egttoolsNumerical Boost::multiprecision)
 endif ()
 
+if (Boost_FOUND)
+    add_executable(testBinomialTime cpp/test_binomial_coefficient_with_time.cpp)
+    target_include_directories(testBinomialTime PRIVATE ${Boost_INCLUDE_DIRS})
+    target_link_libraries(testBinomialTime egttoolsNumerical Boost::multiprecision)
+endif ()
+
 add_executable(testGameHolders cpp/test_game_holders.cpp)
 target_link_libraries(testGameHolders egttoolsNumerical)
 if (Boost_FOUND)

@@ -219,8 +219,8 @@ void init_distributions(py::module_ &mDistributions) {
 
 #if (HAS_BOOST)
     mDistributions.def(
-            "comb", [](size_t n, size_t k) {
-                auto result = egttools::binomialCoeff<boost::multiprecision::cpp_int, boost::multiprecision::cpp_int>(n, k);
+            "comb", [](const size_t n, const size_t k) {
+                auto result = egttools::binomialCoeff<boost::multiprecision::cpp_int, size_t>(n, k);
                 return py::cast(result);
             },
             R"pbdoc(
