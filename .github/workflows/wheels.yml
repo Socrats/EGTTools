@@ -139,7 +139,7 @@ jobs:
           ./vcpkg/vcpkg install
 
       - name: Build and test wheels
-        uses: pypa/cibuildwheel@v2.21.3
+        uses: pypa/cibuildwheel@v2.23.0
         env:
           CIBW_BUILD_FRONTEND: "build"
           CIBW_BUILD: "cp*-${{ matrix.cibw-arch }}"
