@@ -22,6 +22,7 @@ pybind11_add_module(numerical_
         pybind11_files/structure.cpp
         pybind11_files/behaviors.cpp
         pybind11_files/methods.cpp
+        pybind11_files/random.cpp
         pybind11_files/datastructures.cpp)
 add_subdirectory(egttools)
 

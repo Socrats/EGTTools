@@ -31,3 +31,6 @@ ignore = [
 build-frontend = "build"
 test-requires = "pytest"
 test-command = "pytest {project}/tests"
+
+[tool.scikit-build]
+cmake.args = ["-G", "Ninja"]

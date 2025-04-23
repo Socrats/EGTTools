@@ -32,6 +32,7 @@ except ImportError:
           file=sys.stderr)
     raise
 
+
 def transform_to_valid_windows_path(input_path):
     # Remove the initial backslash if it exists
     if input_path.startswith('\\'):
@@ -45,9 +46,10 @@ def transform_to_valid_windows_path(input_path):
     valid_path = os.path.normpath(valid_path)
     return valid_path
 
+
 vcpkg_path = os.environ.get('VCPKG_PATH', '')
 vcpkg_toolchain_file = os.path.normpath(os.path.join(vcpkg_path, 'vcpkg', 'scripts',
-                                    'buildsystems', 'vcpkg.cmake'))
+                                                     'buildsystems', 'vcpkg.cmake'))
 if os.name == 'nt':
     vcpkg_toolchain_file = transform_to_valid_windows_path(vcpkg_toolchain_file)
 cmake_args = shlex.split(os.environ.get('EGTTOOLS_EXTRA_CMAKE_ARGS', ''))
@@ -91,4 +93,6 @@ setup(
     cmake_args=cmake_args,
     cmake_install_dir="src/egttools/numerical",
     cmake_with_sdist=False,
+    include_package_data=True,  # required to honor MANIFEST.in
+    package_data={"egttools": ["*.pyi"]},  # or use a glob: ["**/*.pyi"]
 )

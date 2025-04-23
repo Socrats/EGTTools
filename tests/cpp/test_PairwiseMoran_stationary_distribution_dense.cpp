@@ -8,7 +8,7 @@
 #include <egttools/finite_populations/Utils.hpp>
 #include <egttools/finite_populations/games/NormalFormGame.h>
 #include <egttools/finite_populations/behaviors/NFGStrategies.hpp>
-#include <egttools/finite_populations/PairwiseMoran.hpp>
+#include <egttools/finite_populations/PairwiseComparisonNumerical.hpp>
 
 
 using namespace std;
@@ -50,7 +50,7 @@ int main() {
     egttools::FinitePopulations::NormalFormGame game(nb_rounds, payoff_matrix, strategies);
 
     // Initialise selection mutation process
-    auto smProcess = egttools::FinitePopulations::PairwiseMoran(pop_size, game, 1000000);
+    auto smProcess = egttools::FinitePopulations::PairwiseComparisonNumerical(pop_size, game, 1000000);
 
     auto start = high_resolution_clock::now();
 

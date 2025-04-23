@@ -6,7 +6,7 @@
 #include <egttools/SeedGenerator.h>
 #include <random>
 #include <egttools/finite_populations/games/NormalFormGame.h>
-#include <egttools/finite_populations/PairwiseMoran.hpp>
+#include <egttools/finite_populations/PairwiseComparisonNumerical.hpp>
 
 
 using namespace std;
@@ -28,7 +28,7 @@ int main() {
     egttools::FinitePopulations::NormalFormGame game(nb_rounds, payoff_matrix);
 
     // Initialise selection mutation process
-    auto smProcess = egttools::FinitePopulations::PairwiseMoran(pop_size, game, 1000);
+    auto smProcess = egttools::FinitePopulations::PairwiseComparisonNumerical(pop_size, game, 1000);
 
     // let's run this many times
     size_t nb_runs = 1000;

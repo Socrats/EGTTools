@@ -24,7 +24,7 @@
 namespace py = pybind11;
 using namespace std::string_literals;
 using namespace egttools;
-using PairwiseComparison = egttools::FinitePopulations::PairwiseMoran<egttools::Utils::LRUCache<std::string, double>>;
+using PairwiseComparison = egttools::FinitePopulations::PairwiseComparisonNumerical<egttools::Utils::LRUCache<std::string, double>>;
 
 namespace egttools {
 

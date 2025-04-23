@@ -8,7 +8,7 @@
 #include <egttools/SeedGenerator.h>
 #include <egttools/utils/CalculateExpectedIndicators.h>
 
-#include <egttools/finite_populations/PairwiseMoran.hpp>
+#include <egttools/finite_populations/PairwiseComparisonNumerical.hpp>
 #include <egttools/finite_populations/analytical/PairwiseComparison.hpp>
 #include <egttools/finite_populations/evolvers/GeneralPopulationEvolver.hpp>
 #include <egttools/finite_populations/evolvers/NetworkEvolver.hpp>

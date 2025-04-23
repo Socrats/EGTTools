@@ -13,7 +13,7 @@ else:
     # del numpy
     from .numerical.numerical_ import __version__
     from .numerical.numerical_ import VERSION
-    from .numerical.numerical_ import Random
+    from .numerical.numerical_.random import Random
     from .numerical.numerical_ import USES_BOOST
     from .numerical.numerical_ import (sample_simplex, sample_unit_simplex, calculate_nb_states,
                                        calculate_state,

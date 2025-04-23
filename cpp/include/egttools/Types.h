@@ -39,10 +39,10 @@ namespace egttools {
     using Factors = std::vector<size_t>;
 
     using Vector = Eigen::Matrix<double, Eigen::Dynamic, 1>;
-    using VectorXi = Eigen::Matrix<int, Eigen::Dynamic, 1>;
+    using VectorXi = Eigen::Matrix<int64_t, Eigen::Dynamic, 1>;
     using VectorXli = Eigen::Matrix<int64_t, Eigen::Dynamic, 1>;
     using VectorXui = Eigen::Matrix<size_t, Eigen::Dynamic, 1>;
-    using SparseVectorXi = Eigen::SparseVector<int, Eigen::RowMajor>;
+    using SparseVectorXi = Eigen::SparseVector<int64_t, Eigen::RowMajor>;
     using SparseVectorXui =  Eigen::SparseVector<size_t, Eigen::RowMajor>;
     using SparseVector =  Eigen::SparseVector<double, Eigen::RowMajor>;
     using Vector2d = Eigen::Matrix<double, 2, 1>;

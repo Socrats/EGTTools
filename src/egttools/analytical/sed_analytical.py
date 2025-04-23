@@ -32,22 +32,27 @@ from warnings import warn
 from .. import sample_simplex, calculate_nb_states, calculate_state
 
 
-def replicator_equation(x: np.ndarray, payoffs: np.ndarray) -> np.ndarray:
+def replicator_equation(
+        x: npt.NDArray[np.float64],
+        payoffs: npt.NDArray[np.float64]
+) -> npt.NDArray[np.float64]:
     """
-    Produces the discrete time derivative of the replicator dynamics
+    Compute the time derivative of the replicator dynamics for 2-player games.
 
-    This only works for 2-player games.
+    This function implements the standard replicator equation for continuous-time dynamics
+    in infinite populations under 2-player payoff structures.
 
     Parameters
     ----------
-    x : numpy.ndarray[numpy.float64[m,1]]
-        array containing the frequency of each strategy in the population.
-    payoffs : numpy.ndarray[numpy.float64[m,m]]
-        payoff matrix
+    x : ndarray of shape (n,)
+        Vector of strategy frequencies in the population.
+    payoffs : ndarray of shape (n, n)
+        Payoff matrix where entry [i, j] indicates the payoff of strategy i against j.
+
     Returns
     -------
-    numpy.ndarray
-        time derivative of x
+    ndarray of shape (n,)
+        Time derivative of the frequency vector under replicator dynamics.
 
     See Also
     --------
@@ -58,46 +63,38 @@ def replicator_equation(x: np.ndarray, payoffs: np.ndarray) -> np.ndarray:
     return x * (ax - np.dot(x, ax))
 
 
-def replicator_equation_n_player(x: np.ndarray, payoffs: np.ndarray, group_size: int) -> np.ndarray:
+def replicator_equation_n_player(
+        x: npt.NDArray[np.float64],
+        payoffs: npt.NDArray[np.float64],
+        group_size: int
+) -> npt.NDArray[np.float64]:
     """
-    Replicator dynamics in N-player games
+    Compute the replicator dynamics for N-player games.
 
-    The replicator equation is of the form
-
-    .. math::
-        g(x) \\equiv \\dot{x_{i}} = x_{i}(f_{i}(x) - \\sum_{j=1}^{N}{x_{j}f_{j}(x))
-
-    Which can also be represented using a pairwise comparison rule as:
-
-    .. math::
-        \\dot{x_{i}} = x_{i}\\sum_{j}(f_{ij}(x) - f_{ji}(x))x_{j}
-
-    For N-player games, to calculate the fitness of a strategy given a population state, we
-    need to calculate the probability of each possible group configuration. This can be obtained
-    by summing for each possible group configuration the payoff of strategy i times the probability
-    of the group configurations occurring.
+    In N-player games, fitness is computed as the expected payoff over all
+    possible group configurations of co-players. This function computes the
+    discrete time gradient of strategy frequencies under this setting.
 
     Parameters
     ----------
-    x : numpy.ndarray
-        A vector of shape (1, nb_strategies), which contains the current frequency of each strategy in the population.
-    payoffs : numpy.ndarray
-        Payoff matrix. Each row represents a strategy and each column a possible group configuration.
-        Each entry in the matrix should give the expected payoff for each row strategy for a given column group
-        configuration.
+    x : ndarray of shape (n,)
+        Current frequency distribution over `n` strategies.
+    payoffs : ndarray of shape (n, m)
+        Payoff matrix where each row represents a strategy, and each column
+        a group configuration. Entry [i, j] gives the expected payoff of
+        strategy i in group configuration j.
     group_size : int
-        Size of the group.
+        Number of individuals in each interacting group.
 
     Returns
     -------
-    numpy.ndarray
-        A vector of shape (1, nb_strategies), which contains the change in frequency of each strategy in the population
-        (so the gradient).
-
+    ndarray of shape (n,)
+        Time derivative (gradient) of strategy frequencies under replicator dynamics.
     """
-    fitness = np.zeros(shape=(len(x),))
-    fitness_avg = 0.
+    fitness = np.zeros_like(x)
+    fitness_avg = 0.0
     nb_group_configurations = calculate_nb_states(group_size, len(x))
+
     for strategy_index in range(len(x)):
         for i in range(nb_group_configurations):
             group_configuration = sample_simplex(i, group_size, len(x))
@@ -120,7 +117,7 @@ class StochDynamics:
     ----------
     nb_strategies : int
                 number of strategies in the population
-    payoffs : numpy.ndarray[numpy.float64[m,m]]
+    payoffs : npt.NDArray[np.float64][numpy.float64[m,m]]
             Payoff matrix indicating the payoff of each strategy (rows) against each other (columns).
             When analyzing an N-player game (group_size > 2) the structure of the matrix is a bit more involved,
             and we can have 2 options for structuring the payoff matrix:
@@ -203,7 +200,7 @@ class StochDynamics:
             self.fitness = self.fitness_pair
             self.full_fitness = self.full_fitness_difference_pairwise
 
-    def update_population_size(self, pop_size: int):
+    def update_population_size(self, pop_size: int) -> None:
         """
         Updates the size of the population and the number of possible population states.
 
@@ -214,7 +211,7 @@ class StochDynamics:
         self.pop_size = pop_size
         self.nb_states_population = calculate_nb_states(pop_size, self.nb_strategies)
 
-    def update_group_size(self, group_size: int):
+    def update_group_size(self, group_size: int) -> None:
         """
         Updates the groups size of the game (and the methods used to compute the fitness)
 
@@ -231,7 +228,7 @@ class StochDynamics:
             self.fitness = self.fitness_pair
             self.full_fitness = self.full_fitness_difference_pairwise
 
-    def update_payoffs(self, payoffs: np.ndarray, nb_strategies: Optional[int] = None):
+    def update_payoffs(self, payoffs: npt.NDArray[np.float64], nb_strategies: Optional[int] = None) -> None:
         """
         Updates the payoff matrix
 
@@ -286,7 +283,7 @@ class StochDynamics:
             index of the strategy that will reproduce
         j : int
             index of the strategy that will die
-        population_state : numpy.ndarray[numpy.int64[m,1]]
+        population_state : npt.NDArray[np.float64][numpy.int64[m,1]]
                            vector containing the counts of each strategy in the population
 
         Returns
@@ -357,7 +354,7 @@ class StochDynamics:
             index of the strategy that will reproduce
         j : int
             index of the strategy that will die
-        population_state : numpy.ndarray[numpy.int64[m,1]]
+        population_state : npt.NDArray[np.float64][numpy.int64[m,1]]
                            vector containing the counts of each strategy in the population
 
         Returns
@@ -509,7 +506,7 @@ class StochDynamics:
 
         Parameters
         ----------
-        population_state : numpy.ndarray[np.int64[m,1]]
+        population_state : npt.NDArray[np.float64][np.int64[m,1]]
             structure of unsigned integers containing the
             counts of each strategy in the population
         beta : float
@@ -517,7 +514,7 @@ class StochDynamics:
 
         Returns
         -------
-        numpy.ndarray[numpy.float64[m,m]]
+        npt.NDArray[np.float64][numpy.float64[m,m]]
             Matrix indicating the likelihood of change in the population given a starting point.
         """
         probability_selecting_strategy_first = population_state / self.pop_size
@@ -542,7 +539,7 @@ class StochDynamics:
 
         Parameters
         ----------
-        population_state : numpy.ndarray[np.int64[m,1]]
+        population_state : npt.NDArray[np.float64][np.int64[m,1]]
             structure of unsigned integers containing the
             counts of each strategy in the population
         beta : float
@@ -550,7 +547,7 @@ class StochDynamics:
 
         Returns
         -------
-        numpy.ndarray[numpy.float64[m,m]]
+        npt.NDArray[np.float64][numpy.float64[m,m]]
             Matrix indicating the likelihood of change in the population given a starting point.
         """
 
@@ -639,7 +636,7 @@ class StochDynamics:
 
         for i in range(nb_states):
             total_prob = 0.
-            current_state = sample_simplex(i, self.pop_size, self.nb_strategies)
+            current_state: npt.NDArray[np.uint64] = sample_simplex(i, self.pop_size, self.nb_strategies)
             # Check if we are in a monomorphic state
             monomorphic = True if (current_state == self.pop_size).any() else False
 
@@ -705,7 +702,7 @@ class StochDynamics:
             in the payoff matrix.
         Returns
         -------
-        Tuple[numpy.ndarray[numpy.float64[m,m]], numpy.ndarray[numpy.float64[m,m]]]
+        Tuple[npt.NDArray[np.float64][numpy.float64[m,m]], npt.NDArray[np.float64][numpy.float64[m,m]]]
             This method returns a tuple with the transition matrix as first element, and
             the matrix of fixation probabilities.
         """
@@ -739,7 +736,7 @@ class StochDynamics:
             extra arguments for calculating payoffs.
         Returns
         -------
-        numpy.ndarray
+        npt.NDArray[np.float64]
             A vector containing the stationary distribution
         """
         if self.mu > 0:

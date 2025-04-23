@@ -16,21 +16,17 @@
   * along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 */
 #pragma once
-#ifndef EGTTOOLS_FINITEPOPULATIONS_PAIRWISEMORAN_HPP
-#define EGTTOOLS_FINITEPOPULATIONS_PAIRWISEMORAN_HPP
+#ifndef EGTTOOLS_FINITEPOPULATIONS_PAIRWISECOMPARISONNUMERICAL_HPP
+#define EGTTOOLS_FINITEPOPULATIONS_PAIRWISECOMPARISONNUMERICAL_HPP
 
 #include <egttools/Distributions.h>
 #include <egttools/SeedGenerator.h>
 #include <egttools/Types.h>
 
 #include <algorithm>
-#include <chrono>
 #include <egttools/finite_populations/Utils.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <egttools/utils/ThreadSafeLRUCache.hpp>
-#include <limits>
-#include <memory>
-#include <optional>
 #include <random>
 #include <stdexcept>
 #include <vector>
@@ -46,8 +42,8 @@ namespace egttools::FinitePopulations {
         *
         * @tparam Cache
         */
-    template<class Cache = egttools::Utils::ThreadSafeLRUCache<std::string, double>>
-    class PairwiseMoran {
+    template<class Cache = Utils::ThreadSafeLRUCache<std::string, double> >
+    class PairwiseComparisonNumerical {
     public:
         /**
          * @brief Implements the Pairwise comparison Moran process.
@@ -61,13 +57,11 @@ namespace egttools::FinitePopulations {
          *
          * This class uses a cache to accelerate the computations.
          *
-         * @param nb_strategies
          * @param pop_size
-         * @param group_size : size of the group
          * @param game : pointer to the game class (it must be a child of AbstractGame)
          * @param cache_size : maximum number of elements in the cache
          */
-        PairwiseMoran(size_t pop_size, egttools::FinitePopulations::AbstractGame &game, size_t cache_size = 1000000);
+        PairwiseComparisonNumerical(size_t pop_size, AbstractGame &game, size_t cache_size = 1000000);
 
         /**
          * Runs the moran process for a given number of generations or until it reaches a monomorphic state
@@ -148,7 +142,8 @@ namespace egttools::FinitePopulations {
          * @param init_state : initial state of the population
          * @return a matrix with all the states the system went through during the simulation
          */
-        MatrixXui2D run(int64_t nb_generations, int64_t transient, double beta, const Eigen::Ref<const VectorXui> &init_state);
+        MatrixXui2D run(int64_t nb_generations, int64_t transient, double beta,
+                        const Eigen::Ref<const VectorXui> &init_state);
 
         /**
          * @brief Runs a moran process with social imitation
@@ -164,7 +159,8 @@ namespace egttools::FinitePopulations {
          * @param init_state : initial state of the population
          * @return a matrix with all the states the system went through during the simulation
          */
-        MatrixXui2D run(int64_t nb_generations, int64_t transient, double beta, double mu, const Eigen::Ref<const VectorXui> &init_state);
+        MatrixXui2D run(int64_t nb_generations, int64_t transient, double beta, double mu,
+                        const Eigen::Ref<const VectorXui> &init_state);
 
         /**
          * @brieff Estimates the gradient of selection between 2 strategies.
@@ -197,10 +193,10 @@ namespace egttools::FinitePopulations {
          * @param runs : number of independent runs (the estimation improves with the number of runs)
          * @param nb_generations : maximum number of generations per run
          * @param beta : intensity of selection
-         * @param mu : mutation probability
          * @return the fixation probability of the invader strategy
          */
-        double estimate_fixation_probability(int invader, int resident, size_t runs, size_t nb_generations, double beta);
+        double estimate_fixation_probability(int invader, int resident, size_t runs, size_t nb_generations,
+                                             double beta);
 
         /**
          * @brief Estimates the stationary distribution of the population of strategies in the game.
@@ -215,7 +211,8 @@ namespace egttools::FinitePopulations {
          * @param mu : mutation probability
          * @return the stationary distribution
          */
-        Vector estimate_stationary_distribution(size_t nb_runs, size_t nb_generations, size_t transitory, double beta, double mu);
+        Vector estimate_stationary_distribution(size_t nb_runs, size_t nb_generations, size_t transitory, double beta,
+                                                double mu);
 
         /**
          * @brief Estimates the stationary distribution of the population of strategies in the game.
@@ -231,7 +228,8 @@ namespace egttools::FinitePopulations {
          * @param mu : mutation probability
          * @return the stationary distribution
          */
-        SparseMatrix2D estimate_stationary_distribution_sparse(size_t nb_runs, size_t nb_generations, size_t transitory, double beta, double mu);
+        SparseMatrix2D estimate_stationary_distribution_sparse(size_t nb_runs, size_t nb_generations, size_t transitory,
+                                                               double beta, double mu);
 
         /**
          * @brief Estimates the distribution of strategies in the population given the current game.
@@ -249,7 +247,8 @@ namespace egttools::FinitePopulations {
          * @param mu : mutation probability
          * @return the stationary distribution
          */
-        Vector estimate_strategy_distribution(size_t nb_runs, size_t nb_generations, size_t transitory, double beta, double mu);
+        Vector estimate_strategy_distribution(size_t nb_runs, size_t nb_generations, size_t transitory, double beta,
+                                              double mu);
 
         // Getters
         [[nodiscard]] size_t nb_strategies() const;
@@ -269,7 +268,7 @@ namespace egttools::FinitePopulations {
 
         void set_cache_size(size_t cache_size);
 
-        void change_game(egttools::FinitePopulations::AbstractGame &game);
+        void change_game(egttools::FinitePopulations::AbstractGame &game) const;
 
     private:
         size_t _nb_strategies, _pop_size, _cache_size, _nb_states;
@@ -357,12 +356,13 @@ namespace egttools::FinitePopulations {
 
         inline void _initialise_population(const VectorXui &strategies, std::vector<size_t> &population);
 
-        inline std::pair<bool, int> _is_homogeneous(VectorXui &strategies);
-        inline void mutate_(std::mt19937_64 &generator, int &birth, int &idx_homo);
+        inline std::pair<bool, int> _is_homogeneous(VectorXui &strategies) const;
+
+        inline void mutate_(std::mt19937_64 &generator, int &birth, const int &idx_homo);
     };
 
     template<class Cache>
-    PairwiseMoran<Cache>::PairwiseMoran(size_t pop_size,
+    PairwiseComparisonNumerical<Cache>::PairwiseComparisonNumerical(size_t pop_size,
                                         egttools::FinitePopulations::AbstractGame &game,
                                         size_t cache_size) : _pop_size(pop_size),
                                                              _cache_size(cache_size),
@@ -378,7 +378,7 @@ namespace egttools::FinitePopulations {
 
     template<class Cache>
     void
-    PairwiseMoran<Cache>::_initialise_population(const VectorXui &strategies, std::vector<size_t> &population) {
+    PairwiseComparisonNumerical<Cache>::_initialise_population(const VectorXui &strategies, std::vector<size_t> &population) {
         size_t z = 0;
         for (unsigned int i = 0; i < _nb_strategies; ++i) {
             for (size_t j = 0; j < strategies(i); ++j) {
@@ -392,23 +392,28 @@ namespace egttools::FinitePopulations {
 
     template<class Cache>
     VectorXui
-    PairwiseMoran<Cache>::evolve(size_t nb_generations, double beta, double mu,
+    PairwiseComparisonNumerical<Cache>::evolve(const size_t nb_generations, const double beta, const double mu,
                                  const Eigen::Ref<const VectorXui> &init_state) {
-
+        if (nb_generations <= 0) {
+            throw std::invalid_argument(
+                "nb_generations must be > 0");
+        }
         if (mu <= 0) {
             throw std::invalid_argument(
-                    "mu must be > 0. If you want to run a simulation without mutation, "
-                    "please use the method signature without the mu parameter");
+                "mu must be > 0. If you want to run a simulation without mutation, "
+                "please use the method signature without the mu parameter");
         }
         // Check that there is the length of init_state is the same as the number of strategies
         if (init_state.size() != static_cast<int>(_nb_strategies)) {
             throw std::invalid_argument(
-                    "The length of the initial state array must be the number of strategies " + std::to_string(_nb_strategies));
+                "The length of the initial state array must be the number of strategies " + std::to_string(
+                    _nb_strategies));
         }
         // Check that the initial state is valid
         if (init_state.sum() != _pop_size) {
             throw std::invalid_argument(
-                    "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(_pop_size));
+                "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(
+                    _pop_size));
         }
 
         VectorXui strategies(_nb_strategies);
@@ -444,20 +449,26 @@ namespace egttools::FinitePopulations {
 
     template<class Cache>
     void
-    PairwiseMoran<Cache>::evolve(size_t nb_generations, double beta, VectorXui &strategies,
+    PairwiseComparisonNumerical<Cache>::evolve(const size_t nb_generations, const double beta, VectorXui &strategies,
                                  std::mt19937_64 &generator) {
         // This method runs a Moran process with pairwise comparison
         // using the fermi rule and no mutation
+        if (nb_generations <= 0) {
+            throw std::invalid_argument(
+                "nb_generations must be > 0");
+        }
 
         // Check that there is the length of init_state is the same as the number of strategies
         if (strategies.size() != static_cast<int>(_nb_strategies)) {
             throw std::invalid_argument(
-                    "The length of the initial state array must be the number of strategies " + std::to_string(_nb_strategies));
+                "The length of the initial state array must be the number of strategies " + std::to_string(
+                    _nb_strategies));
         }
         // Check that the initial state is valid
         if (strategies.sum() != _pop_size) {
             throw std::invalid_argument(
-                    "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(_pop_size));
+                "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(
+                    _pop_size));
         }
 
         int die, birth, strategy_p1 = 0, strategy_p2 = 0;
@@ -480,24 +491,29 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    VectorXui
-    PairwiseMoran<Cache>::evolve(size_t nb_generations, double beta, double mu,
-                                 const Eigen::Ref<const VectorXui> &init_state, std::mt19937_64 &generator) {
-
+    auto PairwiseComparisonNumerical<Cache>::evolve(const size_t nb_generations, double beta, double mu,
+                                      const Eigen::Ref<const VectorXui> &init_state,
+                                      std::mt19937_64 &generator) -> VectorXui {
+        if (nb_generations <= 0) {
+            throw std::invalid_argument(
+                "nb_generations must be > 0");
+        }
         if (mu <= 0) {
             throw std::invalid_argument(
-                    "mu must be > 0. If you want to run a simulation without mutation, "
-                    "please use the method signature without the mu parameter");
+                "mu must be > 0. If you want to run a simulation without mutation, "
+                "please use the method signature without the mu parameter");
         }
         // Check that there is the length of init_state is the same as the number of strategies
         if (init_state.size() != static_cast<int>(_nb_strategies)) {
             throw std::invalid_argument(
-                    "The length of the initial state array must be the number of strategies " + std::to_string(_nb_strategies));
+                "The length of the initial state array must be the number of strategies " + std::to_string(
+                    _nb_strategies));
         }
         // Check that the initial state is valid
         if (init_state.sum() != _pop_size) {
             throw std::invalid_argument(
-                    "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(_pop_size));
+                "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(
+                    _pop_size));
         }
 
         VectorXui strategies(_nb_strategies);
@@ -511,18 +527,21 @@ namespace egttools::FinitePopulations {
         // Creates a cache for the fitness data
         Cache cache(_cache_size);
         // Initialize helper parameters
-        size_t die = 0, birth = 0, strategy_p1 = 0, strategy_p2 = 0, k;
 
         // Imitation process
         for (size_t j = 0; j < nb_generations; ++j) {
+            size_t strategy_p2 = 0;
+            size_t strategy_p1 = 0;
+            size_t birth = 0;
+            size_t die = 0;
             _sample_players(strategy_p1, strategy_p2, strategies, generator);
 
             // Update with mutation and return how many steps should be added to the current
             // generation if the only change in the population could have been a mutation
-            k = _update_multi_step(strategy_p1, strategy_p2, beta, mu,
-                                   birth, die, homogeneous, idx_homo,
-                                   strategies, cache,
-                                   geometric, generator);
+            size_t k = _update_multi_step(strategy_p1, strategy_p2, beta, mu,
+                                          birth, die, homogeneous, idx_homo,
+                                          strategies, cache,
+                                          geometric, generator);
 
             // Update state count by k steps
             j += k;
@@ -532,25 +551,30 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    MatrixXui2D PairwiseMoran<Cache>::run(int64_t nb_generations, double beta, double mu,
+    MatrixXui2D PairwiseComparisonNumerical<Cache>::run(const int64_t nb_generations, const double beta, const double mu,
                                           const Eigen::Ref<const VectorXui> &init_state) {
-
-
         if (mu <= 0) {
             throw std::invalid_argument(
-                    "mu must be > 0. If you want to run a simulation without mutation, "
-                    "please use the method signature without the mu parameter");
+                "mu must be > 0. If you want to run a simulation without mutation, "
+                "please use the method signature without the mu parameter");
+        }
+
+        if (nb_generations <= 0) {
+            throw std::invalid_argument(
+                "nb_generations must be > 0");
         }
 
         // Check that there is the length of init_state is the same as the number of strategies
         if (init_state.size() != static_cast<int>(_nb_strategies)) {
             throw std::invalid_argument(
-                    "The length of the initial state array must be the number of strategies " + std::to_string(_nb_strategies));
+                "The length of the initial state array must be the number of strategies " + std::to_string(
+                    _nb_strategies));
         }
         // Check that the initial state is valid
         if (init_state.sum() != _pop_size) {
             throw std::invalid_argument(
-                    "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(_pop_size));
+                "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(
+                    _pop_size));
         }
 
         int die, birth, strategy_p1 = 0, strategy_p2 = 0;
@@ -568,14 +592,13 @@ namespace egttools::FinitePopulations {
 
         // Creates a cache for the fitness data
         Cache cache(_cache_size);
-        int k;
 
         // Imitation process
         for (int64_t j = 1; j < nb_generations + 1; ++j) {
             // Update with mutation and return how many steps should be added to the current
             // generation if the only change in the population could have been a mutation
             if (homogeneous) {
-                k = geometric(_mt);
+                int k = geometric(_mt);
                 // Update states matrix
                 if (k == 0) states.row(j) = strategies;
                 else if ((j + k) < nb_generations + 1) {
@@ -614,33 +637,40 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    MatrixXui2D PairwiseMoran<Cache>::run(int64_t nb_generations, int64_t transient, double beta, double mu,
+    MatrixXui2D PairwiseComparisonNumerical<Cache>::run(const int64_t nb_generations, const int64_t transient, const double beta,
+                                          const double mu,
                                           const Eigen::Ref<const VectorXui> &init_state) {
-
         if (mu <= 0) {
             throw std::invalid_argument(
-                    "mu must be > 0. If you want to run a simulation without mutation, "
-                    "please use the method signature without the mu parameter");
+                "mu must be > 0. If you want to run a simulation without mutation, "
+                "please use the method signature without the mu parameter");
+        }
+
+        if (nb_generations <= 0 || transient < 0) {
+            throw std::invalid_argument(
+                "nb_generations must be > 0 and transient must be >= 0");
         }
 
         // Check if transient > nb_generations
-        if (transient > nb_generations) {
+        if (transient >= nb_generations) {
             throw std::invalid_argument(
-                    "transient must be < than nb_generations!");
+                "transient must be < than nb_generations!");
         }
         // Check that there is the length of init_state is the same as the number of strategies
         if (init_state.size() != static_cast<int>(_nb_strategies)) {
             throw std::invalid_argument(
-                    "The length of the initial state array must be the number of strategies " + std::to_string(_nb_strategies));
+                "The length of the initial state array must be the number of strategies " + std::to_string(
+                    _nb_strategies));
         }
         // Check that the initial state is valid
         if (init_state.sum() != _pop_size) {
             throw std::invalid_argument(
-                    "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(_pop_size));
+                "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(
+                    _pop_size));
         }
 
         int die, birth, strategy_p1 = 0, strategy_p2 = 0;
-        auto total_counting_generations = nb_generations - transient;
+        const auto total_counting_generations = nb_generations - transient;
         MatrixXui2D states = MatrixXui2D::Zero(total_counting_generations, _nb_strategies);
         VectorXui strategies(_nb_strategies);
         // initialise initial state
@@ -702,7 +732,6 @@ namespace egttools::FinitePopulations {
                 j += k + 1;
                 // Update state after mutation
                 if (j <= total_counting_generations) {
-
                     // mutate
                     birth = _strategy_sampler(_mt);
                     // If population still homogeneous we wait for another mutation
@@ -728,23 +757,28 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    MatrixXui2D PairwiseMoran<Cache>::run(int64_t nb_generations, int64_t transient, double beta,
+    MatrixXui2D PairwiseComparisonNumerical<Cache>::run(const int64_t nb_generations, const int64_t transient, const double beta,
                                           const Eigen::Ref<const VectorXui> &init_state) {
-
         // Check that there is the length of init_state is the same as the number of strategies
         if (init_state.size() != static_cast<int>(_nb_strategies)) {
             throw std::invalid_argument(
-                    "The length of the initial state array must be the number of strategies " + std::to_string(_nb_strategies));
+                "The length of the initial state array must be the number of strategies " + std::to_string(
+                    _nb_strategies));
         }
         // Check that the initial state is valid
         if (init_state.sum() != _pop_size) {
             throw std::invalid_argument(
-                    "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(_pop_size));
+                "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(
+                    _pop_size));
+        }
+        if (nb_generations <= 0 || transient < 0) {
+            throw std::invalid_argument(
+                "nb_generations must be > 0 and transient must be >= 0");
         }
         // Check if transient > nb_generations
-        if (transient > nb_generations) {
+        if (transient >= nb_generations) {
             throw std::invalid_argument(
-                    "transient must be < than nb_generations!");
+                "transient must be < than nb_generations!");
         }
 
         int die, birth, strategy_p1 = 0, strategy_p2 = 0;
@@ -755,10 +789,9 @@ namespace egttools::FinitePopulations {
         strategies.array() = init_state.eval();
 
         // Check if state is homogeneous
-        auto [homogeneous, idx_homo] = _is_homogeneous(strategies);
 
         // If homogeneous we return a matrix where the population never changes
-        if (homogeneous) {
+        if (auto [homogeneous, idx_homo] = _is_homogeneous(strategies); homogeneous) {
             for (int j = 0; j <= total_counting_generations; ++j)
                 states.row(j).array() = strategies;
             return states;
@@ -797,18 +830,23 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    MatrixXui2D PairwiseMoran<Cache>::run(int64_t nb_generations, double beta,
+    MatrixXui2D PairwiseComparisonNumerical<Cache>::run(const int64_t nb_generations, const double beta,
                                           const Eigen::Ref<const VectorXui> &init_state) {
-
+        if (nb_generations <= 0) {
+            throw std::invalid_argument(
+                "nb_generations must be > 0");
+        }
         // Check that there is the length of init_state is the same as the number of strategies
         if (init_state.size() != static_cast<int>(_nb_strategies)) {
             throw std::invalid_argument(
-                    "The length of the initial state array must be the number of strategies " + std::to_string(_nb_strategies));
+                "The length of the initial state array must be the number of strategies " + std::to_string(
+                    _nb_strategies));
         }
         // Check that the initial state is valid
         if (init_state.sum() != _pop_size) {
             throw std::invalid_argument(
-                    "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(_pop_size));
+                "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(
+                    _pop_size));
         }
 
         int die, birth, strategy_p1 = 0, strategy_p2 = 0, current_generation = 1;
@@ -850,16 +888,17 @@ namespace egttools::FinitePopulations {
 
     template<class Cache>
     double
-    PairwiseMoran<Cache>::estimate_fixation_probability(int invader, int resident, size_t runs, size_t nb_generations,
-                                                        double beta) {
+    PairwiseComparisonNumerical<Cache>::estimate_fixation_probability(const int invader, const int resident, const size_t runs,
+                                                        const size_t nb_generations,
+                                                        const double beta) {
         if (invader >= static_cast<int>(_nb_strategies) || resident >= static_cast<int>(_nb_strategies))
             throw std::invalid_argument(
-                    "you must specify a valid index for invader and resident [0, " + std::to_string(_nb_strategies) +
-                    ")");
+                "you must specify a valid index for invader and resident [0, " + std::to_string(_nb_strategies) +
+                ")");
         if (invader == resident) throw std::invalid_argument("mutant must be different from resident");
 
-        long int r2m = 0;// resident to mutant count
-        long int r2r = 0;// resident to resident count
+        long int r2m = 0; // resident to mutant count
+        long int r2r = 0; // resident to resident count
 
         // This loop can be done in parallel
 #pragma omp parallel for reduction(+ : r2m, r2r) default(none) shared(resident, invader, runs, nb_generations, beta)
@@ -880,30 +919,29 @@ namespace egttools::FinitePopulations {
             } else if (strategies(resident) == 0) {
                 ++r2m;
             }
-        }// end runs loop
+        } // end runs loop
         if ((r2m == 0) && (r2r == 0)) return 0.0;
         else
             return static_cast<double>(r2m) / static_cast<double>(r2m + r2r);
     }
 
     template<class Cache>
-    Vector PairwiseMoran<Cache>::estimate_gradient_of_selection(size_t runs, int invader, int resident) {
+    Vector PairwiseComparisonNumerical<Cache>::estimate_gradient_of_selection(const size_t runs, const int invader,
+                                                                const int resident) {
         if (invader > _nb_strategies || resident > _nb_strategies)
             throw std::invalid_argument(
-                    "you must specify a valid index for invader and resident [0, " + std::to_string(_nb_strategies) +
-                    ")");
+                "you must specify a valid index for invader and resident [0, " + std::to_string(_nb_strategies) +
+                ")");
         // 1-D gradient between the two strategies
         VectorXi t_plus = VectorXi::Zero(_pop_size + 1);
         VectorXi t_minus = VectorXi::Zero(_pop_size + 1);
 
-// This loop can be done in parallel
+        // This loop can be done in parallel
 #pragma omp parallel for reduction(+ : t_plus, t_minus) default(none) shared(invader, resident, runs, \
                                                                                      _pop_size, _nb_strategies)
         for (size_t run = 0; run < runs; ++run) {
-            for (size_t k = 1; k < _pop_size; ++k) {// Loops over all population configurations
-                // Random generators - each thread should have its own generator
-                std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
-                // Setup the population state
+            for (size_t k = 1; k < _pop_size; ++k) {
+                // Set up the population state
                 VectorXui strategies = VectorXui::Zero(_nb_strategies);
                 strategies(resident) = _pop_size - k;
                 strategies(invader) = k;
@@ -919,30 +957,31 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    Vector
-    PairwiseMoran<Cache>::estimate_stationary_distribution(size_t nb_runs, size_t nb_generations, size_t transitory, double beta,
-                                                           double mu) {
+    auto PairwiseComparisonNumerical<Cache>::estimate_stationary_distribution(const size_t nb_runs, const size_t nb_generations,
+                                                                const size_t transitory,
+                                                                const double beta,
+                                                                double mu) -> Vector {
         if (mu <= 0) {
             throw std::invalid_argument(
-                    "mu must be > 0. If you want to run a simulation without mutation, "
-                    "please use the method signature without the mu parameter");
+                "mu must be > 0. If you want to run a simulation without mutation, "
+                "please use the method signature without the mu parameter");
         }
         if (beta < 0) {
             throw std::invalid_argument(
-                    "beta must be >= 0!");
+                "beta must be >= 0!");
         }
         // Check if transient > nb_generations
         if (transitory > nb_generations) {
             throw std::invalid_argument(
-                    "transient must be < than nb_generations!");
+                "transient must be < than nb_generations!");
         }
         if (nb_runs < 1) {
             throw std::invalid_argument(
-                    "nb_runs must be >= 1!");
+                "nb_runs must be >= 1!");
         }
         if (nb_generations < 1) {
             throw std::invalid_argument(
-                    "nb_generations must be >= 1!");
+                "nb_generations must be >= 1!");
         }
 
         // First we initialise the container for the stationary distribution
@@ -1032,30 +1071,31 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    SparseMatrix2D
-    PairwiseMoran<Cache>::estimate_stationary_distribution_sparse(size_t nb_runs, size_t nb_generations, size_t transitory, double beta,
-                                                                  double mu) {
+    auto PairwiseComparisonNumerical<Cache>::estimate_stationary_distribution_sparse(const size_t nb_runs,
+                                                                       const size_t nb_generations,
+                                                                       const size_t transitory, const double beta,
+                                                                       double mu) -> SparseMatrix2D {
         if (mu <= 0) {
             throw std::invalid_argument(
-                    "mu must be > 0. If you want to run a simulation without mutation, "
-                    "please use the method signature without the mu parameter");
+                "mu must be > 0. If you want to run a simulation without mutation, "
+                "please use the method signature without the mu parameter");
         }
         if (beta < 0) {
             throw std::invalid_argument(
-                    "beta must be >= 0!");
+                "beta must be >= 0!");
         }
         // Check if transient > nb_generations
         if (transitory > nb_generations) {
             throw std::invalid_argument(
-                    "transient must be < than nb_generations!");
+                "transient must be < than nb_generations!");
         }
         if (nb_runs < 1) {
             throw std::invalid_argument(
-                    "nb_runs must be >= 1!");
+                "nb_runs must be >= 1!");
         }
         if (nb_generations < 1) {
             throw std::invalid_argument(
-                    "nb_generations must be >= 1!");
+                "nb_generations must be >= 1!");
         }
 
 
@@ -1147,8 +1187,9 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    Vector PairwiseMoran<Cache>::estimate_strategy_distribution(size_t nb_runs, size_t nb_generations, size_t transitory, double beta,
-                                                                double mu) {
+    auto PairwiseComparisonNumerical<Cache>::estimate_strategy_distribution(const size_t nb_runs, const size_t nb_generations,
+                                                              const size_t transitory, const double beta,
+                                                              double mu) -> Vector {
         // Here we are going to estimate the strategy distribution directly, without the stationary distribution.
         // To do that, we need to keep count of the average frequency of each strategy in the population during the simulation.
         // Thus, we will keep a matrix of size nb_strategies x min(1000, nb_generations - transitory). We will use this vector
@@ -1156,25 +1197,25 @@ namespace egttools::FinitePopulations {
 
         if (mu <= 0) {
             throw std::invalid_argument(
-                    "mu must be > 0. If you want to run a simulation without mutation, "
-                    "please use the method signature without the mu parameter");
+                "mu must be > 0. If you want to run a simulation without mutation, "
+                "please use the method signature without the mu parameter");
         }
         if (beta < 0) {
             throw std::invalid_argument(
-                    "beta must be >= 0!");
+                "beta must be >= 0!");
         }
         // Check if transient > nb_generations
         if (transitory > nb_generations) {
             throw std::invalid_argument(
-                    "transient must be < than nb_generations!");
+                "transient must be < than nb_generations!");
         }
         if (nb_runs < 1) {
             throw std::invalid_argument(
-                    "nb_runs must be >= 1!");
+                "nb_runs must be >= 1!");
         }
         if (nb_generations < 1) {
             throw std::invalid_argument(
-                    "nb_generations must be >= 1!");
+                "nb_generations must be >= 1!");
         }
 
         VectorXui strategy_dist = VectorXui::Zero(_nb_strategies);
@@ -1184,7 +1225,6 @@ namespace egttools::FinitePopulations {
 
 #pragma omp parallel for reduction(+ : strategy_dist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu)
         for (size_t i = 0; i < nb_runs; ++i) {
-
             // Random generators - each thread should have its own generator
             std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
 
@@ -1253,11 +1293,11 @@ namespace egttools::FinitePopulations {
             }
         }
 
-        return strategy_dist.template cast<double>() / (_pop_size * nb_runs * (nb_generations - transitory));
+        return strategy_dist.cast<double>() / (_pop_size * nb_runs * (nb_generations - transitory));
     }
 
     template<class Cache>
-    void PairwiseMoran<Cache>::mutate_(std::mt19937_64 &generator, int &birth, int &idx_homo) {
+    void PairwiseComparisonNumerical<Cache>::mutate_(std::mt19937_64 &generator, int &birth, const int &idx_homo) {
         // mutate
         birth = _strategy_sampler(generator);
         // We assume mutations imply changing strategy
@@ -1265,7 +1305,7 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    bool PairwiseMoran<Cache>::_update_step(int s1, int s2, double beta, int &birth, int &die,
+    bool PairwiseComparisonNumerical<Cache>::_update_step(const int s1, const int s2, double beta, int &birth, int &die,
                                             VectorXui &strategies,
                                             Cache &cache,
                                             std::mt19937_64 &generator) {
@@ -1287,14 +1327,15 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    void PairwiseMoran<Cache>::_update_step(int s1, int s2, double beta, double mu,
+    void PairwiseComparisonNumerical<Cache>::_update_step(const int s1, const int s2, double beta, const double mu,
                                             int &birth, int &die, bool &homogeneous, int &idx_homo,
                                             VectorXui &strategies,
                                             Cache &cache,
                                             std::mt19937_64 &generator) {
         die = s1;
 
-        if (s1 == s2) {// if the strategies are the same, the only change is with mutation
+        if (s1 == s2) {
+            // if the strategies are the same, the only change is with mutation
             // Check if player mutates
             if (_real_rand(generator) < mu) {
                 mutate_(generator, birth, die);
@@ -1306,7 +1347,6 @@ namespace egttools::FinitePopulations {
                     idx_homo = birth;
                 }
             }
-
         } else {
             // Check if player mutates
             if (_real_rand(generator) < mu) {
@@ -1319,7 +1359,8 @@ namespace egttools::FinitePopulations {
                     homogeneous = true;
                     idx_homo = birth;
                 }
-            } else {// If no mutation, player imitates
+            } else {
+                // If no mutation, player imitates
 
                 // Then we let them play to calculate their payoffs
                 auto fitness_p1 = _calculate_fitness(s1, strategies, cache);
@@ -1345,14 +1386,13 @@ namespace egttools::FinitePopulations {
 
     template<class Cache>
     size_t
-    PairwiseMoran<Cache>::_update_multi_step(int s1, int s2, double beta, double mu,
+    PairwiseComparisonNumerical<Cache>::_update_multi_step(const int s1, const int s2, double beta, const double mu,
                                              int &birth, int &die,
                                              bool &homogeneous, int &idx_homo,
                                              VectorXui &strategies,
                                              Cache &cache,
                                              std::geometric_distribution<size_t> &geometric,
                                              std::mt19937_64 &generator) {
-
         size_t k = 0;
         die = s1, birth = s1;
 
@@ -1364,7 +1404,8 @@ namespace egttools::FinitePopulations {
             strategies(birth) += 1;
             strategies(die) -= 1;
             homogeneous = false;
-        } else if (s1 == s2) {// if the strategies are the same, the only change is with mutation
+        } else if (s1 == s2) {
+            // if the strategies are the same, the only change is with mutation
             // Check if player mutates
             if (_real_rand(generator) < mu) {
                 mutate_(generator, birth, die);
@@ -1390,7 +1431,8 @@ namespace egttools::FinitePopulations {
                     homogeneous = true;
                     idx_homo = birth;
                 }
-            } else {// If no mutation, player imitates
+            } else {
+                // If no mutation, player imitates
 
                 // Then we let them play to calculate their payoffs
                 auto fitness_p1 = _calculate_fitness(s1, strategies, cache);
@@ -1416,7 +1458,7 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    std::pair<size_t, size_t> PairwiseMoran<Cache>::_sample_players() {
+    std::pair<size_t, size_t> PairwiseComparisonNumerical<Cache>::_sample_players() {
         auto player1 = _pop_sampler(_mt);
         auto player2 = _pop_sampler(_mt);
         while (player2 == player1) player2 = _pop_sampler(_mt);
@@ -1424,7 +1466,7 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    std::pair<size_t, size_t> PairwiseMoran<Cache>::_sample_players(std::mt19937_64 &generator) {
+    std::pair<size_t, size_t> PairwiseComparisonNumerical<Cache>::_sample_players(std::mt19937_64 &generator) {
         auto player1 = _pop_sampler(generator);
         auto player2 = _pop_sampler(generator);
         while (player2 == player1) player2 = _pop_sampler(generator);
@@ -1432,7 +1474,7 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    void PairwiseMoran<Cache>::_sample_players(size_t &s1, size_t &s2, std::mt19937_64 &generator) {
+    void PairwiseComparisonNumerical<Cache>::_sample_players(size_t &s1, size_t &s2, std::mt19937_64 &generator) {
         s1 = _pop_sampler(generator);
         s2 = _pop_sampler(generator);
         while (s1 == s2) s2 = _pop_sampler(generator);
@@ -1440,7 +1482,7 @@ namespace egttools::FinitePopulations {
 
     template<class Cache>
     bool
-    PairwiseMoran<Cache>::_sample_players(int &s1, int &s2, VectorXui &strategies, std::mt19937_64 &generator) {
+    PairwiseComparisonNumerical<Cache>::_sample_players(int &s1, int &s2, VectorXui &strategies, std::mt19937_64 &generator) {
         // sample 2 players from the pool
         auto player1 = _pop_sampler(generator);
         auto player2 = _pop_sampler(generator);
@@ -1469,7 +1511,7 @@ namespace egttools::FinitePopulations {
 
     template<class Cache>
     double
-    PairwiseMoran<Cache>::_calculate_fitness(const int &player_type, VectorXui &strategies, Cache &cache) {
+    PairwiseComparisonNumerical<Cache>::_calculate_fitness(const int &player_type, VectorXui &strategies, Cache &cache) {
         double fitness;
         std::stringstream result;
         result << strategies;
@@ -1492,7 +1534,7 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    std::pair<bool, int> PairwiseMoran<Cache>::_is_homogeneous(VectorXui &strategies) {
+    std::pair<bool, int> PairwiseComparisonNumerical<Cache>::_is_homogeneous(VectorXui &strategies) const {
         for (int i = 0; i < static_cast<int>(_nb_strategies); ++i) {
             if (strategies(i) == _pop_size) return std::make_pair(true, i);
         }
@@ -1500,37 +1542,37 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    size_t PairwiseMoran<Cache>::nb_strategies() const {
+    size_t PairwiseComparisonNumerical<Cache>::nb_strategies() const {
         return _nb_strategies;
     }
 
     template<class Cache>
-    size_t PairwiseMoran<Cache>::population_size() const {
+    size_t PairwiseComparisonNumerical<Cache>::population_size() const {
         return _pop_size;
     }
 
     template<class Cache>
-    size_t PairwiseMoran<Cache>::cache_size() const {
+    size_t PairwiseComparisonNumerical<Cache>::cache_size() const {
         return _cache_size;
     }
 
     template<class Cache>
-    int64_t PairwiseMoran<Cache>::nb_states() const {
+    int64_t PairwiseComparisonNumerical<Cache>::nb_states() const {
         return _nb_states;
     }
 
     template<class Cache>
-    std::string PairwiseMoran<Cache>::game_type() const {
+    std::string PairwiseComparisonNumerical<Cache>::game_type() const {
         return _game.type();
     }
 
     template<class Cache>
-    const GroupPayoffs &PairwiseMoran<Cache>::payoffs() const {
+    const GroupPayoffs &PairwiseComparisonNumerical<Cache>::payoffs() const {
         return _game.payoffs();
     }
 
     template<class Cache>
-    void PairwiseMoran<Cache>::set_population_size(size_t pop_size) {
+    void PairwiseComparisonNumerical<Cache>::set_population_size(const size_t pop_size) {
         _pop_size = pop_size;
         _nb_states = egttools::starsBars(_pop_size, _nb_strategies);
         _state_sampler = std::uniform_int_distribution<size_t>(0, _nb_states - 1);
@@ -1538,14 +1580,14 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    void PairwiseMoran<Cache>::set_cache_size(size_t cache_size) {
+    void PairwiseComparisonNumerical<Cache>::set_cache_size(const size_t cache_size) {
         _cache_size = cache_size;
     }
 
     template<class Cache>
-    void PairwiseMoran<Cache>::change_game(egttools::FinitePopulations::AbstractGame &game) {
+    void PairwiseComparisonNumerical<Cache>::change_game(egttools::FinitePopulations::AbstractGame &game) const {
         _game = game;
     }
-}// namespace egttools::FinitePopulations
+} // namespace egttools::FinitePopulations
 
-#endif//EGTTOOLS_PAIRWISEMORAN_HPP
+#endif//EGTTOOLS_FINITEPOPULATIONS_PAIRWISECOMPARISONNUMERICAL_HPP

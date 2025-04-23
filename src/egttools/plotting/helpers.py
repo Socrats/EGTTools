@@ -1,10 +1,12 @@
 """
 Helper functions for producing plots on simplexes
 """
-from typing import Tuple, List, Callable, Optional, Union
+from typing import Tuple, List, Callable, Optional, Union, Literal
 
 import numpy as np
+from numpy.typing import NDArray
 from scipy.optimize import root
+
 from .. import (calculate_nb_states, sample_simplex, )
 
 
@@ -101,106 +103,88 @@ def barycentric_to_xy_coordinates(point_barycentric: np.ndarray, corners: np.nda
     return (corners.T @ point_barycentric.T).T
 
 
-def calculate_stability(roots: List[np.ndarray], f: Callable[[np.ndarray], np.ndarray]) -> List[bool]:
+def calculate_stability(
+        roots: List[NDArray[np.float64]],
+        f: Callable[[NDArray[np.float64]], NDArray[np.float64]],
+        atol: float = 1e-7,
+        return_mode: Literal["bool", "int"] = "bool"
+) -> List[bool] | List[int]:
     """
-    Calculates the stability of the roots. It will return a list indicating whether each root
-    is or not stable.
+    Calculates the stability of the roots. Returns stability classification for each root.
 
     Parameters
     ----------
-    roots: numpy.ndarray
-        A list or arrays which contain the barycentric coordinates of the roots.
-    f: Callable[[numpy.ndarray], numpy.ndarray]
+    roots : List[NDArray[np.float64]]
+        A list of barycentric coordinates of the roots.
+    f : Callable[[NDArray[np.float64]], NDArray[np.float64]]
         A function which computes the gradient at any point in the simplex.
+    atol : float, default=1e-7
+        Numerical tolerance for zero comparisons.
+    return_mode : {'bool', 'int'}, default='bool'
+        - 'bool' returns True for stable, False otherwise.
+        - 'int' returns 1 (stable), -1 (unstable), or 0 (saddle).
 
     Returns
     -------
-    List[bool]
-        A list of booleans indicating whether each root is or not stable.
+    List[bool] or List[int]
+        Stability of each root, as booleans or ternary integers.
     """
     stability = []
-    for stationary_point in roots:
-        stable = False
-        # first we check if the root is in one of the edges
-        if np.isclose(stationary_point, 0., atol=1e-7).any():
-            sign_plus = 0
-            sign_minus = 0
-            # Check if we are in an edge
-            edge = np.where(~np.isclose(stationary_point, 0., atol=1e-7))[0]
-            if edge.shape[0] > 1:  # we are at an edge
-                # Now we perturb the edge
-                if stationary_point[edge[0]] + 0.1 <= 1.:
-                    tmp = stationary_point.copy()
-                    tmp[edge[0]] += 0.1
-                    tmp[edge[1]] -= 0.1
-                    grad = f(tmp)
-                    if grad[edge[0]] > 0:
-                        sign_plus = 1
-                if stationary_point[edge[0]] - 0.1 >= 0.:
-                    tmp = stationary_point.copy()
-                    tmp[edge[0]] -= 0.1
-                    tmp[edge[1]] += 0.1
-                    grad = f(tmp)
-                    if grad[edge[0]] > 0:
-                        sign_minus = 1
-                if sign_minus and not sign_plus:
-                    stable = True
-            else:  # we are at a vertex
-                # Now we perturb the vertex
-                tmp = stationary_point.copy()
-                tmp[edge[0]] -= 0.1
-                tmp[(edge[0] + 1) % 3] += 0.1
-                grad = f(tmp)
-                if grad[edge[0]] > 0.:
-                    sign_plus = 1
-                tmp[(edge[0] + 1) % 3] -= 0.1
-                tmp[(edge[0] + 2) % 3] += 0.1
-                grad = f(tmp)
-                if grad[edge[0]] > 0.:
-                    sign_minus = 1
 
-                if sign_plus and sign_minus:
-                    stable = True
-        else:  # we are in the interior of the simples
-            # here to analyse stability we need to
-            # check wether change in any direction leads back to the point
-            unstable = False
-            for vertex in range(stationary_point.shape[0]):
-                tmp = stationary_point.copy()
-                if stationary_point[vertex] + 0.1 <= 1.:
-                    tmp[vertex] += 0.1
-                    if tmp[(vertex + 1) % 3] - 0.1 >= 0.:
-                        tmp[(vertex + 1) % 3] -= 0.1
+    for stationary_point in roots:
+        signs = []
+
+        if np.isclose(stationary_point, 0., atol=atol).any():
+            edge = np.where(~np.isclose(stationary_point, 0., atol=atol))[0]
+            if edge.shape[0] > 1:
+                # Perturb along edge
+                for delta in [+0.1, -0.1]:
+                    tmp = stationary_point.copy()
+                    if 0. <= tmp[edge[0]] + delta <= 1. and 0. <= tmp[edge[1]] - delta <= 1.:
+                        tmp[edge[0]] += delta
+                        tmp[edge[1]] -= delta
                         grad = f(tmp)
-                        if grad[vertex] > 0.:
-                            unstable = True
-                            break
-                        tmp[(vertex + 1) % 3] += 0.1
-                    if tmp[(vertex + 2) % 3] - 0.1 >= 0.:
-                        tmp[(vertex + 1) % 3] -= 0.1
+                        signs.append(np.sign(grad[edge[0]]))
+            else:
+                # At a vertex
+                idx = edge[0]
+                for shift in [+0.1, -0.1]:
+                    tmp = stationary_point.copy()
+                    if 0. <= tmp[idx] + shift <= 1.:
+                        tmp[idx] += shift
+                        tmp[(idx + 1) % 3] -= shift
                         grad = f(tmp)
-                        if grad[vertex] > 0.:
-                            unstable = True
-                            break
-                        tmp[(vertex + 1) % 3] += 0.1
-                    tmp[vertex] -= 0.1
-                if stationary_point[vertex] - 0.1 >= 0.:
-                    tmp[vertex] -= 0.1
-                    if tmp[(vertex + 1) % 3] + 0.1 <= 1.:
-                        tmp[(vertex + 1) % 3] += 0.1
+                        signs.append(np.sign(grad[idx]))
+                    if 0. <= tmp[(idx + 1) % 3] - shift <= 1.:
+                        tmp[(idx + 1) % 3] -= shift
+                        tmp[(idx + 2) % 3] += shift
                         grad = f(tmp)
-                        if grad[vertex] < 0.:
-                            unstable = True
-                            break
-                        tmp[(vertex + 1) % 3] += 0.1
-                    if tmp[(vertex + 2) % 3] + 0.1 <= 1.:
-                        tmp[(vertex + 1) % 3] += 0.1
-                        grad = f(tmp)
-                        if grad[vertex] < 0.:
-                            unstable = True
-                            break
-            stable = not unstable
-        stability.append(stable)
+                        signs.append(np.sign(grad[idx]))
+        else:
+            # Interior point
+            for i in range(3):
+                for delta in [+0.1, -0.1]:
+                    tmp = stationary_point.copy()
+                    if 0. <= tmp[i] + delta <= 1.:
+                        tmp[i] += delta
+                        for j in [j for j in range(3) if j != i]:
+                            if 0. <= tmp[j] - delta <= 1.:
+                                tmp[j] -= delta
+                                grad = f(tmp)
+                                signs.append(np.sign(grad[i]))
+
+        if all(s <= 0 for s in signs) and any(s < 0 for s in signs):
+            result = 1  # Stable
+        elif all(s >= 0 for s in signs) and any(s > 0 for s in signs):
+            result = -1  # Unstable
+        else:
+            result = 0  # Saddle (mixed signs or zero)
+
+        if return_mode == "bool":
+            stability.append(result == 1)
+        else:
+            stability.append(result)
+
     return stability
 
 

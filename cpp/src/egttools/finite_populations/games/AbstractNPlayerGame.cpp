@@ -76,7 +76,7 @@ egttools::FinitePopulations::AbstractNPlayerGame::payoff(int strategy, const egt
     return expected_payoffs_(static_cast<int>(strategy), static_cast<int64_t>(egttools::FinitePopulations::calculate_state(group_size_, group_composition)));
 }
 
-void egttools::FinitePopulations::AbstractNPlayerGame::update_payoff(int strategy_index, int group_configuration_index, double value) {
+void egttools::FinitePopulations::AbstractNPlayerGame::update_payoff(const int strategy_index, const int group_configuration_index, const double value) {
     expected_payoffs_(strategy_index, group_configuration_index) = value;
 }
 

@@ -1,4 +1,4 @@
-/** Copyright (c) 2019-2021  Elias Fernandez
+/** Copyright (c) 2019-2025  Elias Fernandez
   *
   * This file is part of EGTtools.
   *
@@ -30,14 +30,14 @@ namespace egttools::Random {
     * This template function can be used to initialize a random generator
     * from a series of seeds.
     *
-    * T his function will be active if N == 1
+    * This function will be active if N == 1
     *
     * @tparam T : type of random generator
     * @tparam N : number of randomly generated seeds to use
     * @return random generator of class T
     */
     template<class T = std::mt19937, std::size_t N = T::state_size * sizeof(typename T::result_type)>
-    auto SeededRandomEngine() -> typename std::enable_if<N == 1, T>::type {
+    auto SeededRandomEngine() -> std::enable_if_t<N == 1, T> {
         std::random_device source;
         return T(source());
     }
@@ -53,7 +53,7 @@ namespace egttools::Random {
     * @return random generator of class T
     */
     template<class T = std::mt19937, std::size_t N = T::state_size * sizeof(typename T::result_type)>
-    auto SeededRandomEngine() -> typename std::enable_if<N >= 2, T>::type {
+    auto SeededRandomEngine() -> std::enable_if_t<N >= 2, T> {
         std::random_device source;
         std::random_device::result_type random_data[(N - 1) / sizeof(source()) + 1];
         std::generate(std::begin(random_data), std::end(random_data), std::ref(source));
@@ -65,7 +65,7 @@ namespace egttools::Random {
     class SeedGenerator {
     public:
         /**
-        * @brief This functions provices a pointer to a Seeder class
+        * @brief This function provides a pointer to a Seeder class
         * @return SeedGenerator
         */
         static SeedGenerator &getInstance();
@@ -75,25 +75,25 @@ namespace egttools::Random {
         * @brief This function generates a random number to seed other generators
         *
         * You can use this function to generate a random seed to seed other random generators
-        * in you project. This avoids concurrency problems when doing parallel execution.
+        * in your project. This avoids concurrency problems when doing parallel execution.
         *
         * @return A random unsigned long number
         */
         unsigned long int getSeed();
 
         /**
-        * @brief This function sets the seed for the seed generator
+        * @brief This function sets the seed for the seed generator.
         *
-        * By default the generator is seeded either from a seed.in file or from random_device
+        * By default, the generator is seeded either from a seed.in file or from random_device
         *
         * @param seed The seed for the random generator used to generate new seeds
         */
         void setMainSeed(unsigned long int seed);
 
         /**
-        * @brief This function sets the seed for the seed generator
+        * @brief This function sets the seed for the seed generator.
         *
-        * By default the generator is seeded either from a seed.in file or from random_device
+        * By default, the generator is seeded either from a seed.in file or from random_device
         *
         * @return main seed (unsigned long int)
         */
