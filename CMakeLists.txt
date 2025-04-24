@@ -127,7 +127,7 @@ endif ()
 option(USE_OPENMP "Enable OpenMP multithreading" ON)
 
 if (USE_OPENMP)
-    if(APPLE AND NOT OpenMP_CXX_FOUND)
+    if(APPLE)
         set(OpenMP_CXX_FLAGS
                 -Xpreprocessor
                 -fopenmp
@@ -137,6 +137,11 @@ if (USE_OPENMP)
         set(LDFLAGS "$LDFLAGS -Wl,-rpath,${LIBOMP_DIR}/lib -L${LIBOMP_DIR}/lib -lomp")
         set(OpenMP_CXX_LIB_NAMES "omp")
         set(OpenMP_C_LIB_NAMES "omp")
+    else ()
+        unset(OpenMP_CXX_FLAGS CACHE)
+        unset(OpenMP_omp_LIBRARY CACHE)
+        unset(OpenMP_CXX_LIB_NAMES CACHE)
+        unset(OpenMP_C_LIB_NAMES CACHE)
     endif()
 
     find_package(OpenMP REQUIRED)
@@ -179,13 +184,22 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
 add_subdirectory(${PROJECT_SOURCE_DIR}/docs)
 
 if (SKBUILD)
-    # Extract the OpenMP library actually used
+    # Install the compiled target
+    install(TARGETS numerical_ LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX})
+
+    # Also install OpenMP runtime library if available (for portability)
     if (OpenMP_CXX_LIBRARIES)
         foreach(lib ${OpenMP_CXX_LIBRARIES})
             get_filename_component(lib_path ${lib} ABSOLUTE)
-            message(STATUS "Installing OpenMP runtime library: ${lib_path}")
-            install(FILES ${lib_path} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+            if(EXISTS ${lib_path})
+                message(STATUS "Installing OpenMP runtime library: ${lib_path}")
+                install(FILES ${lib_path} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+            else()
+                message(WARNING "OpenMP lib not found at ${lib_path}, skipping install")
+            endif()
         endforeach()
+    else()
+        message(WARNING "OpenMP_CXX_LIBRARIES is empty — OpenMP runtime will not be bundled.")
     endif()
-    install(TARGETS numerical_ LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX})
-endif ()
+endif()
+
