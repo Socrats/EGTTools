@@ -65,9 +65,12 @@ else ()
 endif ()
 
 if (OpenMP_CXX_FOUND)
+    message(STATUS "OpenMP found: enabling support")
     message("-- linking OpenMP to target numerical_")
-    # TODO: Make sure that having dynamic linking will work on Pypi
+    target_compile_definitions(your_target PRIVATE _OPENMP)
+    target_compile_options(your_target PRIVATE ${OpenMP_CXX_FLAGS})
     target_link_libraries(numerical_ PRIVATE OpenMP::OpenMP_CXX)
 else ()
+    message(WARNING "OpenMP not found: disabling parallelism")
     target_link_libraries(numerical_)
 endif ()

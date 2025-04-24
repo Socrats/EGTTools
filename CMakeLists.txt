@@ -18,8 +18,10 @@
 cmake_minimum_required(VERSION 3.30)
 project(egttools LANGUAGES CXX)
 
+option(HPC "Disable HPC configuration - Use VCPKG" OFF)
+
 # Set the vcpkg toolchain file
-if (NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+if (NOT DEFINED CMAKE_TOOLCHAIN_FILE AND NOT HPC)
     set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
 endif ()
 
@@ -80,43 +82,41 @@ if (APPLE)
         message(FATAL_ERROR "Accelerate framework or LAPACKE library not found")
     endif ()
 else ()
+    # Find BLAS and LAPACK (these are usually bundled together)
     find_package(BLAS REQUIRED)
     find_package(LAPACK REQUIRED)
-    find_library(LAPACKE_LIB lapacke REQUIRED PATHS ${CMAKE_PREFIX_PATH})
-    if (BLAS_FOUND AND LAPACK_FOUND AND LAPACKE_LIB)
-        message(STATUS "BLAS, LAPACK, and LAPACKE found")
-        add_compile_definitions(EIGEN_USE_BLAS EIGEN_USE_LAPACKE)
-    else ()
-        message(FATAL_ERROR "BLAS, LAPACK, or LAPACKE not found")
-    endif ()
+
+    # Optionally try to find LAPACKE
+    find_library(LAPACKE_LIB
+            NAMES lapacke
+            HINTS ${CMAKE_PREFIX_PATH}
+            PATH_SUFFIXES lib lib64
+    )
+
+    if (BLAS_FOUND AND LAPACK_FOUND)
+        message(STATUS "BLAS and LAPACK found")
+        add_compile_definitions(EIGEN_USE_BLAS)
+
+        if (LAPACKE_LIB)
+            message(STATUS "LAPACKE found")
+            add_compile_definitions(EIGEN_USE_LAPACKE)
+        else()
+            message(STATUS "LAPACKE not found — using LAPACK directly")
+        endif()
+
+    else()
+        message(FATAL_ERROR "BLAS or LAPACK not found — required for Eigen acceleration")
+    endif()
+
 endif ()
 
 # Necessary for certain MacOX versions to find homebrew OpenMP
-if (NOT SKIP_OPENMP)
-    message(STATUS "OpenMP lib at ${LIBOMP_DIR}")
-    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${LIBOMP_DIR}/include")
-    set(OpenMP_omp_LIBRARY "${LIBOMP_DIR}/lib/libomp.dylib")
-    set(LDFLAGS "$LDFLAGS -Wl,-rpath,${LIBOMP_DIR}/lib -L${LIBOMP_DIR}/lib -lomp")
-    set(OpenMP_CXX_LIB_NAMES "omp")
-    set(OpenMP_C_LIB_NAMES "omp")
-    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-    set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+# Optionally allow disabling OpenMP
+option(USE_OPENMP "Enable OpenMP multithreading" ON)
 
+if (USE_OPENMP)
     find_package(OpenMP)
-    if (OpenMP_CXX_FOUND)
-        include_directories(SYSTEM ${OPENMP_INCLUDE_DIR})
-        message(STATUS "OpenMP enabled")
-        if (NOT APPLE)
-            SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-            SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -fopenmp")
-        else ()
-            SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-            SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-        endif ()
-    else ()
-        message(STATUS "OpenMP not found!")
-    endif ()
-endif ()
+endif()
 
 find_package(Eigen3 ${EIGEN_VERSION_REQUIRED} QUIET CONFIG)
 if (NOT EIGEN3_FOUND)
