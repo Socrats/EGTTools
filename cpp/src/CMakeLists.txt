@@ -67,6 +67,9 @@ endif ()
 if (OpenMP_CXX_FOUND)
     message(STATUS "linking OpenMP to target numerical_")
     target_link_libraries(numerical_ PRIVATE OpenMP::OpenMP_CXX)
+
+    # ✅ Explicitly add compile flags in case OpenMP::OpenMP_CXX doesn't propagate them
+    target_compile_options(numerical_ PRIVATE ${OpenMP_CXX_FLAGS})
 else ()
     message(WARNING "OpenMP not found: disabling parallelism")
 endif ()

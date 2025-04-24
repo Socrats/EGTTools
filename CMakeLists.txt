@@ -147,7 +147,10 @@ if (USE_OPENMP)
     endif()
 endif()
 
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+# Runtime search path: Look for libs inside the installed wheel/package
+set(CMAKE_INSTALL_RPATH "$ORIGIN/lib")
+
+# Use this path at build time too
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 
 find_package(Eigen3 ${EIGEN_VERSION_REQUIRED} QUIET CONFIG)
