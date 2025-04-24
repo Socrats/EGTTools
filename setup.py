@@ -59,6 +59,8 @@ if IS_HPC == 'OFF':
         vcpkg_toolchain_file = transform_to_valid_windows_path(vcpkg_toolchain_file)
 
     cmake_args.append(f'-DCMAKE_TOOLCHAIN_FILE={vcpkg_toolchain_file}')
+else:
+    cmake_args.append(f'-DHPC=ON')
 
 
 def find_version():
