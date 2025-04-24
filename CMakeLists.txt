@@ -26,6 +26,8 @@ if (NOT HPC AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
             CACHE STRING "VCPKG toolchain file")
     message(STATUS "Using vcpkg toolchain: ${CMAKE_TOOLCHAIN_FILE}")
+elseif (DEFINED CMAKE_TOOLCHAIN_FILE)
+    message(STATUS "Toolchain file already set: ${CMAKE_TOOLCHAIN_FILE}")
 else()
     message(STATUS "Using HPC/system configuration — not setting vcpkg toolchain")
 endif()
@@ -120,8 +122,23 @@ endif ()
 option(USE_OPENMP "Enable OpenMP multithreading" ON)
 
 if (USE_OPENMP)
-    find_package(OpenMP)
+    if(APPLE AND NOT OpenMP_CXX_FOUND)
+        set(OpenMP_CXX_FLAGS
+                -Xpreprocessor
+                -fopenmp
+                -I${LIBOMP_DIR}/include
+        )
+        set(OpenMP_omp_LIBRARY "${LIBOMP_DIR}/lib/libomp.dylib")
+        set(LDFLAGS "$LDFLAGS -Wl,-rpath,${LIBOMP_DIR}/lib -L${LIBOMP_DIR}/lib -lomp")
+        set(OpenMP_CXX_LIB_NAMES "omp")
+        set(OpenMP_C_LIB_NAMES "omp")
+    endif()
+
+    find_package(OpenMP REQUIRED)
 endif()
+
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 
 find_package(Eigen3 ${EIGEN_VERSION_REQUIRED} QUIET CONFIG)
 if (NOT EIGEN3_FOUND)
