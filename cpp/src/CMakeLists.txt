@@ -65,7 +65,6 @@ else ()
 endif ()
 
 if (OpenMP_CXX_FOUND)
-    message(STATUS "OpenMP found: enabling support")
     message(STATUS "linking OpenMP to target numerical_")
     target_link_libraries(numerical_ PRIVATE OpenMP::OpenMP_CXX)
 else ()

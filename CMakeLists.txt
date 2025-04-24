@@ -128,18 +128,23 @@ option(USE_OPENMP "Enable OpenMP multithreading" ON)
 
 if (USE_OPENMP)
     if(APPLE)
-        set(OpenMP_CXX_FLAGS
-                -Xpreprocessor
-                -fopenmp
-                -I${LIBOMP_DIR}/include
-        )
-        set(OpenMP_omp_LIBRARY "${LIBOMP_DIR}/lib/libomp.dylib")
-        set(LDFLAGS "$LDFLAGS -Wl,-rpath,${LIBOMP_DIR}/lib -L${LIBOMP_DIR}/lib -lomp")
+        # Workaround for Apple Clang: manual flags for libomp via brew
+        set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${LIBOMP_DIR}/include")
         set(OpenMP_CXX_LIB_NAMES "omp")
         set(OpenMP_C_LIB_NAMES "omp")
+        set(OpenMP_omp_LIBRARY "${LIBOMP_DIR}/lib/libomp.dylib")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${LIBOMP_DIR}/lib -lomp")
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L${LIBOMP_DIR}/lib -lomp")
     endif()
 
     find_package(OpenMP REQUIRED)
+
+    message(STATUS ">>> OpenMP_CXX_FLAGS = ${OpenMP_CXX_FLAGS}")
+    message(STATUS ">>> OpenMP_CXX_LIBRARIES = ${OpenMP_CXX_LIBRARIES}")
+
+    if (NOT APPLE AND USE_OPENMP AND OpenMP_CXX_FLAGS STREQUAL "")
+        set(OpenMP_CXX_FLAGS "-fopenmp")
+    endif()
 endif()
 
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
