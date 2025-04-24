@@ -16,7 +16,6 @@
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
 cmake_minimum_required(VERSION 3.30)
-project(egttools LANGUAGES CXX)
 
 # Option to disable vcpkg and use HPC/system libraries
 option(HPC "Use HPC configuration and skip vcpkg toolchain" OFF)
@@ -31,6 +30,12 @@ elseif (DEFINED CMAKE_TOOLCHAIN_FILE)
 else()
     message(STATUS "Using HPC/system configuration — not setting vcpkg toolchain")
 endif()
+
+if (HPC AND DEFINED CMAKE_TOOLCHAIN_FILE)
+    message(FATAL_ERROR "HPC=ON but CMAKE_TOOLCHAIN_FILE is defined — remove it to avoid vcpkg usage")
+endif()
+
+project(egttools LANGUAGES CXX)
 
 # For additional Find library scripts
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules/")

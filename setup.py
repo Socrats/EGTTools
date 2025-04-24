@@ -47,11 +47,15 @@ def transform_to_valid_windows_path(input_path):
     return valid_path
 
 
-vcpkg_path = os.environ.get('VCPKG_PATH', '')
-vcpkg_toolchain_file = os.path.normpath(os.path.join(vcpkg_path, 'vcpkg', 'scripts',
-                                                     'buildsystems', 'vcpkg.cmake'))
-if os.name == 'nt':
-    vcpkg_toolchain_file = transform_to_valid_windows_path(vcpkg_toolchain_file)
+IS_HPC = os.environ.get('HPC', 'OFF')
+
+if IS_HPC == 'OFF':
+    vcpkg_path = os.environ.get('VCPKG_PATH', '')
+    vcpkg_toolchain_file = os.path.normpath(os.path.join(vcpkg_path, 'vcpkg', 'scripts',
+                                                         'buildsystems', 'vcpkg.cmake'))
+    if os.name == 'nt':
+        vcpkg_toolchain_file = transform_to_valid_windows_path(vcpkg_toolchain_file)
+
 cmake_args = shlex.split(os.environ.get('EGTTOOLS_EXTRA_CMAKE_ARGS', ''))
 cmake_args.append(f'-DCMAKE_TOOLCHAIN_FILE={vcpkg_toolchain_file}')
 
