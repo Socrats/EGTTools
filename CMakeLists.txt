@@ -18,12 +18,17 @@
 cmake_minimum_required(VERSION 3.30)
 project(egttools LANGUAGES CXX)
 
-option(HPC "Disable HPC configuration - Use VCPKG" OFF)
+# Option to disable vcpkg and use HPC/system libraries
+option(HPC "Use HPC configuration and skip vcpkg toolchain" OFF)
 
-# Set the vcpkg toolchain file
-if (NOT DEFINED CMAKE_TOOLCHAIN_FILE AND NOT HPC)
-    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
-endif ()
+# Set the vcpkg toolchain file only if not on HPC and if not already set
+if (NOT HPC AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+            CACHE STRING "VCPKG toolchain file")
+    message(STATUS "Using vcpkg toolchain: ${CMAKE_TOOLCHAIN_FILE}")
+else()
+    message(STATUS "Using HPC/system configuration — not setting vcpkg toolchain")
+endif()
 
 # For additional Find library scripts
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules/")
