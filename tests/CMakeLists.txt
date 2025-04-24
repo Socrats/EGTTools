@@ -217,11 +217,13 @@ endif ()
 
 if (NOT SKIP_OPENMP)
     message(STATUS "OpenMP lib at ${LIBOMP_DIR}")
-    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${LIBOMP_DIR}/include")
-    set(OpenMP_omp_LIBRARY "${LIBOMP_DIR}/lib/libomp.dylib")
-    set(LDFLAGS "$LDFLAGS -Wl,-rpath,${LIBOMP_DIR}/lib -L${LIBOMP_DIR}/lib -lomp")
-    set(OpenMP_CXX_LIB_NAMES "omp")
-    set(OpenMP_C_LIB_NAMES "omp")
+    if (APPLE)
+        set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${LIBOMP_DIR}/include")
+        set(OpenMP_omp_LIBRARY "${LIBOMP_DIR}/lib/libomp.dylib")
+        set(LDFLAGS "$LDFLAGS -Wl,-rpath,${LIBOMP_DIR}/lib -L${LIBOMP_DIR}/lib -lomp")
+        set(OpenMP_CXX_LIB_NAMES "omp")
+        set(OpenMP_C_LIB_NAMES "omp")
+    endif ()
 
     find_package(OpenMP)
     if (OpenMP_CXX_FOUND)
@@ -249,10 +251,12 @@ endif ()
 
 if (OpenMP_CXX_FOUND)
     message("-- linking OpenMP to target numerical_")
-    target_include_directories(testCalculateSDSparse PRIVATE ${LIBOMP_DIR}/include)
-    target_link_libraries(testCalculateSDSparse PRIVATE ${LIBOMP_DIR}/lib/libomp.dylib)
-    set_target_properties(testCalculateSDSparse PROPERTIES
-            BUILD_RPATH "${LIBOMP_DIR}/lib"
-            INSTALL_RPATH "${LIBOMP_DIR}/lib"
-    )
+    if (APPLE)
+        target_include_directories(testCalculateSDSparse PRIVATE ${LIBOMP_DIR}/include)
+        target_link_libraries(testCalculateSDSparse PRIVATE ${LIBOMP_DIR}/lib/libomp.dylib)
+        set_target_properties(testCalculateSDSparse PROPERTIES
+                BUILD_RPATH "${LIBOMP_DIR}/lib"
+                INSTALL_RPATH "${LIBOMP_DIR}/lib"
+        )
+    endif ()
 endif ()
