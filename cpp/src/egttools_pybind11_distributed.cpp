@@ -41,8 +41,8 @@ void init_datastructures(py::module_ &);
 void init_random(py::module_ &);
 
 PYBIND11_MODULE(numerical_, m) {
-    m.attr("__version__") = py::str(XSTR(EGTTOOLS_VERSION));
-    m.attr("VERSION") = py::str(XSTR(EGTTOOLS_VERSION));
+    m.attr("__version__") = py::str(XSTR(EGTTOOLS_VERSION_STRING));
+    m.attr("VERSION") = py::str(XSTR(EGTTOOLS_VERSION_STRING));
     m.attr("__init__") = py::str(
         "The `numerical` module contains optimized "
         "functions and classes to simulate evolutionary dynamics in large populations.");

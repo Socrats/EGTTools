@@ -1,0 +1,6 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/EGTToolsTargets.cmake")
+
+# Optional: set version variable
+set(EGTTools_VERSION "@PROJECT_VERSION@")

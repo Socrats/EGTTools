@@ -15,6 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
+# ------------------------------------------------------------------------------
+# Python extension module using pybind11
+# ------------------------------------------------------------------------------
+
 pybind11_add_module(numerical_
         egttools_pybind11_distributed.cpp
         pybind11_files/distributions.cpp
@@ -23,8 +27,18 @@ pybind11_add_module(numerical_
         pybind11_files/behaviors.cpp
         pybind11_files/methods.cpp
         pybind11_files/random.cpp
-        pybind11_files/datastructures.cpp)
+        pybind11_files/datastructures.cpp
+)
+
+# ------------------------------------------------------------------------------
+# Add main C++ sources
+# ------------------------------------------------------------------------------
+
 add_subdirectory(egttools)
+
+# ------------------------------------------------------------------------------
+# Includes and warnings
+# ------------------------------------------------------------------------------
 
 target_include_directories(numerical_ PRIVATE .)
 
@@ -35,6 +49,10 @@ if (UNIX)
             -Wno-unknown-pragmas
     )
 endif ()
+
+# ------------------------------------------------------------------------------
+# Target properties (standard, LTO, visibility)
+# ------------------------------------------------------------------------------
 
 set_target_properties(numerical_ PROPERTIES
         CXX_STANDARD 17
@@ -48,39 +66,52 @@ set_target_properties(numerical_ PROPERTIES
         CXX_VISIBILITY_PRESET hidden
 )
 
-target_include_directories(numerical_ SYSTEM INTERFACE ${CMAKE_SOURCE_DIR})
+# ------------------------------------------------------------------------------
+# Boost
+# ------------------------------------------------------------------------------
 
-if (Boost_FOUND)
-    get_target_property(Boost_INCLUDE_DIRS Boost::multiprecision INTERFACE_INCLUDE_DIRECTORIES)
-    message(STATUS "Boost Include Directories: ${Boost_INCLUDE_DIRS}")
-    target_include_directories(numerical_ PRIVATE ${Boost_INCLUDE_DIRS})
-    if (APPLE)
-        target_link_libraries(numerical_ PRIVATE Boost::multiprecision "-framework Accelerate")
-    else ()
-        target_link_libraries(numerical_ PRIVATE Boost::multiprecision)
-    endif ()
-    add_definitions("-DHAS_BOOST")
+get_target_property(Boost_INCLUDE_DIRS Boost::multiprecision INTERFACE_INCLUDE_DIRECTORIES)
+message(STATUS "Boost Include Directories: ${Boost_INCLUDE_DIRS}")
+target_include_directories(numerical_ PRIVATE ${Boost_INCLUDE_DIRS})
+
+if (APPLE)
+    target_link_libraries(numerical_ PRIVATE Boost::multiprecision "-framework Accelerate")
 else ()
-    message(FATAL_ERROR "Boost not found")
+    target_link_libraries(numerical_ PRIVATE Boost::multiprecision)
 endif ()
 
-if (OpenMP_CXX_FOUND)
-    message(STATUS "linking OpenMP to target numerical_")
-    target_link_libraries(numerical_ PRIVATE OpenMP::OpenMP_CXX)
+target_compile_definitions(numerical_ PRIVATE -DHAS_BOOST)
 
-    # ✅ Explicitly add compile flags in case OpenMP::OpenMP_CXX doesn't propagate them
+# ------------------------------------------------------------------------------
+# OpenMP
+# ------------------------------------------------------------------------------
+
+if (OpenMP_CXX_FOUND)
+    message(STATUS "[OpenMP] Linking to target: numerical_")
+    target_link_libraries(numerical_ PRIVATE OpenMP::OpenMP_CXX)
     if (NOT APPLE)
         target_compile_options(numerical_ PRIVATE ${OpenMP_CXX_FLAGS})
     endif ()
 else ()
-    message(WARNING "OpenMP not found: disabling parallelism")
+    message(WARNING "[OpenMP] Not found or disabled for target: numerical_")
 endif ()
 
+# ------------------------------------------------------------------------------
+# BLAS / LAPACK
+# ------------------------------------------------------------------------------
+
 if (BLAS_FOUND AND LAPACK_FOUND)
-    message(STATUS "linking BLAS AND LAPACK to target numerical_")
+    message(STATUS "Linking BLAS AND LAPACK to target numerical_")
     if (TARGET BLAS::BLAS AND TARGET LAPACK::LAPACK)
         target_link_libraries(numerical_ PRIVATE BLAS::BLAS LAPACK::LAPACK)
     else ()
         target_link_libraries(numerical_ PRIVATE ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
     endif ()
 endif ()
+
+install(TARGETS numerical_
+        EXPORT EGTToolsTargets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)

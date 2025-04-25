@@ -17,73 +17,110 @@
 
 cmake_minimum_required(VERSION 3.30)
 
-# Option to disable vcpkg and use HPC/system libraries
+# ------------------------------------------------------------------------------
+# Parse version from version.h
+# ------------------------------------------------------------------------------
+
+file(READ "${CMAKE_SOURCE_DIR}/cpp/src/version.h" VERSION_HEADER_CONTENT)
+
+string(REGEX MATCH "#define EGTTOOLS_VERSION_MAJOR[ \t]+([0-9]+)" _ ${VERSION_HEADER_CONTENT})
+set(EGTTOOLS_VERSION_MAJOR ${CMAKE_MATCH_1})
+
+string(REGEX MATCH "#define EGTTOOLS_VERSION_MINOR[ \t]+([0-9]+)" _ ${VERSION_HEADER_CONTENT})
+set(EGTTOOLS_VERSION_MINOR ${CMAKE_MATCH_1})
+
+string(REGEX MATCH "#define EGTTOOLS_VERSION_PATCH[ \t]+([0-9]+)" _ ${VERSION_HEADER_CONTENT})
+set(EGTTOOLS_VERSION_PATCH ${CMAKE_MATCH_1})
+
+string(REGEX MATCH "#define EGTTOOLS_VERSION_TWEAK[ \t]+([0-9]+)" _ ${VERSION_HEADER_CONTENT})
+set(EGTTOOLS_VERSION_TWEAK ${CMAKE_MATCH_1})
+
+set(EGTTOOLS_VERSION
+        "${EGTTOOLS_VERSION_MAJOR}.${EGTTOOLS_VERSION_MINOR}.${EGTTOOLS_VERSION_PATCH}.${EGTTOOLS_VERSION_TWEAK}"
+)
+
+# ------------------------------------------------------------------------------
+# Project definition
+# ------------------------------------------------------------------------------
+
+project(egttools VERSION ${EGTTOOLS_VERSION} LANGUAGES CXX)
+
+# ------------------------------------------------------------------------------
+# Toolchain setup: HPC vs vcpkg
+# ------------------------------------------------------------------------------
+
 option(HPC "Use HPC configuration and skip vcpkg toolchain" OFF)
 
-# Set the vcpkg toolchain file only if not on HPC and if not already set
 if (NOT HPC AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
-            CACHE STRING "VCPKG toolchain file")
+            CACHE STRING "Toolchain file for vcpkg")
     message(STATUS "Using vcpkg toolchain: ${CMAKE_TOOLCHAIN_FILE}")
 elseif (DEFINED CMAKE_TOOLCHAIN_FILE)
     message(STATUS "Toolchain file already set: ${CMAKE_TOOLCHAIN_FILE}")
-else()
+else ()
     message(STATUS "Using HPC/system configuration — not setting vcpkg toolchain")
-endif()
-
-if (HPC AND DEFINED CMAKE_TOOLCHAIN_FILE)
-    message(FATAL_ERROR "HPC=ON but CMAKE_TOOLCHAIN_FILE is defined — remove it to avoid vcpkg usage")
-endif()
-
-project(egttools LANGUAGES CXX)
-
-# For additional Find library scripts
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules/")
-
-if (NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel." FORCE)
 endif ()
 
-# Check for Link Time Optimizations with this compiler
+if (HPC AND DEFINED CMAKE_TOOLCHAIN_FILE)
+    message(FATAL_ERROR "HPC=ON but CMAKE_TOOLCHAIN_FILE is defined — remove it to avoid using vcpkg")
+endif ()
+
+# ------------------------------------------------------------------------------
+# Compiler options and platform-specific settings
+# ------------------------------------------------------------------------------
+
+# Set module path
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules")
+
+# CMake policy for CMake ≥ 3.27 (e.g. Boost wrapper warning)
+if (POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+endif ()
+
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build: Debug, Release, RelWithDebInfo, MinSizeRel" FORCE)
+endif ()
+
+# Enable IPO/LTO
 include(CheckIPOSupported)
 check_ipo_supported(RESULT LTO_SUPPORTED OUTPUT LTO_ERROR)
-
 if (LTO_SUPPORTED)
     message(STATUS "IPO / LTO enabled")
 else ()
     message(STATUS "IPO / LTO not supported: <${LTO_ERROR}>")
 endif ()
 
-# In case of windows (This piece of code was copied from https://github.com/YannickJadoul/Parselmouth/blob/master/CMakeLists.txt
+# MSVC specific flags
 if (MSVC)
-    add_compile_options(/permissive- /Zc:inline) # Please follow the standard more closely, MSVC (e.g. adds ciso646 alternative tokens for logical operators)
-    add_compile_options(/utf-8) # because UTF-8 is not default enough for MSVC to read and compile these files correctly
-    add_compile_definitions(_CRT_SECURE_NO_WARNINGS UNICODE NOMINMAX) # Windows no "safe alternatives" warning, Windows unicode API by default, and no <windows.h> 'min' and 'max' macros
+    add_compile_options(/permissive- /Zc:inline /utf-8)
+    add_compile_definitions(_CRT_SECURE_NO_WARNINGS UNICODE NOMINMAX)
     if (MSVC_VERSION GREATER_EQUAL 1920)
-        add_compile_options(/d2FH4-) # Because we don't want to link against VCRUNTIME140_1.dll (see https://cibuildwheel.readthedocs.io/en/stable/faq/#importerror-dll-load-failed-the-specific-module-could-not-be-found-error-on-windows)
+        add_compile_options(/d2FH4-)
     endif ()
 endif ()
 
+# macOS deployment
 if (APPLE)
-    message("-- Building for architecture ${CMAKE_OSX_ARCHITECTURES}")
-    set(_msg "Checking which MACOSX_DEPLOYMENT_TARGET to use")
-    message(STATUS "${_msg}")
+    message(STATUS "-- Building for architecture: ${CMAKE_OSX_ARCHITECTURES}")
+    message(STATUS "Checking which MACOSX_DEPLOYMENT_TARGET to use - ${CMAKE_OSX_DEPLOYMENT_TARGET}")
     set(MACOSX_DEPLOYMENT_TARGET ${CMAKE_OSX_DEPLOYMENT_TARGET})
-    message(STATUS "${_msg} - ${MACOSX_DEPLOYMENT_TARGET}")
 endif ()
 
+# Warnings for non-Windows
 if (NOT WIN32)
-    add_definitions(
-            -Wall
-            -Wextra
-    )
+    add_definitions(-Wall -Wextra)
 endif ()
 
+# C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Find BLAS/LAPACK and Eigen
+# ------------------------------------------------------------------------------
+# Dependencies: BLAS, LAPACK, LAPACKE, Eigen, OpenMP, Boost
+# ------------------------------------------------------------------------------
+
+# BLAS, LAPACK and LAPACKE
 if (APPLE)
     find_library(ACCELERATE_FRAMEWORK Accelerate)
     find_library(LAPACKE_LIB lapacke PATHS /opt/local/lib ${LAPACK_DIR}/lib)
@@ -91,19 +128,12 @@ if (APPLE)
         message(STATUS "Using Accelerate framework and LAPACKE")
         add_compile_definitions(EIGEN_USE_BLAS EIGEN_USE_LAPACKE)
     else ()
-        message(FATAL_ERROR "Accelerate framework or LAPACKE library not found")
+        message(FATAL_ERROR "Accelerate or LAPACKE not found")
     endif ()
 else ()
-    # Find BLAS and LAPACK (these are usually bundled together)
     find_package(BLAS REQUIRED)
     find_package(LAPACK REQUIRED)
-
-    # Optionally try to find LAPACKE
-    find_library(LAPACKE_LIB
-            NAMES lapacke
-            HINTS ${CMAKE_PREFIX_PATH}
-            PATH_SUFFIXES lib lib64
-    )
+    find_library(LAPACKE_LIB NAMES lapacke HINTS ${CMAKE_PREFIX_PATH} PATH_SUFFIXES lib lib64)
 
     if (BLAS_FOUND AND LAPACK_FOUND)
         message(STATUS "BLAS and LAPACK found")
@@ -112,113 +142,125 @@ else ()
         if (LAPACKE_LIB)
             message(STATUS "LAPACKE found")
             add_compile_definitions(EIGEN_USE_LAPACKE)
-        else()
+        else ()
             message(STATUS "LAPACKE not found — using LAPACK directly")
-        endif()
-
-    else()
+        endif ()
+    else ()
         message(FATAL_ERROR "BLAS or LAPACK not found — required for Eigen acceleration")
-    endif()
-
-endif ()
-
-# Necessary for certain MacOX versions to find homebrew OpenMP
-# Optionally allow disabling OpenMP
-option(USE_OPENMP "Enable OpenMP multithreading" ON)
-
-if (USE_OPENMP)
-    if(APPLE)
-        # Workaround for Apple Clang: manual flags for libomp via brew
-        set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${LIBOMP_DIR}/include")
-        set(OpenMP_CXX_LIB_NAMES "omp")
-        set(OpenMP_C_LIB_NAMES "omp")
-        set(OpenMP_omp_LIBRARY "${LIBOMP_DIR}/lib/libomp.dylib")
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${LIBOMP_DIR}/lib -lomp")
-        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L${LIBOMP_DIR}/lib -lomp")
-    endif()
-
-    find_package(OpenMP REQUIRED)
-
-    message(STATUS ">>> OpenMP_CXX_FLAGS = ${OpenMP_CXX_FLAGS}")
-    message(STATUS ">>> OpenMP_CXX_LIBRARIES = ${OpenMP_CXX_LIBRARIES}")
-
-    if (NOT APPLE AND USE_OPENMP AND OpenMP_CXX_FLAGS STREQUAL "")
-        set(OpenMP_CXX_FLAGS "-fopenmp")
-    endif()
-endif()
-
-# Runtime search path: Look for libs inside the installed wheel/package
-set(CMAKE_INSTALL_RPATH "$ORIGIN/lib")
-
-# Use this path at build time too
-set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-
-find_package(Eigen3 ${EIGEN_VERSION_REQUIRED} QUIET CONFIG)
-if (NOT EIGEN3_FOUND)
-    find_package(Eigen3 ${EIGEN_VERSION_REQUIRED} REQUIRED)
-    if (NOT EIGEN3_FOUND)
-        message(FATAL_ERROR "Please point the environment variable EIGEN3_INCLUDE_DIR to the include directory of your Eigen3 installation.")
     endif ()
-else ()
-    message(STATUS "Eigen3 found: ${Eigen3_DIR}")
-    message(STATUS "Eigen3 include directory: ${EIGEN3_INCLUDE_DIR}")
 endif ()
 
-if (EIGEN3_FOUND)
-    include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
-    message(STATUS "Eigen found")
-endif ()
+# OpenMP
+include(EnableOpenMP)
 
-#set(Boost_DEBUG ON)
+# Boost
 find_package(Boost REQUIRED COMPONENTS multiprecision)
 
+# Eigen
+find_package(Eigen3 REQUIRED CONFIG)
+include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
+message(STATUS "Eigen3 include directory: ${EIGEN3_INCLUDE_DIR}")
+
+# ------------------------------------------------------------------------------
+# Python & pybind11 setup
+# ------------------------------------------------------------------------------
+
 set(Python_FIND_IMPLEMENTATIONS CPython PyPy)
-find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
+find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
 set(PYBIND11_FINDPYTHON ON)
-# Add external dependencies
 add_subdirectory(pybind11)
+message(STATUS "Python include dirs: ${Python_INCLUDE_DIRS}")
 
+# ------------------------------------------------------------------------------
+# RPATH settings
+# ------------------------------------------------------------------------------
 
-message(STATUS "${Python_INCLUDE_DIRS}")
+include(GNUInstallDirs)
+set(CMAKE_INSTALL_RPATH "$ORIGIN/${CMAKE_INSTALL_LIBDIR}")
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+
+# ------------------------------------------------------------------------------
+# Export targets
+# ------------------------------------------------------------------------------
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+# Generate version file
+write_basic_package_version_file(
+        "${CMAKE_CURRENT_BINARY_DIR}/EGTToolsConfigVersion.cmake"
+        VERSION ${PROJECT_VERSION}
+        COMPATIBILITY SameMajorVersion
+)
+
+configure_package_config_file(
+        "${CMAKE_SOURCE_DIR}/cmake/EGTToolsConfig.cmake.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/EGTToolsConfig.cmake"
+        INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/EGTTools
+)
+
+# Install generated config + version files
+install(FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/EGTToolsConfig.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/EGTToolsConfigVersion.cmake"
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/EGTTools
+)
+
+# Install exported targets
+install(EXPORT EGTToolsTargets
+        FILE EGTToolsTargets.cmake
+        NAMESPACE EGTTools::
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/EGTTools"
+)
+
+# ------------------------------------------------------------------------------
+# Subdirectories (main source, tests, docs)
+# ------------------------------------------------------------------------------
 
 include_directories(${PROJECT_SOURCE_DIR}/cpp/include)
 add_subdirectory(${PROJECT_SOURCE_DIR}/cpp/src)
-add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
 add_subdirectory(${PROJECT_SOURCE_DIR}/docs)
 
+# Optional tests, disabled by default
+option(BUILD_NUMERICAL_TESTS "Build C++ tests in numerical-tests/" ON)
+
+if (BUILD_NUMERICAL_TESTS)
+    add_subdirectory(tests)
+endif ()
+
+# ------------------------------------------------------------------------------
+# scikit-build install logic (bundling .so/.dylib if needed)
+# ------------------------------------------------------------------------------
+
 if (SKBUILD)
-    # Install the compiled target
     install(TARGETS numerical_ LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX})
 
-    # Also install OpenMP runtime library if available (for portability)
+    # OpenMP
     if (OpenMP_CXX_LIBRARIES)
-        foreach(lib ${OpenMP_CXX_LIBRARIES})
+        foreach (lib ${OpenMP_CXX_LIBRARIES})
             get_filename_component(lib_path ${lib} ABSOLUTE)
-
-            # Skip system-wide OpenMP libraries
-            if(EXISTS ${lib_path} AND NOT lib_path MATCHES "^/lib.*|/usr/lib.*")
+            if (EXISTS ${lib_path} AND NOT lib_path MATCHES "^/lib.*|/usr/lib.*")
                 message(STATUS "Installing OpenMP runtime library: ${lib_path}")
                 install(FILES ${lib_path} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
-            else()
+            else ()
                 message(STATUS "Skipping OpenMP runtime: ${lib_path} is system-provided")
-            endif()
-        endforeach()
-    else()
+            endif ()
+        endforeach ()
+    else ()
         message(WARNING "OpenMP_CXX_LIBRARIES is empty — OpenMP runtime will not be bundled.")
-    endif()
+    endif ()
 
+    # BLAS / LAPACK
     if (BLAS_FOUND AND LAPACK_FOUND)
-        message(STATUS "BLAS and LAPACK found — checking for runtime library installation")
-
-        foreach(lib ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+        foreach (lib ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
             get_filename_component(lib_path ${lib} ABSOLUTE)
             if (EXISTS ${lib_path} AND NOT lib_path MATCHES "^/lib|^/usr/lib")
                 message(STATUS "Installing BLAS/LAPACK runtime library: ${lib_path}")
                 install(FILES ${lib_path} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
-            else()
+            else ()
                 message(STATUS "Skipping system BLAS/LAPACK library: ${lib_path}")
-            endif()
-        endforeach()
-    endif()
-endif()
+            endif ()
+        endforeach ()
+    endif ()
+endif ()
+
 
