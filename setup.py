@@ -49,9 +49,9 @@ def transform_to_valid_windows_path(input_path):
 
 cmake_args = shlex.split(os.environ.get('EGTTOOLS_EXTRA_CMAKE_ARGS', ''))
 
-IS_HPC = os.environ.get('HPC', 'OFF')
+SKIP_VCPKG = os.environ.get('SKIP_VCPKG', 'OFF')
 
-if IS_HPC == 'OFF':
+if SKIP_VCPKG == 'OFF':
     # Try to find the vcpkg path
     vcpkg_path = os.environ.get('VCPKG_PATH', '')
 
@@ -71,7 +71,7 @@ if IS_HPC == 'OFF':
 
     cmake_args.append(f'-DCMAKE_TOOLCHAIN_FILE={vcpkg_toolchain_file}')
 else:
-    cmake_args.append(f'-DHPC=ON')
+    cmake_args.append(f'-DSKIP_VCPKG=ON')
 
 
 def find_version():
