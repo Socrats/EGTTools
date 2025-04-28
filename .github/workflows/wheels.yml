@@ -114,10 +114,18 @@ jobs:
             platform_id: win_amd64
             openmp_enabled: "ON"
 
+          - os: windows-latest
+            platform_id: win_arm64
+            openmp_enabled: "ON"
+
           - os: ubuntu-latest
             platform_id: manylinux_x86_64
             manylinux_image: manylinux2014
             openmp_enabled: "ON"
+
+          - os: ubuntu-latest
+            platform_id: manylinux_aarch64
+            manylinux_image: manylinux2014
 
           - os: macos-13
             platform_id: macosx_x86_64
