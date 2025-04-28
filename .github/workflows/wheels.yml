@@ -112,18 +112,28 @@ jobs:
         include:
           - os: windows-latest
             platform_id: win_amd64
+            openmp_enabled: "ON"
 
           - os: ubuntu-latest
             platform_id: manylinux_x86_64
             manylinux_image: manylinux2014
+            openmp_enabled: "ON"
 
           - os: macos-13
             platform_id: macosx_x86_64
             macosx_deployment_target: "13.0"
+            openmp_enabled: "ON"
 
           - os: macos-14
             platform_id: macosx_arm64
             macosx_deployment_target: "14.0"
+            openmp_enabled: "ON"
+
+          - os: macos-14
+            platform_id: macosx_universal2
+            macosx_deployment_target: "11.0"
+            openmp_enabled: "OFF"
+
 
     steps:
       - name: Checkout code
@@ -196,7 +206,7 @@ jobs:
           CIBW_ENVIRONMENT_LINUX: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
           CIBW_ENVIRONMENT_MACOS: |
             VCPKG_PATH=$(pwd)
-            EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
+            EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=${{ matrix.openmp_enabled }}"
             MACOSX_DEPLOYMENT_TARGET=${{ matrix.macosx_deployment_target }}
           CIBW_ENVIRONMENT_WINDOWS: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
           CIBW_BUILD: "cp310-${{ matrix.platform_id }} cp311-${{ matrix.platform_id }} cp312-${{ matrix.platform_id }}"
