@@ -52,7 +52,18 @@ cmake_args = shlex.split(os.environ.get('EGTTOOLS_EXTRA_CMAKE_ARGS', ''))
 IS_HPC = os.environ.get('HPC', 'OFF')
 
 if IS_HPC == 'OFF':
+    # Try to find the vcpkg path
     vcpkg_path = os.environ.get('VCPKG_PATH', '')
+
+    if not vcpkg_path:
+        # Assume vcpkg is in the project root if not explicitly set
+        project_root = os.path.dirname(os.path.abspath(__file__))
+        default_vcpkg_path = os.path.join(project_root, 'vcpkg')
+        if os.path.exists(default_vcpkg_path):
+            vcpkg_path = default_vcpkg_path
+        else:
+            print("Warning: VCPKG_PATH not set and no vcpkg folder found — CMake may fail", file=sys.stderr)
+
     vcpkg_toolchain_file = os.path.normpath(os.path.join(vcpkg_path, 'vcpkg', 'scripts',
                                                          'buildsystems', 'vcpkg.cmake'))
     if os.name == 'nt':

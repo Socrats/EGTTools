@@ -19,7 +19,7 @@
 #include <vector>
 
 #if defined(_OPENMP)
-#include <egttools/OpenMPUtils.hpp>
+#include <egttools/OpenMPExtensions.hpp>
 #endif
 
 namespace egttools::FinitePopulations::games {

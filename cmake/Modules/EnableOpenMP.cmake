@@ -9,31 +9,31 @@ option(USE_OPENMP "Enable OpenMP multithreading" ON)
 
 if (USE_OPENMP)
 
+    # Only relevant on macOS
     if (APPLE)
-        # macOS needs manual override with Homebrew/Conda libomp
-        if (DEFINED ENV{LIBOMP_DIR})
-            set(LIBOMP_DIR $ENV{LIBOMP_DIR})
-        elseif (DEFINED LIBOMP_DIR)
-            set(LIBOMP_DIR ${LIBOMP_DIR})
+        # Define a CMake cache variable so users can override it with -DLIBOMP_DIR=/path
+        set(LIBOMP_DIR "/opt/homebrew/opt/libomp" CACHE PATH "Path to libomp installation on macOS")
+
+        if (NOT EXISTS "${LIBOMP_DIR}")
+            message(WARNING "[OpenMP] LIBOMP_DIR does not exist: ${LIBOMP_DIR}")
         else ()
-            message(WARNING "[OpenMP] LIBOMP_DIR is not set. Defaulting to /opt/homebrew/opt/libomp")
-            set(LIBOMP_DIR "/opt/homebrew/opt/libomp")
+            message(STATUS "[OpenMP] Using LIBOMP_DIR=${LIBOMP_DIR}")
         endif ()
 
-        # Set up OpenMP variables used by find_package(OpenMP)
+        # Set OpenMP variables manually
         set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${LIBOMP_DIR}/include")
         set(OpenMP_CXX_INCLUDE_DIRS "${LIBOMP_DIR}/include")
         set(OpenMP_omp_LIBRARY "${LIBOMP_DIR}/lib/libomp.dylib")
         set(OpenMP_CXX_LIB_NAMES "omp")
         set(OpenMP_C_LIB_NAMES "omp")
 
-        # Let CMake handle RPATH and linking cleanly
         set(CMAKE_INSTALL_RPATH "${LIBOMP_DIR}/lib")
         set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
         set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
     endif ()
 
-    find_package(OpenMP REQUIRED)
+
+    find_package(OpenMP)
 
     if (OpenMP_CXX_FOUND)
         message(STATUS "[OpenMP] Found and enabled")
@@ -52,3 +52,15 @@ if (USE_OPENMP)
     endif ()
 
 endif ()
+
+# Summary message for OpenMP status
+if (USE_OPENMP)
+    if (OpenMP_CXX_FOUND)
+        message(STATUS "[EGTtools] OpenMP support: ON")
+    else ()
+        message(STATUS "[EGTtools] OpenMP support: OFF (requested but not found)")
+    endif ()
+else ()
+    message(STATUS "[EGTtools] OpenMP support: OFF (disabled by user)")
+endif ()
+

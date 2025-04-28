@@ -1,10 +1,10 @@
-name: Wheels
+name: Build Wheels
 
 on:
   workflow_dispatch:
     inputs:
       debug_enabled:
-        description: 'Run the build with tmate debugging enabled'
+        description: 'Enable tmate debugging session'
         required: false
         default: false
   pull_request:
@@ -20,245 +20,130 @@ on:
 
 jobs:
   build_sdist:
-    name: Build source distribution (sdist)
+    name: Build Source Distribution (sdist)
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/heads/docs') != true
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
-
-      - name: Make sure submodules are updated
-        run: |
-          git submodule sync --recursive
-          git submodule update --init --recursive --force
-          cd vcpkg
-          git fetch --all --unshallow || true
-          cd ..
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Setup cmake
-        uses: jwlawson/actions-setup-cmake@v2
-        with:
-          cmake-version: '3.27.x'
-
-      - name: Install necessary packages for vcpkg to manage python
-        run: |
-          sudo apt-get install autoconf automake autoconf-archive
-
-      - name: Setup cache for vcpkg
-        id: cache-vcpkg
-        uses: actions/cache@v4
-        with:
-          path: |
-            ./vcpkg_installed  # Cached path for packages
-            ./vcpkg/buildtrees
-            ./vcpkg/downloads
-            ./vcpkg/packages
-          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
-          restore-keys: |
-            ${{ runner.os }}-vcpkg-
-
-      - name: Bootstrap vcpkg
-        run: |
-          ./vcpkg/bootstrap-vcpkg.sh
-
-      - name: Install dependencies with vcpkg
-        if: steps.cache-vcpkg.outputs.cache-hit != 'true'
-        run: |
-          ./vcpkg/vcpkg install --x-binarycaching
-
-      - name: Set VCPKG_PATH environment variable
-        run: |
-          echo "VCPKG_PATH=$(pwd)" >> $GITHUB_ENV
-
-      - name: Install requirements
-        run: |
-          pip install --user check-manifest twine
+      - name: Install build tools
+        run: pip install build check-manifest twine
 
       - name: Build sdist
         run: |
-          echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP=TRUE'" >> $GITHUB_ENV
+          echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DUSE_OPENMP=OFF'" >> $GITHUB_ENV
           python -m build --sdist --outdir wheelhouse
 
-      - name: Run check-manifest
-        run: |
-          python -m check_manifest --verbose
+      - name: Check manifest
+        run: python -m check_manifest --verbose
 
       - name: Install from sdist
-        run: |
-          pip install --user wheelhouse/*.tar.gz
+        run: pip install wheelhouse/*.tar.gz
 
-      - name: Check sdist metadata
-        run: |
-          python -m twine check wheelhouse/*
+      - name: Validate sdist metadata
+        run: python -m twine check wheelhouse/*
 
-      - name: Upload sdist
+      - name: Upload sdist artifact
         uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: sdist
           path: wheelhouse/*.tar.gz
 
   build_wheels:
-    name: Build wheel for ${{ matrix.platform_id }}-${{ matrix.manylinux_image }}
+    name: Build Wheels for ${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          # Window 64 bit
-          - os: windows-latest
-            platform_id: win_amd64
-
-          # Linux 64 bit manylinux2014
           - os: ubuntu-latest
-            platform_id: manylinux_x86_64
+            platform: manylinux_x86_64
             manylinux_image: manylinux2014
-
-          # MacOS x86_64
+          - os: windows-latest
+            platform: win_amd64
           - os: macos-13
-            platform_id: macosx_x86_64
-
-          # MacOS arm64
+            platform: macosx_x86_64
           - os: macos-14
-            platform_id: macosx_arm64
+            platform: macosx_arm64
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
-
-      - name: Make sure submodules are updated
-        run: |
-          git submodule sync --recursive
-          git submodule update --init --recursive --force
-          cd vcpkg
-          git fetch --all --unshallow || true
-          cd ..
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Setup cmake
+      - name: Install latest CMake
         uses: jwlawson/actions-setup-cmake@v2
         with:
-          cmake-version: '3.27.x'
+          cmake-version: 'latest'
 
-      - name: Install necessary packages for vcpkg to manage python (Linux)
+      - name: Install required system packages (Linux)
         if: runner.os == 'Linux'
-        run: |
-          sudo apt-get install autoconf automake autoconf-archive
+        run: sudo apt-get install -y autoconf automake autoconf-archive
 
-      - name: Install necessary packages for vcpkg to manage python (macOS)
+      - name: Install required system packages (macOS)
         if: runner.os == 'macOS'
-        run: |
-          brew install autoconf automake autoconf-archive openblas
+        run: brew install autoconf automake autoconf-archive openblas libomp
 
-      #      - name: Install necessary packages for vcpkg to manage python (Linux)
-      #        if: runner.os == 'Windows'
-      #        run: |
-      #          choco install libomp
-
-      - name: Setup cache for vcpkg
+      - name: Setup vcpkg cache
         id: cache-vcpkg
         uses: actions/cache@v4
         with:
           path: |
-            ./vcpkg_installed  # Cached path for packages
+            ./vcpkg_installed
             ./vcpkg/buildtrees
             ./vcpkg/downloads
             ./vcpkg/packages
-          key: ${{ runner.os }}-vcpkg-${{ matrix.platform_id }}-${{ hashFiles('vcpkg.json') }}
+          key: ${{ runner.os }}-vcpkg-${{ matrix.platform }}-${{ hashFiles('vcpkg.json') }}
           restore-keys: |
-            ${{ runner.os }}-vcpkg-${{ matrix.platform_id }}-
+            ${{ runner.os }}-vcpkg-${{ matrix.platform }}-
             ${{ runner.os }}-vcpkg-
 
       - name: Bootstrap vcpkg
-        if: runner.os != 'Windows'
         run: |
-          ./vcpkg/bootstrap-vcpkg.sh
-
-      - name: Bootstrap vcpkg
-        if: runner.os == 'Windows'
-        run: |
-          ./vcpkg/bootstrap-vcpkg.bat
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            ./vcpkg/bootstrap-vcpkg.bat
+          else
+            ./vcpkg/bootstrap-vcpkg.sh
+          fi
 
       - name: Install dependencies with vcpkg
         if: steps.cache-vcpkg.outputs.cache-hit != 'true'
-        run: |
-          ./vcpkg/vcpkg install --x-binarycaching   
+        run: ./vcpkg/vcpkg install --x-binarycaching
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.22.0
         env:
+          CIBW_BUILD: "cp39-${{ matrix.platform }} cp310-${{ matrix.platform }} cp311-${{ matrix.platform }} cp312-${{ matrix.platform }}"
           CIBW_ARCHS: all
-          CIBW_ENVIRONMENT_LINUX: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DSKIP_OPENMP=TRUE"
-          CIBW_ENVIRONMENT_MACOS: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DSKIP_OPENMP=TRUE" MACOSX_DEPLOYMENT_TARGET=11.0
-          CIBW_ENVIRONMENT_WINDOWS: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DSKIP_OPENMP=TRUE"
-          CIBW_BUILD: "cp39-${{ matrix.platform_id }} cp310-${{ matrix.platform_id }} cp311-${{ matrix.platform_id }} cp312-${{ matrix.platform_id }}"
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
-          CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
-          # Needed on Windows CI to compile with Visual Studio compiler
-          # otherwise Meson detects a MINGW64 platform and use MINGW64
-          # toolchain
+          CIBW_ENVIRONMENT_LINUX: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS='-DUSE_OPENMP=OFF'
+          CIBW_ENVIRONMENT_MACOS: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS='-DUSE_OPENMP=OFF' MACOSX_DEPLOYMENT_TARGET=11.0
+          CIBW_ENVIRONMENT_WINDOWS: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS='-DUSE_OPENMP=OFF'
           CIBW_CONFIG_SETTINGS_WINDOWS: "setup-args=--vsenv"
-          CIBW_BEFORE_ALL_MACOS: brew install libomp
-          CIBW_ENVIRONMENT_PASS_LINUX: RUNNER_OS
-        with:
-          package-dir: .
-          output-dir: wheelhouse
-          config-file: "{package}/pyproject.toml"
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cibw-wheels-${{ matrix.os }}-${{ matrix.platform }}-${{ strategy.job-index }}
-          path: ./wheelhouse/*.whl
-
-      #      - name: Build and test wheels
-      #        uses: pypa/cibuildwheel@v2.21.3
-      #        env:
-      #          CIBW_BUILD_FRONTEND: "build"
-      #          CIBW_BUILD: "cp*-${{ matrix.cibw-arch }}"
-      #          CIBW_SKIP: "cp38-win32 cp39-win32 cp310-win32 cp311-win32 cp312-win32"
-      #          CIBW_ARCHS_MACOS: "x86_64 arm64"
-      #          CIBW_ARCHS_WINDOWS: "AMD64 x86"
-      #          CIBW_BEFORE_ALL_MACOS: bash build_tools/github/before_all_mac.sh
-      ##          CIBW_BEFORE_ALL_LINUX: bash build_tools/github/download_eigen3.sh
-      ##          CIBW_BEFORE_ALL_WINDOWS: bash build_tools/github/download_eigen3_windows.sh
-      #          CIBW_ENVIRONMENT_WINDOWS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_ARCH="${{ matrix.platform_id == 'win32' && '-A Win32' || '' }}"
-      #          CIBW_ENVIRONMENT_MACOS: CMAKE_BUILD_PARALLEL_LEVEL=2 CMAKE_OSX_ARCHITECTURES=${{ matrix.cibw-arch == 'macosx_x86_64' && 'x86_64' || matrix.cibw-arch == 'macosx_arm64' && 'arm64' || matrix.cibw-arch == 'macosx_universal2' && '"arm64;x86_64"' || '' }} BUILD_ARCH=${{ matrix.cibw-arch }} EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP=TRUE -DMACOSX_DEPLOYMENT_TARGET=10.5'
-      #          CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
-      #          CIBW_TEST_REQUIRES: pytest
-      #          CIBW_BEFORE_TEST_MACOS: cd .. && cp -r {package}/tests/ {project}/tests/
-      #          CIBW_BEFORE_TEST_WINDOWS: cd .. && cp -r {package}/tests/ {project}\tests\
-      #          CIBW_TEST_COMMAND: pytest {project}/tests
-      #          CIBW_BUILD_VERBOSITY: 1
-      #
-#      - name: Upload wheels
-#        if: startsWith(github.ref, 'refs/heads/docs') != true
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: wheels
-#          path: ./wheelhouse/egttools-*.whl
-#          if-no-files-found: error
-
-      - name: Upload wheel for ReadTheDocs
-        if: runner.os == 'Linux' && matrix.cibw-arch == 'manylinux_x86_64' && startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
+      - name: Upload wheels artifact
         uses: actions/upload-artifact@v4
         with:
-          name: rtd-wheel
-          path: wheelhouse/egttools-*-cp39-cp39-*manylinux2014_x86_64*.whl
+          name: wheels
+          path: wheelhouse/*.whl
           if-no-files-found: error
 
-      - name: Setup tmate session
+      - name: Setup tmate session (for debugging)
         uses: mxschmitt/action-tmate@v3
         if: ${{ failure() && github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
         with:
@@ -268,38 +153,44 @@ jobs:
     name: Trigger ReadTheDocs build
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
-    needs: [ build_wheels ]
+    needs: [build_wheels]
 
     steps:
-      - name: Get branch name
-        id: get_branch
-        run: |
-          echo "::set-output name=branch::${GITHUB_REF##refs/heads/}"
       - name: Trigger ReadTheDocs webhook
         run: |
-          curl -X POST -d "branches=${{ steps.get_branch.outputs.branch }}" -d "token=${{ secrets.READTHEDOCS_WEBHOOK_TOKEN }}" https://readthedocs.org/api/v2/webhook/egttools/180432/
+          branch_name="${GITHUB_REF#refs/heads/}"
+          curl -X POST \
+            -d "branches=${branch_name}" \
+            -d "token=${{ secrets.READTHEDOCS_WEBHOOK_TOKEN }}" \
+            https://readthedocs.org/api/v2/webhook/egttools/180432/
 
   create_release:
-    name: Create release
+    name: Create GitHub Release
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [ build_sdist, build_wheels ]
+    needs: [build_sdist, build_wheels]
 
     steps:
-      - name: Collect sdist and wheels
+      - name: Download sdist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sdist
+          path: wheelhouse
+
+      - name: Download wheels artifact
         uses: actions/download-artifact@v4
         with:
           name: wheels
           path: wheelhouse
 
-      - name: Get release name
+      - name: Get release version
         id: get_version
-        run: |
-          echo "::set-output name=version::${GITHUB_REF##refs/tags/v}"
-      - name: Upload sdist and wheels to release
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Upload release assets
         uses: ncipollo/release-action@v1.14.0
         with:
-          name: ${{ steps.get_version.outputs.version }}
+          name: Release ${{ steps.get_version.outputs.version }}
           draft: true
           artifacts: wheelhouse/*
           token: ${{ secrets.GITHUB_TOKEN }}

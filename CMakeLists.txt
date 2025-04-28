@@ -234,7 +234,6 @@ endif ()
 # ------------------------------------------------------------------------------
 # scikit-build install logic (bundling .so/.dylib if needed)
 # ------------------------------------------------------------------------------
-
 if (SKBUILD)
     install(TARGETS numerical_ LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX})
 
@@ -247,5 +246,10 @@ if (SKBUILD)
         include(InstallBLASLAPACK)
     endif ()
 endif ()
+
+# ------------------------------------------------------------------------------
+# Build information
+# ------------------------------------------------------------------------------
+include(AddBuildInfo)
 
 

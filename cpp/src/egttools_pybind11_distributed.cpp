@@ -17,6 +17,7 @@
 */
 
 #include <pybind11/pybind11.h>
+#include <egttools/OpenMPStatus.hpp>
 
 #include "version.h"
 
@@ -46,6 +47,9 @@ PYBIND11_MODULE(numerical_, m) {
     m.attr("__init__") = py::str(
         "The `numerical` module contains optimized "
         "functions and classes to simulate evolutionary dynamics in large populations.");
+    m.def("is_openmp_enabled", &egttools::is_openmp_enabled,
+      "Check if EGTtools was compiled with OpenMP support.");
+
 #if (HAS_BOOST)
     m.attr("USES_BOOST") = true;
 #else
