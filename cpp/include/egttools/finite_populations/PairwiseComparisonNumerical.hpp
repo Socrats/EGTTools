@@ -31,7 +31,7 @@
 #include <stdexcept>
 #include <vector>
 
-#if defined(_OPENMP)
+#ifdef _OPENMP
 #include <egttools/OpenMPExtensions.hpp>
 #endif
 
@@ -363,10 +363,10 @@ namespace egttools::FinitePopulations {
 
     template<class Cache>
     PairwiseComparisonNumerical<Cache>::PairwiseComparisonNumerical(size_t pop_size,
-                                        egttools::FinitePopulations::AbstractGame &game,
-                                        size_t cache_size) : _pop_size(pop_size),
-                                                             _cache_size(cache_size),
-                                                             _game(game) {
+                                                                    egttools::FinitePopulations::AbstractGame &game,
+                                                                    size_t cache_size) : _pop_size(pop_size),
+        _cache_size(cache_size),
+        _game(game) {
         // Initialize random uniform distribution
         _nb_strategies = game.nb_strategies();
         _pop_sampler = std::uniform_int_distribution<size_t>(0, _pop_size - 1);
@@ -378,7 +378,8 @@ namespace egttools::FinitePopulations {
 
     template<class Cache>
     void
-    PairwiseComparisonNumerical<Cache>::_initialise_population(const VectorXui &strategies, std::vector<size_t> &population) {
+    PairwiseComparisonNumerical<Cache>::_initialise_population(const VectorXui &strategies,
+                                                               std::vector<size_t> &population) {
         size_t z = 0;
         for (unsigned int i = 0; i < _nb_strategies; ++i) {
             for (size_t j = 0; j < strategies(i); ++j) {
@@ -393,7 +394,7 @@ namespace egttools::FinitePopulations {
     template<class Cache>
     VectorXui
     PairwiseComparisonNumerical<Cache>::evolve(const size_t nb_generations, const double beta, const double mu,
-                                 const Eigen::Ref<const VectorXui> &init_state) {
+                                               const Eigen::Ref<const VectorXui> &init_state) {
         if (nb_generations <= 0) {
             throw std::invalid_argument(
                 "nb_generations must be > 0");
@@ -450,7 +451,7 @@ namespace egttools::FinitePopulations {
     template<class Cache>
     void
     PairwiseComparisonNumerical<Cache>::evolve(const size_t nb_generations, const double beta, VectorXui &strategies,
-                                 std::mt19937_64 &generator) {
+                                               std::mt19937_64 &generator) {
         // This method runs a Moran process with pairwise comparison
         // using the fermi rule and no mutation
         if (nb_generations <= 0) {
@@ -492,8 +493,8 @@ namespace egttools::FinitePopulations {
 
     template<class Cache>
     auto PairwiseComparisonNumerical<Cache>::evolve(const size_t nb_generations, double beta, double mu,
-                                      const Eigen::Ref<const VectorXui> &init_state,
-                                      std::mt19937_64 &generator) -> VectorXui {
+                                                    const Eigen::Ref<const VectorXui> &init_state,
+                                                    std::mt19937_64 &generator) -> VectorXui {
         if (nb_generations <= 0) {
             throw std::invalid_argument(
                 "nb_generations must be > 0");
@@ -551,8 +552,9 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    MatrixXui2D PairwiseComparisonNumerical<Cache>::run(const int64_t nb_generations, const double beta, const double mu,
-                                          const Eigen::Ref<const VectorXui> &init_state) {
+    MatrixXui2D PairwiseComparisonNumerical<Cache>::run(const int64_t nb_generations, const double beta,
+                                                        const double mu,
+                                                        const Eigen::Ref<const VectorXui> &init_state) {
         if (mu <= 0) {
             throw std::invalid_argument(
                 "mu must be > 0. If you want to run a simulation without mutation, "
@@ -637,9 +639,10 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    MatrixXui2D PairwiseComparisonNumerical<Cache>::run(const int64_t nb_generations, const int64_t transient, const double beta,
-                                          const double mu,
-                                          const Eigen::Ref<const VectorXui> &init_state) {
+    MatrixXui2D PairwiseComparisonNumerical<Cache>::run(const int64_t nb_generations, const int64_t transient,
+                                                        const double beta,
+                                                        const double mu,
+                                                        const Eigen::Ref<const VectorXui> &init_state) {
         if (mu <= 0) {
             throw std::invalid_argument(
                 "mu must be > 0. If you want to run a simulation without mutation, "
@@ -757,8 +760,9 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    MatrixXui2D PairwiseComparisonNumerical<Cache>::run(const int64_t nb_generations, const int64_t transient, const double beta,
-                                          const Eigen::Ref<const VectorXui> &init_state) {
+    MatrixXui2D PairwiseComparisonNumerical<Cache>::run(const int64_t nb_generations, const int64_t transient,
+                                                        const double beta,
+                                                        const Eigen::Ref<const VectorXui> &init_state) {
         // Check that there is the length of init_state is the same as the number of strategies
         if (init_state.size() != static_cast<int>(_nb_strategies)) {
             throw std::invalid_argument(
@@ -831,7 +835,7 @@ namespace egttools::FinitePopulations {
 
     template<class Cache>
     MatrixXui2D PairwiseComparisonNumerical<Cache>::run(const int64_t nb_generations, const double beta,
-                                          const Eigen::Ref<const VectorXui> &init_state) {
+                                                        const Eigen::Ref<const VectorXui> &init_state) {
         if (nb_generations <= 0) {
             throw std::invalid_argument(
                 "nb_generations must be > 0");
@@ -888,9 +892,10 @@ namespace egttools::FinitePopulations {
 
     template<class Cache>
     double
-    PairwiseComparisonNumerical<Cache>::estimate_fixation_probability(const int invader, const int resident, const size_t runs,
-                                                        const size_t nb_generations,
-                                                        const double beta) {
+    PairwiseComparisonNumerical<Cache>::estimate_fixation_probability(const int invader, const int resident,
+                                                                      const size_t runs,
+                                                                      const size_t nb_generations,
+                                                                      const double beta) {
         if (invader >= static_cast<int>(_nb_strategies) || resident >= static_cast<int>(_nb_strategies))
             throw std::invalid_argument(
                 "you must specify a valid index for invader and resident [0, " + std::to_string(_nb_strategies) +
@@ -901,7 +906,9 @@ namespace egttools::FinitePopulations {
         long int r2r = 0; // resident to resident count
 
         // This loop can be done in parallel
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+ : r2m, r2r) default(none) shared(resident, invader, runs, nb_generations, beta)
+#endif
         for (size_t i = 0; i < runs; ++i) {
             // Random generators - each thread should have its own generator
             std::mt19937_64 generator(egttools::Random::SeedGenerator::getInstance().getSeed());
@@ -927,7 +934,7 @@ namespace egttools::FinitePopulations {
 
     template<class Cache>
     Vector PairwiseComparisonNumerical<Cache>::estimate_gradient_of_selection(const size_t runs, const int invader,
-                                                                const int resident) {
+                                                                              const int resident) {
         if (invader > _nb_strategies || resident > _nb_strategies)
             throw std::invalid_argument(
                 "you must specify a valid index for invader and resident [0, " + std::to_string(_nb_strategies) +
@@ -937,8 +944,10 @@ namespace egttools::FinitePopulations {
         VectorXi t_minus = VectorXi::Zero(_pop_size + 1);
 
         // This loop can be done in parallel
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+ : t_plus, t_minus) default(none) shared(invader, resident, runs, \
                                                                                      _pop_size, _nb_strategies)
+#endif
         for (size_t run = 0; run < runs; ++run) {
             for (size_t k = 1; k < _pop_size; ++k) {
                 // Set up the population state
@@ -957,10 +966,11 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    auto PairwiseComparisonNumerical<Cache>::estimate_stationary_distribution(const size_t nb_runs, const size_t nb_generations,
-                                                                const size_t transitory,
-                                                                const double beta,
-                                                                double mu) -> Vector {
+    auto PairwiseComparisonNumerical<Cache>::estimate_stationary_distribution(
+        const size_t nb_runs, const size_t nb_generations,
+        const size_t transitory,
+        const double beta,
+        double mu) -> Vector {
         if (mu <= 0) {
             throw std::invalid_argument(
                 "mu must be > 0. If you want to run a simulation without mutation, "
@@ -992,7 +1002,9 @@ namespace egttools::FinitePopulations {
         // Creates a cache for the fitness data
         Cache cache(_cache_size);
 
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+ : sdist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu, cache)
+#endif
         for (size_t i = 0; i < nb_runs; ++i) {
             // Random generators - each thread should have its own generator
             std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
@@ -1072,9 +1084,9 @@ namespace egttools::FinitePopulations {
 
     template<class Cache>
     auto PairwiseComparisonNumerical<Cache>::estimate_stationary_distribution_sparse(const size_t nb_runs,
-                                                                       const size_t nb_generations,
-                                                                       const size_t transitory, const double beta,
-                                                                       double mu) -> SparseMatrix2D {
+        const size_t nb_generations,
+        const size_t transitory, const double beta,
+        double mu) -> SparseMatrix2D {
         if (mu <= 0) {
             throw std::invalid_argument(
                 "mu must be > 0. If you want to run a simulation without mutation, "
@@ -1108,7 +1120,9 @@ namespace egttools::FinitePopulations {
         // Creates a cache for the fitness data
         Cache cache(_cache_size);
 
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+ : sdist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu, cache)
+#endif
         for (size_t i = 0; i < nb_runs; ++i) {
             // Random generators - each thread should have its own generator
             std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
@@ -1187,9 +1201,10 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    auto PairwiseComparisonNumerical<Cache>::estimate_strategy_distribution(const size_t nb_runs, const size_t nb_generations,
-                                                              const size_t transitory, const double beta,
-                                                              double mu) -> Vector {
+    auto PairwiseComparisonNumerical<Cache>::estimate_strategy_distribution(
+        const size_t nb_runs, const size_t nb_generations,
+        const size_t transitory, const double beta,
+        double mu) -> Vector {
         // Here we are going to estimate the strategy distribution directly, without the stationary distribution.
         // To do that, we need to keep count of the average frequency of each strategy in the population during the simulation.
         // Thus, we will keep a matrix of size nb_strategies x min(1000, nb_generations - transitory). We will use this vector
@@ -1223,7 +1238,9 @@ namespace egttools::FinitePopulations {
         // Distribution number of generations for a mutation to happen
         std::geometric_distribution<size_t> geometric(mu);
 
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+ : strategy_dist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu)
+#endif
         for (size_t i = 0; i < nb_runs; ++i) {
             // Random generators - each thread should have its own generator
             std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
@@ -1306,9 +1323,9 @@ namespace egttools::FinitePopulations {
 
     template<class Cache>
     bool PairwiseComparisonNumerical<Cache>::_update_step(const int s1, const int s2, double beta, int &birth, int &die,
-                                            VectorXui &strategies,
-                                            Cache &cache,
-                                            std::mt19937_64 &generator) {
+                                                          VectorXui &strategies,
+                                                          Cache &cache,
+                                                          std::mt19937_64 &generator) {
         // Then we let them play to calculate their payoffs
         auto fitness_p1 = _calculate_fitness(s1, strategies, cache);
         auto fitness_p2 = _calculate_fitness(s2, strategies, cache);
@@ -1328,10 +1345,10 @@ namespace egttools::FinitePopulations {
 
     template<class Cache>
     void PairwiseComparisonNumerical<Cache>::_update_step(const int s1, const int s2, double beta, const double mu,
-                                            int &birth, int &die, bool &homogeneous, int &idx_homo,
-                                            VectorXui &strategies,
-                                            Cache &cache,
-                                            std::mt19937_64 &generator) {
+                                                          int &birth, int &die, bool &homogeneous, int &idx_homo,
+                                                          VectorXui &strategies,
+                                                          Cache &cache,
+                                                          std::mt19937_64 &generator) {
         die = s1;
 
         if (s1 == s2) {
@@ -1387,12 +1404,12 @@ namespace egttools::FinitePopulations {
     template<class Cache>
     size_t
     PairwiseComparisonNumerical<Cache>::_update_multi_step(const int s1, const int s2, double beta, const double mu,
-                                             int &birth, int &die,
-                                             bool &homogeneous, int &idx_homo,
-                                             VectorXui &strategies,
-                                             Cache &cache,
-                                             std::geometric_distribution<size_t> &geometric,
-                                             std::mt19937_64 &generator) {
+                                                           int &birth, int &die,
+                                                           bool &homogeneous, int &idx_homo,
+                                                           VectorXui &strategies,
+                                                           Cache &cache,
+                                                           std::geometric_distribution<size_t> &geometric,
+                                                           std::mt19937_64 &generator) {
         size_t k = 0;
         die = s1, birth = s1;
 
@@ -1482,7 +1499,8 @@ namespace egttools::FinitePopulations {
 
     template<class Cache>
     bool
-    PairwiseComparisonNumerical<Cache>::_sample_players(int &s1, int &s2, VectorXui &strategies, std::mt19937_64 &generator) {
+    PairwiseComparisonNumerical<Cache>::_sample_players(int &s1, int &s2, VectorXui &strategies,
+                                                        std::mt19937_64 &generator) {
         // sample 2 players from the pool
         auto player1 = _pop_sampler(generator);
         auto player2 = _pop_sampler(generator);
@@ -1511,7 +1529,8 @@ namespace egttools::FinitePopulations {
 
     template<class Cache>
     double
-    PairwiseComparisonNumerical<Cache>::_calculate_fitness(const int &player_type, VectorXui &strategies, Cache &cache) {
+    PairwiseComparisonNumerical<
+        Cache>::_calculate_fitness(const int &player_type, VectorXui &strategies, Cache &cache) {
         double fitness;
         std::stringstream result;
         result << strategies;

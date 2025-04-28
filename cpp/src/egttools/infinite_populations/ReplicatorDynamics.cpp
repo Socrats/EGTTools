@@ -4,12 +4,14 @@
 #include <egttools/infinite_populations/ReplicatorDynamics.hpp>
 
 
-egttools::Vector egttools::infinite_populations::replicator_equation(egttools::Vector &frequencies, egttools::Matrix2D &payoff_matrix) {
+egttools::Vector egttools::infinite_populations::replicator_equation(egttools::Vector &frequencies,
+                                                                     egttools::Matrix2D &payoff_matrix) {
     auto ax = payoff_matrix * frequencies;
     return frequencies * (ax - (frequencies * ax));
 }
 
-egttools::Vector egttools::infinite_populations::replicator_equation_n_player(egttools::Vector &frequencies, egttools::Matrix2D &payoff_matrix, size_t group_size) {
+egttools::Vector egttools::infinite_populations::replicator_equation_n_player(
+    egttools::Vector &frequencies, egttools::Matrix2D &payoff_matrix, size_t group_size) {
     egttools::Vector fitness = egttools::Vector::Zero(frequencies.size());
     egttools::VectorXui group_configuration = egttools::VectorXui::Zero(frequencies.size());
     auto nb_group_configurations = egttools::starsBars<size_t, int64_t>(group_size, frequencies.size());
@@ -47,7 +49,9 @@ egttools::infinite_populations::vectorized_replicator_equation_n_player(egttools
     egttools::Matrix2D result2 = egttools::Matrix2D::Zero(x2.rows(), x2.cols());
     egttools::Matrix2D result3 = egttools::Matrix2D::Zero(x3.rows(), x3.cols());
 
+#ifdef _OPENMP
 #pragma omp parallel for default(none) shared(x1, x2, x3, payoff_matrix, group_size, result1, result2, result3)
+#endif
     for (int i = 0; i < x1.rows(); ++i) {
         for (int j = 0; j < x1.cols(); ++j) {
             // Check if we are in the simplex (frequencies must sum to 1)

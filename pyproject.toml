@@ -3,12 +3,65 @@ requires = [
     "setuptools>=44",
     "wheel",
     "scikit-build>=0.13.1",
-    "cmake>=3.30",
-    "ninja; platform_system!='Windows'"
+    "cmake>=3.18",
+    "ninja; platform_system!='Windows'",
+    "numpy",
+    "scipy",
 ]
 build-backend = "setuptools.build_meta"
 
-# pyproject.toml
+[tool.scikit-build]
+experimental = true
+cmake.version = ">=3.27"
+wheel.py-api = "cp310"
+wheel.expand-macos-universal-tags = true
+cmake.args = [
+    "-DUSE_OPENMP=ON",
+    "-G", "Ninja"
+]
+build.verbose = true
+logging.level = "INFO"
+
+[project]
+name = "egttools"
+dynamic = ["version"]
+description = "Efficient Python library for Evolutionary Game Theory (EGT)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Elias F. Domingos", email = "elias.fernandez.domingos@vub.be" },
+]
+maintainers = [
+    { name = "Elias F. Domingos", email = "elias.fernandez.domingos@vub.be" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Evolutionary Game Theory",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+urls = { "Homepage" = "https://github.com/Socrats/EGTTools", "Bug Tracker" = "https://github.com/Socrats/EGTTools/issues", "Documentation" = "https://egttools.readthedocs.io/en/latest/" }
+keywords = ["evolutionary game theory", "EGT", "python", "library", "scientific computing"]
+dependencies = [
+    "numpy>=1.26.3",
+    "scipy>=1.12.0",
+    "matplotlib>=3.8.2",
+    "seaborn>=0.13.2",
+    "networkx>=3.2.1",
+]
+
 [tool.check-manifest]
 ignore = [
     "PKG-INFO",
@@ -32,5 +85,14 @@ build-frontend = "build"
 test-requires = "pytest"
 test-command = "pytest {project}/tests"
 
-[tool.scikit-build]
-cmake.args = ["-G", "Ninja"]
+[tool.pytest.ini_options]
+# disable-pytest-warnings should be removed once we rewrite tests
+# using yield with parametrize
+addopts = """
+    --ignore build_tools
+    --ignore docs
+    --ignore pybind11
+    --disable-pytest-warnings
+    -rxXs
+"""
+doctest_optionflags = ["NORMALIZE_WHITESPACE", "ELLIPSIS"]

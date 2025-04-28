@@ -14,7 +14,7 @@
 #include <map>
 #include <memory>
 
-#if defined(_OPENMP)
+#ifdef _OPENMP
 #include <egttools/OpenMPExtensions.hpp>
 #endif
 
@@ -78,7 +78,7 @@ namespace egttools::FinitePopulations::evolvers {
                                                                                AbstractNetworkStructure &network);
 
         /**
-         * Estimates the time-dependant gradient of selection
+         * Estimates the time-dependent gradient of selection
          *
          * This method will first evolve the population for (generation - 1) generations. Afterwards,
          * it will average the gradient of selection observed for each state the population goes though in
@@ -137,13 +137,13 @@ namespace egttools::FinitePopulations::evolvers {
          *
          * In the asynchronous case, we will adopt the definition used in Pinheiro, Pacheco and Santos 2012,
          * and assume that 1 generation = Z time-steps (Z asynchronous updates of the population). Thus, a simulation
-         * with 25 generations and with 1000 individuals, will run for 25000 time-steps.
+         * with 25 generations and with 1000 individuals will run for 25,000 time-steps.
          *
          * This method will run a total of simulations * networks.size() simulations. The final gradients are averaged over
          * simulations * networks.size() * nb_generations.
          *
          * @warning Don't use this method if the population has too many possible states, since it will likely take both a long time,
-         * produce a bad estimation, and possible your computer will run out of memory.
+         * produce a bad estimation, and possibly your computer will run out of memory.
          *
          * @param initial_states : the starting states of every simulation
          * @param nb_simulations : the number of simulations to run

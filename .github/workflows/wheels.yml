@@ -29,7 +29,7 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Make sure submodules are updated (full vcpkg)
+      - name: Make sure submodules are updated
         run: |
           git submodule sync --recursive
           git submodule update --init --recursive --force
@@ -47,10 +47,8 @@ jobs:
         with:
           cmake-version: '3.27.x'
 
-      - name: Install system dependencies (Linux)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libomp-dev libblas-dev liblapack-dev autoconf automake autoconf-archive
+      - name: Install system packages (OpenMP, BLAS/LAPACK)
+        run: bash build_tools/github/install_blas_openmp.sh
 
       - name: Setup cache for vcpkg
         id: cache-vcpkg
@@ -66,17 +64,21 @@ jobs:
             ${{ runner.os }}-vcpkg-
 
       - name: Bootstrap vcpkg
-        run: ./vcpkg/bootstrap-vcpkg.sh
+        run: |
+          ./vcpkg/bootstrap-vcpkg.sh
 
-      - name: Install dependencies with vcpkg (only if cache missed)
+      - name: Install dependencies with vcpkg
         if: steps.cache-vcpkg.outputs.cache-hit != 'true'
-        run: ./vcpkg/vcpkg install --x-binarycaching
+        run: |
+          ./vcpkg/vcpkg install --x-binarycaching
 
       - name: Set VCPKG_PATH environment variable
-        run: echo "VCPKG_PATH=$(pwd)" >> $GITHUB_ENV
+        run: |
+          echo "VCPKG_PATH=$(pwd)" >> $GITHUB_ENV
 
-      - name: Install Python build requirements
-        run: pip install --user check-manifest twine
+      - name: Install Python requirements
+        run: |
+          pip install --user check-manifest twine
 
       - name: Build sdist
         run: |
@@ -84,13 +86,16 @@ jobs:
           python -m build --sdist --outdir wheelhouse
 
       - name: Run check-manifest
-        run: python -m check_manifest --verbose
+        run: |
+          python -m check_manifest --verbose
 
       - name: Install from sdist
-        run: pip install --user wheelhouse/*.tar.gz
+        run: |
+          pip install --user wheelhouse/*.tar.gz
 
       - name: Check sdist metadata
-        run: python -m twine check wheelhouse/*
+        run: |
+          python -m twine check wheelhouse/*
 
       - name: Upload sdist
         uses: actions/upload-artifact@v4
@@ -99,7 +104,7 @@ jobs:
           path: wheelhouse/*.tar.gz
 
   build_wheels:
-    name: Build wheel for ${{ matrix.platform_id }}
+    name: Build wheel for ${{ matrix.platform_id }}-${{ matrix.manylinux_image }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -124,7 +129,7 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Make sure submodules are updated (full vcpkg)
+      - name: Make sure submodules are updated
         run: |
           git submodule sync --recursive
           git submodule update --init --recursive --force
@@ -140,17 +145,7 @@ jobs:
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v2
         with:
-          cmake-version: '3.27.x'
-
-      - name: Install system packages for Linux
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libomp-dev libblas-dev liblapack-dev autoconf automake autoconf-archive
-
-      - name: Install system packages for macOS
-        if: runner.os == 'macOS'
-        run: brew install libomp openblas autoconf automake autoconf-archive
+          cmake-version: 'latest'
 
       - name: Setup cache for vcpkg
         id: cache-vcpkg
@@ -166,40 +161,46 @@ jobs:
             ${{ runner.os }}-vcpkg-${{ matrix.platform_id }}-
             ${{ runner.os }}-vcpkg-
 
-      - name: Bootstrap vcpkg (Linux/macOS)
+      - name: Bootstrap vcpkg
         if: runner.os != 'Windows'
-        run: ./vcpkg/bootstrap-vcpkg.sh
+        run: |
+          ./vcpkg/bootstrap-vcpkg.sh
 
       - name: Bootstrap vcpkg (Windows)
         if: runner.os == 'Windows'
-        run: ./vcpkg/bootstrap-vcpkg.bat
+        run: |
+          ./vcpkg/bootstrap-vcpkg.bat
 
-      - name: Install dependencies with vcpkg (only if cache missed)
+      - name: Install dependencies with vcpkg
         if: steps.cache-vcpkg.outputs.cache-hit != 'true'
-        run: ./vcpkg/vcpkg install --x-binarycaching
+        run: |
+          ./vcpkg/vcpkg install --x-binarycaching
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.22.0
         env:
           CIBW_ARCHS: all
-          CIBW_ENVIRONMENT_LINUX: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=OFF"
-          CIBW_ENVIRONMENT_MACOS: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=OFF" MACOSX_DEPLOYMENT_TARGET=11.0
-          CIBW_ENVIRONMENT_WINDOWS: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=OFF"
-          CIBW_BUILD: "cp39-${{ matrix.platform_id }} cp310-${{ matrix.platform_id }} cp311-${{ matrix.platform_id }} cp312-${{ matrix.platform_id }}"
+          CIBW_ENVIRONMENT_LINUX: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
+          CIBW_ENVIRONMENT_MACOS: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON" MACOSX_DEPLOYMENT_TARGET=11.0
+          CIBW_ENVIRONMENT_WINDOWS: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
+          CIBW_BUILD: "cp310-${{ matrix.platform_id }} cp311-${{ matrix.platform_id }} cp312-${{ matrix.platform_id }}"
+          CIBW_BEFORE_ALL_LINUX: bash {package}/build_tools/github/install_blas_openmp.sh
+          CIBW_BEFORE_ALL_MACOS: bash {package}/build_tools/github/install_blas_openmp.sh
+          # Optionally for Windows too, if needed
+          # CIBW_BEFORE_ALL_WINDOWS: bash {package}/build_tools/github/install_blas_openmp.sh
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_CONFIG_SETTINGS_WINDOWS: "setup-args=--vsenv"
-          CIBW_BEFORE_ALL_MACOS: brew install libomp
           CIBW_ENVIRONMENT_PASS_LINUX: RUNNER_OS
         with:
           package-dir: .
           output-dir: wheelhouse
           config-file: "{package}/pyproject.toml"
 
-      - name: Upload built wheels
-        uses: actions/upload-artifact@v4
+
+      - uses: actions/upload-artifact@v4
         with:
-          name: cibw-wheels-${{ matrix.os }}-${{ matrix.platform_id }}-${{ strategy.job-index }}
+          name: cibw-wheels-${{ matrix.os }}-${{ matrix.platform }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
 
       - name: Upload wheel for ReadTheDocs
@@ -221,20 +222,23 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
     needs: [ build_wheels ]
+
     steps:
       - name: Get branch name
         id: get_branch
-        run: echo "branch=${GITHUB_REF##refs/heads/}" >> $GITHUB_ENV
+        run: |
+          echo "::set-output name=branch::${GITHUB_REF##refs/heads/}"
 
       - name: Trigger ReadTheDocs webhook
         run: |
-          curl -X POST -d "branches=${{ env.branch }}" -d "token=${{ secrets.READTHEDOCS_WEBHOOK_TOKEN }}" https://readthedocs.org/api/v2/webhook/egttools/180432/
+          curl -X POST -d "branches=${{ steps.get_branch.outputs.branch }}" -d "token=${{ secrets.READTHEDOCS_WEBHOOK_TOKEN }}" https://readthedocs.org/api/v2/webhook/egttools/180432/
 
   create_release:
-    name: Create GitHub Release
+    name: Create release
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     needs: [ build_sdist, build_wheels ]
+
     steps:
       - name: Collect sdist and wheels
         uses: actions/download-artifact@v4
@@ -242,14 +246,15 @@ jobs:
           name: wheels
           path: wheelhouse
 
-      - name: Get version from tag
+      - name: Get release name
         id: get_version
-        run: echo "version=${GITHUB_REF##refs/tags/v}" >> $GITHUB_ENV
+        run: |
+          echo "::set-output name=version::${GITHUB_REF##refs/tags/v}"
 
-      - name: Upload sdist and wheels to GitHub release
+      - name: Upload sdist and wheels to release
         uses: ncipollo/release-action@v1.14.0
         with:
-          name: ${{ env.version }}
+          name: ${{ steps.get_version.outputs.version }}
           draft: true
           artifacts: wheelhouse/*
           token: ${{ secrets.GITHUB_TOKEN }}

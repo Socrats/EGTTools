@@ -33,6 +33,7 @@ egttools::FinitePopulations::OneShotCRD::OneShotCRD(double endowment, double cos
     // Initialize group achievement vector
     calculate_success_per_group_composition();
 }
+
 void egttools::FinitePopulations::OneShotCRD::play(const egttools::FinitePopulations::StrategyCounts &group_composition,
                                                    std::vector<double> &game_payoffs) {
     if (static_cast<int>(group_composition[1]) < min_nb_cooperators_) {
@@ -120,14 +121,18 @@ const egttools::FinitePopulations::GroupPayoffs &egttools::FinitePopulations::On
 }
 
 double
-egttools::FinitePopulations::OneShotCRD::payoff(int strategy, const egttools::FinitePopulations::StrategyCounts &group_composition) const {
+egttools::FinitePopulations::OneShotCRD::payoff(int strategy,
+                                                const egttools::FinitePopulations::StrategyCounts &group_composition)
+const {
     if (strategy > nb_strategies_)
         throw std::invalid_argument(
-                "you must specify a valid index for the strategy [0, " + std::to_string(nb_strategies_) +
-                ")");
+            "you must specify a valid index for the strategy [0, " + std::to_string(nb_strategies_) +
+            ")");
     if (group_composition.size() != static_cast<size_t>(nb_strategies_))
         throw std::invalid_argument("The group composition must be of size " + std::to_string(nb_strategies_));
-    return expected_payoffs_(static_cast<int>(strategy), static_cast<int64_t>(egttools::FinitePopulations::calculate_state(group_size_, group_composition)));
+    return expected_payoffs_(static_cast<int>(strategy),
+                             static_cast<int64_t>(egttools::FinitePopulations::calculate_state(
+                                 group_size_, group_composition)));
 }
 
 const egttools::VectorXi &egttools::FinitePopulations::OneShotCRD::calculate_success_per_group_composition() {
@@ -149,8 +154,7 @@ const egttools::VectorXi &egttools::FinitePopulations::OneShotCRD::calculate_suc
 }
 
 double egttools::FinitePopulations::OneShotCRD::calculate_population_group_achievement(size_t pop_size,
-                                                                                       const Eigen::Ref<const egttools::VectorXui> &population_state) {
-
+    const Eigen::Ref<const egttools::VectorXui> &population_state) {
     double group_achievement = 0.0;
     std::vector<size_t> sample_counts(nb_strategies_, 0);
 
@@ -160,8 +164,9 @@ double egttools::FinitePopulations::OneShotCRD::calculate_population_group_achie
         egttools::FinitePopulations::sample_simplex(i, group_size_, nb_strategies_, sample_counts);
 
         if (group_achievement_(i) == 1) {
-            group_achievement += egttools::multivariateHypergeometricPDF(pop_size, nb_strategies_, group_size_, sample_counts,
-                                                                         population_state);
+            group_achievement += egttools::multivariateHypergeometricPDF(
+                pop_size, nb_strategies_, group_size_, sample_counts,
+                population_state);
         }
     }
 
@@ -169,11 +174,13 @@ double egttools::FinitePopulations::OneShotCRD::calculate_population_group_achie
 }
 
 double egttools::FinitePopulations::OneShotCRD::calculate_group_achievement(size_t pop_size,
-                                                                            const Eigen::Ref<const egttools::Vector> &stationary_distribution) {
+                                                                            const Eigen::Ref<const egttools::Vector> &
+                                                                            stationary_distribution) {
     double group_achievement = 0;
 
+#ifdef _OPENMP
 #pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_, nb_group_compositions_, group_size_, group_achievement_, Eigen::Dynamic) reduction(+ : group_achievement)
-
+#endif
     for (int64_t i = 0; i < stationary_distribution.size(); ++i) {
         VectorXui strategies = VectorXui::Zero(nb_strategies_);
         egttools::FinitePopulations::sample_simplex(i, pop_size, nb_strategies_, strategies);

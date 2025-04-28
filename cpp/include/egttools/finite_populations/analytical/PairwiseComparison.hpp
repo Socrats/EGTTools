@@ -36,7 +36,7 @@
 #include <boost/multiprecision/cpp_dec_float.hpp>
 #endif
 
-#if defined(_OPENMP)
+#ifdef _OPENMP
 #include <egttools/OpenMPExtensions.hpp>
 #endif
 

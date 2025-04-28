@@ -5,7 +5,8 @@
 #include <egttools/finite_populations/games/CRDGame.hpp>
 
 egttools::FinitePopulations::CRDGame::CRDGame(int endowment, int threshold, int nb_rounds, int group_size,
-                                              double risk, double enhancement_factor, const CRDStrategyVector &strategies)
+                                              double risk, double enhancement_factor,
+                                              const CRDStrategyVector &strategies)
     : endowment_(endowment),
       threshold_(threshold),
       nb_rounds_(nb_rounds),
@@ -13,7 +14,6 @@ egttools::FinitePopulations::CRDGame::CRDGame(int endowment, int threshold, int 
       risk_(risk),
       enhancement_factor_(enhancement_factor),
       strategies_(strategies) {
-
     // First we check how many strategies will be in the game
     nb_strategies_ = static_cast<int>(strategies.size());
 
@@ -54,7 +54,8 @@ void egttools::FinitePopulations::CRDGame::play(const egttools::FinitePopulation
                 if (game_payoffs[j] >= actions(j)) {
                     game_payoffs[j] -= actions(j);
                     current_donation += static_cast<int>(group_composition[j]) * actions(j);
-                } else {// If not enough, contribute what is left of the endowment
+                } else {
+                    // If not enough, contribute what is left of the endowment
                     current_donation += static_cast<int>(group_composition[j]) * static_cast<int>(game_payoffs[j]);
                     game_payoffs[j] = 0;
                 }
@@ -73,12 +74,12 @@ void egttools::FinitePopulations::CRDGame::play(const egttools::FinitePopulation
 
     // Calculate expected payoffs from risk
     if (public_account < threshold_)
-        for (auto &type : game_payoffs) type *= (1.0 - risk_);
+        for (auto &type: game_payoffs) type *= (1.0 - risk_);
 }
 
 std::string egttools::FinitePopulations::CRDGame::toString() const {
     return "Collective-risk dilemma game.\n"
-           "See Milinski et al. 2008.";
+            "See Milinski et al. 2008.";
 }
 
 std::string egttools::FinitePopulations::CRDGame::type() const {
@@ -158,7 +159,8 @@ double egttools::FinitePopulations::CRDGame::calculate_fitness(const int &player
 }
 
 double egttools::FinitePopulations::CRDGame::calculate_fitness_edge(const int &strategy_1, const int &strategy_2,
-                                                                    const size_t &pop_size, const Eigen::Ref<const VectorXui> &strategies) {
+                                                                    const size_t &pop_size,
+                                                                    const Eigen::Ref<const VectorXui> &strategies) {
     // This function assumes that the strategy counts given in @param strategies does not include
     // the player with @param player_type strategy.
 
@@ -213,18 +215,23 @@ const egttools::FinitePopulations::GroupPayoffs &egttools::FinitePopulations::CR
 }
 
 double
-egttools::FinitePopulations::CRDGame::payoff(int strategy, const egttools::FinitePopulations::StrategyCounts &group_composition) const {
+egttools::FinitePopulations::CRDGame::payoff(int strategy,
+                                             const egttools::FinitePopulations::StrategyCounts &group_composition)
+const {
     if (strategy > nb_strategies_)
         throw std::invalid_argument(
-                "you must specify a valid index for the strategy [0, " + std::to_string(nb_strategies_) +
-                ")");
+            "you must specify a valid index for the strategy [0, " + std::to_string(nb_strategies_) +
+            ")");
     if (group_composition.size() != static_cast<size_t>(nb_strategies_))
         throw std::invalid_argument("The group composition must be of size " + std::to_string(nb_strategies_));
-    return expected_payoffs_(static_cast<int>(strategy), static_cast<int64_t>(egttools::FinitePopulations::calculate_state(group_size_, group_composition)));
+    return expected_payoffs_(static_cast<int>(strategy),
+                             static_cast<int64_t>(egttools::FinitePopulations::calculate_state(
+                                 group_size_, group_composition)));
 }
 
 void egttools::FinitePopulations::CRDGame::_check_success(size_t state, PayoffVector &game_payoffs,
-                                                          const egttools::FinitePopulations::StrategyCounts &group_composition) {
+                                                          const egttools::FinitePopulations::StrategyCounts &
+                                                          group_composition) {
     int prev_donation = 0, current_donation = 0;
     int public_account = 0;
     double fair_endowment = static_cast<double>(endowment_) / 2;
@@ -301,7 +308,7 @@ const egttools::Vector &egttools::FinitePopulations::CRDGame::calculate_success_
 }
 
 double egttools::FinitePopulations::CRDGame::calculate_population_group_achievement(size_t pop_size,
-                                                                                    const Eigen::Ref<const egttools::VectorXui> &population_state) {
+    const Eigen::Ref<const egttools::VectorXui> &population_state) {
     // This function assumes that the strategy counts given in @param strategies does not include
     // the player with @param player_type strategy.
 
@@ -327,10 +334,13 @@ double egttools::FinitePopulations::CRDGame::calculate_population_group_achievem
 }
 
 double egttools::FinitePopulations::CRDGame::calculate_group_achievement(size_t pop_size,
-                                                                         const Eigen::Ref<const egttools::Vector> &stationary_distribution) {
+                                                                         const Eigen::Ref<const egttools::Vector> &
+                                                                         stationary_distribution) {
     double group_achievement = 0;
 
+#ifdef _OPENMP
 #pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_, nb_states_, group_size_, group_achievement_, Eigen::Dynamic) reduction(+ : group_achievement)
+#endif
     for (long int i = 0; i < stationary_distribution.size(); ++i) {
         VectorXui strategies = VectorXui::Zero(nb_strategies_);
         egttools::FinitePopulations::sample_simplex(i, pop_size, nb_strategies_, strategies);
@@ -340,7 +350,8 @@ double egttools::FinitePopulations::CRDGame::calculate_group_achievement(size_t 
 }
 
 void egttools::FinitePopulations::CRDGame::calculate_population_polarization(size_t pop_size,
-                                                                             const Eigen::Ref<const egttools::VectorXui> &population_state,
+                                                                             const Eigen::Ref<const egttools::VectorXui>
+                                                                             &population_state,
                                                                              egttools::Vector3d &polarization) {
     polarization.setZero();
     std::vector<size_t> sample_counts(nb_strategies_, 0);
@@ -359,8 +370,8 @@ void egttools::FinitePopulations::CRDGame::calculate_population_polarization(siz
 }
 
 void egttools::FinitePopulations::CRDGame::calculate_population_polarization_success(size_t pop_size,
-                                                                                     const Eigen::Ref<const egttools::VectorXui> &population_state,
-                                                                                     egttools::Vector3d &polarization) {
+    const Eigen::Ref<const egttools::VectorXui> &population_state,
+    egttools::Vector3d &polarization) {
     polarization.setZero();
     std::vector<size_t> sample_counts(nb_strategies_, 0);
 
@@ -380,10 +391,12 @@ void egttools::FinitePopulations::CRDGame::calculate_population_polarization_suc
 }
 
 egttools::Vector3d egttools::FinitePopulations::CRDGame::calculate_polarization(size_t pop_size,
-                                                                                const Eigen::Ref<const egttools::Vector> &stationary_distribution) {
+    const Eigen::Ref<const egttools::Vector> &stationary_distribution) {
     egttools::Vector3d polarization = egttools::Vector3d::Zero();
 
+#ifdef _OPENMP
 #pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_, Eigen::Dynamic) reduction(+ : polarization)
+#endif
     for (long int i = 0; i < stationary_distribution.size(); ++i) {
         egttools::Vector3d container = egttools::Vector3d::Zero();
         VectorXui strategies = VectorXui::Zero(nb_strategies_);
@@ -396,10 +409,12 @@ egttools::Vector3d egttools::FinitePopulations::CRDGame::calculate_polarization(
 }
 
 egttools::Vector3d egttools::FinitePopulations::CRDGame::calculate_polarization_success(size_t pop_size,
-                                                                                        const Eigen::Ref<const egttools::Vector> &stationary_distribution) {
+    const Eigen::Ref<const egttools::Vector> &stationary_distribution) {
     egttools::Vector3d polarization = egttools::Vector3d::Zero();
 
+#ifdef _OPENMP
 #pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_) reduction(+ : polarization)
+#endif
     for (long int i = 0; i < stationary_distribution.size(); ++i) {
         egttools::Vector3d container = egttools::Vector3d::Zero();
         VectorXui strategies = VectorXui::Zero(nb_strategies_);
@@ -446,6 +461,7 @@ double egttools::FinitePopulations::CRDGame::enhancement_factor() const {
 size_t egttools::FinitePopulations::CRDGame::nb_states() const {
     return nb_states_;
 }
+
 const egttools::FinitePopulations::CRDStrategyVector &egttools::FinitePopulations::CRDGame::strategies() const {
     return strategies_;
 }

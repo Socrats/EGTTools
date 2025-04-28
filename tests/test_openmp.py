@@ -29,9 +29,9 @@ def test_openmp_simulations():
     # if platform == "darwin":
     #     os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-    Random.init(3610063510)
+    Random.init_with_seed(3610063510)
 
-    assert Random._seed == 3610063510
+    assert Random.current_seed() == 3610063510
 
     game = egt.games.NormalFormGame(1, A)
     assert game.type() == 'NormalFormGame'

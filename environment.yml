@@ -3,6 +3,11 @@ channels:
   - conda-forge
 dependencies:
   - python>=3.8
+  - cmake>=3.25
+  - ninja
+  - openblas
+  - libomp
+  - pip
   - numpy>=1.7.*
   - scipy>=1.5.*
   - matplotlib>=3.3.*

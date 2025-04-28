@@ -1,0 +1,64 @@
+{% set name = "egttools" %}
+  {% set version = "0.1.14" %}
+
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
+
+source:
+  path: ../.
+
+build:
+  noarch: false  # C++ extension: NOT noarch
+  number: 0
+  script: |
+    {{ PYTHON }} -m pip install . -vvv
+
+requirements:
+  host:
+    - python
+    - pip
+    - scikit-build
+    - wheel
+    - setuptools
+    - cmake >=3.27
+    - ninja
+    - numpy
+  run:
+    - python
+    - numpy
+    - scipy
+    - matplotlib
+    - seaborn
+    - networkx
+    - blas  # OpenBLAS by default unless overridden
+    - liblapack  # system LAPACK
+
+test:
+  imports:
+    - egttools
+    - egttools.numerical
+    - egttools.games
+    - egttools.behaviors
+    - egttools.analytical
+    - egttools.datastructures
+    - egttools.helpers
+    - egttools.plotting
+  requires:
+    - pytest
+  commands:
+    - pytest --pyargs egttools
+
+about:
+  home: "https://github.com/Socrats/EGTTools"
+  summary: "Evolutionary Game Theory tools for Python with C++ acceleration."
+  license: GPL-3.0-or-later
+  license_file: LICENSE
+  description: |
+    EGTtools provides high-performance tools to study evolutionary game dynamics,
+    including analytical methods, simulations, and visualization utilities.
+  doc_url: "https://egttools.readthedocs.io"
+
+extra:
+  recipe-maintainers:
+    - Socrats

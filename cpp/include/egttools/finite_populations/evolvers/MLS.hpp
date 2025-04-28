@@ -1024,9 +1024,11 @@ MLS<S>::fixationProbability(size_t invader, size_t resident, size_t runs, double
   group_strategies(resident) = _group_size;
 
   // This loop can be done in parallel
+#ifdef _OPENMP
 #pragma omp parallel for default(none) shared(group_strategies, invader, resident, runs, q, w, \
 _nb_strategies, _group_size, \
 _payoff_matrix, _nb_groups, _pop_size, _generations) reduction(+:r2m, r2r)
+#endif
   for (size_t i = 0; i < runs; ++i) {
     // First we initialize a homogeneous population with the resident strategy
     SED::Group group(_nb_strategies, _group_size, w, group_strategies, _payoff_matrix);
@@ -1074,9 +1076,11 @@ MLS<S>::fixationProbability(size_t invader, size_t resident, size_t runs,
   group_strategies(resident) = _group_size;
 
   // This loop can be done in parallel
+#ifdef _OPENMP
 #pragma omp parallel for default(none) shared(group_strategies, invader, resident, runs, q, w, lambda, \
 _nb_strategies, _group_size, \
 _payoff_matrix, _nb_groups, _pop_size, _generations) reduction(+:r2m, r2r)
+#endif
   for (size_t i = 0; i < runs; ++i) {
     // First we initialize a homogeneous population with the resident strategy
     SED::Group group(_nb_strategies, _group_size, w, group_strategies, _payoff_matrix);
@@ -1124,9 +1128,11 @@ double MLS<S>::fixationProbability(size_t invader, size_t resident, size_t runs,
   group_strategies(resident) = _group_size;
 
   // This loop can be done in parallel
+#ifdef _OPENMP
 #pragma omp parallel for default(none) shared(group_strategies, invader, resident, runs, q, w, lambda, kappa, z, \
 _nb_strategies, _group_size, \
 _payoff_matrix, _nb_groups, _pop_size, _generations) reduction(+:r2m, r2r)
+#endif
   for (size_t i = 0; i < runs; ++i) {
     // First we initialize a homogeneous population with the resident strategy
     SED::Group group(_nb_strategies, _group_size, w, group_strategies, _payoff_matrix);
@@ -1191,9 +1197,11 @@ Vector MLS<S>::fixationProbability(size_t invader, const Eigen::Ref<const Vector
   }
 
   // This loop can be done in parallel
+#ifdef _OPENMP
 #pragma omp parallel for default(none) shared(group, pop_container, init_state, invader, runs, q, w, \
 group, _nb_groups, _generations, \
 _nb_strategies) reduction(+:fixations)
+#endif
   for (size_t i = 0; i < runs; ++i) {
     // First we initialize a homogeneous population with the resident strategy
     bool fixated = false;
@@ -1241,8 +1249,10 @@ MLS<S>::gradientOfSelection(size_t invader, size_t resident, size_t runs, double
   Vector gradient = Vector::Zero(_pop_size + 1);
 
   // This loop can be done in parallel
+#ifdef _OPENMP
 #pragma omp parallel for default(none) shared(gradient, invader, resident, runs, w, q, \
 _pop_size, _nb_strategies, _group_size, _payoff_matrix, _nb_groups)
+#endif
   for (size_t k = 1; k < _pop_size; ++k) { // Loops over all population configurations
     VectorXui strategies = VectorXui::Zero(_nb_strategies);
     Group group(_nb_strategies, _group_size, w, strategies, _payoff_matrix);
@@ -1299,8 +1309,10 @@ MLS<S>::gradientOfSelection(size_t invader, size_t resident, const Eigen::Ref<co
   Vector gradient = Vector::Zero(init_state(resident) + 1);
 
   // This loop can be done in parallel
+#ifdef _OPENMP
 #pragma omp parallel for default(none) shared(gradient, invader, resident, runs, w, q, init_state, \
 _pop_size, _nb_strategies, _group_size, _payoff_matrix, _nb_groups, _pop_size)
+#endif
   for (size_t k = 0; k <= init_state(resident); ++k) { // Loops over all population configurations
     VectorXui strategies = VectorXui::Zero(_nb_strategies);
     Group group(_nb_strategies, _group_size, w, strategies, _payoff_matrix);

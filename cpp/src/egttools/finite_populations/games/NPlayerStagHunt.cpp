@@ -4,7 +4,8 @@
 
 #include <egttools/finite_populations/games/NPlayerStagHunt.hpp>
 
-egttools::FinitePopulations::NPlayerStagHunt::NPlayerStagHunt(int group_size, int cooperation_threshold, double enhancement_factor, double cost)
+egttools::FinitePopulations::NPlayerStagHunt::NPlayerStagHunt(int group_size, int cooperation_threshold,
+                                                              double enhancement_factor, double cost)
     : group_size_(group_size),
       cooperation_threshold_(cooperation_threshold),
       enhancement_factor_(enhancement_factor),
@@ -27,8 +28,10 @@ egttools::FinitePopulations::NPlayerStagHunt::NPlayerStagHunt(int group_size, in
     // Initialize group achievement vector
     calculate_success_per_group_composition();
 }
-void egttools::FinitePopulations::NPlayerStagHunt::play(const egttools::FinitePopulations::StrategyCounts &group_composition,
-                                                        std::vector<double> &game_payoffs) {
+
+void egttools::FinitePopulations::NPlayerStagHunt::play(
+    const egttools::FinitePopulations::StrategyCounts &group_composition,
+    std::vector<double> &game_payoffs) {
     if (group_composition[0] == 0) {
         game_payoffs[0] = 0;
         game_payoffs[1] = cost_ * (enhancement_factor_ - 1);
@@ -120,14 +123,18 @@ const egttools::FinitePopulations::GroupPayoffs &egttools::FinitePopulations::NP
 }
 
 double
-egttools::FinitePopulations::NPlayerStagHunt::payoff(int strategy, const egttools::FinitePopulations::StrategyCounts &group_composition) const {
+egttools::FinitePopulations::NPlayerStagHunt::payoff(int strategy,
+                                                     const egttools::FinitePopulations::StrategyCounts &
+                                                     group_composition) const {
     if (strategy > nb_strategies_)
         throw std::invalid_argument(
-                "you must specify a valid index for the strategy [0, " + std::to_string(nb_strategies_) +
-                ")");
+            "you must specify a valid index for the strategy [0, " + std::to_string(nb_strategies_) +
+            ")");
     if (group_composition.size() != static_cast<size_t>(nb_strategies_))
         throw std::invalid_argument("The group composition must be of size " + std::to_string(nb_strategies_));
-    return expected_payoffs_(static_cast<int>(strategy), static_cast<int64_t>(egttools::FinitePopulations::calculate_state(group_size_, group_composition)));
+    return expected_payoffs_(static_cast<int>(strategy),
+                             static_cast<int64_t>(egttools::FinitePopulations::calculate_state(
+                                 group_size_, group_composition)));
 }
 
 const egttools::VectorXi &egttools::FinitePopulations::NPlayerStagHunt::calculate_success_per_group_composition() {
@@ -149,8 +156,7 @@ const egttools::VectorXi &egttools::FinitePopulations::NPlayerStagHunt::calculat
 }
 
 double egttools::FinitePopulations::NPlayerStagHunt::calculate_population_group_achievement(size_t pop_size,
-                                                                                            const Eigen::Ref<const egttools::VectorXui> &population_state) {
-
+    const Eigen::Ref<const egttools::VectorXui> &population_state) {
     double group_achievement = 0.0;
     std::vector<size_t> sample_counts(nb_strategies_, 0);
 
@@ -160,8 +166,9 @@ double egttools::FinitePopulations::NPlayerStagHunt::calculate_population_group_
         egttools::FinitePopulations::sample_simplex(i, group_size_, nb_strategies_, sample_counts);
 
         if (group_achievement_(i) == 1) {
-            group_achievement += egttools::multivariateHypergeometricPDF(pop_size, nb_strategies_, group_size_, sample_counts,
-                                                                         population_state);
+            group_achievement += egttools::multivariateHypergeometricPDF(
+                pop_size, nb_strategies_, group_size_, sample_counts,
+                population_state);
         }
     }
 
@@ -169,10 +176,12 @@ double egttools::FinitePopulations::NPlayerStagHunt::calculate_population_group_
 }
 
 double egttools::FinitePopulations::NPlayerStagHunt::calculate_group_achievement(size_t pop_size,
-                                                                                 const Eigen::Ref<const egttools::Vector> &stationary_distribution) {
+    const Eigen::Ref<const egttools::Vector> &stationary_distribution) {
     double group_achievement = 0;
 
+#ifdef _OPENMP
 #pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_, nb_group_configurations_, group_size_, group_achievement_, Eigen::Dynamic) reduction(+ : group_achievement)
+#endif
     for (int64_t i = 0; i < stationary_distribution.size(); ++i) {
         VectorXui strategies = VectorXui::Zero(nb_strategies_);
         egttools::FinitePopulations::sample_simplex(i, pop_size, nb_strategies_, strategies);

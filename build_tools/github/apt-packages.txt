@@ -1,0 +1,6 @@
+libomp-dev
+libblas-dev
+liblapack-dev
+autoconf
+automake
+autoconf-archive
