@@ -119,9 +119,11 @@ jobs:
 
           - os: macos-13
             platform_id: macosx_x86_64
+            macosx_deployment_target: "11.0"
 
           - os: macos-14
             platform_id: macosx_arm64
+            macosx_deployment_target: "14.0"
 
     steps:
       - name: Checkout code
@@ -184,6 +186,7 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: |
             VCPKG_PATH=$(pwd)
             EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
+            MACOSX_DEPLOYMENT_TARGET=${{ matrix.macosx_deployment_target }}
           CIBW_ENVIRONMENT_WINDOWS: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
           CIBW_BUILD: "cp310-${{ matrix.platform_id }} cp311-${{ matrix.platform_id }} cp312-${{ matrix.platform_id }}"
           CIBW_BEFORE_ALL_LINUX: bash {package}/build_tools/github/install_blas_openmp.sh
