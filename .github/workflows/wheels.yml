@@ -188,7 +188,7 @@ jobs:
             ${{ runner.os }}-vcpkg-
 
       - name: Bootstrap vcpkg
-        if: runner.os != 'Windows'
+        if: runner.os == 'Linux' || (runner.os == 'macOS' && matrix.platform_id != 'macosx_universal2')
         run: |
           ./vcpkg/bootstrap-vcpkg.sh
 
