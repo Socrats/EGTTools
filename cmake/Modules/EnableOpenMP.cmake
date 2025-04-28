@@ -33,7 +33,6 @@ if (USE_OPENMP)
         set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
     endif ()
 
-
     find_package(OpenMP REQUIRED)
 
     if (OpenMP_CXX_FOUND)
@@ -41,6 +40,15 @@ if (USE_OPENMP)
         message(STATUS "[OpenMP] Libraries: ${OpenMP_CXX_LIBRARIES}")
     else ()
         message(WARNING "[OpenMP] Not found — OpenMP support disabled")
+    endif ()
+
+    # Windows system runtime installation
+    if (WIN32)
+        if (OpenMP_CXX_FOUND)
+            set(CMAKE_INSTALL_OPENMP_LIBRARIES TRUE)
+        endif ()
+
+        include(InstallRequiredSystemLibraries)
     endif ()
 
 endif ()

@@ -1,0 +1,12 @@
+    # BLAS / LAPACK
+    if (BLAS_FOUND AND LAPACK_FOUND)
+        foreach (lib ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+            get_filename_component(lib_path ${lib} ABSOLUTE)
+            if (EXISTS ${lib_path} AND NOT lib_path MATCHES "^/lib|^/usr/lib")
+                message(STATUS "Installing BLAS/LAPACK runtime library: ${lib_path}")
+                install(FILES ${lib_path} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+            else ()
+                message(STATUS "Skipping system BLAS/LAPACK library: ${lib_path}")
+            endif ()
+        endforeach ()
+    endif ()

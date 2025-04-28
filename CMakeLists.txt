@@ -90,10 +90,14 @@ else ()
     message(STATUS "IPO / LTO not supported: <${LTO_ERROR}>")
 endif ()
 
-# MSVC specific flags
+# -------------------------------------------
+# MSVC Specific Configuration
+# -------------------------------------------
+# Compiler-specific build options
 if (MSVC)
     add_compile_options(/permissive- /Zc:inline /utf-8)
     add_compile_definitions(_CRT_SECURE_NO_WARNINGS UNICODE NOMINMAX)
+
     if (MSVC_VERSION GREATER_EQUAL 1920)
         add_compile_options(/d2FH4-)
     endif ()
@@ -234,32 +238,13 @@ endif ()
 if (SKBUILD)
     install(TARGETS numerical_ LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX})
 
-    # OpenMP
-    if (OpenMP_CXX_LIBRARIES)
-        foreach (lib ${OpenMP_CXX_LIBRARIES})
-            get_filename_component(lib_path ${lib} ABSOLUTE)
-            if (EXISTS ${lib_path} AND NOT lib_path MATCHES "^/lib.*|/usr/lib.*")
-                message(STATUS "Installing OpenMP runtime library: ${lib_path}")
-                install(FILES ${lib_path} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
-            else ()
-                message(STATUS "Skipping OpenMP runtime: ${lib_path} is system-provided")
-            endif ()
-        endforeach ()
+    if (WIN32)
+        install(FILES ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
     else ()
-        message(WARNING "OpenMP_CXX_LIBRARIES is empty — OpenMP runtime will not be bundled.")
-    endif ()
-
-    # BLAS / LAPACK
-    if (BLAS_FOUND AND LAPACK_FOUND)
-        foreach (lib ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
-            get_filename_component(lib_path ${lib} ABSOLUTE)
-            if (EXISTS ${lib_path} AND NOT lib_path MATCHES "^/lib|^/usr/lib")
-                message(STATUS "Installing BLAS/LAPACK runtime library: ${lib_path}")
-                install(FILES ${lib_path} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
-            else ()
-                message(STATUS "Skipping system BLAS/LAPACK library: ${lib_path}")
-            endif ()
-        endforeach ()
+        # OpenMP
+        include(InstallOpenMP)
+        # BLAS / LAPACK
+        include(InstallBLASLAPACK)
     endif ()
 endif ()
 

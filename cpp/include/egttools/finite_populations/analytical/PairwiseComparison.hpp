@@ -67,7 +67,7 @@ namespace egttools::FinitePopulations::analytical {
          * the fitness of a strategy, given a population state (represented as the counts of each
          * strategy in the population).
          *
-         * @note For now it is not possible not possible to update the game without instantiating
+         * @note For now, it is not possible to update the game without instantiating
          * PairwiseComparison again. Hopefully, this will be fixed in the future
          *
          * @param population_size : size of the population
@@ -82,7 +82,7 @@ namespace egttools::FinitePopulations::analytical {
         void pre_calculate_edge_fitnesses();
 
         /**
-         * @brief computes the transition matrix of the Markov Chain which defines the population dynamics.
+         * @brief Computes the transition matrix of the Markov Chain which defines the population dynamics.
          *
          * It is not advisable to use this method for very large state spaces since the memory required
          * to store the matrix might explode. In these cases you should resort to dimensional reduction
@@ -152,13 +152,13 @@ namespace egttools::FinitePopulations::analytical {
 
         [[nodiscard]] int population_size() const;
 
-        [[nodiscard]] const egttools::FinitePopulations::AbstractGame &game() const;
+        [[nodiscard]] const AbstractGame &game() const;
 
     private:
         int population_size_, nb_strategies_;
         size_t cache_size_;
         int64_t nb_states_;
-        egttools::FinitePopulations::AbstractGame &game_;
+        AbstractGame &game_;
 
         Cache cache_;
 
@@ -178,9 +178,9 @@ namespace egttools::FinitePopulations::analytical {
         //        inline double calculate_transition_(int decreasing_strategy, int increasing_strategy, double beta, double mu, VectorXui &state);
 
         inline double calculate_local_gradient_(int decreasing_strategy, int increasing_strategy, double beta,
-                                                VectorXui &state);
+                                                VectorXui &state) const;
 
-        inline double calculate_fitness_(int &strategy_index, VectorXui &state);
+        inline double calculate_fitness_(const int &strategy_index, VectorXui &state);
     };
 } // namespace egttools::FinitePopulations::analytical
 

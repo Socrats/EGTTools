@@ -22,8 +22,6 @@
 
 #ifdef _OPENMP
 #include <omp.h>
-#endif
-
 #include <egttools/Types.h>
 
 #pragma omp declare reduction (+: egttools::Vector: omp_out=omp_out+omp_in)\
@@ -43,5 +41,7 @@
 
 #pragma omp declare reduction (+: egttools::SparseMatrix2DXui: omp_out=omp_out+omp_in)\
      initializer(omp_priv=egttools::SparseMatrix2DXui(omp_orig.rows(), omp_orig.cols()))
+
+#endif
 
 #endif //EGTTOOLS_OPENMPUTILS_HPP
