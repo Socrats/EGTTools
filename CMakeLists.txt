@@ -49,12 +49,8 @@ project(egttools VERSION ${EGTTOOLS_VERSION} LANGUAGES CXX)
 # macOS deployment target enforcement
 # ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
-# macOS deployment target enforcement
-# ------------------------------------------------------------------------------
-
 if (APPLE)
-    if(NOT DEFINED CMAKE_OSX_DEPLOYMENT_TARGET OR CMAKE_OSX_DEPLOYMENT_TARGET STREQUAL "")
+    if (NOT DEFINED CMAKE_OSX_DEPLOYMENT_TARGET OR CMAKE_OSX_DEPLOYMENT_TARGET STREQUAL "")
         set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS deployment target" FORCE)
         message(WARNING
                 "
@@ -68,12 +64,19 @@ if (APPLE)
     endif ()
 endif ()
 
+# ------------------------------------------------------------------------------
+# Set cmake options
+# ------------------------------------------------------------------------------
+option(USE_OPENMP "Enable OpenMP multithreading" ON)
+# Optional tests, disabled by default
+option(BUILD_NUMERICAL_TESTS "Build C++ tests in numerical-tests/" ON)
+# HPC configuration
+option(HPC "Use HPC configuration and skip vcpkg toolchain" OFF)
+# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 # Toolchain setup: HPC vs vcpkg
 # ------------------------------------------------------------------------------
-
-option(HPC "Use HPC configuration and skip vcpkg toolchain" OFF)
 
 if (NOT HPC AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
@@ -220,9 +223,6 @@ install(EXPORT EGTToolsTargets
 include_directories(${PROJECT_SOURCE_DIR}/cpp/include)
 add_subdirectory(${PROJECT_SOURCE_DIR}/cpp/src)
 add_subdirectory(${PROJECT_SOURCE_DIR}/docs)
-
-# Optional tests, disabled by default
-option(BUILD_NUMERICAL_TESTS "Build C++ tests in numerical-tests/" ON)
 
 if (BUILD_NUMERICAL_TESTS)
     add_subdirectory(tests)
