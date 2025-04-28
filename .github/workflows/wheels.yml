@@ -123,18 +123,13 @@ jobs:
             platform_id: macosx_x86_64
             macosx_deployment_target: "13.0"
             openmp_enabled: "ON"
+            skip_vcpkg: "OFF"
 
           - os: macos-14
             platform_id: macosx_arm64
             macosx_deployment_target: "14.0"
             openmp_enabled: "ON"
             skip_vcpkg: "OFF"
-
-          - os: macos-14
-            platform_id: macosx_universal2
-            macosx_deployment_target: "11.0"
-            openmp_enabled: "OFF"
-            skip_vcpkg: "ON"
 
 
     steps:
