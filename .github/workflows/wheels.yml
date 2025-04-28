@@ -119,7 +119,7 @@ jobs:
 
           - os: macos-13
             platform_id: macosx_x86_64
-            macosx_deployment_target: "11.0"
+            macosx_deployment_target: "13.0"
 
           - os: macos-14
             platform_id: macosx_arm64
