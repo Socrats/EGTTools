@@ -1,5 +1,7 @@
 openblas
 lapack
+boost
+eigen
 autoconf
 automake
 autoconf-archive

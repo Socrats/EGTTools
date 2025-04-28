@@ -128,11 +128,13 @@ jobs:
             platform_id: macosx_arm64
             macosx_deployment_target: "14.0"
             openmp_enabled: "ON"
+            skip_vcpkg: "OFF"
 
           - os: macos-14
             platform_id: macosx_universal2
             macosx_deployment_target: "11.0"
             openmp_enabled: "OFF"
+            skip_vcpkg: "ON"
 
 
     steps:
@@ -164,7 +166,7 @@ jobs:
         run: |
           echo "Setting MACOSX_DEPLOYMENT_TARGET=${{ matrix.macosx_deployment_target }}"
           echo "MACOSX_DEPLOYMENT_TARGET=${{ matrix.macosx_deployment_target }}" >> $GITHUB_ENV
-          echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DUSE_OPENMP=${{ matrix.openmp_enabled }}'" >> $GITHUB_ENV
+          echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DUSE_OPENMP=${{ matrix.openmp_enabled }} -DSKIP_VCPKG=${{ matrix.skip_vcpkg }}'" >> $GITHUB_ENV
 
       - name: Check MACOSX_DEPLOYMENT_TARGET inside Python
         if: runner.os == 'macOS'
@@ -207,7 +209,7 @@ jobs:
           CIBW_ENVIRONMENT_LINUX: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
           CIBW_ENVIRONMENT_MACOS: |
             VCPKG_PATH=$(pwd)
-            EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=${{ matrix.openmp_enabled }}"
+            EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=${{ matrix.openmp_enabled }} -DSKIP_VCPKG=${{ matrix.skip_vcpkg }}"
             MACOSX_DEPLOYMENT_TARGET=${{ matrix.macosx_deployment_target }}
           CIBW_ENVIRONMENT_WINDOWS: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
           CIBW_BUILD: "cp310-${{ matrix.platform_id }} cp311-${{ matrix.platform_id }} cp312-${{ matrix.platform_id }}"
