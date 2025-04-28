@@ -184,7 +184,7 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: |
             VCPKG_PATH=$(pwd)
             EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
-            MACOSX_DEPLOYMENT_TARGET={% if arch == "arm64" %}14.0{% else %}11.0{% endif %}
+            MACOSX_DEPLOYMENT_TARGET={% if platform_id == "macosx_arm64" %}14.0{% else %}11.0{% endif %}
           CIBW_ENVIRONMENT_WINDOWS: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
           CIBW_BUILD: "cp310-${{ matrix.platform_id }} cp311-${{ matrix.platform_id }} cp312-${{ matrix.platform_id }}"
           CIBW_BEFORE_ALL_LINUX: bash {package}/build_tools/github/install_blas_openmp.sh
@@ -211,7 +211,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: rtd-wheel
-          path: wheelhouse/egttools-*-cp39-cp39-*manylinux2014_x86_64*.whl
+          path: wheelhouse/egttools-*-cp310-*-manylinux*_x86_64*.whl
           if-no-files-found: error
 
       - name: Setup tmate session
