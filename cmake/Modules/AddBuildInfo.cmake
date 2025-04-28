@@ -29,6 +29,18 @@ set(EGTTOOLS_VERSION "${PROJECT_VERSION}")
 # Build date
 string(TIMESTAMP CMAKE_BUILD_DATE "%Y-%m-%d")
 
+# macOS deployment target info
+if(APPLE)
+    if(DEFINED CMAKE_OSX_DEPLOYMENT_TARGET AND NOT CMAKE_OSX_DEPLOYMENT_TARGET STREQUAL "")
+        set(MACOS_DEPLOYMENT_TARGET_LINE "macOS Deployment Target: ${CMAKE_OSX_DEPLOYMENT_TARGET}")
+    else()
+        set(MACOS_DEPLOYMENT_TARGET_LINE "macOS Deployment Target: (not set)")
+    endif()
+else()
+    set(MACOS_DEPLOYMENT_TARGET_LINE "")
+endif()
+
+
 # Build info generation
 configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/cmake/egttools_build_info.in

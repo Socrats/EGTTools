@@ -149,6 +149,17 @@ jobs:
         with:
           cmake-version: 'latest'
 
+      - name: Set MACOSX_DEPLOYMENT_TARGET globally
+        if: runner.os == 'macOS'
+        run: |
+          echo "Setting MACOSX_DEPLOYMENT_TARGET=${{ matrix.macosx_deployment_target }}"
+          echo "MACOSX_DEPLOYMENT_TARGET=${{ matrix.macosx_deployment_target }}" >> $GITHUB_ENV
+
+      - name: Check MACOSX_DEPLOYMENT_TARGET inside Python
+        if: runner.os == 'macOS'
+        run: |
+          python3 -c "import sysconfig; print('Python sees MACOSX_DEPLOYMENT_TARGET =', sysconfig.get_config_var('MACOSX_DEPLOYMENT_TARGET'))"
+
       - name: Setup cache for vcpkg
         id: cache-vcpkg
         uses: actions/cache@v4

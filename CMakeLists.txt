@@ -46,6 +46,30 @@ set(EGTTOOLS_VERSION
 project(egttools VERSION ${EGTTOOLS_VERSION} LANGUAGES CXX)
 
 # ------------------------------------------------------------------------------
+# macOS deployment target enforcement
+# ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+# macOS deployment target enforcement
+# ------------------------------------------------------------------------------
+
+if (APPLE)
+    if(NOT DEFINED CMAKE_OSX_DEPLOYMENT_TARGET OR CMAKE_OSX_DEPLOYMENT_TARGET STREQUAL "")
+        set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS deployment target" FORCE)
+        message(WARNING
+                "
+[EGTTools] CMAKE_OSX_DEPLOYMENT_TARGET was not set.
+[EGTTools] Defaulting to 11.0.
+[EGTTools] If you need to target an older macOS version, manually set MACOSX_DEPLOYMENT_TARGET before configuring.
+"
+        )
+    else ()
+        message(STATUS "[EGTTools] CMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}")
+    endif ()
+endif ()
+
+
+# ------------------------------------------------------------------------------
 # Toolchain setup: HPC vs vcpkg
 # ------------------------------------------------------------------------------
 
