@@ -164,6 +164,7 @@ jobs:
         run: |
           echo "Setting MACOSX_DEPLOYMENT_TARGET=${{ matrix.macosx_deployment_target }}"
           echo "MACOSX_DEPLOYMENT_TARGET=${{ matrix.macosx_deployment_target }}" >> $GITHUB_ENV
+          echo "EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=${{ matrix.openmp_enabled }}" >> $GITHUB_ENV
 
       - name: Check MACOSX_DEPLOYMENT_TARGET inside Python
         if: runner.os == 'macOS'

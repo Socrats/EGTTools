@@ -49,7 +49,12 @@ elif [[ "$platform" == "Mac" ]]; then
   fi
 
   brew update
-  xargs brew install <build_tools/github/brew-packages.txt
+
+  if [[ "$CIBW_BUILD" == *"macosx_universal2"* ]]; then
+    xargs brew install <build_tools/github/brew-packages-universal2.txt
+  else
+    xargs brew install <build_tools/github/brew-packages.txt
+  fi
 
 else
   echo "No system libraries needed for Windows (handled by MSVC)"

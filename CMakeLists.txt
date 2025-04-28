@@ -70,26 +70,26 @@ endif ()
 option(USE_OPENMP "Enable OpenMP multithreading" ON)
 # Optional tests, disabled by default
 option(BUILD_NUMERICAL_TESTS "Build C++ tests in numerical-tests/" ON)
-# HPC configuration
-option(HPC "Use HPC configuration and skip vcpkg toolchain" OFF)
+# SKIP_VCPKG configuration
+option(SKIP_VCPKG "Use SKIP_VCPKG configuration to skip vcpkg toolchain" OFF)
 # ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
-# Toolchain setup: HPC vs vcpkg
+# Toolchain setup: SKIP_VCPKG vs vcpkg
 # ------------------------------------------------------------------------------
 
-if (NOT HPC AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+if (NOT SKIP_VCPKG AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
             CACHE STRING "Toolchain file for vcpkg")
     message(STATUS "Using vcpkg toolchain: ${CMAKE_TOOLCHAIN_FILE}")
 elseif (DEFINED CMAKE_TOOLCHAIN_FILE)
     message(STATUS "Toolchain file already set: ${CMAKE_TOOLCHAIN_FILE}")
 else ()
-    message(STATUS "Using HPC/system configuration — not setting vcpkg toolchain")
+    message(STATUS "Using SKIP_VCPKG/system configuration — not setting vcpkg toolchain")
 endif ()
 
-if (HPC AND DEFINED CMAKE_TOOLCHAIN_FILE)
-    message(FATAL_ERROR "HPC=ON but CMAKE_TOOLCHAIN_FILE is defined — remove it to avoid using vcpkg")
+if (SKIP_VCPKG AND DEFINED CMAKE_TOOLCHAIN_FILE)
+    message(FATAL_ERROR "SKIP_VCPKG=ON but CMAKE_TOOLCHAIN_FILE is defined — remove it to avoid using vcpkg")
 endif ()
 
 # ------------------------------------------------------------------------------
