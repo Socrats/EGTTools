@@ -2,9 +2,19 @@
 set -e
 set -x
 
-# Auto-skip if running inside manylinux container
+# Detect if running inside manylinux container
 if [ -f /etc/redhat-release ] || [ -d /opt/_internal ]; then
-  echo "[install_blas_openmp.sh] Detected manylinux container — skipping system installation."
+  echo "[install_blas_openmp.sh] Detected manylinux container — installing OpenBLAS and LAPACK."
+
+  # Try using yum or dnf to install OpenBLAS dev
+  if command -v yum &>/dev/null; then
+    yum install -y openblas-devel lapack-devel
+  elif command -v dnf &>/dev/null; then
+    dnf install -y openblas-devel lapack-devel
+  else
+    echo "[install_blas_openmp.sh] Warning: No yum/dnf found. Skipping OpenBLAS/LAPACK install."
+  fi
+
   exit 0
 fi
 
