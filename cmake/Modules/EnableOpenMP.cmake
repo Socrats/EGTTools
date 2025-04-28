@@ -11,8 +11,15 @@ if (USE_OPENMP)
 
     # Only relevant on macOS
     if (APPLE)
-        # Define a CMake cache variable so users can override it with -DLIBOMP_DIR=/path
-        set(LIBOMP_DIR "/opt/homebrew/opt/libomp" CACHE PATH "Path to libomp installation on macOS")
+        # Determine the default LIBOMP_DIR depending on architecture
+        if (NOT DEFINED LIBOMP_DIR)
+            if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
+                # Define a CMake cache variable so users can override it with -DLIBOMP_DIR=/path
+                set(LIBOMP_DIR "/opt/homebrew/opt/libomp" CACHE PATH "Path to libomp installation on macOS (default ARM64)" FORCE)
+            else()
+                set(LIBOMP_DIR "/usr/local/opt/libomp" CACHE PATH "Path to libomp installation on macOS (default Intel)" FORCE)
+            endif()
+        endif()
 
         if (NOT EXISTS "${LIBOMP_DIR}")
             message(WARNING "[OpenMP] LIBOMP_DIR does not exist: ${LIBOMP_DIR}")
