@@ -49,7 +49,7 @@ double SED::MLS<SED::GarciaGroup>::fixationProbability(size_t invader, size_t re
     Matrix2D payoff_out = payoff_matrix_out;
 
     // This loop can be done in parallel
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(_MSC_VER)
 #pragma omp parallel for shared(group_strategies) reduction(+:r2m, r2r)
 #endif
     for (size_t i = 0; i < runs; ++i) {

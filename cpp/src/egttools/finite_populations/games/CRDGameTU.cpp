@@ -4,10 +4,10 @@
 
 #include <egttools/finite_populations/games/CRDGameTU.hpp>
 
-egttools::FinitePopulations::games::CRDGameTU::CRDGameTU(int endowment, int threshold,
-                                                         int min_rounds, int group_size,
-                                                         double risk,
-                                                         egttools::utils::TimingUncertainty<std::mt19937_64> &tu,
+egttools::FinitePopulations::games::CRDGameTU::CRDGameTU(const int endowment, const int threshold,
+                                                         const int min_rounds, const int group_size,
+                                                         const double risk,
+                                                         const utils::TimingUncertainty<std::mt19937_64> &tu,
                                                          const CRDStrategyVector &strategies)
     : endowment_(endowment),
       threshold_(threshold),
@@ -35,7 +35,7 @@ egttools::FinitePopulations::games::CRDGameTU::CRDGameTU(int endowment, int thre
 }
 
 void egttools::FinitePopulations::games::CRDGameTU::play(
-    const egttools::FinitePopulations::StrategyCounts &group_composition,
+    const StrategyCounts &group_composition,
     PayoffVector &game_payoffs) {
     int prev_donation = 0, current_donation = 0;
     int public_account = 0;
@@ -89,7 +89,7 @@ const egttools::FinitePopulations::GroupPayoffs &egttools::FinitePopulations::ga
     // Initialise matrix
     expected_payoffs_.setZero();
 
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(_MSC_VER)
 #pragma omp parallel for default(none) shared(nb_strategies_, group_size_, expected_payoffs_, Eigen::Dynamic)
 #endif
     // For every possible group composition run the game and store the payoff of each strategy
@@ -121,7 +121,7 @@ double egttools::FinitePopulations::games::CRDGameTU::calculate_fitness(const in
     // This function assumes that the strategy counts given in @param strategies does not include
     // the player with @param player_type strategy.
 
-    double fitness = 0.0, payoff;
+    double fitness = 0.0;
     std::vector<size_t> sample_counts(nb_strategies_, 0);
 
     // If it isn't, then we must calculate the fitness for every possible group combination
@@ -132,7 +132,7 @@ double egttools::FinitePopulations::games::CRDGameTU::calculate_fitness(const in
         // If the focal player is not in the group, then the payoff should be zero
         if (sample_counts[player_type] > 0) {
             // First update sample_counts with new group composition
-            payoff = expected_payoffs_(static_cast<int>(player_type), i);
+            double payoff = expected_payoffs_(static_cast<int>(player_type), i);
             sample_counts[player_type] -= 1;
 
             // Calculate probability of encountering the current group
@@ -242,7 +242,7 @@ const egttools::Vector &egttools::FinitePopulations::games::CRDGameTU::calculate
     c_behaviors_counts_.setZero();
     group_achievement_.setZero();
 
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(_MSC_VER)
 #pragma omp parallel for default(none) shared(nb_strategies_, group_size_, group_achievement_, c_behaviors_counts_, c_behaviors_, Eigen::Dynamic)
 #endif
     // For every possible group composition run the game and store the payoff of each strategy
@@ -271,7 +271,7 @@ double egttools::FinitePopulations::games::CRDGameTU::calculate_population_group
     // This function assumes that the strategy counts given in @param strategies does not include
     // the player with @param player_type strategy.
 
-    double group_achievement = 0.0, success;
+    double group_achievement = 0.0;
     std::vector<size_t> sample_counts(nb_strategies_, 0);
 
     // If it isn't, then we must calculate the fitness for every possible group combination
@@ -280,7 +280,7 @@ double egttools::FinitePopulations::games::CRDGameTU::calculate_population_group
         egttools::FinitePopulations::sample_simplex(i, group_size_, nb_strategies_, sample_counts);
 
         // First update sample_counts with new group composition
-        success = group_achievement_(i);
+        double success = group_achievement_(i);
 
         // Calculate probability of encountering the current group
         auto prob = egttools::multivariateHypergeometricPDF(pop_size, nb_strategies_, group_size_, sample_counts,
@@ -296,7 +296,7 @@ double egttools::FinitePopulations::games::CRDGameTU::calculate_group_achievemen
     const Eigen::Ref<const egttools::Vector> &stationary_distribution) {
     double group_achievement = 0;
 
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(_MSC_VER)
 #pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_, nb_states_, group_size_, group_achievement_, Eigen::Dynamic) reduction(+ : group_achievement)
 #endif
     for (long int i = 0; i < stationary_distribution.size(); ++i) {
@@ -352,7 +352,7 @@ egttools::Vector3d egttools::FinitePopulations::games::CRDGameTU::calculate_pola
     const Eigen::Ref<const egttools::Vector> &stationary_distribution) {
     egttools::Vector3d polarization = egttools::Vector3d::Zero();
 
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(_MSC_VER)
 #pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_, Eigen::Dynamic) reduction(+ : polarization)
 #endif
     for (long int i = 0; i < stationary_distribution.size(); ++i) {
@@ -370,7 +370,7 @@ egttools::Vector3d egttools::FinitePopulations::games::CRDGameTU::calculate_pola
     const Eigen::Ref<const egttools::Vector> &stationary_distribution) {
     egttools::Vector3d polarization = egttools::Vector3d::Zero();
 
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(_MSC_VER)
 #pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_) reduction(+ : polarization)
 #endif
     for (long int i = 0; i < stationary_distribution.size(); ++i) {

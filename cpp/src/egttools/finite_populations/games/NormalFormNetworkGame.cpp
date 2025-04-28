@@ -40,7 +40,7 @@ egttools::FinitePopulations::games::NormalFormNetworkGame::NormalFormNetworkGame
 
 egttools::FinitePopulations::games::NormalFormNetworkGame::NormalFormNetworkGame(int nb_rounds,
                                                                                  const Eigen::Ref<const Matrix2D> &payoff_matrix,
-                                                                                 NFGStrategyVector &strategies)
+                                                                                 const NFGStrategyVector &strategies)
     : nb_rounds_(nb_rounds),
       payoff_matrix_(payoff_matrix),
       strategies_(strategies) {
@@ -55,14 +55,12 @@ egttools::FinitePopulations::games::NormalFormNetworkGame::NormalFormNetworkGame
 }
 
 void egttools::FinitePopulations::games::NormalFormNetworkGame::calculate_payoffs() {
-    int s1, s2;
-
     // For every possible pair combination, run the game and store the payoff of each strategy
     for (int i = 0; i < nb_strategies_; ++i) {
-        s1 = i;
+        int s1 = i;
         for (int j = i; j < nb_strategies_; ++j) {
             // Update group composition from current
-            s2 = j;
+            int s2 = j;
 
             // play game and update game_payoffs
             update_cooperation_and_payoffs_(s1, s2);
@@ -100,11 +98,10 @@ void egttools::FinitePopulations::games::NormalFormNetworkGame::update_cooperati
     int div;
 
     // Check if any of the strategies is stochastic, in which case repeat the loop 10000 times (for good statistics)
-    bool is_stochastic = strategies_[s1]->is_stochastic() || strategies_[s2]->is_stochastic();
 
     // This should be repeated many times if the strategies are stochastic
     // First we play the game
-    if (is_stochastic) {
+    if (strategies_[s1]->is_stochastic() || strategies_[s2]->is_stochastic()) {
         div = static_cast<int>(nb_rounds_) * 10000;
         for (int j = 0; j < 10000; ++j) {
             for (int i = 0; i < nb_rounds_; ++i) {

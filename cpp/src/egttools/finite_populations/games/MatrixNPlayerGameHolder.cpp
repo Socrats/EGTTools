@@ -3,9 +3,9 @@
 //
 #include <egttools/finite_populations/games/MatrixNPlayerGameHolder.hpp>
 
-egttools::FinitePopulations::MatrixNPlayerGameHolder::MatrixNPlayerGameHolder(int nb_strategies,
-                                                                              int group_size,
-                                                                              const Eigen::Ref<const egttools::Matrix2D> &payoff_matrix) : nb_strategies_(nb_strategies),
+egttools::FinitePopulations::MatrixNPlayerGameHolder::MatrixNPlayerGameHolder(const int nb_strategies,
+                                                                              const int group_size,
+                                                                              const Eigen::Ref<const Matrix2D> &payoff_matrix) : nb_strategies_(nb_strategies),
                                                                                                                                            group_size_(group_size),
                                                                                                                                            expected_payoffs_(payoff_matrix) {
 
@@ -44,7 +44,7 @@ double egttools::FinitePopulations::MatrixNPlayerGameHolder::calculate_fitness(c
     // This function assumes that the strategy counts given in @param strategies does not include
     // the player with @param player_type strategy.
 
-    double fitness = 0.0, payoff;
+    double fitness = 0.0;
     std::vector<size_t> sample_counts(nb_strategies_, 0);
 
     // If it isn't, then we must calculate the fitness for every possible group combination
@@ -54,7 +54,7 @@ double egttools::FinitePopulations::MatrixNPlayerGameHolder::calculate_fitness(c
 
         // If the focal player is not in the group, then the payoff should be zero
         if (sample_counts[player_type] > 0) {
-            payoff = expected_payoffs_(player_type, i);
+            double payoff = expected_payoffs_(player_type, i);
             sample_counts[player_type] -= 1;
 
             // Calculate probability of encountering the current group
@@ -96,17 +96,17 @@ const egttools::FinitePopulations::GroupPayoffs &egttools::FinitePopulations::Ma
 }
 
 double
-egttools::FinitePopulations::MatrixNPlayerGameHolder::payoff(int strategy, const egttools::FinitePopulations::StrategyCounts &group_composition) const {
+egttools::FinitePopulations::MatrixNPlayerGameHolder::payoff(int strategy, const StrategyCounts &group_composition) const {
     if (strategy > nb_strategies_)
         throw std::invalid_argument(
                 "you must specify a valid index for the strategy [0, " + std::to_string(nb_strategies_) +
                 ")");
     if (group_composition.size() != static_cast<size_t>(nb_strategies_))
         throw std::invalid_argument("The group composition must be of size " + std::to_string(nb_strategies_));
-    return expected_payoffs_(static_cast<int>(strategy), static_cast<int64_t>(egttools::FinitePopulations::calculate_state(group_size_, group_composition)));
+    return expected_payoffs_(static_cast<int>(strategy), static_cast<int64_t>(calculate_state(group_size_, group_composition)));
 }
 
-void egttools::FinitePopulations::MatrixNPlayerGameHolder::update_payoff_matrix(egttools::Matrix2D &payoff_matrix) {
+void egttools::FinitePopulations::MatrixNPlayerGameHolder::update_payoff_matrix(const Matrix2D &payoff_matrix) {
     expected_payoffs_ = payoff_matrix;
 }
 

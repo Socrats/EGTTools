@@ -63,14 +63,14 @@ egttools::FinitePopulations::NormalFormGame::NormalFormGame(int64_t nb_rounds,
 
 void egttools::FinitePopulations::NormalFormGame::play(const egttools::FinitePopulations::StrategyCounts &group_composition,
                                                        egttools::FinitePopulations::PayoffVector &game_payoffs) {
-    int action1, action1_prev = 0, action2 = 0;
+    int action1_prev = 0, action2 = 0;
     // Initialize payoffs
     for (auto &value : game_payoffs) value = 0;
 
     for (int64_t i = 0; i < nb_rounds_; ++i) {
         // For now since we will consider only C and D as strategies, we will pre-calculate all actions since they
         // correspond with the strategies
-        action1 = strategies_[group_composition[0]]->get_action(i, action2);
+        int action1 = strategies_[group_composition[0]]->get_action(i, action2);
         action2 = strategies_[group_composition[1]]->get_action(i, action1_prev);
         action1_prev = action1;
         game_payoffs[0] += payoffs_(action1, action2);
@@ -81,14 +81,12 @@ void egttools::FinitePopulations::NormalFormGame::play(const egttools::FinitePop
 }
 
 const egttools::FinitePopulations::GroupPayoffs &egttools::FinitePopulations::NormalFormGame::calculate_payoffs() {
-    int s1, s2;
-
     // For every possible pair combination, run the game and store the payoff of each strategy
     for (int i = 0; i < nb_strategies_; ++i) {
-        s1 = i;
+        int s1 = i;
         for (int j = i; j < nb_strategies_; ++j) {
             // Update group composition from current
-            s2 = j;
+            int s2 = j;
 
             // play game and update game_payoffs
             _update_cooperation_and_payoffs(s1, s2);
@@ -208,11 +206,10 @@ void egttools::FinitePopulations::NormalFormGame::_update_cooperation_and_payoff
     int div;
 
     // Check if any of the strategies is stochastic, in which case repeat the loop 10000 times (for good statistics)
-    bool is_stochastic = strategies_[s1]->is_stochastic() || strategies_[s2]->is_stochastic();
 
     // This should be repeated many times if the strategies are stochastic
     // First we play the game
-    if (is_stochastic) {
+    if (strategies_[s1]->is_stochastic() || strategies_[s2]->is_stochastic()) {
         div = static_cast<int>(nb_rounds_) * 10000;
         for (int j = 0; j < 10000; ++j) {
             for (int i = 0; i < nb_rounds_; ++i) {

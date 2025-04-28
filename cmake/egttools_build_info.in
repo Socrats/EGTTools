@@ -2,6 +2,7 @@ Build information:
 -------------------
 EGTtools version: @EGTTOOLS_VERSION@
 OpenMP support: @OPENMP_STATUS@
+BLAS/LAPACK support: @BLAS_LAPACK_STATUS@
 CMake Generator: @CMAKE_GENERATOR@
 CMake Version: @CMAKE_VERSION@
 System: @CMAKE_SYSTEM_NAME@ @CMAKE_SYSTEM_PROCESSOR@

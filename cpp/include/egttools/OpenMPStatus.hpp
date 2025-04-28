@@ -12,7 +12,7 @@ namespace egttools {
      * @return true if OpenMP was enabled during compilation, false otherwise.
      */
     inline bool is_openmp_enabled() {
-#ifdef _OPENMP
+#if defined(_OPENMP)
         return true;
 #else
         return false;

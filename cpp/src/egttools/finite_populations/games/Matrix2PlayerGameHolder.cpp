@@ -69,7 +69,7 @@ double egttools::FinitePopulations::Matrix2PlayerGameHolder::payoff(int strategy
     return expected_payoffs_(static_cast<int>(group_composition[0]), static_cast<int>(group_composition[1]));
 }
 
-void egttools::FinitePopulations::Matrix2PlayerGameHolder::update_payoff_matrix(egttools::Matrix2D &payoff_matrix) {
+void egttools::FinitePopulations::Matrix2PlayerGameHolder::update_payoff_matrix(const Matrix2D &payoff_matrix) {
     expected_payoffs_ = payoff_matrix;
 }
 

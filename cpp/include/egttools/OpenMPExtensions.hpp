@@ -20,8 +20,11 @@
 #ifndef EGTTOOLS_OPENMPUTILS_HPP
 #define EGTTOOLS_OPENMPUTILS_HPP
 
-#ifdef _OPENMP
+#if defined(_OPENMP)
 #include <omp.h>
+#endif
+
+#if defined(_OPENMP) && !defined(_MSC_VER)
 #include <egttools/Types.h>
 
 #pragma omp declare reduction (+: egttools::Vector: omp_out=omp_out+omp_in)\

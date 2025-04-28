@@ -36,10 +36,10 @@
 
 namespace egttools::FinitePopulations {
     using PayoffVector = std::vector<double>;
-    using AbstractNFGStrategy = egttools::FinitePopulations::behaviors::AbstractNFGStrategy;
+    using AbstractNFGStrategy = behaviors::AbstractNFGStrategy;
     using NFGStrategyVector = std::vector<AbstractNFGStrategy *>;
 
-    class NormalFormGame final : public egttools::FinitePopulations::AbstractGame {
+    class NormalFormGame final : public AbstractGame {
     public:
         /**
         * @brief This class implements a normal form game.
@@ -98,7 +98,7 @@ namespace egttools::FinitePopulations {
         /**
         * @brief Calculates the expected level of cooperation given a population state
         * @param pop_size : size of the population
-        *       @param population_state : state of the population (number of players of each strategy)
+        * @param population_state : state of the population (number of players of each strategy)
         * @return the level of cooperation of that population state
         */
         double calculate_cooperation_level(size_t pop_size, const Eigen::Ref<const VectorXui> &population_state);
@@ -111,7 +111,7 @@ namespace egttools::FinitePopulations {
         [[nodiscard]] std::string type() const override;
         [[nodiscard]] const GroupPayoffs &payoffs() const override;
         [[nodiscard]] const Matrix2D &expected_payoffs() const;
-        [[nodiscard]] double payoff(int strategy, const egttools::FinitePopulations::StrategyCounts &group_composition) const override;
+        [[nodiscard]] double payoff(int strategy, const StrategyCounts &group_composition) const override;
         [[nodiscard]] const NFGStrategyVector &strategies() const;
         void save_payoffs(std::string file_name) const override;
 

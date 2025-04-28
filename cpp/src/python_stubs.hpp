@@ -40,7 +40,7 @@ namespace stubs {
     class PyAbstractGame : public egttools::FinitePopulations::AbstractGame {
     public:
         /* Inherit the constructors */
-        using egttools::FinitePopulations::AbstractGame::AbstractGame;
+        using AbstractGame::AbstractGame;
 
         /* Trampoline (need one for each virtual function) */
         void play(const egttools::FinitePopulations::StrategyCounts &group_composition,

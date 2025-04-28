@@ -179,7 +179,7 @@ double egttools::FinitePopulations::NPlayerStagHunt::calculate_group_achievement
     const Eigen::Ref<const egttools::Vector> &stationary_distribution) {
     double group_achievement = 0;
 
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(_MSC_VER)
 #pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_, nb_group_configurations_, group_size_, group_achievement_, Eigen::Dynamic) reduction(+ : group_achievement)
 #endif
     for (int64_t i = 0; i < stationary_distribution.size(); ++i) {

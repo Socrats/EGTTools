@@ -125,34 +125,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # ------------------------------------------------------------------------------
 
 # BLAS, LAPACK and LAPACKE
-if (APPLE)
-    find_library(ACCELERATE_FRAMEWORK Accelerate)
-    find_library(LAPACKE_LIB lapacke PATHS /opt/local/lib ${LAPACK_DIR}/lib)
-    if (ACCELERATE_FRAMEWORK AND LAPACKE_LIB)
-        message(STATUS "Using Accelerate framework and LAPACKE")
-        add_compile_definitions(EIGEN_USE_BLAS EIGEN_USE_LAPACKE)
-    else ()
-        message(FATAL_ERROR "Accelerate or LAPACKE not found")
-    endif ()
-else ()
-    find_package(BLAS)
-    find_package(LAPACK)
-    find_library(LAPACKE_LIB NAMES lapacke HINTS ${CMAKE_PREFIX_PATH} PATH_SUFFIXES lib lib64)
-
-    if (BLAS_FOUND AND LAPACK_FOUND)
-        message(STATUS "BLAS and LAPACK found")
-        add_compile_definitions(EIGEN_USE_BLAS)
-
-        if (LAPACKE_LIB)
-            message(STATUS "LAPACKE found")
-            add_compile_definitions(EIGEN_USE_LAPACKE)
-        else ()
-            message(STATUS "LAPACKE not found — using LAPACK directly")
-        endif ()
-    else ()
-        message(WARNING "BLAS or LAPACK not found — required for Eigen acceleration")
-    endif ()
-endif ()
+include(EnableBLASLapack)
 
 # OpenMP
 include(EnableOpenMP)

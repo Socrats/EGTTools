@@ -31,7 +31,7 @@
 #include <stdexcept>
 #include <vector>
 
-#ifdef _OPENMP
+#if defined(_OPENMP)
 #include <egttools/OpenMPExtensions.hpp>
 #endif
 
@@ -906,7 +906,7 @@ namespace egttools::FinitePopulations {
         long int r2r = 0; // resident to resident count
 
         // This loop can be done in parallel
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(_MSC_VER)
 #pragma omp parallel for reduction(+ : r2m, r2r) default(none) shared(resident, invader, runs, nb_generations, beta)
 #endif
         for (size_t i = 0; i < runs; ++i) {
@@ -944,7 +944,7 @@ namespace egttools::FinitePopulations {
         VectorXi t_minus = VectorXi::Zero(_pop_size + 1);
 
         // This loop can be done in parallel
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(_MSC_VER)
 #pragma omp parallel for reduction(+ : t_plus, t_minus) default(none) shared(invader, resident, runs, \
                                                                                      _pop_size, _nb_strategies)
 #endif
@@ -1002,7 +1002,7 @@ namespace egttools::FinitePopulations {
         // Creates a cache for the fitness data
         Cache cache(_cache_size);
 
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(_MSC_VER)
 #pragma omp parallel for reduction(+ : sdist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu, cache)
 #endif
         for (size_t i = 0; i < nb_runs; ++i) {
@@ -1120,7 +1120,7 @@ namespace egttools::FinitePopulations {
         // Creates a cache for the fitness data
         Cache cache(_cache_size);
 
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(_MSC_VER)
 #pragma omp parallel for reduction(+ : sdist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu, cache)
 #endif
         for (size_t i = 0; i < nb_runs; ++i) {
@@ -1238,7 +1238,7 @@ namespace egttools::FinitePopulations {
         // Distribution number of generations for a mutation to happen
         std::geometric_distribution<size_t> geometric(mu);
 
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(_MSC_VER)
 #pragma omp parallel for reduction(+ : strategy_dist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu)
 #endif
         for (size_t i = 0; i < nb_runs; ++i) {

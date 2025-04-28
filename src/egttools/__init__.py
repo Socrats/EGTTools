@@ -57,6 +57,7 @@ else:
     from .numerical.numerical_ import __version__
     from .numerical.numerical_ import VERSION
     from .numerical.numerical_ import is_openmp_enabled
+    from .numerical.numerical_ import is_blas_lapack_enabled
     from .numerical.numerical_ import USES_BOOST
     from .numerical.numerical_.random import Random
     from .numerical.numerical_ import (sample_simplex, sample_unit_simplex, calculate_nb_states,

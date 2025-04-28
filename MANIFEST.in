@@ -11,10 +11,11 @@ include environment.yml
 include vcpkg.json
 
 # Anaconda files
-include bld.bat
-include build.sh
+include conda-recipe/bld.bat
+include conda-recipe/build.sh
+include conda-recipe/meta.yaml
+include conda-recipe/conda_build_config.yaml
 include install_dependencies.sh
-include meta.yaml
 
 include CMakeLists.txt
 include requirements.txt

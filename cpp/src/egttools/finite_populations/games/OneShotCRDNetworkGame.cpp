@@ -3,13 +3,13 @@
 //
 #include <egttools/finite_populations/games/OneShotCRDNetworkGame.hpp>
 
-egttools::FinitePopulations::games::OneShotCRDNetworkGame::OneShotCRDNetworkGame(double endowment,
-                                                                                 double cost,
-                                                                                 double risk,
-                                                                                 int min_nb_cooperators) : endowment_(endowment),
-                                                                                                           cost_(cost),
-                                                                                                           risk_(risk),
-                                                                                                           min_nb_cooperators_(min_nb_cooperators) {
+egttools::FinitePopulations::games::OneShotCRDNetworkGame::OneShotCRDNetworkGame(const double endowment,
+    const double cost,
+    const double risk,
+    const int min_nb_cooperators) : endowment_(endowment),
+                                    cost_(cost),
+                                    risk_(risk),
+                                    min_nb_cooperators_(min_nb_cooperators) {
     nb_strategies_ = 2;
 
     // Payoffs cooperator and defector
@@ -19,7 +19,8 @@ egttools::FinitePopulations::games::OneShotCRDNetworkGame::OneShotCRDNetworkGame
     payoffs_failure_[1] = endowment_ * (1 - risk_ - cost_);
 }
 
-double egttools::FinitePopulations::games::OneShotCRDNetworkGame::calculate_fitness(int strategy_index, egttools::VectorXui &state) {
+double egttools::FinitePopulations::games::OneShotCRDNetworkGame::calculate_fitness(
+    int strategy_index, VectorXui &state) {
     // We assume that index 0 is defect and index 1 is cooperate
     double payoff;
     int nb_cooperators = strategy_index + static_cast<int>(state(1));
@@ -36,18 +37,23 @@ double egttools::FinitePopulations::games::OneShotCRDNetworkGame::calculate_fitn
 int egttools::FinitePopulations::games::OneShotCRDNetworkGame::nb_strategies() const {
     return nb_strategies_;
 }
+
 double egttools::FinitePopulations::games::OneShotCRDNetworkGame::endowment() const {
     return endowment_;
 }
+
 double egttools::FinitePopulations::games::OneShotCRDNetworkGame::cost() const {
     return cost_;
 }
+
 double egttools::FinitePopulations::games::OneShotCRDNetworkGame::risk() const {
     return risk_;
 }
+
 int egttools::FinitePopulations::games::OneShotCRDNetworkGame::min_nb_cooperators() const {
     return min_nb_cooperators_;
 }
+
 std::string egttools::FinitePopulations::games::OneShotCRDNetworkGame::toString() const {
     std::stringstream ss;
     ss << "Python implementation of a public goods one-shot Collective Risk Dilemma on Networks." << std::endl;
@@ -63,6 +69,7 @@ std::string egttools::FinitePopulations::games::OneShotCRDNetworkGame::toString(
 
     return ss.str();
 }
+
 std::string egttools::FinitePopulations::games::OneShotCRDNetworkGame::type() const {
     return "egttools.games.OneShotCRDNetworkGame";
 }

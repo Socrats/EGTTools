@@ -23,7 +23,7 @@ double egttools::FinitePopulations::AbstractNPlayerGame::calculate_fitness(const
     // This function assumes that the strategy counts given in @param strategies does not include
     // the player with @param player_type strategy.
 
-    double fitness = 0.0, payoff;
+    double fitness = 0.0;
     std::vector<size_t> sample_counts(nb_strategies_, 0);
 
     // If it isn't, then we must calculate the fitness for every possible group combination
@@ -33,7 +33,7 @@ double egttools::FinitePopulations::AbstractNPlayerGame::calculate_fitness(const
 
         // If the focal player is not in the group, then the payoff should be zero
         if (sample_counts[player_type] > 0) {
-            payoff = expected_payoffs_(player_type, i);
+            double payoff = expected_payoffs_(player_type, i);
             sample_counts[player_type] -= 1;
 
             // Calculate probability of encountering the current group

@@ -14,7 +14,7 @@
 #include <map>
 #include <memory>
 
-#ifdef _OPENMP
+#if defined(_OPENMP)
 #include <egttools/OpenMPExtensions.hpp>
 #endif
 

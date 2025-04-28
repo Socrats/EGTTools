@@ -176,7 +176,7 @@ egttools::FinitePopulations::evolvers::NetworkEvolver::estimate_time_dependent_a
     state_iterator.set_prefix("Iterating over states: ");
 
     for (auto state_index: state_iterator) {
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(_MSC_VER)
 #pragma omp parallel for reduction(+ : average_gradients_of_selection) default(none) shared(initial_states, networks, nb_simulations, generation_start, generation_stop, state_index)
 #endif
         for (auto &network: networks) {
@@ -283,7 +283,7 @@ egttools::FinitePopulations::evolvers::NetworkEvolver::estimate_time_independent
     state_iterator.set_prefix("Iterating over simulations: ");
 
     for (const auto state_index: state_iterator) {
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(_MSC_VER)
 #pragma omp parallel for reduction(+ : average_gradients_of_selection) default(none) shared(initial_states, networks, nb_simulations, nb_generations, state_index)
 #endif
         for (const auto &network: networks) {

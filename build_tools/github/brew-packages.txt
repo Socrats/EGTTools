@@ -1,5 +1,6 @@
 libomp
 openblas
+lapack
 autoconf
 automake
 autoconf-archive

@@ -66,7 +66,7 @@ namespace egttools::FinitePopulations {
         [[nodiscard]] const GroupPayoffs &payoffs() const final;
         [[nodiscard]] double payoff(int strategy, const egttools::FinitePopulations::StrategyCounts &group_composition) const final;
 
-        void update_payoff_matrix(Matrix2D &payoff_matrix);
+        void update_payoff_matrix(const Matrix2D &payoff_matrix);
 
         void save_payoffs(std::string file_name) const final;
 

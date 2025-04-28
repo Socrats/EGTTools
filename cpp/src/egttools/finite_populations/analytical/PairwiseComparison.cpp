@@ -50,7 +50,7 @@ void egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_
     Matrix2D fitnesses = Matrix2D::Zero(nb_strategies_, (population_size_ - 1) * nb_strategies_);
     const int nb_elements = population_size_ - 2;
 
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(_MSC_VER)
 #pragma omp parallel for default(none) shared(fitnesses, nb_strategies_, population_size_, game_, nb_elements, Eigen::Dynamic)
 #endif
     for (int i = 0; i < nb_strategies_; ++i) {
@@ -338,7 +338,7 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transitio
     Matrix2D transitions = Matrix2D::Zero(nb_strategies_, nb_strategies_);
     Matrix2D fixation_probabilities = Matrix2D::Zero(nb_strategies_, nb_strategies_);
 
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(_MSC_VER)
 #pragma omp parallel for default(none) shared(beta, nb_strategies_, population_size_, transitions, fixation_probabilities)
 #endif
     for (int i = 0; i < nb_strategies_; ++i) {

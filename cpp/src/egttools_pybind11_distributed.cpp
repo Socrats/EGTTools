@@ -18,6 +18,7 @@
 
 #include <pybind11/pybind11.h>
 #include <egttools/OpenMPStatus.hpp>
+#include <egttools/BLASLAPACKStatus.hpp>
 
 #include "version.h"
 
@@ -49,6 +50,9 @@ PYBIND11_MODULE(numerical_, m) {
         "functions and classes to simulate evolutionary dynamics in large populations.");
     m.def("is_openmp_enabled", &egttools::is_openmp_enabled,
       "Check if EGTtools was compiled with OpenMP support.");
+    m.def("is_blas_lapack_enabled", &egttools::is_blas_lapack_enabled,
+      "Check if EGTtools was compiled with BLAS/LAPACK acceleration.");
+
 
 #if (HAS_BOOST)
     m.attr("USES_BOOST") = true;

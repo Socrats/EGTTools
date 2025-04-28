@@ -32,10 +32,10 @@
 #include <vector>
 
 namespace egttools::FinitePopulations::games {
-    using AbstractNFGStrategy_ptr = egttools::FinitePopulations::behaviors::AbstractNFGStrategy *;
+    using AbstractNFGStrategy_ptr = behaviors::AbstractNFGStrategy *;
     using NFGStrategyVector = std::vector<AbstractNFGStrategy_ptr>;
 
-    class NormalFormNetworkGame final : public egttools::FinitePopulations::games::AbstractSpatialGame {
+    class NormalFormNetworkGame final : public AbstractSpatialGame {
     public:
         /**
         * @brief This class implements a normal form game.
@@ -54,7 +54,7 @@ namespace egttools::FinitePopulations::games {
         */
         NormalFormNetworkGame(int nb_rounds, const Eigen::Ref<const Matrix2D> &payoff_matrix);
 
-        NormalFormNetworkGame(int nb_rounds, const Eigen::Ref<const Matrix2D> &payoff_matrix, NFGStrategyVector &strategies);
+        NormalFormNetworkGame(int nb_rounds, const Eigen::Ref<const Matrix2D> &payoff_matrix, const NFGStrategyVector &strategies);
 
         void calculate_payoffs();
 

@@ -49,7 +49,7 @@ egttools::infinite_populations::vectorized_replicator_equation_n_player(egttools
     egttools::Matrix2D result2 = egttools::Matrix2D::Zero(x2.rows(), x2.cols());
     egttools::Matrix2D result3 = egttools::Matrix2D::Zero(x3.rows(), x3.cols());
 
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(_MSC_VER)
 #pragma omp parallel for default(none) shared(x1, x2, x3, payoff_matrix, group_size, result1, result2, result3)
 #endif
     for (int i = 0; i < x1.rows(); ++i) {

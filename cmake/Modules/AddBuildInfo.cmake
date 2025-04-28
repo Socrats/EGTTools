@@ -1,4 +1,4 @@
-# Define variables for configure_file
+# Detect OpenMP
 if (USE_OPENMP)
     if (OpenMP_CXX_FOUND)
         set(OPENMP_STATUS "ON")
@@ -8,6 +8,20 @@ if (USE_OPENMP)
 else ()
     set(OPENMP_STATUS "OFF (disabled by user)")
 endif ()
+
+# Detect BLAS/LAPACK acceleration based on compile definitions
+get_target_property(_numerical_compile_defs numerical_ COMPILE_DEFINITIONS)
+
+if (_numerical_compile_defs)
+    list(FIND _numerical_compile_defs "EIGEN_USE_BLAS" _found_blas_macro)
+    if (NOT _found_blas_macro EQUAL -1)
+        set(BLAS_LAPACK_STATUS "ON")
+    else()
+        set(BLAS_LAPACK_STATUS "OFF")
+    endif()
+else()
+    set(BLAS_LAPACK_STATUS "OFF")
+endif()
 
 # Version
 set(EGTTOOLS_VERSION "${PROJECT_VERSION}")

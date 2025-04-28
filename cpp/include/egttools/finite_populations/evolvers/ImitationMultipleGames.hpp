@@ -27,7 +27,7 @@
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <stdexcept>
 
-#ifdef _OPENMP
+#if defined(_OPENMP)
 #include <egttools/OpenMPExtensions.hpp>
 #endif
 
@@ -298,7 +298,7 @@ namespace egttools::FinitePopulations {
         // Distribution number of generations for a mutation to happen
         std::geometric_distribution<size_t> geometric(mu);
 
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(_MSC_VER)
 #pragma omp parallel for reduction(+ \
                                    : sdist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu)
 #endif

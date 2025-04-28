@@ -44,7 +44,7 @@ namespace egttools::FinitePopulations::games {
          * @param strategies : vector containing pointers to the strategies that will play the game
          */
         CRDGameTU(int endowment, int threshold, int min_rounds, int group_size, double risk,
-                  egttools::utils::TimingUncertainty<std::mt19937_64> &tu,
+                  const egttools::utils::TimingUncertainty<std::mt19937_64> &tu,
                   const CRDStrategyVector &strategies);
 
         void play(const egttools::FinitePopulations::StrategyCounts &group_composition,

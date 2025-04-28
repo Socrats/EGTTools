@@ -90,8 +90,8 @@ if (OpenMP_CXX_FOUND)
     message(STATUS "[OpenMP] Linking to target: numerical_")
     target_link_libraries(numerical_ PRIVATE OpenMP::OpenMP_CXX)
     if (NOT APPLE)
-#        SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-#        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -fopenmp")
+        #        SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+        #        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -fopenmp")
         target_compile_options(numerical_ PRIVATE ${OpenMP_CXX_FLAGS})
     endif ()
 else ()
@@ -102,14 +102,11 @@ endif ()
 # BLAS / LAPACK
 # ------------------------------------------------------------------------------
 
-if (BLAS_FOUND AND LAPACK_FOUND)
-    message(STATUS "Linking BLAS AND LAPACK to target numerical_")
-    if (TARGET BLAS::BLAS AND TARGET LAPACK::LAPACK)
-        target_link_libraries(numerical_ PRIVATE BLAS::BLAS LAPACK::LAPACK)
-    else ()
-        target_link_libraries(numerical_ PRIVATE ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
-    endif ()
-endif ()
+egttools_enable_blas_lapack(numerical_)
+
+# ------------------------------------------------------------------------------
+# Create EGTToolsTargets export
+# ------------------------------------------------------------------------------
 
 install(TARGETS numerical_
         EXPORT EGTToolsTargets

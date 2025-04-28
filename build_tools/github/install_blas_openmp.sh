@@ -14,8 +14,15 @@ echo "Detected platform: ${platform}"
 
 if [[ "$platform" == "Linux" ]]; then
     echo "Installing system libraries for Linux..."
-    sudo apt-get update -y
-    xargs -a build_tools/github/apt-packages.txt sudo apt-get install -y --no-install-recommends
+
+    # Check if running as root
+    if [ "$(id -u)" -eq 0 ]; then
+        apt-get update -y
+        xargs -a build_tools/github/apt-packages.txt apt-get install -y --no-install-recommends
+    else
+        sudo apt-get update -y
+        xargs -a build_tools/github/apt-packages.txt sudo apt-get install -y --no-install-recommends
+    fi
 
 elif [[ "$platform" == "Mac" ]]; then
     echo "Installing system libraries for macOS..."
