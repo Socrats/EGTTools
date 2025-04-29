@@ -45,7 +45,7 @@ jobs:
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v2
         with:
-          cmake-version: '3.27.x'
+          cmake-version: 'latest'
 
       - name: Install system packages (OpenMP, BLAS/LAPACK)
         run: bash build_tools/github/install_blas_openmp.sh

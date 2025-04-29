@@ -6,7 +6,6 @@ on:
     branches:
       - master
       - develop
-      - fix_github_ci
   workflow_dispatch:
     inputs:
       debug_enabled:
@@ -39,29 +38,56 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Make sure submodules are updated
+        run: |
+          git submodule sync --recursive
+          git submodule update --init --recursive --force
+          cd vcpkg
+          git fetch --all --unshallow || true
+          cd ..
+
       - name: Setup Python ${{ matrix.python }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Bootstrap vcpkg
-        if: runner.os != 'Windows'  # Windows support can be added later
-        run: |
-          ./vcpkg/bootstrap-vcpkg.sh
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: 'latest'
 
-      - name: Cache vcpkg artifacts
+      - name: Install system packages (OpenMP, BLAS/LAPACK)
+        run: bash build_tools/github/install_blas_openmp.sh
+
+      - name: Setup cache for vcpkg
+        id: cache-vcpkg
         uses: actions/cache@v4
         with:
           path: |
-            vcpkg_installed
-            _skbuild/**/cmake-build/vcpkg_installed
+            ./vcpkg_installed
+            ./vcpkg/buildtrees
+            ./vcpkg/downloads
+            ./vcpkg/packages
           key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
           restore-keys: |
             ${{ runner.os }}-vcpkg-
 
-      - name: Install Python build tools
+      - name: Bootstrap vcpkg
         run: |
-          python -m pip install --upgrade pip setuptools wheel build
+          ./vcpkg/bootstrap-vcpkg.sh
+
+      - name: Install dependencies with vcpkg
+        if: steps.cache-vcpkg.outputs.cache-hit != 'true'
+        run: |
+          ./vcpkg/vcpkg install --x-binarycaching
+
+      - name: Set VCPKG_PATH environment variable
+        run: |
+          echo "VCPKG_PATH=$(pwd)" >> $GITHUB_ENV
+
+      - name: Install Python requirements
+        run: |
+          pip install --user check-manifest twine
 
       - name: Install EGTtools
         run: |
@@ -70,15 +96,6 @@ jobs:
       - name: Install testing dependencies
         run: |
           pip install --no-deps -r tests/requirements.txt
-
-      - name: Configure project
-        shell: bash
-        run: |
-          cmake -S . -B build -DPython_EXECUTABLE="$(which python)" -DUSE_OPENMP=${{ matrix.openmp_enabled }}
-
-      - name: Build project
-        run: |
-          cmake --build build --parallel
 
       - name: Test project
         run: |
