@@ -24,7 +24,7 @@ jobs:
       - name: Download built wheel
         uses: actions/download-artifact@v4
         with:
-          name: wheelhouse
+          name: rtd-wheel
           path: wheelhouse
 
       - name: Setup Python
