@@ -134,6 +134,9 @@ nitpick_ignore = [
     ('py:class', 'm'),
     ('py:class', 'n'),
     ('py:class', '1'),
+    ('py:exc', 'NetworkXError'),
+    ('py:class', 'container'),
+    ('py:class', 'node'),
 ]
 
 # -- ReadTheDocs special wheel installation -----------------------------------

@@ -17,10 +17,10 @@ and how to implement new strategies or `behaviors` for the existing games:
 
 .. toctree::
 
-    Create a new game <tutorials/create_new_game>
-    Create new behaviors for existing games <tutorials/create_new_behaviors>
-    Apply analytical methods <tutorials/analytical_methods>
-    Apply numerical methods <tutorials/numerical_methods>
-    Visualizing results <tutorials/plotting>
-    Utility functions <tutorials/utility_functions>
+    Create a new game in Python <tutorials/create_new_python_game>
+    Create a new game in C++ and bind it to Python <tutorials/create_cpp_game>
+    Create new strategies/behaviors for existing games <tutorials/create_new_behaviors>
+    Use analytical methods <tutorials/analytical_methods>
+    Use numerical methods <tutorials/numerical_methods>
+    Visualize results <tutorials/plotting>
     References <tutorials/references>
