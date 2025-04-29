@@ -66,10 +66,35 @@ jobs:
 
       - name: Build docs
         run: |
-          sphinx-build -b html -n --keep-going docs build/html
+          sphinx-build -b html -n --keep-going docs docs/build/html
 
       - name: Upload docs as artifact
         uses: actions/upload-artifact@v4
         with:
           name: html-docs
           path: docs/build/html
+
+  deploy-docs:
+    name: Deploy to GitHub Pages
+    needs: build-docs
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_run'
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Download built HTML docs
+        uses: actions/download-artifact@v4
+        with:
+          name: html-docs
+          path: public
+
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          publish_branch: gh-pages
+          force_orphan: true
+
