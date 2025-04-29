@@ -63,8 +63,7 @@ jobs:
 
       - name: Build docs
         run: |
-          cd docs
-          make html SPHINXOPTS="--keep-going"
+          sphinx-build -b html -n --keep-going docs build/html
 
       - name: Upload docs as artifact
         uses: actions/upload-artifact@v4
