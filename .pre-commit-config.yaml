@@ -4,3 +4,13 @@ repos:
       hooks:
         -   id: check-manifest
             additional_dependencies: [setuptools, scikit-build, wheel, setuptools-scm]
+
+  - repo: https://github.com/psf/black
+    rev: 23.12.1  # or latest
+    hooks:
+      - id: black
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.12.0  # or latest
+    hooks:
+      - id: isort

@@ -21,7 +21,7 @@ class AbstractNPlayerGameExpectedPayoff(AbstractNPlayerGame):
 
     It assumes that you have at least the following attributes:
      1. And an attribute `self.nb_strategies_` which contains the number of strategies
-     that you are going to analyse for the given game.
+     that you are going to analyze for the given game.
      2. `self.payoffs()` returns a numpy.ndarray and contain the payoff matrix of the game. This array
      is of shape (self.nb_strategies(), self.nb_group_configurations()), where self.nb_group_configurations()
      is the number

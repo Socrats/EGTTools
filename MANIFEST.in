@@ -17,6 +17,12 @@ include conda-recipe/meta.yaml
 include conda-recipe/conda_build_config.yaml
 include install_dependencies.sh
 
+# Scripts
+include scripts/hooks/pre-push
+include scripts/hooks/post-merge
+include scripts/fix_vcpkg.sh
+include scripts/install_hooks.sh
+
 include CMakeLists.txt
 include requirements.txt
 graft cpp

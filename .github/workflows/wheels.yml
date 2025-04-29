@@ -14,7 +14,6 @@ on:
       - stable
       - actions*
       - docs
-      - fix_*
     tags:
       - v*
 
@@ -45,7 +44,7 @@ jobs:
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v2
         with:
-          cmake-version: '3.27.x'
+          cmake-version: 'latest'
 
       - name: Install system packages (OpenMP, BLAS/LAPACK)
         run: bash build_tools/github/install_blas_openmp.sh
@@ -122,10 +121,6 @@ jobs:
             platform_id: manylinux_x86_64
             manylinux_image: manylinux2014
             openmp_enabled: "ON"
-
-          - os: ubuntu-latest
-            platform_id: manylinux_aarch64
-            manylinux_image: manylinux2014
 
           - os: macos-13
             platform_id: macosx_x86_64

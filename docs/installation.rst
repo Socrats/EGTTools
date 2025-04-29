@@ -2,7 +2,7 @@ Installation
 ============
 
 From PyPi
-------
+---------
 
 EGTtools can be installed using PyPi on Linux, macOS, and Windows::
 
