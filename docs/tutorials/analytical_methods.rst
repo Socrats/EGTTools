@@ -161,7 +161,7 @@ The Markov chain described above can quickly become too complex for
 analytical description as the number of strategies, even for small population sizes.
 However, whenever in the limit where mutations are rare (:math:`\mu \rightarrow 0`) it is possible to approximate
 the complete stochastic process by a Markov chain with a number of states given by the number of strategies.
-In this small mutation limit (SML) :cite:p:`Fudenberg2006ImitationMutations,Imhof2005EvolutionaryDefection`,
+In this small mutation limit (SML) :cite:p:`Fudenberg2006ImitationMutations`,
 when a new strategy appears through mutation, one of two outcomes occurs long before the occurrence of a new mutation:
 either the population faces the fixation of a newly introduced strategy, or the mutant strategy goes extinct.
 
@@ -244,8 +244,3 @@ Hawk-Dove game:
     egt.plotting.indicators.plot_gradients(gradients[:, 0], figsize=(6,5),
                                        marker_facecolor='white',
                                        xlabel="frequency of hawks (k/Z)", marker="o", marker_size=30, marker_plot_freq=2)
-
-.. image:: ../images/hawk_dove_moran_gradient.pdf
-   :alt: Gradient of selection of a N-player Hawk Dove game
-   :align: center
-   :scale: 30%

@@ -14,6 +14,7 @@ sphinx-autodoc-typehints>=1.25.2
 pybind11>=2.10
 sphinxcontrib-bibtex>=2.6.1
 beautifulsoup4>=4.12.2
+pandoc
 
 # For ReadTheDocs artifacts
 gitpython>=3.1.31

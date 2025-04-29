@@ -53,6 +53,9 @@ extensions = [
     'sphinxcontrib.bibtex',
 ]
 
+napoleon_google_docstring = False
+napoleon_numpy_docstring = True
+
 # Enable automatic section labels
 autosectionlabel_prefix_document = True
 
