@@ -1,23 +1,24 @@
-Sphinx>=3.2.1
-sphinx_rtd_theme>=0.5.1
-sphinx-autodoc-typehints>1.12.0
-sphinxcontrib-bibtex>=2.5.0
-babel
-
-GitPython
-PyGithub
-requests
-
+# Install main project dependencies
 -r ../requirements.txt
 
+# Install example dependencies
+-r examples/requirements.txt
+
+# Sphinx and documentation tools
+sphinx>=7.2
+sphinx-rtd-theme>=2.0.0
+myst-parser>=2.0.0
+nbsphinx>=0.9.3
+sphinx-autodoc-typehints>=1.25.2
+pybind11>=2.10
+sphinxcontrib-bibtex>=2.6.1
+beautifulsoup4>=4.12.2
+
+# For ReadTheDocs artifacts
+gitpython>=3.1.31
+PyGithub>=1.58.0
+requests>=2.29.0
+
+# For Jupyter notebooks rendering inside docs
 ipykernel
 ipywidgets
-nbsphinx>=0.8.7
-recommonmark>=0.7.1
-beautifulsoup4
-pygments
-docutils
-prompt-toolkit
-
-
--r examples/requirements.txt
