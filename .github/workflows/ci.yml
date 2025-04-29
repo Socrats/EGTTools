@@ -6,6 +6,7 @@ on:
     branches:
       - master
       - develop
+      - fix_github_ci
   workflow_dispatch:
     inputs:
       debug_enabled:
@@ -20,53 +21,21 @@ jobs:
       matrix:
         include:
           - runs-on: ubuntu-latest
-            python: 3.8
-            arch: x64
-          - runs-on: ubuntu-latest
-            python: 3.9
-            arch: x64
+            python: "3.10"
+            openmp_enabled: "ON"
+            platform: linux-x86_64
 
-          - runs-on: ubuntu-latest
-            python: 3.9
-            arch: x64
-            gcc: 10
-            name-extra: ' (GCC 10)'
-#          - runs-on: ubuntu-latest
-#            python: 3.9
-#            arch: x64
-#            clang: 16
-#            name-extra: ' (Clang 16)'
-          - runs-on: ubuntu-latest
-            python: 3.9
-            arch: x64
-            release: true
-            name-extra: ' (Release)'
           - runs-on: macos-13
-            python: 3.8
-            arch: x64
-            name-extra: ' No OpenMP'
-          - runs-on: macos-13
-            python: 3.9
-            arch: x64
-            release: true
-            name-extra: ' No OpenMP (Release)'
-#          - runs-on: windows-latest
-#            python: 3.9
-#            arch: x64
-#            name-extra: ' No OpenMP (Release)'
-#          - runs-on: windows-latest
-#            python: 3.7
-#            arch: x86
-#            name-extra: ' (32-bit)'
+            python: "3.10"
+            openmp_enabled: "OFF"  # No OpenMP for easier documentation build
+            platform: macos-x86_64
 
-    name: Python ${{ matrix.python }}${{ matrix.name-extra }} • ${{ matrix.runs-on }}
+    name: Python ${{ matrix.python }} • ${{ matrix.runs-on }}
     runs-on: ${{ matrix.runs-on }}
-    if: startsWith(github.ref, 'refs/heads/docs') != true
-
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -74,91 +43,50 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
-          architecture: ${{ matrix.arch }}
 
-      - name: Setup CMake
-        uses: jwlawson/actions-setup-cmake@v2.0
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('tests/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install system dependencies Linux
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libomp-dev libeigen3-dev libboost-all-dev
+          echo "EGTTOOLS_EXTRA_CMAKE_ARGS=-DUSE_OPENMP=${{ matrix.openmp_enabled }}" >> $GITHUB_ENV
 
       - name: Install system dependencies macOS
         if: runner.os == 'macOS'
         run: |
           brew update
-          brew install eigen
-          echo "EIGEN=$(brew --prefix eigen)" >> $GITHUB_ENV
-          brew install gfortran
-          echo "GFORTRAN=$(brew --prefix gfortran)" >> $GITHUB_ENV
-          brew install openblas
-          echo "OPENBLAS=$(brew --prefix openblas)" >> $GITHUB_ENV
-          echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'" >> $GITHUB_ENV
-          brew install boost
-      - name: Install system dependencies Linux
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get install libomp-dev
-          sudo apt-get install libeigen3-dev
-          echo "Eigen3_DIR='/usr/include/eigen3'" >> $GITHUB_ENV
-          sudo apt-get install libboost-all-dev
-      - name: Install Eigen3 windows
-        if: runner.os == 'Windows'
-        run: |
-          curl.exe --output eigen-3.3.9.tar.gz --url https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
-          tar -zxvf eigen-3.3.9.tar.gz
-          ren eigen-3.3.9 Eigen3
-          move eigen3 "C:/Program Files (x86)/Eigen3"
-          echo "Eigen3_DIR='C:/Program Files (x86)/Eigen3'" >> $GITHUB_ENV
-          echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DSKIP_OPENMP:BOOL=TRUE'" >> $GITHUB_ENV
-          curl.exe --output boost_1_80_0.zip--url https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.zip
-          tar -zxvf boost_1_80_0.zip
-          ren boost_1_80_0 Boost
-          move Boost "C:/Program Files (x86)/Boost"
-          cd "C:/Program Files (x86)/Boost/boost"
-          .\bootstrap.bat
-          b2 -j8 toolset=msvc-14.0 --build-type=complete --libdir=C:\Boost\lib\x64 architecture=x86 address-model=64 install
-          
+          brew install eigen boost
+          echo "EGTTOOLS_EXTRA_CMAKE_ARGS=-DUSE_OPENMP=${{ matrix.openmp_enabled }}" >> $GITHUB_ENV
 
-      - name: Install requirements
+      - name: Install Python requirements
         run: |
-          python -m pip install --upgrade pip wheel setuptools build
-          python -m pip install --upgrade -r tests/requirements.txt
-
-      - name: Select GCC
-        if: matrix.gcc
-        shell: bash
-        run: |
-          echo "CC=gcc-${{ matrix.gcc }}" >> $GITHUB_ENV
-          echo "CXX=g++-${{ matrix.gcc }}" >> $GITHUB_ENV
-
-      - name: Select Clang
-        if: matrix.clang
-        shell: bash
-        run: |
-          echo "CC=clang-${{ matrix.clang }}" >> $GITHUB_ENV
-          echo "CXX=clang++-${{ matrix.clang }}" >> $GITHUB_ENV
-
-      - name: Setup pytest annotations
-        run: |
-          python -m pip install pytest-github-actions-annotate-failures
-
-      - name: Setup GCC annotations
-        uses: ammaraskar/gcc-problem-matcher@master
+          python -m pip install --upgrade pip setuptools wheel build
+          python -m pip install -r tests/requirements.txt
 
       - name: Configure
         shell: bash
         run: |
-          CMAKE_ARCH="${{ (runner.os == 'Windows' && matrix.arch == 'x86') && '-A Win32' || '' }}"
-          CMAKE_BUILD_TYPE="${{ matrix.release && 'Release' || 'Debug' }}"
-          cmake -S . -B build $CMAKE_ARCH -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE -DPython_EXECUTABLE="$(which python)"
+          cmake -S . -B build -DPython_EXECUTABLE="$(which python)" $EGTTOOLS_EXTRA_CMAKE_ARGS
 
       - name: Build and install
         run: |
-          python -m build
-          python -m pip install ./
+          cmake --build build --parallel
+          pip install .
+
       - name: Test
         run: |
           python build_tools/github/check_if_egttools_is_installed.py
-          python -m pytest tests -s --import-mode=importlib
+          pytest tests -s --import-mode=importlib
 
-      - name: Setup tmate session
+      - name: Setup tmate session (on failure)
         uses: mxschmitt/action-tmate@v3
         if: ${{ failure() && github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
         with:
@@ -170,45 +98,49 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v3
         with:
-          python-version: '3.8'
+          auto-update-conda: true
+          python-version: "3.10"
+          environment-file: docs/environment.yml
 
-      - name: Setup CMake
-        uses: jwlawson/actions-setup-cmake@v2.0
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('docs/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-      - name: Install system dependencies Linux
+      - name: Install system dependencies
         run: |
-          sudo apt-get install libomp-dev
-          sudo apt-get install libeigen3-dev
-          echo "Eigen3_DIR='/usr/include/eigen3'" >> $GITHUB_ENV
-          sudo apt-get install libboost-all-dev
+          sudo apt-get update
+          sudo apt-get install -y libomp-dev libeigen3-dev libboost-all-dev pandoc
+          echo "EGTTOOLS_EXTRA_CMAKE_ARGS=-DUSE_OPENMP=OFF" >> $GITHUB_ENV
 
-      - name: Install requirements
+      - name: Configure project
         run: |
-          pip install --upgrade pip wheel setuptools build
-          pip install --user -r docs/requirements.txt
-          sudo apt install pandoc
-      - name: Configure
-        shell: bash
+          cmake -S . -B build -DPython_EXECUTABLE="$(which python)" $EGTTOOLS_EXTRA_CMAKE_ARGS
+
+      - name: Build Python wheel and install
         run: |
-          cmake -S . -B build -DPython_EXECUTABLE="$(which python)"
-      - name: Build
-        run: |
-          python -m build
-          python -m pip install .
+          cmake --build build --parallel
+          pip install .
+
       - name: Build documentation
         run: |
-          python -m sphinx -M html docs docs/_build
-      - name: Check links
+          sphinx-build -b html docs docs/_build/html
+
+      - name: Check documentation links
         run: |
-          python -m sphinx -M linkcheck docs docs/_build
-      - name: Setup tmate session
+          sphinx-build -b linkcheck docs docs/_build/linkcheck
+
+      - name: Setup tmate session (on failure)
         uses: mxschmitt/action-tmate@v3
         if: ${{ failure() && github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
         with:
