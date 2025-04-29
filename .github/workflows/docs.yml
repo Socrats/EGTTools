@@ -57,7 +57,9 @@ jobs:
         run: pip install ./wheelhouse/*.whl
 
       - name: Install documentation dependencies
-        run: pip install .[docs] pandoc
+        run: |
+          pip install pandoc
+          pip install -r docs/requirements.txt
 
       - name: Build docs
         run: |
