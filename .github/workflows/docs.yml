@@ -9,7 +9,6 @@ on:
 
 jobs:
   build-docs:
-    name: Build HTML Documentation
     runs-on: ubuntu-latest
 
     steps:
@@ -22,29 +21,31 @@ jobs:
       - name: Authenticate GitHub CLI
         run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
-      - name: Determine triggering context
+      - name: Determine triggering event
         id: context
-        run: |
-          echo "EVENT_NAME=${{ github.event_name }}" >> $GITHUB_ENV
+        run: echo "EVENT_NAME=${{ github.event_name }}" >> $GITHUB_ENV
 
-      - name: Determine latest successful 'wheels.yml' run ID
+      - name: Get latest successful Wheels run ID (manual only)
         if: env.EVENT_NAME == 'workflow_dispatch'
-        id: get_run_id
+        id: get_manual_run_id
         run: |
-          run_id=$(gh run list --workflow="Build Wheels" --branch=main --json databaseId,status,conclusion \
+          run_id=$(gh run list --workflow="Wheels" --branch=main --json databaseId,status,conclusion \
             --jq '.[] | select(.status=="completed" and .conclusion=="success") | .databaseId' | head -n 1)
           echo "WHEEL_RUN_ID=$run_id" >> $GITHUB_ENV
 
-      - name: Download RTD wheel artifact from triggering run (workflow_run)
+      - name: Get triggering Wheels run ID (workflow_run)
         if: env.EVENT_NAME == 'workflow_run'
-        uses: actions/download-artifact@v4
-        with:
-          name: rtd-wheel
-          path: ./wheelhouse
-
-      - name: Download RTD wheel artifact from latest successful run (workflow_dispatch)
-        if: env.EVENT_NAME == 'workflow_dispatch'
+        id: get_triggered_run_id
         run: |
+          # Uses the SHA of the triggering workflow_run to find the matching Wheels run
+          sha="${{ github.event.workflow_run.head_sha }}"
+          run_id=$(gh run list --workflow="Wheels" --branch=main --json databaseId,headSha,status,conclusion \
+            --jq ".[] | select(.headSha==\"$sha\" and .status==\"completed\" and .conclusion==\"success\") | .databaseId" | head -n 1)
+          echo "WHEEL_RUN_ID=$run_id" >> $GITHUB_ENV
+
+      - name: Download RTD wheel artifact from matched Wheels run
+        run: |
+          echo "Downloading rtd-wheel artifact from run ID $WHEEL_RUN_ID"
           gh run download "$WHEEL_RUN_ID" -n rtd-wheel -D ./wheelhouse
 
       - name: Set up Python
@@ -58,12 +59,12 @@ jobs:
       - name: Install documentation dependencies
         run: pip install .[docs] pandoc
 
-      - name: Build Sphinx docs
+      - name: Build docs
         run: |
           cd docs
           make html SPHINXOPTS="--keep-going"
 
-      - name: Upload built docs as artifact
+      - name: Upload docs as artifact
         uses: actions/upload-artifact@v4
         with:
           name: html-docs
