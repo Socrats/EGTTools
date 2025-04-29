@@ -123,10 +123,6 @@ jobs:
             manylinux_image: manylinux2014
             openmp_enabled: "ON"
 
-          - os: ubuntu-latest
-            platform_id: manylinux_aarch64
-            manylinux_image: manylinux2014
-
           - os: macos-13
             platform_id: macosx_x86_64
             macosx_deployment_target: "13.0"
