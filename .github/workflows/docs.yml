@@ -56,6 +56,9 @@ jobs:
       - name: Install RTD wheel
         run: pip install ./wheelhouse/*.whl
 
+      - name: Install pandoc
+        run: sudo apt-get update && sudo apt-get install -y pandoc
+
       - name: Install documentation dependencies
         run: |
           pip install pandoc
