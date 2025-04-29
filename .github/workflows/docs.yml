@@ -2,7 +2,7 @@ name: Build Docs
 
 on:
   workflow_run:
-    workflows: [ "Build Wheels" ]
+    workflows: ["Wheels"]
     types:
       - completed
   workflow_dispatch:   # Allow manual triggering too
