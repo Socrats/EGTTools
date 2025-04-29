@@ -66,10 +66,14 @@ jobs:
           brew install eigen boost
           echo "EGTTOOLS_EXTRA_CMAKE_ARGS=-DUSE_OPENMP=${{ matrix.openmp_enabled }}" >> $GITHUB_ENV
 
-      - name: Install Python requirements
+      - name: Install local EGTtools first
         run: |
           python -m pip install --upgrade pip setuptools wheel build
-          python -m pip install -r tests/requirements.txt
+          pip install .
+
+      - name: Install testing requirements
+        run: |
+          pip install --no-deps -r tests/requirements.txt
 
       - name: Configure
         shell: bash
