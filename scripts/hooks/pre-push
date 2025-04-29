@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# -------------------------------------------------------------
+# Pre-push hook: Prevent pushing if vcpkg is missing or corrupted
+# -------------------------------------------------------------
+
+echo "[pre-push hook] Checking vcpkg integrity before push..."
+
+if [ ! -f "vcpkg/scripts/vcpkgTools.xml" ]; then
+  echo "[pre-push hook] ERROR: vcpkg is missing or incomplete!"
+  echo "Please run ./scripts/fix_vcpkg.sh before pushing."
+  exit 1
+fi
+
+echo "[pre-push hook] vcpkg OK. Proceeding with push."

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# -------------------------------------------------------------
+# Git hook to detect if vcpkg is dirty after merge and warn
+# -------------------------------------------------------------
+
+if [ -d "vcpkg" ]; then
+  if [ ! -f "vcpkg/scripts/vcpkgTools.xml" ]; then
+    echo "[post-merge hook] WARNING: vcpkg looks incomplete or corrupted!"
+    echo "Run ./scripts/fix_vcpkg.sh to fix."
+  fi
+fi
