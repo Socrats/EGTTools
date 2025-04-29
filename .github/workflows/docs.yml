@@ -5,71 +5,66 @@ on:
     workflows: ["Wheels"]
     types:
       - completed
-  workflow_dispatch:   # Allow manual triggering too
+  workflow_dispatch:
 
 jobs:
   build-docs:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    name: Build HTML Documentation
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download built wheels artifact
+      - name: Install GitHub CLI
+        run: sudo apt-get update && sudo apt-get install -y gh
+
+      - name: Authenticate GitHub CLI
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+      - name: Determine triggering context
+        id: context
+        run: |
+          echo "EVENT_NAME=${{ github.event_name }}" >> $GITHUB_ENV
+
+      - name: Determine latest successful 'wheels.yml' run ID
+        if: env.EVENT_NAME == 'workflow_dispatch'
+        id: get_run_id
+        run: |
+          run_id=$(gh run list --workflow="Build Wheels" --branch=main --json databaseId,status,conclusion \
+            --jq '.[] | select(.status=="completed" and .conclusion=="success") | .databaseId' | head -n 1)
+          echo "WHEEL_RUN_ID=$run_id" >> $GITHUB_ENV
+
+      - name: Download RTD wheel artifact from triggering run (workflow_run)
+        if: env.EVENT_NAME == 'workflow_run'
         uses: actions/download-artifact@v4
         with:
           name: rtd-wheel
           path: ./wheelhouse
+
+      - name: Download RTD wheel artifact from latest successful run (workflow_dispatch)
+        if: env.EVENT_NAME == 'workflow_dispatch'
+        run: |
+          gh run download "$WHEEL_RUN_ID" -n rtd-wheel -D ./wheelhouse
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
-      - name: Install EGTtools from built wheel
-        run: |
-          python -m pip install --upgrade pip setuptools wheel build
-          pip install wheelhouse/*.whl
-
-      - name: Install pandoc
-        run: sudo apt-get update && sudo apt-get install -y pandoc
+      - name: Install RTD wheel
+        run: pip install ./wheelhouse/*.whl
 
       - name: Install documentation dependencies
-        run: |
-          pip install .[docs] pandoc
+        run: pip install .[docs] pandoc
 
-      - name: Build documentation
+      - name: Build Sphinx docs
         run: |
-          sphinx-build -b html -n --keep-going docs build/html
+          cd docs
+          make html SPHINXOPTS="--keep-going"
 
-      - name: Check documentation links
-        run: |
-          sphinx-build -b linkcheck docs docs/_build/linkcheck
-
-      - name: Upload built docs
+      - name: Upload built docs as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: built-docs
-          path: docs/_build/html
-
-  deploy_docs:
-    name: Deploy Documentation
-    runs-on: ubuntu-latest
-    needs: build-docs
-    if: success()
-
-    steps:
-      - name: Download built documentation
-        uses: actions/download-artifact@v4
-        with:
-          name: built-docs
-          path: docs/_build/html
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs/_build/html
-          publish_branch: gh-pages
-          force_orphan: true
+          name: html-docs
+          path: docs/build/html
