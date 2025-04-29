@@ -214,7 +214,7 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: |
             SKIP_VCPKG=${{ matrix.skip_vcpkg }} EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=${{ matrix.openmp_enabled }}" MACOSX_DEPLOYMENT_TARGET=${{ matrix.macosx_deployment_target }}
           CIBW_ENVIRONMENT_WINDOWS: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
-          CIBW_BUILD: "cp310-${{ matrix.platform_id }} cp311-${{ matrix.platform_id }} cp312-${{ matrix.platform_id }} pp310-${{ matrix.platform_id }}"
+          CIBW_BUILD: "cp310-${{ matrix.platform_id }} cp311-${{ matrix.platform_id }} cp312-${{ matrix.platform_id }}"
           CIBW_BEFORE_ALL_LINUX: bash {package}/build_tools/github/install_blas_openmp.sh
           CIBW_BEFORE_ALL_MACOS: bash {package}/build_tools/github/install_blas_openmp.sh
           # Optionally for Windows too, if needed
