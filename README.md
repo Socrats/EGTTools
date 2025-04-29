@@ -1,155 +1,185 @@
 ![EGTtools](docs/images/logo-full.png)
 
-# Toolbox for Evolutionary Game Theory
+# EGTTools – Evolutionary Game Theory Toolbox
 
-[![PyPI version](https://badge.fury.io/py/egttools.svg)](https://badge.fury.io/py/egttools)
-[![Documentation Status](https://readthedocs.org/projects/egttools/badge/?version=latest)](https://egttools.readthedocs.io/en/latest/?badge=latest)
-[![Build](https://github.com/Socrats/EGTTools/actions/workflows/ci.yml/badge.svg)](https://github.com/Socrats/EGTTools/actions/workflows/ci.yml) [![Join the chat at https://gitter.im/EGTTools/community](https://badges.gitter.im/EGTTools/community.svg)](https://gitter.im/EGTTools/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![PyPI](https://img.shields.io/pypi/v/egttools)](https://pypi.org/project/egttools/)
+[![Docs](https://img.shields.io/badge/docs-ReadTheDocs-green)](https://egttools.readthedocs.io/)
+[![Live Docs](https://img.shields.io/badge/docs-latest-blue)](https://efernandez.eu/EGTTools/)
+[![Build Status](https://github.com/Socrats/EGTTools/actions/workflows/wheels.yml/badge.svg?branch=master)](https://github.com/Socrats/EGTTools/actions/workflows/wheels.yml)
+[![Gitter](https://badges.gitter.im/EGTTools/community.svg)](https://gitter.im/EGTTools/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Socrats/EGTTools/HEAD?labpath=docs%2Fexamples)
 [![DOI](https://zenodo.org/badge/242180332.svg)](https://zenodo.org/badge/latestdoi/242180332)
 
-[//]: # ([![PyPI Downloads]&#40;https://img.shields.io/pypi/dm/egttools.svg?label=PyPI%20downloads&#41;]&#40;https://pypi.org/project/egttools/&#41;)
+EGTTools is a modular toolbox for simulating and analyzing **evolutionary dynamics** in strategic environments. It
+combines **analytical methods** (replicator dynamics, fixation probabilities) and **numerical simulations** (Monte Carlo
+with parallel C++ backends) under a unified interface.
 
-**EGTtools** provides a centralized repository with analytical and numerical methods to study/model game theoretical
-problems under the Evolutionary Game Theory (EGT) framework.
+---
 
-This library is composed of two parts:
+## 📑 Table of Contents
 
-- a set of analytical methods implemented in Python 3
-- a set of computational methods implemented in C++ with (Python 3 bindings)
+Testing & Continuous Integration
 
-The second typed is used in cases where the state space is too big to solve analytically, and thus require estimating
-the model parameters through monte-carlo simulations. The C++ implementation provides optimized computational methods
-that can run in parallel in a reasonable time, while Python bindings make the methods easily accecible to a larger range
-of researchers.
+- [Features](#-features)
+- [Installation](#-installation)
+- [Platform Notes](#-platform-notes)
+- [Advanced Configuration](#-advanced-configuration-blas-openmp-vcpkg)
+- [Build from Source](#-build-from-source-with-vcpkg)
+- [Usage Examples](#-usage-examples)
+- [Documentation](#-documentation)
+- [Testing & CI](#-testing--continuous-integration)
+- [Citation](#-citation)
+- [License](#-license)
+- [Acknowledgements](#-acknowledgements)
+- [Caveats](#-caveats)
 
-## Table of Contents
+## 🚀 Features
 
-1. [Requirements](#requirements)
-2. [Downloading sources](#downloading-sources)
-3. [Examples of usage](#examples-of-usage)
-4. [Documentation](#documentation)
-5. [Caveats](#caveats)
-6. [Citing](#citing)
-7. [Licence](#licence)
-8. [Acknowledgements](#acknowledgements)
+- ✅ Replicator dynamics for 2-strategy and N-player games
+- ✅ Stochastic dynamics using the pairwise comparison rule
+- ✅ Numerical simulation of evolutionary processes in finite populations
+- ✅ Monte Carlo estimation of fixation probabilities and strategy distributions
+- ✅ OpenMP parallelization for large-scale simulations (Linux/macOS)
+- ✅ Modular game and strategy framework, extensible in both Python and C++
+- ✅ Visual tools for plotting gradients, stationary distributions, and simplex diagrams
+- ✅ Support for Boost, Eigen, and BLAS integration (configurable)
+- ✅ Cross-platform wheels (Linux, macOS, Windows; x86_64 and ARM64)
 
-## Requirements
+## 📦 Installation
 
-To be able to install EGTtools, you must have:
+EGTTools is distributed via PyPI and includes prebuilt wheels for major platforms:
 
-* A recent version of Linux (only tested on Ubuntu), MacOSX (Mojave or above) or Windows
-* [**CMake**](https://cmake.org) version 3.17 or higher
-* [**C++ 17**](https://en.cppreference.com/w/cpp/17)
-* [**Eigen**](https://eigen.tuxfamily.org/index.php?title=Main_Page) 3.3.*
-* [**Boost**](https://www.boost.org/) 1.80.*
-* **Python** 3.7 or higher
-* If you want support for parallel operations you should install [**OpenMP**](https://www.openmp.org)
-* Ideally, you should also install [**OpenBLAS**](https://www.openblas.net), which offers optimized implementations of
-  linear algebra kernels for several processor architectures, and install numpy and scipy versions that use it.
+| Platform        | Architectures         | Python Versions | OpenMP Supported |
+|-----------------|-----------------------|-----------------|------------------|
+| Linux (x86_64)  | x86_64                | 3.10 – 3.12     | ✅ Yes            |
+| macOS (x86/arm) | x86_64, arm64 (M1/M2) | 3.10 – 3.12     | ✅ Yes            |
+| Windows         | x86_64, arm64         | 3.10 – 3.12     | ❌ Not available  |
 
-**Eigen and Boost are now installed through vcpkg, which comes included as a submodule. You must initialise vcpkg by
-running
-`./vcpkg/bootstrap-vcpkg.sh` before building the project (see [vcpkg repo](https://github.com/microsoft/vcpkg) for more
-info).**
-
-**Note**: If you want to install EGTtools from a source distribution, you must initialize the environmental variable
-`VCPKG_PATH` to the path where you have vcpkg installed. This is necessary for the setup.py script to find the necessary
-libraries. You must also initialize the environmental variable `EGTTOOLS_EXTRA_CMAKE_ARGS` with the option
-`-DLIBOMP_PATH=<path_to_libomp>` if you
-want to compile with OpenMP.
-
-## Downloading sources
-
-When cloning the repository you should also clone the submodules so that pybind11 is downloaded. You can do that by
-running:
-
-```bash
-git clone --recurse-submodules -j8 https://github.com/Socrats/EGTTools.git
-```
-
-## Installation
-
-### With pip
-
-You can install `egttools` directly from PyPi with:
+### ▶️ Install with pip
 
 ```bash
 pip install egttools
 ```
 
-Currently, only the Linux build supports OpenMP parallelization for numerical simulations. This should normally be ok
-for most applications, since numerical simulations are heavy and should be run on High Power Computing (HPC) clusters
-which normally run Linux distributions.
+For a more reliable installation on macOS with conda-based environments:
 
-We are investigating how to provide support for OpenMP in both Windows and Mac. In the meantime, if you really want to
-run numerical simulations on either of the two platforms, you should follow the compilation instructions below and try
-to link OpenMP for your platform yourself. Please, if you manage to do so, open an issue or a pull request with your
-solutions.
+conda install numpy scipy matplotlib networkx seaborn
+pip install egttools --no-deps
 
-**Note**: For Apple M1 (arm64) you should install using ```pip install egttools --no-deps``` so that pip does not
-install the dependencies of the package. You should then install these dependencies through a virtual environment
-created with [miniforge](https://github.com/conda-forge/miniforge) (see [Caveats](#caveats) for more information on why
-this is necessary). Once you have miniforge installed you can do the following (assuming that you are in the base
-miniforge environment):
+---
 
-```bash
-conda create -n egtenv python=3.9
-conda activate egtenv
-conda install numpy
-conda install scipy
-conda install matplotlib
-conda install networkx
-conda install seaborn
-```
+## 🖥️ Platform Notes
 
-### Build from source
+### 🐧 Linux
 
-To build `egttools` from source follow the following steps.
+- OpenMP is fully supported and enabled by default.
+- Wheels are built with optimized BLAS/LAPACK and Boost.
+- Recommended for high-performance simulation runs.
 
-To **install all required packages** run:
+### 🍎 macOS (Intel or Apple Silicon)
+
+- Supported on both `x86_64` and `arm64`.
+- OpenMP is enabled by default and linked via `libomp`.
+- If using `conda`, prefer `miniforge` or `mambaforge` for ABI compatibility.
+- To skip dependency resolution and control packages manually:
 
 ```bash
-python -m venv egttools-env
-source egttools-env/bin/activate
-pip install -r requirements.txt
-```
+pip install egttools --no-deps
+conda install numpy scipy matplotlib networkx seaborn
+````
 
-Or with anaconda:
+### 🪟 Windows (x86_64 and ARM64)
 
-```bash
-conda env create -f environment.yml
-conda activate egttools-env
-```
+- Windows wheels are available for both Intel and ARM architectures.
+- OpenMP is currently not available on Windows.
+- Simulations will fall back to single-threaded mode.
+- BLAS/LAPACK can be enabled via conda or system libraries if building from source.
 
-Also, to make your virtual environment visible to jupyter:
+---
 
-```bash
-conda install ipykernel # or pip install ipykernel
-python -m ipykernel install --user --name=egttools-env
-```
+## ⚙️ Advanced Configuration (BLAS, OpenMP, vcpkg)
 
-You can **build EGTtools** in your virtual environment by running:
+The C++ backend of EGTTools supports several build-time options that can be toggled when building from source:
 
-```bash
-pip install build
-cd <path>
-python -m build
-```
+| Feature       | CMake Option               | Default          | Description                                     |
+|---------------|----------------------------|------------------|-------------------------------------------------|
+| OpenMP        | `-DEGTTOOLS_USE_OPENMP=ON` | ON (Linux/macOS) | Enables parallel computation for simulations    |
+| BLAS/LAPACK   | `-DEGTTOOLS_USE_BLAS=ON`   | OFF              | Enables matrix acceleration (e.g., OpenBLAS)    |
+| Use vcpkg     | `-DEGTTOOLS_USE_VCPKG=ON`  | ON               | Automatically fetches Boost and Eigen           |
+| Disable vcpkg | `-DEGTTOOLS_USE_VCPKG=OFF` |                  | Allows using system-provided libraries manually |
 
-Where ```<path>``` represents the path to the EGTtools folder. If you are running this while inside the EGTtools folder,
-then ```<path>``` is simply ```./```.
+### 🧰 When to disable vcpkg
 
-Finally, you can install EGTtools in **development** mode, this will allow the installation to update with new
-modifications to the package:
+You may want to disable `vcpkg` in CI environments or when using a distribution that provides all necessary dependencies
+system-wide. To do this:
 
 ```bash
-python -m pip install -e <path>
+cmake -DEGTTOOLS_USE_VCPKG=OFF .
 ```
 
-If you don't want development mode, you can skip the option ```-e```.
+In this case, you are responsible for ensuring that compatible versions of Boost and Eigen are available in your system
+paths.
 
-## Examples of usage
+---
+
+## 🔧 Build from Source (with vcpkg)
+
+To build EGTTools from source with all dependencies managed via `vcpkg`, run:
+
+```bash
+git clone --recurse-submodules https://github.com/Socrats/EGTTools.git
+cd EGTTools
+pip install .
+```
+
+To configure optional features manually, such as OpenMP or BLAS support:
+
+```bash
+cmake -DEGTTOOLS_USE_OPENMP=ON -DEGTTOOLS_USE_BLAS=ON -DEGTTOOLS_USE_VCPKG=OFF .
+make
+```
+
+If using `conda`, make sure to activate your environment first and ensure that Python, NumPy, and compiler toolchains
+are compatible.
+
+---
+## 🧪 Usage Examples
+
+### Calculate Gradient of Selection
+
+```python
+from egttools.analytical import PairwiseComparison
+from egttools.games import Matrix2PlayerGameHolder
+
+A = [[-0.5, 2], [0, 0]]
+game = Matrix2PlayerGameHolder(2, A)
+evolver = PairwiseComparison(100, game)
+
+gradient = evolver.calculate_gradient_of_selection(beta=1.0, state=[10, 90])
+```
+
+---
+
+### Estimate fixation probability numerically
+
+```python
+from egttools.numerical import PairwiseComparisonNumerical
+from egttools.games import Matrix2PlayerGameHolder
+
+A = [[-0.5, 2], [0, 0]]
+game = Matrix2PlayerGameHolder(2, A)
+numerical_evolver = PairwiseComparisonNumerical(game, population_size=100, cache=1_000_000)
+fp = numerical_evolver.estimate_fixation_probability(
+    index_invading_strategy=1,
+    index_resident_strategy=0,
+    nb_runs=500,
+    nb_generations=5000,
+    beta=1.0
+)
+```
+
+
+### More Examples of usage
 
 The [Analytical example](docs/examples/hawk_dove_dynamics.ipynb) is a jupyter notebook which analyses analytically the
 evolutionary dynamics in a (2-person, 2-actions, one-shot) Hawk-Dove game.
@@ -191,7 +221,7 @@ evolver = PairwiseComparison(population_size=Z, game=game)
 gradients = np.array([evolver.calculate_gradient_of_selection(beta, np.array([x, Z - x])) for x in range(Z + 1)])
 ```
 
-Afterwards, you can plot the results with:
+Afterward, you can plot the results with:
 
 ```python
 from egttools.plotting import plot_gradients
@@ -224,7 +254,7 @@ plt.show()
 
 ![Stationary distribution](docs/images/hawk_dove_analytical_full_sd.png)
 
-We can obtain the same results through numerical simulations. The error will depend on how many independent simulations
+We can get the same results through numerical simulations. The error will depend on how many independent simulations
 you perform and for how long you let the simulation run. While a future implementation will offer an adaptive method to
 vary these parameters depending on the variations between the estimated distributions, for the moment it is important
 that you let the simulation run for enough generations after it has achieved a steady state. Here is a comparison
@@ -345,37 +375,45 @@ plt.show()
 The same can be done for finite populations, with the added possibility to plot the stationary distribution inside the
 triangle (see [simplex plotting](docs/examples/plot_simplex.ipynb)
 and [simplified simplex plotting](docs/examples/plot_simplex_simplified.ipynb)
-for a more in depth examples).
+for a more in-depth example).
 
-## Documentation
+---
 
-The [analytical](src/egttools/analytical/sed_analytical.py) module contains classes and functions that you may use to
-investigate the evolutionary dynamics in N-player games. For now only the replicator dynamics (for infinite populations)
-and the Pairwise Comparison imitation process (for finite populations) are implemented.
+## 📚 Documentation
 
-When your state-space is too big (in finite populations), it might become computationally hard to solve the system
-analytically. Thus, we provide an efficient [numerical](cpp/src/egttools.cpp) module written in C++ and compiled to
-Python. You may use it to estimate the fixation probabilities and stationary distribution through Monte-Carlo
-simulations, or perform individual runs of the Moran process.
+- 📘 API Reference (ReadTheDocs): [https://egttools.readthedocs.io](https://egttools.readthedocs.io)
+- 🌍 Live Tutorial & Examples: [https://efernandez.eu/EGTTools/](https://efernandez.eu/EGTTools/)
 
-You can find more information in the [ReadTheDocs](https://egttools.readthedocs.io/en/latest/) documentation.
+You can find a full description of available games, strategies, and simulation methods, along with Jupyter notebooks and
+real-world use cases.
 
-### Caveats
+---
 
-1. On Apple M1 (arm64) you should install (for the moment) [miniforge](https://github.com/conda-forge/miniforge), create
-   a conda environment using it, and install EGTtools from the conda environment.
+## 🧪 Testing & Continuous Integration
 
-2. In MacOSX it is assumed that you have [Homebrew](https://brew.sh) installed.
-3. You should install libomp with homebrew ``brew install libomp`` if you want to have support for parallel operations (
-   there is a big difference in computation time).
+EGTTools uses GitHub Actions for full CI/CD automation:
 
-4. You **must** have Eigen 3.3.* installed.
+- 🧱 **`wheels.yml`** builds wheels for all platforms (Linux, macOS, Windows; x86_64 and arm64)
+- 📘 **`docs.yml`** builds documentation and deploys it to GitHub Pages and ReadTheDocs
+- ✅ Unit tests run with `pytest` and are included in each CI matrix build
+- 🧪 Python stub files are auto-generated from `pybind11` bindings for better typing support
 
-5. You **do not** need any of the above if you install EGTtools through ```pip install egttools --no-deps```. However,
-   on Apple M1 (arm64) you still need to install the dependencies through miniforge, since only there you can find a
-   scipy wheel that supports this architecture.
+To run tests locally:
 
-## Citing
+```bash
+pytest tests
+```
+
+You can also build and validate docs locally with:
+
+```bash
+cd docs
+make html
+```
+
+---
+
+## 📖 Citation
 
 If you use EGTtools in your publications, please cite it in the following way with bibtex:
 
@@ -414,12 +452,17 @@ And to cite the current version of EGTtools you can use:
 
 Moreover, you may find our article at [here](https://www.cell.com/iscience/pdf/S2589-0042(23)00496-0.pdf).
 
-## Licence
+---
 
-* EGTtools is released under the [GNU General Public Licence](LICENSE), version 3 or later.
-* [pybind11](https://github.com/pybind/pybind11) is released under [a BSD-style license](pybind11/LICENSE).
+## 📄 License
 
-## Acknowledgements
+EGTTools is released under the [GPLv3 or later](LICENSE).
+
+---
+
+## 🙏 Acknowledgements
+
+Developed and maintained by [Elias Fernández](https://efernandez.eu).
 
 * Great parts of this project have been possible thanks to the help of
   [Yannick Jadoul](https://github.com/YannickJadoul) author of
@@ -428,3 +471,15 @@ Moreover, you may find our article at [here](https://www.cell.com/iscience/pdf/S
   They are both great programmers and scientists, so it is always a good idea to check out their work.
 * EGTtools makes use of the amazing [pybind11](https://github.com/pybind/pybind11). library to provide a Python
   interface for optimized monte-carlo simulations written in C++.
+
+---
+
+## ⚠️ Caveats
+
+- On **Windows**, OpenMP is currently not supported. All simulations will run single-threaded.
+- On **macOS**, OpenMP is supported but performance may depend on the installed `libomp`. If using `conda`, make sure `llvm-openmp` is available.
+- Wheels are only built for **Python 3.10 – 3.12**.
+- Numerical simulations require large RAM allocations when using large population sizes or caching; ensure you configure the `cache` size accordingly.
+- Advanced users building from source should ensure Boost, Eigen, and BLAS/LAPACK libraries are compatible with their compiler toolchain.
+
+---
