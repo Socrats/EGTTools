@@ -286,9 +286,8 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel build
           pip install wheelhouse/*.whl
 
-      - name: Install documentation dependencies
-        run: |
-          python -m pip install -r docs/requirements.txt
+      - name: Install pandoc
+        run: sudo apt-get update && sudo apt-get install -y pandoc
 
       - name: Build documentation
         run: |
