@@ -1,0 +1,6 @@
+egttools.plotting.simplified.vectorized\_barycentric\_to\_xy\_coordinates
+=========================================================================
+
+.. currentmodule:: egttools.plotting.simplified
+
+.. autofunction:: vectorized_barycentric_to_xy_coordinates

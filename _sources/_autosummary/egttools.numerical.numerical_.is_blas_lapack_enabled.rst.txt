@@ -1,0 +1,6 @@
+egttools.numerical.numerical\_.is\_blas\_lapack\_enabled
+========================================================
+
+.. currentmodule:: egttools.numerical.numerical_
+
+.. autofunction:: is_blas_lapack_enabled

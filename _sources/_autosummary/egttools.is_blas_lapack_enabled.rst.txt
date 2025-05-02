@@ -1,0 +1,6 @@
+egttools.is\_blas\_lapack\_enabled
+==================================
+
+.. currentmodule:: egttools
+
+.. autofunction:: is_blas_lapack_enabled

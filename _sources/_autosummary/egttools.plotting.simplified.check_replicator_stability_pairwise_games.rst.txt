@@ -1,0 +1,6 @@
+egttools.plotting.simplified.check\_replicator\_stability\_pairwise\_games
+==========================================================================
+
+.. currentmodule:: egttools.plotting.simplified
+
+.. autofunction:: check_replicator_stability_pairwise_games

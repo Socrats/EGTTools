@@ -1,0 +1,32 @@
+egttools.behaviors.CPR.cpr\_strategies.FixedExtraction
+======================================================
+
+.. currentmodule:: egttools.behaviors.CPR.cpr_strategies
+
+.. autoclass:: FixedExtraction
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~FixedExtraction.get_extraction
+      ~FixedExtraction.get_payoff
+      ~FixedExtraction.is_commitment_validated
+      ~FixedExtraction.proposes_commitment
+      ~FixedExtraction.type
+      ~FixedExtraction.would_like_to_commit
+   
+   
+
+   
+   
+   

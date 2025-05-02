@@ -1,0 +1,40 @@
+egttools.numerical.structure.factories.NetworkGroup
+===================================================
+
+.. currentmodule:: egttools.numerical.structure.factories
+
+.. autoclass:: NetworkGroup
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~NetworkGroup.calculate_average_gradient_of_selection
+      ~NetworkGroup.calculate_average_gradient_of_selection_and_update_population
+      ~NetworkGroup.calculate_fitness
+      ~NetworkGroup.calculate_game_payoff
+      ~NetworkGroup.game
+      ~NetworkGroup.initialize
+      ~NetworkGroup.initialize_state
+      ~NetworkGroup.mean_population_state
+      ~NetworkGroup.nb_strategies
+      ~NetworkGroup.network
+      ~NetworkGroup.population_size
+      ~NetworkGroup.population_strategies
+      ~NetworkGroup.update_node
+      ~NetworkGroup.update_population
+   
+   
+
+   
+   
+   
