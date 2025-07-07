@@ -1,0 +1,37 @@
+egttools.games.abstract\_games.AbstractNPlayerGameExpectedPayoff
+================================================================
+
+.. currentmodule:: egttools.games.abstract_games
+
+.. autoclass:: AbstractNPlayerGameExpectedPayoff
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~AbstractNPlayerGameExpectedPayoff.calculate_fitness
+      ~AbstractNPlayerGameExpectedPayoff.calculate_payoffs
+      ~AbstractNPlayerGameExpectedPayoff.group_size
+      ~AbstractNPlayerGameExpectedPayoff.nb_group_configurations
+      ~AbstractNPlayerGameExpectedPayoff.nb_strategies
+      ~AbstractNPlayerGameExpectedPayoff.payoff
+      ~AbstractNPlayerGameExpectedPayoff.payoffs
+      ~AbstractNPlayerGameExpectedPayoff.play
+      ~AbstractNPlayerGameExpectedPayoff.save_payoffs
+      ~AbstractNPlayerGameExpectedPayoff.type
+      ~AbstractNPlayerGameExpectedPayoff.update_payoff
+   
+   
+
+   
+   
+   

@@ -1,0 +1,6 @@
+egttools.utils.calculate\_stationary\_distribution
+==================================================
+
+.. currentmodule:: egttools.utils
+
+.. autofunction:: calculate_stationary_distribution

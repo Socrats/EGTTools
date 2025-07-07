@@ -1,0 +1,32 @@
+egttools.behaviors.CPR.cpr\_strategies.NashExtraction
+=====================================================
+
+.. currentmodule:: egttools.behaviors.CPR.cpr_strategies
+
+.. autoclass:: NashExtraction
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~NashExtraction.get_extraction
+      ~NashExtraction.get_payoff
+      ~NashExtraction.is_commitment_validated
+      ~NashExtraction.proposes_commitment
+      ~NashExtraction.type
+      ~NashExtraction.would_like_to_commit
+   
+   
+
+   
+   
+   

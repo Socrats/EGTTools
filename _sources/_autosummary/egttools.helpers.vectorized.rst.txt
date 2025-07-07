@@ -1,0 +1,38 @@
+egttools.helpers.vectorized
+===========================
+
+.. automodule:: egttools.helpers.vectorized
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      barycentric_to_xy_coordinates
+      cpp_vectorized_replicator_equation_n_player
+      replicator_equation_n_player
+      vectorized_barycentric_to_xy_coordinates
+      vectorized_replicator_equation
+      vectorized_replicator_equation_n_player
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   

@@ -1,0 +1,6 @@
+egttools.show\_build\_info
+==========================
+
+.. currentmodule:: egttools
+
+.. autofunction:: show_build_info

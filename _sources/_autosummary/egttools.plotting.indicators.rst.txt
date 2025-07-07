@@ -1,0 +1,45 @@
+egttools.plotting.indicators
+============================
+
+.. automodule:: egttools.plotting.indicators
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      draw_invasion_diagram
+      plot_gradient
+      plot_gradients
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AutoMinorLocator
+   
+   
+
+   
+   
+   
+
+   
+   
+   

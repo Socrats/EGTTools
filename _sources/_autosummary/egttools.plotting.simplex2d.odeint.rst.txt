@@ -1,0 +1,6 @@
+egttools.plotting.simplex2d.odeint
+==================================
+
+.. currentmodule:: egttools.plotting.simplex2d
+
+.. autofunction:: odeint
