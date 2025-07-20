@@ -229,6 +229,7 @@ jobs:
           name: cibw-wheels-${{ matrix.os }}-${{ matrix.platform }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
 
+
       - name: Upload wheel for ReadTheDocs
         if: runner.os == 'Linux' && matrix.platform_id == 'manylinux_x86_64' && startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
         uses: actions/upload-artifact@v4
@@ -266,11 +267,17 @@ jobs:
     needs: [ build_sdist, build_wheels ]
 
     steps:
-      - name: Collect sdist and wheels
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          name: wheels
-          path: wheelhouse
+          path: all_artifacts
+
+      - name: Consolidate wheels and sdist
+        run: |
+          mkdir -p wheelhouse
+          find all_artifacts -name '*.whl' -exec cp {} wheelhouse/ \;
+          find all_artifacts -name '*.tar.gz' -exec cp {} wheelhouse/ \;
+
 
       - name: Get release name
         id: get_version
