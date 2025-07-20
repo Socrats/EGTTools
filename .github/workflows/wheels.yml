@@ -202,7 +202,7 @@ jobs:
           ./vcpkg/vcpkg install --x-binarycaching
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.23.3
+        uses: pypa/cibuildwheel@v3.0.1
         env:
           CIBW_ARCHS: all
           CIBW_ENVIRONMENT_LINUX: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
@@ -278,7 +278,7 @@ jobs:
           echo "::set-output name=version::${GITHUB_REF##refs/tags/v}"
 
       - name: Upload sdist and wheels to release
-        uses: ncipollo/release-action@v1.16.0
+        uses: ncipollo/release-action@v1.18.0
         with:
           name: ${{ steps.get_version.outputs.version }}
           draft: true
