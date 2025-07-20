@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres
 to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.14] - 20-07-2025
+
+### Added
+
+- Added support for building **universal macOS wheels** and **ARM builds** for Linux and Windows.
+- Added fallback logic to skip `OpenMP` when not supported (e.g., Windows/macOS universal).
+- Added automatic installation of dependencies via `vcpkg`, including caching and toolchain integration.
+- Introduced modular CMake configuration using `CMakePresets.json` and modular `EnableXXX.cmake` utilities.
+- Added `Dockerfile` to support containerized builds and local testing.
+- Implemented efficient factorial calculation in C++.
+
+### Changed
+
+- Refactored build system for maintainability and CI compatibility:
+    - CI workflows now support `cibuildwheel` v2.23.3 and manually triggered docs builds.
+    - Moved doc generation to separate `docs.yml` workflow and switched to `furo` theme.
+    - Enforced Python 3.10+ as the minimum supported version.
+- Improved README and build documentation.
+- Updated pybind11 and vcpkg submodules to latest versions.
+- Simplified `setup.py` and enforced proper `MACOSX_DEPLOYMENT_TARGET` across CI environments.
+- Made BLAS/LAPACK optional and adjusted linking strategy across platforms (including Accelerate on macOS).
+
+### Fixed
+
+- Fixed multiple CI build issues related to:
+    - `libomp` installation and linking.
+    - `vcpkg` initialization and caching.
+    - RTD (ReadTheDocs) upload and broken builds.
+- Fixed memory management bugs in `pybind11` bindings (e.g., garbage collection of `NDArray` objects).
+- Fixed initialization bugs in simulation state (deep copy and move semantics added to `sample_simplex` and related
+  methods).
+- Resolved `Boost` installation issues on some platforms.
+
 ## [0.1.13-patch5] - 22-11-2023
 
 ### Fixed
@@ -21,7 +54,8 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- Fixed segfault in `PairwiseComparisonNumerical` run method. when called using a `transient` period, the function surpass
+- Fixed segfault in `PairwiseComparisonNumerical` run method. when called using a `transient` period, the function
+  surpass
   the array index limit, thus causing a bad memory access and a segfault
 
 ### Added
