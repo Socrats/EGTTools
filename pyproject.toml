@@ -45,12 +45,12 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
     "Programming Language :: C++",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "Topic :: Scientific/Engineering :: Evolutionary Game Theory",
-    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 urls = { "Homepage" = "https://github.com/Socrats/EGTTools", "Bug Tracker" = "https://github.com/Socrats/EGTTools/issues", "Documentation" = "https://egttools.readthedocs.io/en/latest/" }
 keywords = ["evolutionary game theory", "EGT", "python", "library", "scientific computing"]
