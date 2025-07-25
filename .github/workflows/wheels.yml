@@ -202,7 +202,7 @@ jobs:
           ./vcpkg/vcpkg install --x-binarycaching
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.0.1
+        uses: pypa/cibuildwheel@v3.1.1
         env:
           CIBW_ARCHS: all
           CIBW_ENVIRONMENT_LINUX: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
