@@ -1,0 +1,6 @@
+egttools.analytical.utils.find\_roots
+=====================================
+
+.. currentmodule:: egttools.analytical.utils
+
+.. autofunction:: find_roots

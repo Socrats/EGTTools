@@ -1,0 +1,48 @@
+egttools.games.OneShotCRD
+=========================
+
+.. currentmodule:: egttools.games
+
+.. autoclass:: OneShotCRD
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~OneShotCRD.calculate_fitness
+      ~OneShotCRD.calculate_group_achievement
+      ~OneShotCRD.calculate_payoffs
+      ~OneShotCRD.calculate_population_group_achievement
+      ~OneShotCRD.nb_strategies
+      ~OneShotCRD.payoff
+      ~OneShotCRD.payoffs
+      ~OneShotCRD.play
+      ~OneShotCRD.save_payoffs
+      ~OneShotCRD.type
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~OneShotCRD.cost
+      ~OneShotCRD.endowment
+      ~OneShotCRD.group_achievement_per_group
+      ~OneShotCRD.group_size
+      ~OneShotCRD.min_nb_cooperators
+      ~OneShotCRD.nb_states
+      ~OneShotCRD.risk
+   
+   

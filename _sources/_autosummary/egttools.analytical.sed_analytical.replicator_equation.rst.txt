@@ -1,0 +1,6 @@
+egttools.analytical.sed\_analytical.replicator\_equation
+========================================================
+
+.. currentmodule:: egttools.analytical.sed_analytical
+
+.. autofunction:: replicator_equation

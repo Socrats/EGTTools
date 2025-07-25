@@ -1,0 +1,36 @@
+egttools.plotting.simplified.PairwiseComparison
+===============================================
+
+.. currentmodule:: egttools.plotting.simplified
+
+.. autoclass:: PairwiseComparison
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~PairwiseComparison.calculate_fixation_probability
+      ~PairwiseComparison.calculate_gradient_of_selection
+      ~PairwiseComparison.calculate_transition_and_fixation_matrix_sml
+      ~PairwiseComparison.calculate_transition_matrix
+      ~PairwiseComparison.game
+      ~PairwiseComparison.nb_states
+      ~PairwiseComparison.nb_strategies
+      ~PairwiseComparison.population_size
+      ~PairwiseComparison.pre_calculate_edge_fitnesses
+      ~PairwiseComparison.update_population_size
+   
+   
+
+   
+   
+   

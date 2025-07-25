@@ -1,0 +1,6 @@
+egttools.analytical.sed\_analytical.eig
+=======================================
+
+.. currentmodule:: egttools.analytical.sed_analytical
+
+.. autofunction:: eig

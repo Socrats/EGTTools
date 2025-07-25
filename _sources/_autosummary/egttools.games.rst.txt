@@ -1,0 +1,62 @@
+egttools.games
+==============
+
+.. automodule:: egttools.games
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AbstractGame
+      AbstractNPlayerGame
+      AbstractSpatialGame
+      AbstractTwoPLayerGame
+      CRDGame
+      CRDGameTU
+      CommonPoolResourceDilemma
+      CommonPoolResourceDilemmaCommitment
+      InformalRiskGame
+      Matrix2PlayerGameHolder
+      MatrixNPlayerGameHolder
+      NPlayerStagHunt
+      NormalFormGame
+      NormalFormNetworkGame
+      OneShotCRD
+      OneShotCRDNetworkGame
+      PGG
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. autosummary::
+      :toctree:
+      :template: custom-module-template.rst
+      :recursive:
+   
+      abstract_games
+      informal_risk
+      nonlinear_games
+      opinion_game
+      pgg
+   
+   

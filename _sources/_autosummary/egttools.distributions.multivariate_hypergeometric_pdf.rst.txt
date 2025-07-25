@@ -1,0 +1,6 @@
+egttools.distributions.multivariate\_hypergeometric\_pdf
+========================================================
+
+.. currentmodule:: egttools.distributions
+
+.. autofunction:: multivariate_hypergeometric_pdf

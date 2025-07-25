@@ -1,0 +1,33 @@
+egttools.behaviors.CPR
+======================
+
+.. automodule:: egttools.behaviors.CPR
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. autosummary::
+      :toctree:
+      :template: custom-module-template.rst
+      :recursive:
+   
+      abstract_cpr_strategy
+      cpr_strategies
+   
+   
