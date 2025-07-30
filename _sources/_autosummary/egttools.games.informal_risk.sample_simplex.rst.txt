@@ -1,0 +1,6 @@
+egttools.games.informal\_risk.sample\_simplex
+=============================================
+
+.. currentmodule:: egttools.games.informal_risk
+
+.. autofunction:: sample_simplex

@@ -1,0 +1,6 @@
+egttools.numerical.numerical\_.is\_openmp\_enabled
+==================================================
+
+.. currentmodule:: egttools.numerical.numerical_
+
+.. autofunction:: is_openmp_enabled

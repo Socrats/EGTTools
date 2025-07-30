@@ -1,0 +1,6 @@
+egttools.behaviors.opinion\_behaviors.opinion\_factory
+======================================================
+
+.. currentmodule:: egttools.behaviors.opinion_behaviors
+
+.. autofunction:: opinion_factory

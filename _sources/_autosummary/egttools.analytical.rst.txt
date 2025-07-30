@@ -1,0 +1,53 @@
+egttools.analytical
+===================
+
+.. automodule:: egttools.analytical
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      replicator_equation
+      replicator_equation_n_player
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      PairwiseComparison
+      StochDynamics
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. autosummary::
+      :toctree:
+      :template: custom-module-template.rst
+      :recursive:
+   
+      sed_analytical
+      utils
+   
+   

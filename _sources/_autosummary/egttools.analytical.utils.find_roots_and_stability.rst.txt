@@ -1,0 +1,6 @@
+egttools.analytical.utils.find\_roots\_and\_stability
+=====================================================
+
+.. currentmodule:: egttools.analytical.utils
+
+.. autofunction:: find_roots_and_stability

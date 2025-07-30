@@ -1,0 +1,52 @@
+egttools.analytical.sed\_analytical
+===================================
+
+.. automodule:: egttools.analytical.sed_analytical
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      calculate_nb_states
+      calculate_state
+      eig
+      replicator_equation
+      replicator_equation_n_player
+      sample_simplex
+      warn
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      StochDynamics
+      csr_matrix
+      lil_matrix
+      permutations
+   
+   
+
+   
+   
+   
+
+   
+   
+   

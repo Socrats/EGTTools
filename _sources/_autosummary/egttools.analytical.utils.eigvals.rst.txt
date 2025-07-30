@@ -1,0 +1,6 @@
+egttools.analytical.utils.eigvals
+=================================
+
+.. currentmodule:: egttools.analytical.utils
+
+.. autofunction:: eigvals

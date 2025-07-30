@@ -1,0 +1,32 @@
+egttools.behaviors.CPR.cpr\_strategies.HighExtraction
+=====================================================
+
+.. currentmodule:: egttools.behaviors.CPR.cpr_strategies
+
+.. autoclass:: HighExtraction
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~HighExtraction.get_extraction
+      ~HighExtraction.get_payoff
+      ~HighExtraction.is_commitment_validated
+      ~HighExtraction.proposes_commitment
+      ~HighExtraction.type
+      ~HighExtraction.would_like_to_commit
+   
+   
+
+   
+   
+   

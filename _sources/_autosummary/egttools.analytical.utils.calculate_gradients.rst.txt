@@ -1,0 +1,6 @@
+egttools.analytical.utils.calculate\_gradients
+==============================================
+
+.. currentmodule:: egttools.analytical.utils
+
+.. autofunction:: calculate_gradients

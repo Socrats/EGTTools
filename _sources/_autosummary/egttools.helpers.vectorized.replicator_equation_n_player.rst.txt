@@ -1,0 +1,6 @@
+egttools.helpers.vectorized.replicator\_equation\_n\_player
+===========================================================
+
+.. currentmodule:: egttools.helpers.vectorized
+
+.. autofunction:: replicator_equation_n_player

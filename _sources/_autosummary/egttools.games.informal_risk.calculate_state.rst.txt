@@ -1,0 +1,6 @@
+egttools.games.informal\_risk.calculate\_state
+==============================================
+
+.. currentmodule:: egttools.games.informal_risk
+
+.. autofunction:: calculate_state

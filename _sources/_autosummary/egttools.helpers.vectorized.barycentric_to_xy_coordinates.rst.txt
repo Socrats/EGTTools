@@ -1,0 +1,6 @@
+egttools.helpers.vectorized.barycentric\_to\_xy\_coordinates
+============================================================
+
+.. currentmodule:: egttools.helpers.vectorized
+
+.. autofunction:: barycentric_to_xy_coordinates

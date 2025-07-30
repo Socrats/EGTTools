@@ -1,0 +1,58 @@
+egttools.behaviors.NormalForm.TwoActions
+========================================
+
+.. automodule:: egttools.behaviors.NormalForm.TwoActions
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      ActionInertia
+      Cooperator
+      Defector
+      Detective
+      EpsilonGRIM
+      EpsilonTFT
+      GRIM
+      GenerousTFT
+      GradualTFT
+      ImperfectTFT
+      MemoryOneStrategy
+      Pavlov
+      Random
+      SuspiciousTFT
+      TFT
+      TFTT
+      TTFT
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. autosummary::
+      :toctree:
+      :template: custom-module-template.rst
+      :recursive:
+   
+      nfg_strategies
+   
+   
