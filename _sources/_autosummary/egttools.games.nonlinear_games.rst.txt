@@ -1,0 +1,48 @@
+egttools.games.nonlinear\_games
+===============================
+
+.. automodule:: egttools.games.nonlinear_games
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      calculate_state
+      sample_simplex
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AbstractCPRStrategy
+      AbstractNPlayerGame
+      CommonPoolResourceDilemma
+      CommonPoolResourceDilemmaCommitment
+      NPlayerStagHunt
+   
+   
+
+   
+   
+   
+
+   
+   
+   

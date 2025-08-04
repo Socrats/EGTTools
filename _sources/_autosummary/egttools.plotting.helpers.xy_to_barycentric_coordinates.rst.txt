@@ -1,0 +1,6 @@
+egttools.plotting.helpers.xy\_to\_barycentric\_coordinates
+==========================================================
+
+.. currentmodule:: egttools.plotting.helpers
+
+.. autofunction:: xy_to_barycentric_coordinates

@@ -1,0 +1,6 @@
+egttools.calculate\_strategies\_distribution
+============================================
+
+.. currentmodule:: egttools
+
+.. autofunction:: calculate_strategies_distribution

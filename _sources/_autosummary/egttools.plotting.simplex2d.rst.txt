@@ -1,0 +1,54 @@
+egttools.plotting.simplex2d
+===========================
+
+.. automodule:: egttools.plotting.simplex2d
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      add_arrow
+      barycentric_to_xy_coordinates
+      calculate_nb_states
+      find_where_point_is_in_simplex
+      odeint
+      perturb_state
+      perturb_state_discrete
+      sample_simplex
+      sample_unit_simplex
+      xy_to_barycentric_coordinates
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      Circle
+      Simplex2D
+      TypeVar
+   
+   
+
+   
+   
+   
+
+   
+   
+   

@@ -1,0 +1,6 @@
+egttools.plotting.helpers.calculate\_nb\_states
+===============================================
+
+.. currentmodule:: egttools.plotting.helpers
+
+.. autofunction:: calculate_nb_states
