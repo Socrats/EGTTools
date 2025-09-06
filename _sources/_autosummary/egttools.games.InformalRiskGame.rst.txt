@@ -1,0 +1,39 @@
+egttools.games.InformalRiskGame
+===============================
+
+.. currentmodule:: egttools.games
+
+.. autoclass:: InformalRiskGame
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~InformalRiskGame.calculate_fitness
+      ~InformalRiskGame.calculate_payoffs
+      ~InformalRiskGame.payoff
+      ~InformalRiskGame.play
+      ~InformalRiskGame.save_payoffs
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~InformalRiskGame.nb_strategies
+      ~InformalRiskGame.payoffs
+      ~InformalRiskGame.type
+   
+   

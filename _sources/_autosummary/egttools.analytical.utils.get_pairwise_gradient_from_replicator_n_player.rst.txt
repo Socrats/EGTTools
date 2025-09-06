@@ -1,0 +1,6 @@
+egttools.analytical.utils.get\_pairwise\_gradient\_from\_replicator\_n\_player
+==============================================================================
+
+.. currentmodule:: egttools.analytical.utils
+
+.. autofunction:: get_pairwise_gradient_from_replicator_n_player

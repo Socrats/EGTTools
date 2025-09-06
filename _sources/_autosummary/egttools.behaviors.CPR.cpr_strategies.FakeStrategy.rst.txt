@@ -1,0 +1,32 @@
+egttools.behaviors.CPR.cpr\_strategies.FakeStrategy
+===================================================
+
+.. currentmodule:: egttools.behaviors.CPR.cpr_strategies
+
+.. autoclass:: FakeStrategy
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~FakeStrategy.get_extraction
+      ~FakeStrategy.get_payoff
+      ~FakeStrategy.is_commitment_validated
+      ~FakeStrategy.proposes_commitment
+      ~FakeStrategy.type
+      ~FakeStrategy.would_like_to_commit
+   
+   
+
+   
+   
+   

@@ -1,0 +1,44 @@
+egttools.behaviors.CPR.abstract\_cpr\_strategy
+==============================================
+
+.. automodule:: egttools.behaviors.CPR.abstract_cpr_strategy
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      abstractmethod
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      ABC
+      AbstractCPRStrategy
+   
+   
+
+   
+   
+   
+
+   
+   
+   

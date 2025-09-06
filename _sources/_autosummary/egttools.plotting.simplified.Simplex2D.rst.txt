@@ -1,0 +1,52 @@
+egttools.plotting.simplified.Simplex2D
+======================================
+
+.. currentmodule:: egttools.plotting.simplified
+
+.. autoclass:: Simplex2D
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Simplex2D.add_axis
+      ~Simplex2D.add_colorbar
+      ~Simplex2D.add_edges_with_random_drift
+      ~Simplex2D.add_vertex_labels
+      ~Simplex2D.apply_simplex_boundaries_to_gradients
+      ~Simplex2D.draw_gradients
+      ~Simplex2D.draw_scatter_shadow
+      ~Simplex2D.draw_stationary_distribution
+      ~Simplex2D.draw_stationary_points
+      ~Simplex2D.draw_trajectories
+      ~Simplex2D.draw_trajectory_from_points
+      ~Simplex2D.draw_trajectory_from_roots
+      ~Simplex2D.draw_trajectory_from_vector
+      ~Simplex2D.draw_triangle
+      ~Simplex2D.get_figure_and_axis
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Simplex2D.corners
+      ~Simplex2D.refiner
+      ~Simplex2D.side_slope
+      ~Simplex2D.top_corner
+      ~Simplex2D.triangle
+      ~Simplex2D.trimesh
+   
+   

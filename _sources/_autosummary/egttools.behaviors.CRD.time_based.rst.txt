@@ -1,0 +1,36 @@
+egttools.behaviors.CRD.time\_based
+==================================
+
+.. automodule:: egttools.behaviors.CRD.time_based
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AbstractCRDStrategy
+      TimeBasedCRDStrategy
+   
+   
+
+   
+   
+   
+
+   
+   
+   

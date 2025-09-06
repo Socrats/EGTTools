@@ -1,0 +1,35 @@
+egttools.plotting.simplified.Matrix2PlayerGameHolder
+====================================================
+
+.. currentmodule:: egttools.plotting.simplified
+
+.. autoclass:: Matrix2PlayerGameHolder
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Matrix2PlayerGameHolder.calculate_fitness
+      ~Matrix2PlayerGameHolder.calculate_payoffs
+      ~Matrix2PlayerGameHolder.nb_strategies
+      ~Matrix2PlayerGameHolder.payoff
+      ~Matrix2PlayerGameHolder.payoffs
+      ~Matrix2PlayerGameHolder.play
+      ~Matrix2PlayerGameHolder.save_payoffs
+      ~Matrix2PlayerGameHolder.type
+      ~Matrix2PlayerGameHolder.update_payoff_matrix
+   
+   
+
+   
+   
+   

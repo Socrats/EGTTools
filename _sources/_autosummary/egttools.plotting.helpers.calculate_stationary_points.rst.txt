@@ -1,0 +1,6 @@
+egttools.plotting.helpers.calculate\_stationary\_points
+=======================================================
+
+.. currentmodule:: egttools.plotting.helpers
+
+.. autofunction:: calculate_stationary_points

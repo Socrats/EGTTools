@@ -1,0 +1,6 @@
+egttools.games.abstract\_games.calculate\_state
+===============================================
+
+.. currentmodule:: egttools.games.abstract_games
+
+.. autofunction:: calculate_state

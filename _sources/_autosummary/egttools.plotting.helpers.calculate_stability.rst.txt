@@ -1,0 +1,6 @@
+egttools.plotting.helpers.calculate\_stability
+==============================================
+
+.. currentmodule:: egttools.plotting.helpers
+
+.. autofunction:: calculate_stability

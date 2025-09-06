@@ -1,0 +1,46 @@
+egttools.games.informal\_risk
+=============================
+
+.. automodule:: egttools.games.informal_risk
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      calculate_nb_states
+      calculate_state
+      sample_simplex
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AbstractGame
+      InformalRiskGame
+   
+   
+
+   
+   
+   
+
+   
+   
+   

@@ -1,0 +1,50 @@
+egttools.games.CRDGameTU
+========================
+
+.. currentmodule:: egttools.games
+
+.. autoclass:: CRDGameTU
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~CRDGameTU.calculate_fitness
+      ~CRDGameTU.calculate_group_achievement
+      ~CRDGameTU.calculate_payoffs
+      ~CRDGameTU.calculate_polarization
+      ~CRDGameTU.calculate_polarization_success
+      ~CRDGameTU.calculate_population_group_achievement
+      ~CRDGameTU.nb_strategies
+      ~CRDGameTU.payoff
+      ~CRDGameTU.payoffs
+      ~CRDGameTU.play
+      ~CRDGameTU.save_payoffs
+      ~CRDGameTU.type
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CRDGameTU.endowment
+      ~CRDGameTU.group_size
+      ~CRDGameTU.min_rounds
+      ~CRDGameTU.nb_states
+      ~CRDGameTU.risk
+      ~CRDGameTU.strategies
+      ~CRDGameTU.target
+   
+   

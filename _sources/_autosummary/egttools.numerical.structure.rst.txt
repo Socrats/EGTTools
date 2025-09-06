@@ -1,0 +1,46 @@
+egttools.numerical.structure
+============================
+
+.. automodule:: egttools.numerical.structure
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AbstractStructure
+      Network
+      NetworkGroup
+      NetworkGroupSync
+      NetworkSync
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. autosummary::
+      :toctree:
+      :template: custom-module-template.rst
+      :recursive:
+   
+      factories
+   
+   

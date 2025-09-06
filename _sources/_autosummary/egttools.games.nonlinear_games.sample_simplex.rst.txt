@@ -1,0 +1,6 @@
+egttools.games.nonlinear\_games.sample\_simplex
+===============================================
+
+.. currentmodule:: egttools.games.nonlinear_games
+
+.. autofunction:: sample_simplex

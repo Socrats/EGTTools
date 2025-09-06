@@ -1,0 +1,40 @@
+egttools.numerical.structure.NetworkGroupSync
+=============================================
+
+.. currentmodule:: egttools.numerical.structure
+
+.. autoclass:: NetworkGroupSync
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~NetworkGroupSync.calculate_average_gradient_of_selection
+      ~NetworkGroupSync.calculate_average_gradient_of_selection_and_update_population
+      ~NetworkGroupSync.calculate_fitness
+      ~NetworkGroupSync.calculate_game_payoff
+      ~NetworkGroupSync.game
+      ~NetworkGroupSync.initialize
+      ~NetworkGroupSync.initialize_state
+      ~NetworkGroupSync.mean_population_state
+      ~NetworkGroupSync.nb_strategies
+      ~NetworkGroupSync.network
+      ~NetworkGroupSync.population_size
+      ~NetworkGroupSync.population_strategies
+      ~NetworkGroupSync.update_node
+      ~NetworkGroupSync.update_population
+   
+   
+
+   
+   
+   

@@ -1,0 +1,6 @@
+egttools.distributions.multinomial\_pmf
+=======================================
+
+.. currentmodule:: egttools.distributions
+
+.. autofunction:: multinomial_pmf

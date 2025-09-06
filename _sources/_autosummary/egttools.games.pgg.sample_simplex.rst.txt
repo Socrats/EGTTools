@@ -1,0 +1,6 @@
+egttools.games.pgg.sample\_simplex
+==================================
+
+.. currentmodule:: egttools.games.pgg
+
+.. autofunction:: sample_simplex

@@ -1,0 +1,50 @@
+egttools.numerical.structure.factories
+======================================
+
+.. automodule:: egttools.numerical.structure.factories
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      network_factory
+      network_group_factory
+      network_group_sync_factory
+      network_sync_factory
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AbstractSpatialGame
+      Network
+      NetworkGroup
+      NetworkGroupSync
+      NetworkSync
+   
+   
+
+   
+   
+   
+
+   
+   
+   

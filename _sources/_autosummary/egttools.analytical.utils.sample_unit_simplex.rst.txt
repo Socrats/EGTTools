@@ -1,0 +1,6 @@
+egttools.analytical.utils.sample\_unit\_simplex
+===============================================
+
+.. currentmodule:: egttools.analytical.utils
+
+.. autofunction:: sample_unit_simplex

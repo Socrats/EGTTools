@@ -1,0 +1,45 @@
+egttools.numerical
+==================
+
+.. automodule:: egttools.numerical
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      GeneralPopulationEvolver
+      NetworkEvolver
+      PairwiseComparisonNumerical
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. autosummary::
+      :toctree:
+      :template: custom-module-template.rst
+      :recursive:
+   
+      numerical_
+      structure
+   
+   

@@ -1,0 +1,6 @@
+egttools.numerical.structure.factories.network\_group\_factory
+==============================================================
+
+.. currentmodule:: egttools.numerical.structure.factories
+
+.. autofunction:: network_group_factory

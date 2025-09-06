@@ -1,0 +1,6 @@
+egttools.numerical.numerical\_.replicator\_equation
+===================================================
+
+.. currentmodule:: egttools.numerical.numerical_
+
+.. autofunction:: replicator_equation

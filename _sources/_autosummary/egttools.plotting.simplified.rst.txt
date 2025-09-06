@@ -1,0 +1,63 @@
+egttools.plotting.simplified
+============================
+
+.. automodule:: egttools.plotting.simplified
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      barycentric_to_xy_coordinates
+      calculate_nb_states
+      calculate_stability
+      check_if_there_is_random_drift
+      check_replicator_stability_pairwise_games
+      find_roots
+      find_roots_in_discrete_barycentric_coordinates
+      plot_pairwise_comparison_rule_dynamics_in_simplex
+      plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots
+      plot_replicator_dynamics_in_simplex
+      replicator_equation
+      replicator_equation_n_player
+      vectorized_barycentric_to_xy_coordinates
+      vectorized_replicator_equation
+      vectorized_replicator_equation_n_player
+      xy_to_barycentric_coordinates
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AbstractGame
+      Matrix2PlayerGameHolder
+      MatrixNPlayerGameHolder
+      NDArray
+      PairwiseComparison
+      Simplex2D
+   
+   
+
+   
+   
+   
+
+   
+   
+   

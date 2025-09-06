@@ -1,0 +1,6 @@
+egttools.utils.warn
+===================
+
+.. currentmodule:: egttools.utils
+
+.. autofunction:: warn

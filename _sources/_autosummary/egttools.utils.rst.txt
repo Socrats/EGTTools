@@ -1,0 +1,56 @@
+egttools.utils
+==============
+
+.. automodule:: egttools.utils
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      calculate_nb_unique_combinations
+      calculate_stationary_distribution
+      calculate_stationary_distribution_non_hermitian
+      combine
+      eigvals
+      find_saddle_type_and_gradient_direction
+      get_payoff_function
+      schur
+      transform_graph_to_dict_of_lists
+      transform_payoffs_to_pairwise
+      warn
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AbstractGame
+      Graph
+      csc_matrix
+      csr_matrix
+   
+   
+
+   
+   
+   
+
+   
+   
+   

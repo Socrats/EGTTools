@@ -1,0 +1,6 @@
+egttools.numerical.numerical\_.calculate\_nb\_states
+====================================================
+
+.. currentmodule:: egttools.numerical.numerical_
+
+.. autofunction:: calculate_nb_states

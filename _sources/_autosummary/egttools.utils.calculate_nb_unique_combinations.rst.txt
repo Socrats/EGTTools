@@ -1,0 +1,6 @@
+egttools.utils.calculate\_nb\_unique\_combinations
+==================================================
+
+.. currentmodule:: egttools.utils
+
+.. autofunction:: calculate_nb_unique_combinations

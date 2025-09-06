@@ -1,0 +1,43 @@
+egttools.analytical.StochDynamics
+=================================
+
+.. currentmodule:: egttools.analytical
+
+.. autoclass:: StochDynamics
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~StochDynamics.calculate_full_transition_matrix
+      ~StochDynamics.calculate_stationary_distribution
+      ~StochDynamics.fermi
+      ~StochDynamics.fitness_group
+      ~StochDynamics.fitness_pair
+      ~StochDynamics.fixation_probability
+      ~StochDynamics.full_fitness_difference_group
+      ~StochDynamics.full_fitness_difference_pairwise
+      ~StochDynamics.full_gradient_selection
+      ~StochDynamics.full_gradient_selection_without_mutation
+      ~StochDynamics.gradient_selection
+      ~StochDynamics.prob_increase_decrease
+      ~StochDynamics.prob_increase_decrease_with_mutation
+      ~StochDynamics.transition_and_fixation_matrix
+      ~StochDynamics.update_group_size
+      ~StochDynamics.update_payoffs
+      ~StochDynamics.update_population_size
+   
+   
+
+   
+   
+   

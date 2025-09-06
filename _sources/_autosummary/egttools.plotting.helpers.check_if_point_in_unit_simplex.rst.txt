@@ -1,0 +1,6 @@
+egttools.plotting.helpers.check\_if\_point\_in\_unit\_simplex
+=============================================================
+
+.. currentmodule:: egttools.plotting.helpers
+
+.. autofunction:: check_if_point_in_unit_simplex

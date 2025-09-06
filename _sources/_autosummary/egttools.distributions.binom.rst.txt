@@ -1,0 +1,6 @@
+egttools.distributions.binom
+============================
+
+.. currentmodule:: egttools.distributions
+
+.. autofunction:: binom

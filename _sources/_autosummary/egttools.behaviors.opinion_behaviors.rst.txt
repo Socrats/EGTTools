@@ -1,0 +1,43 @@
+egttools.behaviors.opinion\_behaviors
+=====================================
+
+.. automodule:: egttools.behaviors.opinion_behaviors
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      opinion_factory
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      Opinion
+   
+   
+
+   
+   
+   
+
+   
+   
+   

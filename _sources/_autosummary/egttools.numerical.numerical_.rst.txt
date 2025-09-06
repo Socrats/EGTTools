@@ -1,0 +1,56 @@
+egttools.numerical.numerical\_
+==============================
+
+.. automodule:: egttools.numerical.numerical_
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      calculate_nb_states
+      calculate_state
+      calculate_strategies_distribution
+      is_blas_lapack_enabled
+      is_openmp_enabled
+      replicator_equation
+      replicator_equation_n_player
+      sample_simplex
+      sample_simplex_directly
+      sample_unit_simplex
+      vectorized_replicator_equation_n_player
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      GeneralPopulationEvolver
+      NetworkEvolver
+      PairwiseComparison
+      PairwiseComparisonNumerical
+   
+   
+
+   
+   
+   
+
+   
+   
+   

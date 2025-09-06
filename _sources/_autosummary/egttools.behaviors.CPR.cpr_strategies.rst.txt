@@ -1,0 +1,53 @@
+egttools.behaviors.CPR.cpr\_strategies
+======================================
+
+.. automodule:: egttools.behaviors.CPR.cpr_strategies
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      fair_extraction
+      high_extraction
+      nash_extraction
+      payoff_no_commitment
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AbstractCPRStrategy
+      CommitmentStrategy
+      FairExtraction
+      FakeStrategy
+      FixedExtraction
+      FreeStrategy
+      HighExtraction
+      NashExtraction
+   
+   
+
+   
+   
+   
+
+   
+   
+   

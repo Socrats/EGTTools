@@ -1,0 +1,32 @@
+egttools.games.nonlinear\_games.AbstractCPRStrategy
+===================================================
+
+.. currentmodule:: egttools.games.nonlinear_games
+
+.. autoclass:: AbstractCPRStrategy
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~AbstractCPRStrategy.get_extraction
+      ~AbstractCPRStrategy.get_payoff
+      ~AbstractCPRStrategy.is_commitment_validated
+      ~AbstractCPRStrategy.proposes_commitment
+      ~AbstractCPRStrategy.type
+      ~AbstractCPRStrategy.would_like_to_commit
+   
+   
+
+   
+   
+   

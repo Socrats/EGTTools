@@ -1,0 +1,6 @@
+egttools.games.opinion\_game.moment
+===================================
+
+.. currentmodule:: egttools.games.opinion_game
+
+.. autofunction:: moment

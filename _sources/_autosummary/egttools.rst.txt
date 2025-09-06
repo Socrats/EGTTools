@@ -1,0 +1,56 @@
+﻿egttools
+========
+
+.. automodule:: egttools
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      calculate_nb_states
+      calculate_state
+      calculate_strategies_distribution
+      files
+      is_blas_lapack_enabled
+      is_openmp_enabled
+      sample_simplex
+      sample_unit_simplex
+      show_build_info
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. autosummary::
+      :toctree:
+      :template: custom-module-template.rst
+      :recursive:
+   
+      analytical
+      behaviors
+      datastructures
+      distributions
+      games
+      helpers
+      numerical
+      plotting
+      utils
+   
+   

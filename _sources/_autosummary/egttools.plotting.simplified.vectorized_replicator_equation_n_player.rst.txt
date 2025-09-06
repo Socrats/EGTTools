@@ -1,0 +1,6 @@
+egttools.plotting.simplified.vectorized\_replicator\_equation\_n\_player
+========================================================================
+
+.. currentmodule:: egttools.plotting.simplified
+
+.. autofunction:: vectorized_replicator_equation_n_player

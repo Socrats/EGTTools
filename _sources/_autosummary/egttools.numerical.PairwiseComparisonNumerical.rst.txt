@@ -1,0 +1,44 @@
+egttools.numerical.PairwiseComparisonNumerical
+==============================================
+
+.. currentmodule:: egttools.numerical
+
+.. autoclass:: PairwiseComparisonNumerical
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~PairwiseComparisonNumerical.estimate_fixation_probability
+      ~PairwiseComparisonNumerical.estimate_stationary_distribution
+      ~PairwiseComparisonNumerical.estimate_stationary_distribution_sparse
+      ~PairwiseComparisonNumerical.estimate_strategy_distribution
+      ~PairwiseComparisonNumerical.evolve
+      ~PairwiseComparisonNumerical.run
+      ~PairwiseComparisonNumerical.run_with_mutation
+      ~PairwiseComparisonNumerical.run_without_mutation
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~PairwiseComparisonNumerical.cache_size
+      ~PairwiseComparisonNumerical.nb_states
+      ~PairwiseComparisonNumerical.nb_strategies
+      ~PairwiseComparisonNumerical.payoffs
+      ~PairwiseComparisonNumerical.pop_size
+   
+   

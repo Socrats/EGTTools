@@ -1,0 +1,43 @@
+egttools.games.NormalFormGame
+=============================
+
+.. currentmodule:: egttools.games
+
+.. autoclass:: NormalFormGame
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~NormalFormGame.calculate_fitness
+      ~NormalFormGame.calculate_payoffs
+      ~NormalFormGame.expected_payoffs
+      ~NormalFormGame.nb_strategies
+      ~NormalFormGame.payoff
+      ~NormalFormGame.payoffs
+      ~NormalFormGame.play
+      ~NormalFormGame.save_payoffs
+      ~NormalFormGame.type
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NormalFormGame.nb_rounds
+      ~NormalFormGame.nb_states
+      ~NormalFormGame.strategies
+   
+   

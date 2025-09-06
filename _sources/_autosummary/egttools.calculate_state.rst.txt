@@ -1,0 +1,6 @@
+egttools.calculate\_state
+=========================
+
+.. currentmodule:: egttools
+
+.. autofunction:: calculate_state

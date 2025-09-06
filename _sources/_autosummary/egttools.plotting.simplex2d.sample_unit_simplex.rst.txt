@@ -1,0 +1,6 @@
+egttools.plotting.simplex2d.sample\_unit\_simplex
+=================================================
+
+.. currentmodule:: egttools.plotting.simplex2d
+
+.. autofunction:: sample_unit_simplex

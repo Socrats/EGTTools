@@ -1,0 +1,45 @@
+egttools.games.pgg
+==================
+
+.. automodule:: egttools.games.pgg
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      sample_simplex
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AbstractNPlayerGame
+      PGG
+      PGGOneShotStrategy
+   
+   
+
+   
+   
+   
+
+   
+   
+   
