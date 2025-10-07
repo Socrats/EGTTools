@@ -260,7 +260,9 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex(
     result = np.zeros(shape=(v_int.shape[1], v_int.shape[2], 3))
     for i in range(v_int.shape[1]):
         for j in range(v_int.shape[2]):
-            result[i, j, :] = evolver.calculate_gradient_of_selection(beta, v_int[:, i, j])
+            if not (v_int[:, i, j] < 0).any():
+                if v_int[:, i, j].sum() <= population_size:
+                    result[i, j, :] = evolver.calculate_gradient_of_selection(beta, v_int[:, i, j])
 
     result = result.swapaxes(0, 1).swapaxes(0, 2)
     xy_results = vectorized_barycentric_to_xy_coordinates(result, simplex.corners)
@@ -359,8 +361,9 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots(
     result = np.zeros(shape=(v_int.shape[1], v_int.shape[2], 3))
     for i in range(v_int.shape[1]):
         for j in range(v_int.shape[2]):
-            if v_int[:, i, j].sum() <= population_size:
-                result[i, j, :] = evolver.calculate_gradient_of_selection(beta, v_int[:, i, j])
+            if not (v_int[:, i, j] < 0).any():
+                if v_int[:, i, j].sum() <= population_size:
+                    result[i, j, :] = evolver.calculate_gradient_of_selection(beta, v_int[:, i, j])
 
     result = result.swapaxes(0, 1).swapaxes(0, 2)
     xy_results = vectorized_barycentric_to_xy_coordinates(result, simplex.corners)
