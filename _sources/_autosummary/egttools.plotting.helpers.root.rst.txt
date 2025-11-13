@@ -1,0 +1,6 @@
+egttools.plotting.helpers.root
+==============================
+
+.. currentmodule:: egttools.plotting.helpers
+
+.. autofunction:: root

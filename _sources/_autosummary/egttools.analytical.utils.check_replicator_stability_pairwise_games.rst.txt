@@ -1,0 +1,6 @@
+egttools.analytical.utils.check\_replicator\_stability\_pairwise\_games
+=======================================================================
+
+.. currentmodule:: egttools.analytical.utils
+
+.. autofunction:: check_replicator_stability_pairwise_games

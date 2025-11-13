@@ -1,0 +1,6 @@
+egttools.plotting.simplex2d.calculate\_nb\_states
+=================================================
+
+.. currentmodule:: egttools.plotting.simplex2d
+
+.. autofunction:: calculate_nb_states

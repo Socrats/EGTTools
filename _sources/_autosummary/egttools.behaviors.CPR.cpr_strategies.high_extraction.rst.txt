@@ -1,0 +1,6 @@
+egttools.behaviors.CPR.cpr\_strategies.high\_extraction
+=======================================================
+
+.. currentmodule:: egttools.behaviors.CPR.cpr_strategies
+
+.. autofunction:: high_extraction

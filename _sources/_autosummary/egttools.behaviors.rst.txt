@@ -1,0 +1,36 @@
+egttools.behaviors
+==================
+
+.. automodule:: egttools.behaviors
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. autosummary::
+      :toctree:
+      :template: custom-module-template.rst
+      :recursive:
+   
+      CPR
+      CRD
+      NormalForm
+      opinion_behaviors
+      pgg_behaviors
+   
+   

@@ -1,0 +1,29 @@
+egttools.behaviors.NormalForm.TwoActions.nfg\_strategies.MemoryOneStrategy
+==========================================================================
+
+.. currentmodule:: egttools.behaviors.NormalForm.TwoActions.nfg_strategies
+
+.. autoclass:: MemoryOneStrategy
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~MemoryOneStrategy.get_action
+      ~MemoryOneStrategy.is_stochastic
+      ~MemoryOneStrategy.type
+   
+   
+
+   
+   
+   

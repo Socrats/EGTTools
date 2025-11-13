@@ -1,0 +1,6 @@
+egttools.analytical.sed\_analytical.warn
+========================================
+
+.. currentmodule:: egttools.analytical.sed_analytical
+
+.. autofunction:: warn

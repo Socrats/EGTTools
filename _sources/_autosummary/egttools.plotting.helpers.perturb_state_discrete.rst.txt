@@ -1,0 +1,6 @@
+egttools.plotting.helpers.perturb\_state\_discrete
+==================================================
+
+.. currentmodule:: egttools.plotting.helpers
+
+.. autofunction:: perturb_state_discrete

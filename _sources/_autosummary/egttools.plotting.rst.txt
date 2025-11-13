@@ -1,0 +1,58 @@
+egttools.plotting
+=================
+
+.. automodule:: egttools.plotting
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      draw_invasion_diagram
+      plot_gradient
+      plot_gradients
+      plot_pairwise_comparison_rule_dynamics_in_simplex
+      plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots
+      plot_replicator_dynamics_in_simplex
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      Simplex2D
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. autosummary::
+      :toctree:
+      :template: custom-module-template.rst
+      :recursive:
+   
+      helpers
+      indicators
+      simplex2d
+      simplified
+   
+   
