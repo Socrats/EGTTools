@@ -51,7 +51,8 @@ void egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_
     const int nb_elements = population_size_ - 2;
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for default(none) shared(fitnesses, nb_strategies_, population_size_, game_, nb_elements, Eigen::Dynamic)
+#pragma omp parallel for default(none) shared(fitnesses, nb_strategies_, population_size_, game_, nb_elements, Eigen
+::Dynamic)
 #endif
     for (int i = 0; i < nb_strategies_; ++i) {
         VectorXui population_state = VectorXui::Zero(nb_strategies_);
@@ -97,37 +98,52 @@ void egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_
 }
 
 egttools::SparseMatrix2D
-egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_matrix(const double beta, const double mu) {
+egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_matrix(
+    const double beta,
+    const double mu) {
     if (beta < 0.0) {
         throw std::invalid_argument("beta must be >= 0");
     }
     if (mu < 0.0 || mu > 1.0) {
         throw std::invalid_argument("mu must be in [0,1]");
     }
-    if (nb_strategies_ < 2)
+    if (nb_strategies_ < 2) {
         throw std::invalid_argument("At least 2 strategies are required");
+    }
+
+    using StateScalar = typename VectorXui::Scalar;
+    using Triplet = Eigen::Triplet<double>;
 
     const int64_t S = nb_states_;
     const int k = nb_strategies_;
     const int N = population_size_;
+
+    if (N < 2) {
+        throw std::invalid_argument("Population size must be >= 2");
+    }
+
     const double one_minus_mu = 1.0 - mu;
-    const double mutation_probability = (k > 2) ? (mu / (k - 1)) : mu;
+    const double mutation_probability = (k > 2)
+                                            ? (mu / static_cast<double>(k - 1))
+                                            : mu;
 
-    std::vector<Eigen::Triplet<double> > trips;
-    // Rough upper bound: each row ~ k*(k-1) off-diagonals + 1 diagonal.
-    // (Over-estimate is fine; it only affects capacity, not correctness.)
-    trips.reserve(static_cast<size_t>(S) * (k * (k - 1) + 1));
+    const double inv_N = 1.0 / static_cast<double>(N);
+    const double inv_Nm1 = 1.0 / static_cast<double>(N - 1);
 
-    VectorXui current(k), next(k);
+    std::vector<Triplet> trips;
+    // Upper bound: at most k*(k-1) off-diagonal transitions + 1 diagonal per row.
+    trips.reserve(static_cast<size_t>(S) * static_cast<size_t>(k * (k - 1) + 1));
+
+    VectorXui current(k);
+    VectorXui next(k);
 
     for (int64_t row = 0; row < S; ++row) {
         sample_simplex(row, N, k, current);
-        next = current;
 
         bool monomorphic = false;
         int mono_idx = -1;
         for (int i = 0; i < k; ++i) {
-            if (current(i) == static_cast<size_t>(N)) {
+            if (current(i) == static_cast<StateScalar>(N)) {
                 monomorphic = true;
                 mono_idx = i;
                 break;
@@ -137,81 +153,105 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transitio
         double total_offdiag = 0.0;
 
         if (monomorphic) {
-            // Adjacent single-mutant neighbors: increase any other strategy by 1
             for (int i = 0; i < k; ++i) {
                 if (i == mono_idx) continue;
+
                 next = current;
                 next(mono_idx) -= 1;
                 next(i) += 1;
+
                 const int64_t col = static_cast<int64_t>(calculate_state(N, next));
-                trips.emplace_back(row, col, mutation_probability);
+                trips.emplace_back(static_cast<int>(row),
+                                   static_cast<int>(col),
+                                   mutation_probability);
                 total_offdiag += mutation_probability;
             }
-            const double diag = std::max(0.0, 1.0 - total_offdiag); // = 1 - mu
-            trips.emplace_back(row, row, diag);
+
+            double diag = 1.0 - total_offdiag;
+            if (diag < -1e-10) {
+                throw std::runtime_error("Transition matrix row sum exceeded 1 in monomorphic state.");
+            }
+            if (diag < 0.0) diag = 0.0;
+
+            trips.emplace_back(static_cast<int>(row),
+                               static_cast<int>(row),
+                               diag);
             continue;
         }
 
-        // Non-monomorphic rows
         for (int i = 0; i < k; ++i) {
-            // If we try to increase strategy i:
-            if (current(i) == static_cast<size_t>(N)) continue; // already handled by monomorphic
             next = current;
             next(i) += 1;
 
             if (current(i) == 0) {
-                // i can only increase via mutation from some j>0
+                // Strategy i can only increase through mutation from some strategy j.
                 for (int j = 0; j < k; ++j) {
                     if (j == i || current(j) == 0) continue;
+
                     next(j) -= 1;
+
                     const int64_t col = static_cast<int64_t>(calculate_state(N, next));
                     const double prob =
-                            (static_cast<double>(current(j)) / N) * mutation_probability;
+                            static_cast<double>(current(j)) * inv_N * mutation_probability;
+
                     if (prob > 0.0) {
-                        trips.emplace_back(row, col, prob);
+                        trips.emplace_back(static_cast<int>(row),
+                                           static_cast<int>(col),
+                                           prob);
                         total_offdiag += prob;
                     }
+
                     next(j) += 1;
                 }
             } else {
-                // i present: selection + mutation
                 const double f_i = calculate_fitness_(i, current);
+                const double selection_prefactor =
+                        one_minus_mu * static_cast<double>(current(i)) * inv_Nm1;
+
                 for (int j = 0; j < k; ++j) {
                     if (j == i || current(j) == 0) continue;
+
                     next(j) -= 1;
+
                     const int64_t col = static_cast<int64_t>(calculate_state(N, next));
                     const double f_j = calculate_fitness_(j, current);
 
-                    double sel = one_minus_mu *
-                                 (static_cast<double>(current(i)) / (N - 1)) *
-                                 fermi(beta, f_j, f_i);
-                    double prob = (static_cast<double>(current(j)) / N) *
-                                  (sel + mutation_probability);
+                    const double selection_probability =
+                            selection_prefactor * fermi(beta, f_j, f_i);
+
+                    const double prob =
+                            static_cast<double>(current(j)) * inv_N *
+                            (selection_probability + mutation_probability);
 
                     if (prob > 0.0) {
-                        trips.emplace_back(row, col, prob);
+                        trips.emplace_back(static_cast<int>(row),
+                                           static_cast<int>(col),
+                                           prob);
                         total_offdiag += prob;
                     }
+
                     next(j) += 1;
                 }
             }
-            // revert next(i) done implicitly by reassigning next each loop
         }
 
         double diag = 1.0 - total_offdiag;
-        if (diag < 0.0 && diag > -1e-12) diag = 0.0; // clamp tiny negatives
-        trips.emplace_back(row, row, diag);
+        if (diag < -1e-10) {
+            throw std::runtime_error("Transition matrix row sum exceeded 1.");
+        }
+        if (diag < 0.0) diag = 0.0;
+
+        trips.emplace_back(static_cast<int>(row),
+                           static_cast<int>(row),
+                           diag);
     }
 
-    SparseMatrix2D P(S, S);
-    // Eigen sums duplicates (if any) by default; you can also pass a combiner if you want custom behavior.
-    P.setFromTriplets(trips.begin(), trips.end());
-    P.makeCompressed();
-    P.prune(1e-16); // optional: drop tiny entries
+    SparseMatrix2D transition_matrix(S, S);
+    transition_matrix.setFromTriplets(trips.begin(), trips.end());
+    transition_matrix.makeCompressed();
 
-    return P;
+    return transition_matrix;
 }
-
 
 egttools::Vector egttools::FinitePopulations::analytical::PairwiseComparison::calculate_gradient_of_selection(
     const double beta, const Eigen::Ref<const VectorXui> &state) const {
@@ -285,7 +325,8 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fi
     return fixation_probability.convert_to<double>();
 }
 #else
-double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability(int index_invading_strategy, int index_resident_strategy, double beta) {
+double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability(
+    int index_invading_strategy, int index_resident_strategy, double beta) {
     double phi = 0;
     double prod = 1;
     double probability_increase, probability_decrease;
@@ -301,10 +342,15 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fi
         auto fitness_resident_strategy = calculate_fitness_(index_resident_strategy, population_state);
 
         // Calculate the probability that the invading strategy will increase
-        probability_increase = (static_cast<double>(population_state(index_resident_strategy)) / population_size_) * (static_cast<double>(i) / (population_size_ - 1));
-        probability_increase *= egttools::FinitePopulations::fermi(beta, fitness_resident_strategy, fitness_invading_strategy);
-        probability_decrease = (static_cast<double>(i) / population_size_) * (static_cast<double>(population_state(index_resident_strategy)) / (population_size_ - 1));
-        probability_decrease *= egttools::FinitePopulations::fermi(beta, fitness_invading_strategy, fitness_resident_strategy);
+        probability_increase = (static_cast<double>(population_state(index_resident_strategy)) / population_size_) * (
+                                   static_cast<double>(i) / (population_size_ - 1));
+        probability_increase *= egttools::FinitePopulations::fermi(beta, fitness_resident_strategy,
+                                                                   fitness_invading_strategy);
+        probability_decrease = (static_cast<double>(i) / population_size_) * (
+                                   static_cast<double>(population_state(index_resident_strategy)) / (
+                                       population_size_ - 1));
+        probability_decrease *= egttools::FinitePopulations::fermi(beta, fitness_invading_strategy,
+                                                                   fitness_resident_strategy);
 
         prod *= probability_decrease / probability_increase;
         phi += prod;
@@ -322,7 +368,8 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transitio
     Matrix2D fixation_probabilities = Matrix2D::Zero(nb_strategies_, nb_strategies_);
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for default(none) shared(beta, nb_strategies_, population_size_, transitions, fixation_probabilities)
+#pragma omp parallel for default(none) shared(beta, nb_strategies_, population_size_, transitions,
+    fixation_probabilities)
 #endif
     for (int i = 0; i < nb_strategies_; ++i) {
         double transition_stay = 1;
