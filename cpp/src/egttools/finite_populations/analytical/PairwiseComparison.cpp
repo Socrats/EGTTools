@@ -96,142 +96,125 @@ void egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_
     }
 }
 
-egttools::SparseMatrix2D egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_matrix(
-    const double beta, const double mu) {
-    // Check if beta is positive
-    if (beta < 0) {
-        throw std::invalid_argument(
-            "The intensity of selection beta must not be negative!");
+egttools::SparseMatrix2D
+egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_matrix(const double beta, const double mu) {
+    if (beta < 0.0) {
+        throw std::invalid_argument("beta must be >= 0");
     }
-    // First we initialize the container for the stationary distribution
-    auto transition_matrix = SparseMatrix2D(nb_states_, nb_states_);
-    // Then we sample a random population state
-    VectorXui current_state = VectorXui::Zero(nb_strategies_);
-    VectorXui new_state(current_state);
-
-    double not_mu = 1. - mu;
-    double mutation_probability;
-    if (nb_strategies_ > 2) {
-        mutation_probability = mu / (nb_strategies_ - 1);
-    } else {
-        mutation_probability = mu;
+    if (mu < 0.0 || mu > 1.0) {
+        throw std::invalid_argument("mu must be in [0,1]");
     }
+    if (nb_strategies_ < 2)
+        throw std::invalid_argument("At least 2 strategies are required");
 
-    // #pragma omp parallel for reduction(+ : transition_matrix) default(none) shared(beta, mu, not_mu, mutation_probability, nb_strategies_, population_size_)
-    for (int64_t current_state_index = 0; current_state_index < nb_states_; ++current_state_index) {
-        double total_probability = 0.;
+    const int64_t S = nb_states_;
+    const int k = nb_strategies_;
+    const int N = population_size_;
+    const double one_minus_mu = 1.0 - mu;
+    const double mutation_probability = (k > 2) ? (mu / (k - 1)) : mu;
 
-        // get current state
-        sample_simplex(current_state_index, population_size_, nb_strategies_,
-                       current_state);
+    std::vector<Eigen::Triplet<double> > trips;
+    // Rough upper bound: each row ~ k*(k-1) off-diagonals + 1 diagonal.
+    // (Over-estimate is fine; it only affects capacity, not correctness.)
+    trips.reserve(static_cast<size_t>(S) * (k * (k - 1) + 1));
 
-        // copy current state
-        new_state = current_state;
+    VectorXui current(k), next(k);
 
-        // First check if we are in a monomorphic state
-        // If that is the case, the probability of remaining in the current
-        // state is 1 - mu, and the probability of moving to any other
-        // adjacent state is mu/(nb_strategies - 1)
-        bool homomorphic = false;
-        for (int i = 0; i < nb_strategies_; ++i) {
-            if (current_state(i) == static_cast<size_t>(population_size_)) {
-                homomorphic = true;
-                new_state(i) -= 1;
+    for (int64_t row = 0; row < S; ++row) {
+        sample_simplex(row, N, k, current);
+        next = current;
+
+        bool monomorphic = false;
+        int mono_idx = -1;
+        for (int i = 0; i < k; ++i) {
+            if (current(i) == static_cast<size_t>(N)) {
+                monomorphic = true;
+                mono_idx = i;
                 break;
             }
         }
 
-        // We need now to look at all possible transitions
-        // That is all possible changes of 1 individual in the population
-        // This excludes strategies that are not currently present in the population
-        // (their count is zero)
-        for (int i = 0; i < nb_strategies_; ++i) {
-            // This will happen only when we are in a monomorphic state
-            if (current_state(i) == static_cast<size_t>(population_size_)) continue;
+        double total_offdiag = 0.0;
 
-            new_state(i) += 1;
+        if (monomorphic) {
+            // Adjacent single-mutant neighbors: increase any other strategy by 1
+            for (int i = 0; i < k; ++i) {
+                if (i == mono_idx) continue;
+                next = current;
+                next(mono_idx) -= 1;
+                next(i) += 1;
+                const int64_t col = static_cast<int64_t>(calculate_state(N, next));
+                trips.emplace_back(row, col, mutation_probability);
+                total_offdiag += mutation_probability;
+            }
+            const double diag = std::max(0.0, 1.0 - total_offdiag); // = 1 - mu
+            trips.emplace_back(row, row, diag);
+            continue;
+        }
 
-            if (homomorphic) {
-                auto new_state_index = egttools::FinitePopulations::calculate_state(population_size_, new_state);
-                // update transition matrix
+        // Non-monomorphic rows
+        for (int i = 0; i < k; ++i) {
+            // If we try to increase strategy i:
+            if (current(i) == static_cast<size_t>(N)) continue; // already handled by monomorphic
+            next = current;
+            next(i) += 1;
 
-                transition_matrix.coeffRef(current_state_index, static_cast<int64_t>(new_state_index)) =
-                        mutation_probability;
+            if (current(i) == 0) {
+                // i can only increase via mutation from some j>0
+                for (int j = 0; j < k; ++j) {
+                    if (j == i || current(j) == 0) continue;
+                    next(j) -= 1;
+                    const int64_t col = static_cast<int64_t>(calculate_state(N, next));
+                    const double prob =
+                            (static_cast<double>(current(j)) / N) * mutation_probability;
+                    if (prob > 0.0) {
+                        trips.emplace_back(row, col, prob);
+                        total_offdiag += prob;
+                    }
+                    next(j) += 1;
+                }
             } else {
-                // If the increasing strategy has currently 0 count, it can only
-                // increase through mutation
-                if (current_state(i) == 0) {
-                    for (int j = 0; j < nb_strategies_; ++j) {
-                        // if the strategy to decrease already has count 0
-                        // continue, or if we are tying to increase and decrease the same strategy
-                        if ((i == j) || (current_state(j) == 0))
-                            continue;
+                // i present: selection + mutation
+                const double f_i = calculate_fitness_(i, current);
+                for (int j = 0; j < k; ++j) {
+                    if (j == i || current(j) == 0) continue;
+                    next(j) -= 1;
+                    const int64_t col = static_cast<int64_t>(calculate_state(N, next));
+                    const double f_j = calculate_fitness_(j, current);
 
-                        new_state(j) -= 1;
-                        const auto new_state_index =
-                                calculate_state(population_size_, new_state);
+                    double sel = one_minus_mu *
+                                 (static_cast<double>(current(i)) / (N - 1)) *
+                                 fermi(beta, f_j, f_i);
+                    double prob = (static_cast<double>(current(j)) / N) *
+                                  (sel + mutation_probability);
 
-                        // calculate transition probability
-                        const double transition_probability =
-                                (static_cast<double>(current_state(j)) / population_size_) * mutation_probability;
-
-                        // update transition matrix
-                        transition_matrix.coeffRef(current_state_index, static_cast<int64_t>(new_state_index)) =
-                                transition_probability;
-
-                        total_probability += transition_probability;
-                        new_state(j) += 1;
+                    if (prob > 0.0) {
+                        trips.emplace_back(row, col, prob);
+                        total_offdiag += prob;
                     }
-                } else {
-                    // calculate fitness of the increasing strategy
-                    const auto fitness_increase = calculate_fitness_(i, current_state);
-
-                    for (int j = 0; j < nb_strategies_; ++j) {
-                        // if the strategy to decrease already has count 0
-                        // continue, or if we are tying to increase and decrease the same strategy
-                        if ((i == j) || (current_state(j) == 0))
-                            continue;
-
-                        new_state(j) -= 1;
-                        auto new_state_index =
-                                calculate_state(population_size_, new_state);
-
-                        // calculate fitness of the decreasing strategy
-                        const auto fitness_decrease = calculate_fitness_(j, current_state);
-
-                        // calculate transition probability
-                        double transition_probability =
-                                not_mu * (static_cast<double>(current_state(i)) / (population_size_ - 1));
-                        transition_probability *= fermi(
-                            beta, fitness_decrease, fitness_increase);
-                        transition_probability =
-                                (static_cast<double>(current_state(j)) / population_size_) * (
-                                    transition_probability + mutation_probability);
-
-                        // update transition matrix
-                        transition_matrix.coeffRef(current_state_index, static_cast<int64_t>(new_state_index)) =
-                                transition_probability;
-
-                        total_probability += transition_probability;
-                        new_state(j) += 1;
-                    }
+                    next(j) += 1;
                 }
             }
-            new_state(i) -= 1;
+            // revert next(i) done implicitly by reassigning next each loop
         }
-        // update transition matrix with probability of staying in the current state
-        if (homomorphic) {
-            transition_matrix.coeffRef(current_state_index, current_state_index) = not_mu;
-        } else {
-            transition_matrix.coeffRef(current_state_index, current_state_index) = 1 - total_probability;
-        }
+
+        double diag = 1.0 - total_offdiag;
+        if (diag < 0.0 && diag > -1e-12) diag = 0.0; // clamp tiny negatives
+        trips.emplace_back(row, row, diag);
     }
 
-    return transition_matrix;
+    SparseMatrix2D P(S, S);
+    // Eigen sums duplicates (if any) by default; you can also pass a combiner if you want custom behavior.
+    P.setFromTriplets(trips.begin(), trips.end());
+    P.makeCompressed();
+    P.prune(1e-16); // optional: drop tiny entries
+
+    return P;
 }
 
+
 egttools::Vector egttools::FinitePopulations::analytical::PairwiseComparison::calculate_gradient_of_selection(
-    const double beta, const Eigen::Ref<const VectorXui> &state) {
+    const double beta, const Eigen::Ref<const VectorXui> &state) const {
     // The gradient of selection can be calculated by summing all
     // transition incoming transition probabilities and resting all
     // outgoing transition probabilities.

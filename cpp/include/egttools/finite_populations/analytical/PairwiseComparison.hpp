@@ -105,7 +105,7 @@ namespace egttools::FinitePopulations::analytical {
          * @param state : VectorXui containing the counts of each strategy in the population
          * @return Vector of nb_strategies dimensions containing the gradient of selection.
          */
-        Vector calculate_gradient_of_selection(double beta, const Eigen::Ref<const VectorXui> &state);
+        Vector calculate_gradient_of_selection(double beta, const Eigen::Ref<const VectorXui> &state) const;
 
         /**
          * @brief Calculates the fixation probability of an invading strategy in a population o resident strategy.
