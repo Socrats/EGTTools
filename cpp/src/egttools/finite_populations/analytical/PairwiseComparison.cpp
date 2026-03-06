@@ -18,6 +18,14 @@
 
 #include <egttools/finite_populations/analytical/PairwiseComparison.hpp>
 
+namespace {
+    inline std::uint64_t make_fitness_cache_key(const int64_t state_index,
+                                                const int strategy_index) {
+        return (static_cast<std::uint64_t>(state_index) << 32) |
+               static_cast<std::uint32_t>(strategy_index);
+    }
+} // namespace
+
 egttools::FinitePopulations::analytical::PairwiseComparison::PairwiseComparison(int population_size,
     AbstractGame &game) : population_size_(population_size),
                           cache_size_(100),
@@ -51,8 +59,7 @@ void egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_
     const int nb_elements = population_size_ - 2;
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for default(none) shared(fitnesses, nb_strategies_, population_size_, game_, nb_elements, Eigen
-::Dynamic)
+#pragma omp parallel for default(none) shared(fitnesses, nb_strategies_, population_size_, game_, nb_elements, Eigen::Dynamic)
 #endif
     for (int i = 0; i < nb_strategies_; ++i) {
         VectorXui population_state = VectorXui::Zero(nb_strategies_);
@@ -83,10 +90,12 @@ void egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_
                 population_state(i) = z;
                 population_state(j) = population_size_ - z;
                 // add fitness value to cache
-                std::stringstream result;
-                result << population_state;
-                std::string key1 = std::to_string(i) + result.str();
-                std::string key2 = std::to_string(j) + result.str();
+                const int64_t state_index =
+                        static_cast<int64_t>(calculate_state(
+                            population_size_, population_state));
+
+                const auto key1 = make_fitness_cache_key(state_index, i);
+                const auto key2 = make_fitness_cache_key(state_index, j);
 
                 cache_.put(key1, fitnesses(i, j * nb_elements + (z - 1)));
                 cache_.put(key2, fitnesses(j, i * nb_elements + (population_size_ - z - 1)));
@@ -204,7 +213,7 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transitio
                     next(j) += 1;
                 }
             } else {
-                const double f_i = calculate_fitness_(i, current);
+                const double f_i = calculate_fitness_(i, current, row);
                 const double selection_prefactor =
                         one_minus_mu * static_cast<double>(current(i)) * inv_Nm1;
 
@@ -214,7 +223,7 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transitio
                     next(j) -= 1;
 
                     const int64_t col = static_cast<int64_t>(calculate_state(N, next));
-                    const double f_j = calculate_fitness_(j, current);
+                    const double f_j = calculate_fitness_(j, current, row);
 
                     const double selection_probability =
                             selection_prefactor * fermi(beta, f_j, f_i);
@@ -299,9 +308,15 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fi
         population_state(index_invading_strategy) = i;
         population_state(index_resident_strategy) = population_size_ - i;
 
+        const int64_t state_index =
+                static_cast<int64_t>(egttools::FinitePopulations::calculate_state(
+                    population_size_, population_state));
+
         // calculate fitness of invading strategy
-        const auto fitness_invading_strategy = calculate_fitness_(index_invading_strategy, population_state);
-        const auto fitness_resident_strategy = calculate_fitness_(index_resident_strategy, population_state);
+        const auto fitness_invading_strategy = calculate_fitness_(index_invading_strategy, population_state,
+                                                                  state_index);
+        const auto fitness_resident_strategy = calculate_fitness_(index_resident_strategy, population_state,
+                                                                  state_index);
 
         // Calculate the probability that the invading strategy will increase
         cpp_dec_float_100 probability_increase = (static_cast<double>(population_size_ - i) / population_size_) * (
@@ -368,8 +383,7 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transitio
     Matrix2D fixation_probabilities = Matrix2D::Zero(nb_strategies_, nb_strategies_);
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for default(none) shared(beta, nb_strategies_, population_size_, transitions,
-    fixation_probabilities)
+#pragma omp parallel for default(none) shared(beta, nb_strategies_, population_size_, transitions, fixation_probabilities)
 #endif
     for (int i = 0; i < nb_strategies_; ++i) {
         double transition_stay = 1;
@@ -452,24 +466,21 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_lo
 }
 
 double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fitness_(
-    const int &strategy_index, VectorXui &state) {
-    double fitness;
-    std::stringstream result;
-    result << state;
+    const int strategy_index,
+    const VectorXui &state,
+    const int64_t state_index) {
+    const auto key = make_fitness_cache_key(state_index, strategy_index);
 
-    const std::string key = std::to_string(strategy_index) + result.str();
-
-    // First we check if fitness value is in the lookup table
     if (const auto value = cache_.get(key); value) {
-        fitness = *value;
-    } else {
-        state(strategy_index) -= 1;
-        fitness = game_.calculate_fitness(strategy_index, population_size_, state);
-        state(strategy_index) += 1;
-
-        // Finally we store the new fitness in the Cache. We also keep a Cache for the payoff given each group combination
-        cache_.put(key, fitness);
+        return *value;
     }
 
+    VectorXui tmp(state);
+    tmp(strategy_index) -= 1;
+
+    const double fitness =
+            game_.calculate_fitness(strategy_index, population_size_, tmp);
+
+    cache_.put(key, fitness);
     return fitness;
 }

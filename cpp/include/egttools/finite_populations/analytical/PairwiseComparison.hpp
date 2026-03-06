@@ -20,16 +20,10 @@
 #define EGTTOOLS_FINITEPOPULATIONS_ANALYTICAL_PAIRWISECOMPARISON_HPP
 
 #include <egttools/Distributions.h>
-#include <egttools/SeedGenerator.h>
 #include <egttools/Types.h>
 
-#include <cmath>
 #include <egttools/utils/ThreadSafeLRUCache.hpp>
-#include <egttools/finite_populations/Utils.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
-#include <egttools/finite_populations/games/Matrix2PlayerGameHolder.hpp>
-#include <egttools/finite_populations/games/MatrixNPlayerGameHolder.hpp>
-#include <stdexcept>
 #include <tuple>
 
 #if (HAS_BOOST)
@@ -45,7 +39,8 @@ namespace egttools::FinitePopulations::analytical {
 #if (HAS_BOOST)
     using cpp_dec_float_100 = boost::multiprecision::cpp_dec_float_100;
 #endif
-    using Cache = egttools::Utils::ThreadSafeLRUCache<std::string, double>;
+    using FitnessCacheKey = std::uint64_t;
+    using Cache = egttools::Utils::ThreadSafeLRUCache<FitnessCacheKey, double>;
 
     /**
      * @brief Provides analytical methods to study evolutionary dynamics in finite populations
@@ -180,7 +175,9 @@ namespace egttools::FinitePopulations::analytical {
         inline double calculate_local_gradient_(int decreasing_strategy, int increasing_strategy, double beta,
                                                 VectorXui &state) const;
 
-        inline double calculate_fitness_(const int &strategy_index, VectorXui &state);
+        inline double calculate_fitness_(int strategy_index,
+                                         const VectorXui &state,
+                                         int64_t state_index);
     };
 } // namespace egttools::FinitePopulations::analytical
 
