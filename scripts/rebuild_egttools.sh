@@ -4,26 +4,21 @@ set -euo pipefail
 usage() {
   cat <<'USAGE'
 Usage:
-  rebuild_egttools.sh [--python /path/to/python] [--clone-if-missing] /path/to/EGTTools [git-ref]
+  rebuild_egttools.sh /path/to/EGTTools [git-ref]
 
 Arguments:
   /path/to/EGTTools   Path to the local EGTTools source tree.
   [git-ref]           Optional git branch, tag, or commit to check out before rebuilding.
 
-Options:
-  --python PATH       Python executable to use for all checks and installation.
-  --clone-if-missing  Clone EGTTools into the given path if it does not exist yet.
-  -h, --help          Show this help message.
-
 What this script does:
   - checks required external tools
   - checks Python package requirements declared by EGTTools
   - checks that vcpkg exists inside EGTTools
-  - checks for OpenMP references and warns about ambiguous hard-coded library paths
+  - checks for OpenMP references and warns about suspicious hard-coded library paths
   - checks the local git state before attempting any fetch/pull
   - updates the git checkout and submodules when it is safe to do so
   - bootstraps vcpkg if available
-  - builds and installs EGTTools into the selected Python interpreter
+  - builds and installs EGTTools into the current Python interpreter
   - prints where the package is being installed
 
 What this script does NOT do:
@@ -51,11 +46,28 @@ prompt_yes_no() {
   done
 }
 
-warn_merge_then_exit() {
-  echo "WARNING: There appear to be merge or checkout issues in the repository."
-  echo "Please merge the new changes before continuing."
+if [[ $# -lt 1 || $# -gt 2 ]]; then
+  usage
   exit 1
-}
+fi
+
+EGTTOOLS_SRC_DIR="$(cd "$1" && pwd)"
+GIT_REF="${2:-}"
+
+if [[ ! -d "$EGTTOOLS_SRC_DIR" ]]; then
+  echo "ERROR: EGTTools source directory does not exist: $EGTTOOLS_SRC_DIR" >&2
+  exit 1
+fi
+
+if [[ ! -f "$EGTTOOLS_SRC_DIR/CMakeLists.txt" ]]; then
+  echo "ERROR: This does not look like an EGTTools source tree (missing CMakeLists.txt): $EGTTOOLS_SRC_DIR" >&2
+  exit 1
+fi
+
+if [[ ! -d "$EGTTOOLS_SRC_DIR/.git" ]]; then
+  echo "ERROR: The source directory is not a git repository: $EGTTOOLS_SRC_DIR" >&2
+  exit 1
+fi
 
 require_cmd() {
   local cmd="$1"
@@ -66,14 +78,47 @@ require_cmd() {
   return 0
 }
 
+missing_any=0
+for cmd in git python3 cmake; do
+  if ! require_cmd "$cmd"; then
+    missing_any=1
+  fi
+done
+
+if ! python3 -m pip --version >/dev/null 2>&1; then
+  echo "MISSING TOOL: python3 -m pip"
+  missing_any=1
+fi
+
+if ! command -v ninja >/dev/null 2>&1; then
+  echo "WARNING: ninja not found. Build may still work with another CMake generator, but ninja is recommended."
+fi
+
+if [[ "$missing_any" -ne 0 ]]; then
+  echo ""
+  echo "Aborting because one or more required external tools are missing."
+  exit 1
+fi
+
+PYTHON_EXE="$(command -v python3)"
+PIP_CMD=(python3 -m pip)
+
+python3 - <<'PY'
+import site
+import sys
+print(f"Python executable: {sys.executable}")
+print(f"Python version   : {sys.version.split()[0]}")
+print(f"User site        : {site.getusersitepackages()}")
+print(f"Prefix           : {sys.prefix}")
+PY
+
 check_python_requirements() {
-  local python_exe="$1"
-  local req_file="$2"
+  local req_file="$1"
   if [[ ! -f "$req_file" ]]; then
     return 0
   fi
 
-  "$python_exe" - "$req_file" <<'PY'
+  python3 - "$req_file" <<'PY'
 import re
 import sys
 from pathlib import Path
@@ -114,165 +159,9 @@ if missing:
 PY
 }
 
-check_openmp_references() {
-  local root="$1"
-  local files_found
-  local suspicious
-  local generic
-
-  files_found=$(grep -RIlE 'OpenMP|libomp|libgomp|omp\.h|find_package\(OpenMP' \
-    "$root/CMakeLists.txt" "$root/cmake" "$root/src" "$root/cpp" 2>/dev/null || true)
-
-  suspicious=$(grep -RInE '/opt/homebrew|/usr/local/opt/libomp|/opt/local|libomp\.dylib|libgomp\.so' \
-    "$root/CMakeLists.txt" "$root/cmake" "$root/src" "$root/cpp" 2>/dev/null || true)
-
-  generic=$(grep -RInE 'find_package\(OpenMP|OpenMP::OpenMP|ENABLE_OPENMP|openmp' \
-    "$root/CMakeLists.txt" "$root/cmake" "$root/src" "$root/cpp" 2>/dev/null || true)
-
-  if [[ -z "$files_found" ]]; then
-    echo "OPENMP CHECK: no OpenMP-related references were found in common build files."
-    return 2
-  fi
-
-  if [[ -n "$suspicious" ]]; then
-    echo "OPENMP CHECK: suspicious or machine-specific OpenMP library references were found:"
-    echo "$suspicious"
-    return 3
-  fi
-
-  if [[ -z "$generic" ]]; then
-    echo "OPENMP CHECK: OpenMP references were found, but not a clear generic CMake/OpenMP integration."
-    echo "$files_found"
-    return 4
-  fi
-
-  echo "OPENMP CHECK: generic OpenMP references were found."
-  return 0
-}
-
-PYTHON_EXE=""
-CLONE_IF_MISSING=0
-POSITIONAL=()
-
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-  --python)
-    if [[ $# -lt 2 ]]; then
-      echo "ERROR: --python requires a path argument." >&2
-      usage
-      exit 1
-    fi
-    PYTHON_EXE="$2"
-    shift 2
-    ;;
-  --clone-if-missing)
-    CLONE_IF_MISSING=1
-    shift
-    ;;
-  -h | --help)
-    usage
-    exit 0
-    ;;
-  --)
-    shift
-    while [[ $# -gt 0 ]]; do
-      POSITIONAL+=("$1")
-      shift
-    done
-    ;;
-  -*)
-    echo "ERROR: unknown option: $1" >&2
-    usage
-    exit 1
-    ;;
-  *)
-    POSITIONAL+=("$1")
-    shift
-    ;;
-  esac
-done
-
-if [[ ${#POSITIONAL[@]} -lt 1 || ${#POSITIONAL[@]} -gt 2 ]]; then
-  usage
-  exit 1
-fi
-
-TARGET_PATH="${POSITIONAL[0]}"
-GIT_REF="${POSITIONAL[1]:-}"
-
-missing_any=0
-for cmd in git cmake; do
-  if ! require_cmd "$cmd"; then
-    missing_any=1
-  fi
-done
-
-if [[ -z "$PYTHON_EXE" ]]; then
-  if command -v python3 >/dev/null 2>&1; then
-    PYTHON_EXE="$(command -v python3)"
-  else
-    echo "MISSING TOOL: python3"
-    missing_any=1
-  fi
-fi
-
-if [[ -n "$PYTHON_EXE" && ! -x "$PYTHON_EXE" ]]; then
-  echo "ERROR: Python executable is not executable: $PYTHON_EXE" >&2
-  exit 1
-fi
-
-if [[ -n "$PYTHON_EXE" ]] && ! "$PYTHON_EXE" -m pip --version >/dev/null 2>&1; then
-  echo "MISSING TOOL: $PYTHON_EXE -m pip"
-  missing_any=1
-fi
-
-if ! command -v ninja >/dev/null 2>&1; then
-  echo "WARNING: ninja not found. Build may still work with another CMake generator, but ninja is recommended."
-fi
-
-if [[ "$missing_any" -ne 0 ]]; then
-  echo ""
-  echo "Aborting because one or more required external tools are missing."
-  exit 1
-fi
-
-if [[ ! -e "$TARGET_PATH" ]]; then
-  if [[ "$CLONE_IF_MISSING" -eq 1 ]]; then
-    echo "Target path does not exist. Cloning EGTTools into: $TARGET_PATH"
-    git clone https://github.com/Socrats/EGTTools.git "$TARGET_PATH"
-  else
-    echo "ERROR: EGTTools source directory does not exist: $TARGET_PATH" >&2
-    echo "Use --clone-if-missing to clone it automatically."
-    exit 1
-  fi
-fi
-
-EGTTOOLS_SRC_DIR="$(cd "$TARGET_PATH" && pwd)"
-
-if [[ ! -f "$EGTTOOLS_SRC_DIR/CMakeLists.txt" ]]; then
-  echo "ERROR: This does not look like an EGTTools source tree (missing CMakeLists.txt): $EGTTOOLS_SRC_DIR" >&2
-  exit 1
-fi
-
-if [[ ! -d "$EGTTOOLS_SRC_DIR/.git" ]]; then
-  echo "ERROR: The source directory is not a git repository: $EGTTOOLS_SRC_DIR" >&2
-  exit 1
-fi
-
-PIP_CMD=("$PYTHON_EXE" -m pip)
-
-"$PYTHON_EXE" - <<'PY'
-import site
-import sys
-print(f"Python executable: {sys.executable}")
-print(f"Python version   : {sys.version.split()[0]}")
-print(f"User site        : {site.getusersitepackages()}")
-print(f"Prefix           : {sys.prefix}")
-PY
-
 if [[ -f "$EGTTOOLS_SRC_DIR/requirements.txt" ]]; then
   echo "Checking Python requirements declared in requirements.txt"
-  if ! check_python_requirements "$PYTHON_EXE" "$EGTTOOLS_SRC_DIR/requirements.txt"; then
+  if ! check_python_requirements "$EGTTOOLS_SRC_DIR/requirements.txt"; then
     echo ""
     echo "Aborting because some Python requirements declared by EGTTools are not installed."
     echo "They were not installed automatically."
@@ -296,6 +185,42 @@ if [[ ! -f "$VCPKG_BOOTSTRAP_SH" && ! -f "$VCPKG_BOOTSTRAP_BAT" ]]; then
   exit 1
 fi
 
+check_openmp_references() {
+  local root="$1"
+  local files_found
+  local suspicious
+  local generic
+
+  files_found=$(grep -RIlE 'OpenMP|libomp|libgomp|omp\.h|find_package\(OpenMP' \
+    "$root/CMakeLists.txt" "$root/cmake" "$root/src" "$root/cpp" 2>/dev/null || true)
+
+  suspicious=$(grep -RInE '/opt/homebrew|/usr/local/opt/libomp|/opt/local|libomp\.dylib|libgomp\.so' \
+    "$root/CMakeLists.txt" "$root/cmake" "$root/src" "$root/cpp" 2>/dev/null || true)
+
+  generic=$(grep -RInE 'find_package\(OpenMP|OpenMP::OpenMP|ENABLE_OPENMP|openmp' \
+    "$root/CMakeLists.txt" "$root/cmake" "$root/src" "$root/cpp" 2>/dev/null || true)
+
+  if [[ -z "$files_found" ]]; then
+    echo "OPENMP CHECK: no OpenMP-related references were found in common build files."
+    return 2
+  fi
+
+  if [[ -n "$suspicious" ]]; then
+    echo "OPENMP CHECK: suspicious hard-coded OpenMP library paths were found:"
+    echo "$suspicious"
+    return 3
+  fi
+
+  if [[ -z "$generic" ]]; then
+    echo "OPENMP CHECK: OpenMP references were found, but not a clear generic CMake/OpenMP integration."
+    echo "$files_found"
+    return 4
+  fi
+
+  echo "OPENMP CHECK: generic OpenMP references were found."
+  return 0
+}
+
 if ! check_openmp_references "$EGTTOOLS_SRC_DIR"; then
   rc=$?
   echo ""
@@ -304,7 +229,7 @@ if ! check_openmp_references "$EGTTOOLS_SRC_DIR"; then
     echo "No OpenMP reference was found, so the build configuration may be incomplete."
     ;;
   3 | 4)
-    echo "Since that path to the OpenMP library is ambiguous, we recommend you set it with export EGTTOOLS_EXTRA_CMAKE_ARGS=\"-DLIBOMP_DIR='/path/to/openmplib/'\" before continuing."
+    printf '%s\n' "Since that path to the OpenMP library is ambiguous, we recommend you set it with export EGTTOOLS_EXTRA_CMAKE_ARGS=\"-DLIBOMP_DIR=''/path/to/openmplib/''\" before continuing."
     ;;
   *)
     echo "The OpenMP check reported a warning."
@@ -320,6 +245,7 @@ fi
 cd "$EGTTOOLS_SRC_DIR"
 
 SKIP_FETCH_AND_PULL=0
+
 CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 STATUS_PORCELAIN="$(git status --porcelain || true)"
 HAS_UNCOMMITTED=0
@@ -337,63 +263,84 @@ fi
 AHEAD_COUNT=0
 BEHIND_COUNT=0
 if [[ "$HAS_UPSTREAM" -eq 1 ]]; then
-  counts="$(git rev-list --left-right --count HEAD...@{u} 2>/dev/null || echo '0 0')"
-  AHEAD_COUNT="$(awk '{print $1}' <<<"$counts")"
-  BEHIND_COUNT="$(awk '{print $2}' <<<"$counts")"
+  COUNTS="$(git rev-list --left-right --count "${UPSTREAM_REF}...HEAD" 2>/dev/null || echo '0 0')"
+  BEHIND_COUNT="$(printf '%s' "$COUNTS" | awk '{print $1}')"
+  AHEAD_COUNT="$(printf '%s' "$COUNTS" | awk '{print $2}')"
 fi
 
-if [[ "$HAS_UNCOMMITTED" -eq 1 || "$HAS_UPSTREAM" -eq 0 || "$AHEAD_COUNT" -gt 0 ]]; then
-  echo "WARNING: local git state suggests that updating from the remote may not be safe."
+echo "Checking git status"
+echo "Current branch       : $CURRENT_BRANCH"
+if [[ "$HAS_UPSTREAM" -eq 1 ]]; then
+  echo "Upstream branch      : $UPSTREAM_REF"
+  echo "Ahead of upstream    : $AHEAD_COUNT"
+  echo "Behind upstream      : $BEHIND_COUNT"
+else
+  echo "Upstream branch      : none configured"
+fi
+if [[ "$HAS_UNCOMMITTED" -eq 1 ]]; then
+  echo "Working tree         : has uncommitted changes"
+else
+  echo "Working tree         : clean"
+fi
+
+if [[ "$HAS_UNCOMMITTED" -eq 1 || "$AHEAD_COUNT" -gt 0 || "$HAS_UPSTREAM" -eq 0 ]]; then
+  echo ""
   if [[ "$HAS_UNCOMMITTED" -eq 1 ]]; then
-    echo "- The repository has uncommitted changes."
-  fi
-  if [[ "$HAS_UPSTREAM" -eq 0 ]]; then
-    echo "- The current branch has no configured upstream."
+    echo "WARNING: the repository has uncommitted changes."
   fi
   if [[ "$AHEAD_COUNT" -gt 0 ]]; then
-    echo "- The current branch is ahead of its upstream by $AHEAD_COUNT commit(s)."
+    echo "WARNING: the current branch is ahead of its upstream by $AHEAD_COUNT commit(s)."
   fi
-  echo "The script can continue building from the current local checkout without fetching."
-  if prompt_yes_no "Would you like to continue?"; then
-    SKIP_FETCH_AND_PULL=1
-  else
+  if [[ "$HAS_UPSTREAM" -eq 0 ]]; then
+    echo "WARNING: no upstream branch is configured for the current checkout."
+  fi
+  echo "To avoid disturbing local work, the script will not fetch or pull remote changes in this state."
+
+  if ! prompt_yes_no "Would you like to proceed with the build using the current local checkout without fetching?"; then
     echo "Stopping at user request."
     exit 1
   fi
+  SKIP_FETCH_AND_PULL=1
 fi
 
 if [[ "$SKIP_FETCH_AND_PULL" -eq 0 ]]; then
-  echo "Updating repository"
-  if ! git fetch --all --tags; then
-    warn_merge_then_exit
-  fi
+  echo "Updating repository metadata"
+  git fetch --all --tags
 
   if [[ -n "$GIT_REF" ]]; then
     echo "Checking out requested ref: $GIT_REF"
     if ! git checkout "$GIT_REF"; then
-      warn_merge_then_exit
+      echo "WARNING: git checkout failed. Please merge or resolve local git issues before continuing."
+      exit 1
     fi
   else
     if [[ "$CURRENT_BRANCH" != "HEAD" ]]; then
-      echo "Pulling latest changes for current branch: $CURRENT_BRANCH"
-      if ! git pull --ff-only; then
-        warn_merge_then_exit
+      if [[ "$BEHIND_COUNT" -gt 0 ]]; then
+        echo "Pulling latest changes for current branch: $CURRENT_BRANCH"
+        if ! git pull --ff-only; then
+          echo "WARNING: git pull failed. Please merge the new changes before continuing."
+          exit 1
+        fi
+      else
+        echo "Local branch is not behind upstream. No pull needed."
       fi
     else
       echo "Detached HEAD detected. No pull performed."
     fi
   fi
 else
-  echo "Skipping fetch and pull. Building from the current local checkout."
   if [[ -n "$GIT_REF" ]]; then
-    echo "Requested git ref '$GIT_REF' was ignored because fetch/pull was skipped for safety."
-    echo "Check it out manually if needed before rebuilding."
+    echo "WARNING: a git ref was provided, but fetch/pull/checkout was skipped to avoid disturbing local work."
+    echo "The build will continue from the current checkout: $(git rev-parse --short HEAD)"
+  else
+    echo "Skipping fetch/pull and building from the current local checkout."
   fi
 fi
 
 echo "Updating submodules"
 if ! git submodule update --init --recursive; then
-  warn_merge_then_exit
+  echo "WARNING: submodule update failed. Please merge or resolve local git issues before continuing."
+  exit 1
 fi
 
 if [[ -f "$VCPKG_BOOTSTRAP_SH" ]]; then
@@ -415,13 +362,13 @@ fi
 
 export VCPKG_PATH="$EGTTOOLS_SRC_DIR"
 
-echo "Building and installing EGTTools into the selected Python environment"
+echo "Building and installing EGTTools into the current Python environment"
 "${PIP_CMD[@]}" install --upgrade pip setuptools wheel
 "${PIP_CMD[@]}" install --upgrade .
 
 echo ""
 echo "EGTTools install finished."
-"$PYTHON_EXE" - <<'PY'
+python3 - <<'PY'
 import site
 import sys
 try:

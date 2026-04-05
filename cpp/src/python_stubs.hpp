@@ -24,6 +24,7 @@
 #include <egttools/finite_populations/Utils.hpp>
 #include <egttools/finite_populations/behaviors/AbstractCRDStrategy.hpp>
 #include <egttools/finite_populations/behaviors/AbstractNFGStrategy.hpp>
+#include <egttools/infinite_populations/AbstractReplicatorGame.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <egttools/finite_populations/games/AbstractNPlayerGame.hpp>
 #include <egttools/finite_populations/games/AbstractSpatialGame.hpp>
@@ -33,7 +34,6 @@
 namespace py = pybind11;
 
 namespace stubs {
-
     using PayoffVector = egttools::FinitePopulations::PayoffVector;
     using GroupPayoffs = egttools::FinitePopulations::GroupPayoffs;
 
@@ -49,10 +49,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    void,                                      /* Return type */
-                    egttools::FinitePopulations::AbstractGame, /* Parent class */
-                    play,                                      /* Name of function in C++ (must match Python name) */
-                    group_composition, game_payoffs            /* Argument(s) */
+                void, /* Return type */
+                egttools::FinitePopulations::AbstractGame, /* Parent class */
+                play, /* Name of function in C++ (must match Python name) */
+                group_composition, game_payoffs /* Argument(s) */
             );
         }
 
@@ -62,10 +62,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    GroupPayoffs &,                            /* Return type */
-                    egttools::FinitePopulations::AbstractGame, /* Parent class */
-                    calculate_payoffs                          /* Name of function in C++ (must match Python name) */
-                                                               /* Argument(s) */
+                GroupPayoffs &, /* Return type */
+                egttools::FinitePopulations::AbstractGame, /* Parent class */
+                calculate_payoffs /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -76,10 +76,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    double,                                    /* Return type */
-                    egttools::FinitePopulations::AbstractGame, /* Parent class */
-                    calculate_fitness,                         /* Name of function in C++ (must match Python name) */
-                    strategy_index, pop_size, strategies       /* Argument(s) */
+                double, /* Return type */
+                egttools::FinitePopulations::AbstractGame, /* Parent class */
+                calculate_fitness, /* Name of function in C++ (must match Python name) */
+                strategy_index, pop_size, strategies /* Argument(s) */
             );
         }
 
@@ -89,10 +89,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    size_t,                                    /* Return type */
-                    egttools::FinitePopulations::AbstractGame, /* Parent class */
-                    nb_strategies                              /* Name of function in C++ (must match Python name) */
-                                                               /* Argument(s) */
+                size_t, /* Return type */
+                egttools::FinitePopulations::AbstractGame, /* Parent class */
+                nb_strategies /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -102,11 +102,11 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE_NAME(
-                    std::string,                               /* Return type */
-                    egttools::FinitePopulations::AbstractGame, /* Parent class */
-                    "__str__",                                 /* Python name */
-                    toString                                   /* Name of function in C++ (must match Python name) */
-                                                               /* Argument(s) */
+                std::string, /* Return type */
+                egttools::FinitePopulations::AbstractGame, /* Parent class */
+                "__str__", /* Python name */
+                toString /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -116,10 +116,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    std::string,                               /* Return type */
-                    egttools::FinitePopulations::AbstractGame, /* Parent class */
-                    type                                       /* Name of function in C++ (must match Python name) */
-                                                               /* Argument(s) */
+                std::string, /* Return type */
+                egttools::FinitePopulations::AbstractGame, /* Parent class */
+                type /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -129,24 +129,25 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    GroupPayoffs &,                            /* Return type */
-                    egttools::FinitePopulations::AbstractGame, /* Parent class */
-                    payoffs                                    /* Name of function in C++ (must match Python name) */
-                                                               /* Argument(s) */
+                GroupPayoffs &, /* Return type */
+                egttools::FinitePopulations::AbstractGame, /* Parent class */
+                payoffs /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
         /* Trampoline (need one for each virtual function) */
         [[nodiscard]] double payoff(int strategy,
-                                    const egttools::FinitePopulations::StrategyCounts &group_composition) const override {
+                                    const egttools::FinitePopulations::StrategyCounts &group_composition)
+        const override {
             /* Acquire GIL before calling Python code */
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    double,                                    /* Return type */
-                    egttools::FinitePopulations::AbstractGame, /* Parent class */
-                    payoff,                                    /* Name of function in C++ (must match Python name) */
-                    strategy, group_composition                /* Argument(s) */
+                double, /* Return type */
+                egttools::FinitePopulations::AbstractGame, /* Parent class */
+                payoff, /* Name of function in C++ (must match Python name) */
+                strategy, group_composition /* Argument(s) */
             );
         }
 
@@ -156,10 +157,82 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    void,                                      /* Return type */
-                    egttools::FinitePopulations::AbstractGame, /* Parent class */
-                    save_payoffs,                              /* Name of function in C++ (must match Python name) */
-                    file_name                                  /* Argument(s) */
+                void, /* Return type */
+                egttools::FinitePopulations::AbstractGame, /* Parent class */
+                save_payoffs, /* Name of function in C++ (must match Python name) */
+                file_name /* Argument(s) */
+            );
+        }
+    };
+
+    class PyAbstractReplicatorGame : public egttools::infinite_populations::AbstractReplicatorGame {
+    public:
+        using egttools::infinite_populations::AbstractReplicatorGame::AbstractReplicatorGame;
+
+        const GroupPayoffs &calculate_payoffs() override {
+            py::gil_scoped_acquire acquire;
+            PYBIND11_OVERRIDE_PURE(
+                const GroupPayoffs &, /* Return type */
+                egttools::infinite_populations::AbstractReplicatorGame, /* Parent class */
+                calculate_payoffs /* Name of function in C++ */
+            );
+        }
+
+        [[nodiscard]] egttools::Vector calculate_fitness(
+            const Eigen::Ref<const egttools::Vector> &frequencies
+        ) const override {
+            py::gil_scoped_acquire acquire;
+            PYBIND11_OVERRIDE_PURE(
+                egttools::Vector, /* Return type */
+                egttools::infinite_populations::AbstractReplicatorGame, /* Parent class */
+                calculate_fitness, /* Name of function in C++ */
+                frequencies /* Argument(s) */
+            );
+        }
+
+        [[nodiscard]] size_t nb_strategies() const override {
+            py::gil_scoped_acquire acquire;
+            PYBIND11_OVERRIDE_PURE(
+                size_t, /* Return type */
+                egttools::infinite_populations::AbstractReplicatorGame, /* Parent class */
+                nb_strategies /* Name of function in C++ */
+            );
+        }
+
+        [[nodiscard]] int group_size() const override {
+            py::gil_scoped_acquire acquire;
+            PYBIND11_OVERRIDE_PURE(
+                int, /* Return type */
+                egttools::infinite_populations::AbstractReplicatorGame, /* Parent class */
+                group_size /* Name of function in C++ */
+            );
+        }
+
+        [[nodiscard]] std::string toString() const override {
+            py::gil_scoped_acquire acquire;
+            PYBIND11_OVERRIDE_PURE_NAME(
+                std::string, /* Return type */
+                egttools::infinite_populations::AbstractReplicatorGame, /* Parent class */
+                "__str__", /* Python name */
+                toString /* Name of function in C++ */
+            );
+        }
+
+        [[nodiscard]] std::string type() const override {
+            py::gil_scoped_acquire acquire;
+            PYBIND11_OVERRIDE_PURE(
+                std::string, /* Return type */
+                egttools::infinite_populations::AbstractReplicatorGame, /* Parent class */
+                type /* Name of function in C++ */
+            );
+        }
+
+        [[nodiscard]] const GroupPayoffs &payoffs() const override {
+            py::gil_scoped_acquire acquire;
+            PYBIND11_OVERRIDE_PURE(
+                const GroupPayoffs &, /* Return type */
+                egttools::infinite_populations::AbstractReplicatorGame, /* Parent class */
+                payoffs /* Name of function in C++ */
             );
         }
     };
@@ -176,10 +249,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    void,                                             /* Return type */
-                    egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
-                    play,                                             /* Name of function in C++ (must match Python name) */
-                    group_composition, game_payoffs                   /* Argument(s) */
+                void, /* Return type */
+                egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
+                play, /* Name of function in C++ (must match Python name) */
+                group_composition, game_payoffs /* Argument(s) */
             );
         }
 
@@ -189,10 +262,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    GroupPayoffs &,                                   /* Return type */
-                    egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
-                    calculate_payoffs                                 /* Name of function in C++ (must match Python name) */
-                                                                      /* Argument(s) */
+                GroupPayoffs &, /* Return type */
+                egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
+                calculate_payoffs /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -203,10 +276,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE(
-                    double,                                           /* Return type */
-                    egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
-                    calculate_fitness,                                /* Name of function in C++ (must match Python name) */
-                    strategy_index, pop_size, strategies              /* Argument(s) */
+                double, /* Return type */
+                egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
+                calculate_fitness, /* Name of function in C++ (must match Python name) */
+                strategy_index, pop_size, strategies /* Argument(s) */
             );
         }
 
@@ -216,10 +289,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE(
-                    size_t,                                           /* Return type */
-                    egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
-                    nb_strategies                                     /* Name of function in C++ (must match Python name) */
-                                                                      /* Argument(s) */
+                size_t, /* Return type */
+                egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
+                nb_strategies /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -229,10 +302,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE(
-                    size_t,                                           /* Return type */
-                    egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
-                    group_size                                        /* Name of function in C++ (must match Python name) */
-                                                                      /* Argument(s) */
+                size_t, /* Return type */
+                egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
+                group_size /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -242,10 +315,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE(
-                    size_t,                                           /* Return type */
-                    egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
-                    nb_group_configurations                           /* Name of function in C++ (must match Python name) */
-                                                                      /* Argument(s) */
+                size_t, /* Return type */
+                egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
+                nb_group_configurations /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -255,11 +328,11 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_NAME(
-                    std::string,                                      /* Return type */
-                    egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
-                    "__str__",                                        /* Python name */
-                    toString                                          /* Name of function in C++ (must match Python name) */
-                                                                      /* Argument(s) */
+                std::string, /* Return type */
+                egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
+                "__str__", /* Python name */
+                toString /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -269,10 +342,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE(
-                    std::string,                                      /* Return type */
-                    egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
-                    type                                              /* Name of function in C++ (must match Python name) */
-                                                                      /* Argument(s) */
+                std::string, /* Return type */
+                egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
+                type /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -282,24 +355,25 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE(
-                    GroupPayoffs &,                                   /* Return type */
-                    egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
-                    payoffs                                           /* Name of function in C++ (must match Python name) */
-                                                                      /* Argument(s) */
+                GroupPayoffs &, /* Return type */
+                egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
+                payoffs /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
         /* Trampoline (need one for each virtual function) */
         [[nodiscard]] double payoff(int strategy,
-                                    const egttools::FinitePopulations::StrategyCounts &group_composition) const override {
+                                    const egttools::FinitePopulations::StrategyCounts &group_composition)
+        const override {
             /* Acquire GIL before calling Python code */
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE(
-                    double,                                           /* Return type */
-                    egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
-                    payoff,                                           /* Name of function in C++ (must match Python name) */
-                    strategy, group_composition                       /* Argument(s) */
+                double, /* Return type */
+                egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
+                payoff, /* Name of function in C++ (must match Python name) */
+                strategy, group_composition /* Argument(s) */
             );
         }
 
@@ -309,10 +383,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE(
-                    void,                                             /* Return type */
-                    egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
-                    update_payoff,                                    /* Name of function in C++ (must match Python name) */
-                    strategy_index, group_configuration_index, value  /* Argument(s) */
+                void, /* Return type */
+                egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
+                update_payoff, /* Name of function in C++ (must match Python name) */
+                strategy_index, group_configuration_index, value /* Argument(s) */
             );
         }
 
@@ -322,10 +396,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE(
-                    void,                                             /* Return type */
-                    egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
-                    save_payoffs,                                     /* Name of function in C++ (must match Python name) */
-                    file_name                                         /* Argument(s) */
+                void, /* Return type */
+                egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
+                save_payoffs, /* Name of function in C++ (must match Python name) */
+                file_name /* Argument(s) */
             );
         }
     };
@@ -341,10 +415,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    size_t,                                                      /* Return type */
-                    egttools::FinitePopulations::behaviors::AbstractNFGStrategy, /* Parent class */
-                    get_action,                                                  /* Name of function in C++ (must match Python name) */
-                    time_step, action_prev                                       /* Argument(s) */
+                size_t, /* Return type */
+                egttools::FinitePopulations::behaviors::AbstractNFGStrategy, /* Parent class */
+                get_action, /* Name of function in C++ (must match Python name) */
+                time_step, action_prev /* Argument(s) */
             );
         }
 
@@ -354,10 +428,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    std::string,                                                 /* Return type */
-                    egttools::FinitePopulations::behaviors::AbstractNFGStrategy, /* Parent class */
-                    type                                                         /* Name of function in C++ (must match Python name) */
-                                                                                 /* Argument(s) */
+                std::string, /* Return type */
+                egttools::FinitePopulations::behaviors::AbstractNFGStrategy, /* Parent class */
+                type /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -367,10 +441,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    bool,                                                        /* Return type */
-                    egttools::FinitePopulations::behaviors::AbstractNFGStrategy, /* Parent class */
-                    is_stochastic                                                /* Name of function in C++ (must match Python name) */
-                                                                                 /* Argument(s) */
+                bool, /* Return type */
+                egttools::FinitePopulations::behaviors::AbstractNFGStrategy, /* Parent class */
+                is_stochastic /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
     };
@@ -386,10 +460,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    int,                                                         /* Return type */
-                    egttools::FinitePopulations::behaviors::AbstractCRDStrategy, /* Parent class */
-                    get_action,                                                  /* Name of function in C++ (must match Python name) */
-                    time_step, action_prev                                       /* Argument(s) */
+                int, /* Return type */
+                egttools::FinitePopulations::behaviors::AbstractCRDStrategy, /* Parent class */
+                get_action, /* Name of function in C++ (must match Python name) */
+                time_step, action_prev /* Argument(s) */
             );
         }
 
@@ -399,10 +473,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    std::string,                                                 /* Return type */
-                    egttools::FinitePopulations::behaviors::AbstractCRDStrategy, /* Parent class */
-                    type                                                         /* Name of function in C++ (must match Python name) */
-                                                                                 /* Argument(s) */
+                std::string, /* Return type */
+                egttools::FinitePopulations::behaviors::AbstractCRDStrategy, /* Parent class */
+                type /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
     };
@@ -417,11 +491,11 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    double,                                                  /* Return type */
-                    egttools::FinitePopulations::games::AbstractSpatialGame, /* Parent class */
-                    calculate_fitness,                                       /* Name of function in C++ (must match Python name) */
-                    strategy_index,                                          /* Argument(s) */
-                    state);
+                double, /* Return type */
+                egttools::FinitePopulations::games::AbstractSpatialGame, /* Parent class */
+                calculate_fitness, /* Name of function in C++ (must match Python name) */
+                strategy_index, /* Argument(s) */
+                state);
         }
 
         /* Trampoline (need one for each virtual function) */
@@ -430,10 +504,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    int,                                                     /* Return type */
-                    egttools::FinitePopulations::games::AbstractSpatialGame, /* Parent class */
-                    nb_strategies                                            /* Name of function in C++ (must match Python name) */
-                                                                             /* Argument(s) */
+                int, /* Return type */
+                egttools::FinitePopulations::games::AbstractSpatialGame, /* Parent class */
+                nb_strategies /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -443,10 +517,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    std::string,                                             /* Return type */
-                    egttools::FinitePopulations::games::AbstractSpatialGame, /* Parent class */
-                    toString                                                 /* Name of function in C++ (must match Python name) */
-                                                                             /* Argument(s) */
+                std::string, /* Return type */
+                egttools::FinitePopulations::games::AbstractSpatialGame, /* Parent class */
+                toString /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -456,10 +530,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    std::string,                                             /* Return type */
-                    egttools::FinitePopulations::games::AbstractSpatialGame, /* Parent class */
-                    type                                                     /* Name of function in C++ (must match Python name) */
-                                                                             /* Argument(s) */
+                std::string, /* Return type */
+                egttools::FinitePopulations::games::AbstractSpatialGame, /* Parent class */
+                type /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
     };
@@ -475,10 +549,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    void,                                                      /* Return type */
-                    egttools::FinitePopulations::structure::AbstractStructure, /* Parent class */
-                    initialize,                                                /* Name of function in C++ (must match Python name) */
-                                                                               /* Argument(s) */
+                void, /* Return type */
+                egttools::FinitePopulations::structure::AbstractStructure, /* Parent class */
+                initialize, /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -488,10 +562,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    void,                                                      /* Return type */
-                    egttools::FinitePopulations::structure::AbstractStructure, /* Parent class */
-                    update_population,                                         /* Name of function in C++ (must match Python name) */
-                                                                               /* Argument(s) */
+                void, /* Return type */
+                egttools::FinitePopulations::structure::AbstractStructure, /* Parent class */
+                update_population, /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -501,10 +575,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    egttools::VectorXui &,                                     /* Return type */
-                    egttools::FinitePopulations::structure::AbstractStructure, /* Parent class */
-                    mean_population_state,                                     /* Name of function in C++ (must match Python name) */
-                                                                               /* Argument(s) */
+                egttools::VectorXui &, /* Return type */
+                egttools::FinitePopulations::structure::AbstractStructure, /* Parent class */
+                mean_population_state, /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -514,10 +588,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    int,                                                       /* Return type */
-                    egttools::FinitePopulations::structure::AbstractStructure, /* Parent class */
-                    nb_strategies,                                             /* Name of function in C++ (must match Python name) */
-                                                                               /* Argument(s) */
+                int, /* Return type */
+                egttools::FinitePopulations::structure::AbstractStructure, /* Parent class */
+                nb_strategies, /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
     };
@@ -533,10 +607,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    void,                                                             /* Return type */
-                    egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
-                    initialize,                                                       /* Name of function in C++ (must match Python name) */
-                                                                                      /* Argument(s) */
+                void, /* Return type */
+                egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
+                initialize, /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -546,10 +620,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    void,                                                             /* Return type */
-                    egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
-                    initialize_state,                                                 /* Name of function in C++ (must match Python name) */
-                    state                                                             /* Argument(s) */
+                void, /* Return type */
+                egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
+                initialize_state, /* Name of function in C++ (must match Python name) */
+                state /* Argument(s) */
             );
         }
 
@@ -559,10 +633,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    void,                                                             /* Return type */
-                    egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
-                    update_population,                                                /* Name of function in C++ (must match Python name) */
-                                                                                      /* Argument(s) */
+                void, /* Return type */
+                egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
+                update_population, /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -572,10 +646,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    void,                                                             /* Return type */
-                    egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
-                    update_node,                                                      /* Name of function in C++ (must match Python name) */
-                    node                                                              /* Argument(s) */
+                void, /* Return type */
+                egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
+                update_node, /* Name of function in C++ (must match Python name) */
+                node /* Argument(s) */
             );
         }
 
@@ -585,10 +659,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    egttools::Vector &,                                               /* Return type */
-                    egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
-                    calculate_average_gradient_of_selection,                          /* Name of function in C++ (must match Python name) */
-                                                                                      /* Argument(s) */
+                egttools::Vector &, /* Return type */
+                egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
+                calculate_average_gradient_of_selection, /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -598,10 +672,11 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    egttools::Vector &,                                               /* Return type */
-                    egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
-                    calculate_average_gradient_of_selection_and_update_population,    /* Name of function in C++ (must match Python name) */
-                                                                                      /* Argument(s) */
+                egttools::Vector &, /* Return type */
+                egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
+                calculate_average_gradient_of_selection_and_update_population,
+                /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -611,10 +686,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    egttools::VectorXui &,                                            /* Return type */
-                    egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
-                    mean_population_state,                                            /* Name of function in C++ (must match Python name) */
-                                                                                      /* Argument(s) */
+                egttools::VectorXui &, /* Return type */
+                egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
+                mean_population_state, /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -624,10 +699,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    int,                                                              /* Return type */
-                    egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
-                    nb_strategies,                                                    /* Name of function in C++ (must match Python name) */
-                                                                                      /* Argument(s) */
+                int, /* Return type */
+                egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
+                nb_strategies, /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -637,10 +712,10 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    int,                                                              /* Return type */
-                    egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
-                    population_size,                                                  /* Name of function in C++ (must match Python name) */
-                                                                                      /* Argument(s) */
+                int, /* Return type */
+                egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
+                population_size, /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
 
@@ -650,14 +725,13 @@ namespace stubs {
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                    egttools::FinitePopulations::structure::NodeDictionary &,         /* Return type */
-                    egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
-                    network,                                                          /* Name of function in C++ (must match Python name) */
-                                                                                      /* Argument(s) */
+                egttools::FinitePopulations::structure::NodeDictionary &, /* Return type */
+                egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
+                network, /* Name of function in C++ (must match Python name) */
+                /* Argument(s) */
             );
         }
     };
-
-}// namespace stubs
+} // namespace stubs
 
 #endif//EGTTOOLS_PYTHONSTUBS_HPP

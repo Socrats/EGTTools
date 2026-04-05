@@ -56,11 +56,13 @@ if SKIP_VCPKG == 'OFF':
     vcpkg_path = os.environ.get('VCPKG_PATH', '')
 
     if not vcpkg_path:
-        # Assume vcpkg is in the project root if not explicitly set
+        # Assume vcpkg is in the project root if not explicitly set.
+        # VCPKG_PATH must be the project root (not the vcpkg subdir), because
+        # the toolchain file is constructed as vcpkg_path/vcpkg/scripts/buildsystems/vcpkg.cmake.
         project_root = os.path.dirname(os.path.abspath(__file__))
         default_vcpkg_path = os.path.join(project_root, 'vcpkg')
         if os.path.exists(default_vcpkg_path):
-            vcpkg_path = default_vcpkg_path
+            vcpkg_path = project_root
         else:
             print("Warning: VCPKG_PATH not set and no vcpkg folder found — CMake may fail", file=sys.stderr)
 
@@ -112,5 +114,8 @@ setup(
     cmake_install_dir="src/egttools/numerical",
     cmake_with_sdist=False,
     include_package_data=True,  # required to honor MANIFEST.in
-    package_data={"egttools": ["*.pyi"]},  # or use a glob: ["**/*.pyi"]
+    package_data={
+        "egttools": ["*.pyi", "py.typed"],
+        "egttools.numerical": ["*.so", "*.dylib", "*.pyd", "*.pyi", "lib/*.dylib", "lib/*.so"],
+    },
 )

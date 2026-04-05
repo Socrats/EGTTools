@@ -3,17 +3,20 @@ API reference documentation for the `games` submodule.
 """
 
 try:
-    from ..numerical.numerical_.games import (AbstractGame,
-                                              AbstractSpatialGame,
-                                              AbstractNPlayerGame,
-                                              NormalFormGame,
-                                              NormalFormNetworkGame,
-                                              CRDGame,
-                                              CRDGameTU,
-                                              OneShotCRD,
-                                              OneShotCRDNetworkGame,
-                                              Matrix2PlayerGameHolder,
-                                              MatrixNPlayerGameHolder, )
+    from ..numerical.numerical_.games import (
+        AbstractReplicatorGame,
+        AbstractGame,
+        AbstractSpatialGame,
+        AbstractNPlayerGame,
+        NormalFormGame,
+        NormalFormNetworkGame,
+        CRDGame,
+        CRDGameTU,
+        OneShotCRD,
+        OneShotCRDNetworkGame,
+        Matrix2PlayerGameHolder,
+        MatrixNPlayerGameHolder,
+    )
 except Exception:
     raise Exception("numerical package not initialized")
 else:
@@ -22,7 +25,8 @@ else:
     from .abstract_games import AbstractTwoPLayerGame
     from .nonlinear_games import NPlayerStagHunt, CommonPoolResourceDilemma, CommonPoolResourceDilemmaCommitment
 
-__all__ = ['AbstractGame', 'AbstractSpatialGame', 'AbstractNPlayerGame', 'NormalFormGame', 'NormalFormNetworkGame',
+__all__ = ['AbstractReplicatorGame', 'AbstractGame', 'AbstractSpatialGame', 'AbstractNPlayerGame', 'NormalFormGame',
+           'NormalFormNetworkGame',
            'CRDGame', 'CRDGameTU',
            'OneShotCRD', 'OneShotCRDNetworkGame', 'PGG',
            'InformalRiskGame', 'AbstractTwoPLayerGame', 'NPlayerStagHunt', 'CommonPoolResourceDilemma',

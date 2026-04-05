@@ -34,7 +34,6 @@
 #include <egttools/OpenMPExtensions.hpp>
 #endif
 
-
 namespace egttools::FinitePopulations::analytical {
 #if (HAS_BOOST)
     using cpp_dec_float_100 = boost::multiprecision::cpp_dec_float_100;
@@ -43,110 +42,277 @@ namespace egttools::FinitePopulations::analytical {
     using Cache = egttools::Utils::ThreadSafeLRUCache<FitnessCacheKey, double>;
 
     /**
-     * @brief Provides analytical methods to study evolutionary dynamics in finite populations
-     * with the Pairwise Comparison rule.
+     * @brief Analytical tools for finite-population evolutionary dynamics under the pairwise comparison rule.
+     *
+     * This class studies a well-mixed population of fixed size @f$Z@f$, whose state is represented
+     * by a vector of strategy counts
+     * @f[
+     * x = (x_1, \dots, x_n), \qquad \sum_{i=1}^n x_i = Z,
+     * @f]
+     * where @f$n@f$ is the number of strategies.
+     *
+     * Given a game defining the fitness of each strategy in each population state, this class provides
+     * methods to:
+     * - construct the full Markov transition matrix with mutation,
+     * - compute gradients of selection with and without mutation,
+     * - compute pairwise fixation probabilities,
+     * - construct the reduced Small Mutation Limit (SML) Markov chain.
+     *
+     * Under the pairwise comparison rule, if an individual using strategy @f$i@f$ compares with an
+     * individual using strategy @f$j@f$, the probability that @f$i@f$ imitates @f$j@f$ is
+     * typically given by the Fermi kernel
+     * @f[
+     * p_{i \to j}(x)
+     * =
+     * \frac{1}{1 + \exp[-\beta (f_j(x) - f_i(x))]},
+     * @f]
+     * where @f$\beta \ge 0@f$ is the intensity of selection and @f$f_i(x)@f$ is the fitness of
+     * strategy @f$i@f$ in state @f$x@f$.
      */
     class PairwiseComparison {
     public:
         /**
-         * @brief Implements methods to study evolutionary dynamics in finite populations with the
-         * Pairwise Comparison rule.
+         * @brief Constructs a pairwise-comparison process for a fixed population size and game.
          *
-         * This class implements a series of analytical methods to calculate the most relevant indicators
-         * used to study the evolutionary dynamics in finite populations with the Pairwise Comparison
-         * rule.
+         * The game must implement the fitness of each strategy as a function of the current population
+         * state. The number of strategies is inferred from the game, and the number of population states
+         * is determined by the stars-and-bars formula
+         * @f[
+         * |\mathcal{S}| = \binom{Z + n - 1}{n - 1},
+         * @f]
+         * where @f$Z@f$ is the population size and @f$n@f$ is the number of strategies.
          *
-         * This class requires a @param population_size to indicate the size of the population in which
-         * the evolutionary process takes place, as well as a @param game which must be an object
-         * inheriting from `egttools.games.AbstractGame`, and which contains a method to calculate
-         * the fitness of a strategy, given a population state (represented as the counts of each
-         * strategy in the population).
+         * @note The game object is stored by reference. Updating the underlying game currently requires
+         * constructing a new PairwiseComparison object.
          *
-         * @note For now, it is not possible to update the game without instantiating
-         * PairwiseComparison again. Hopefully, this will be fixed in the future
-         *
-         * @param population_size : size of the population
-         * @param game : Game object.
+         * @param population_size Size @f$Z@f$ of the population.
+         * @param game Game defining the fitness landscape over population states.
          */
         PairwiseComparison(int population_size, egttools::FinitePopulations::AbstractGame &game);
 
+        /**
+         * @brief Constructs a pairwise-comparison process with an explicit fitness-cache size.
+         *
+         * This overload is identical to the constructor above, but also allows controlling the size
+         * of the internal LRU cache used to store previously computed fitness values.
+         *
+         * @param population_size Size @f$Z@f$ of the population.
+         * @param game Game defining the fitness landscape over population states.
+         * @param cache_size Maximum number of cached fitness evaluations.
+         */
         PairwiseComparison(int population_size, egttools::FinitePopulations::AbstractGame &game, size_t cache_size);
 
         ~PairwiseComparison() = default;
 
+        /**
+         * @brief Pre-computes fitness values along all simplex edges.
+         *
+         * This method is useful when repeated pairwise fixation calculations are needed, since fixation
+         * probabilities only depend on edge states involving two strategies at a time.
+         */
         void pre_calculate_edge_fitnesses();
 
         /**
-         * @brief Computes the transition matrix of the Markov Chain which defines the population dynamics.
+         * @brief Computes the full transition matrix of the finite-population Markov chain.
          *
-         * It is not advisable to use this method for very large state spaces since the memory required
-         * to store the matrix might explode. In these cases you should resort to dimensional reduction
-         * techniques, such as the Small Mutation Limit (SML).
+         * The full chain evolves on the set of all population states
+         * @f[
+         * \mathcal{S} = \left\{x \in \mathbb{N}^n : \sum_{i=1}^n x_i = Z \right\}.
+         * @f]
+         * Each off-diagonal entry corresponds to a one-step transition in which one individual changes
+         * strategy, so the destination state differs from the source state by @f$+1@f$ in one strategy
+         * and @f$-1@f$ in another. The diagonal is then chosen so that each row sums to one.
          *
-         * @param beta : intensity of selection
-         * @param mu : mutation rate
-         * @return SparseMatrix2D containing the transition probabilities from any population state to another.
-         * This matrix will be of size nb_states x nb_states.
+         * Mutation is incorporated directly in the transition probabilities. In particular, for a transition
+         * in which strategy @f$j@f$ decreases by one individual and strategy @f$i@f$ increases by one
+         * individual, the corresponding probability combines:
+         * - imitation/selection, weighted by @f$(1-\mu)@f$,
+         * - mutation, weighted by @f$\mu@f$.
+         *
+         * For large state spaces, explicitly storing this matrix may become prohibitively expensive in
+         * memory. In such cases, dimensional reduction methods such as the Small Mutation Limit (SML)
+         * are usually preferable.
+         *
+         * @param beta Intensity of selection @f$\beta@f$.
+         * @param mu Mutation probability @f$\mu@f$.
+         * @return Sparse transition matrix of size @f$|\mathcal{S}| \times |\mathcal{S}|@f$.
          */
         SparseMatrix2D calculate_transition_matrix(double beta, double mu);
 
         /**
-         * @brief Calculates the gradient of selection without mutation for the given state.
+         * @brief Computes the gradient of selection without mutation for a given population state.
          *
-         * This method calculates the gradient of selection (without mutation), which is, the
-         * most likely direction of evolution of the system.
+         * Let @f$x = (x_1,\dots,x_n)@f$ denote the current state. This method returns the expected
+         * net one-step change in the strategy counts due only to selection, i.e. without mutation.
          *
-         * @param beta : intensity of selection
-         * @param state : VectorXui containing the counts of each strategy in the population
-         * @return Vector of nb_strategies dimensions containing the gradient of selection.
+         * For each strategy @f$i@f$, the returned quantity is
+         * @f[
+         * g_i(x)
+         * =
+         * \frac{1}{n}
+         * \sum_{j \ne i}
+         * \left[
+         * T_{j \to i}^{\mathrm{sel}}(x) - T_{i \to j}^{\mathrm{sel}}(x)
+         * \right],
+         * @f]
+         * where @f$T_{j \to i}^{\mathrm{sel}}(x)@f$ is the probability that one individual of strategy
+         * @f$j@f$ is replaced by one individual of strategy @f$i@f$ under pure pairwise comparison.
+         *
+         * Under the Fermi rule, this local net flux can be written as
+         * @f[
+         * T_{j \to i}^{\mathrm{sel}}(x) - T_{i \to j}^{\mathrm{sel}}(x)
+         * =
+         * \frac{x_i x_j}{Z(Z-1)}
+         * \tanh\!\left(\frac{\beta}{2}(f_i(x)-f_j(x))\right).
+         * @f]
+         *
+         * The resulting vector is tangent to the simplex, i.e.
+         * @f[
+         * \sum_{i=1}^n g_i(x) = 0.
+         * @f]
+         *
+         * @param beta Intensity of selection @f$\beta@f$.
+         * @param state Population state @f$x@f$, given as strategy counts.
+         * @return Vector of size @f$n@f$ containing the selection gradient at the given state.
          */
         Vector calculate_gradient_of_selection(double beta, const Eigen::Ref<const VectorXui> &state) const;
 
         /**
-         * @brief Calculates the fixation probability of an invading strategy in a population o resident strategy.
+        * @brief Computes the gradient of selection with mutation for a given population state.
+        *
+        * This method returns the expected one-step drift of the strategy counts when both pairwise comparison
+        * and mutation are active.
+        *
+        * Let @f$x = (x_1,\dots,x_n)@f$ be the current population state, with population size @f$Z@f$ and
+        * @f$n@f$ strategies. The returned gradient is
+        * @f[
+        * g_i^{(\mu)}(x)
+        * =
+        * (1-\mu)\, g_i(x)
+        * +
+        * \frac{\mu_{\mathrm{eff}}}{nZ}\left(Z - n x_i\right),
+        * @f]
+        * where @f$g_i(x)@f$ is the mutation-free gradient returned by
+        * `calculate_gradient_of_selection`, and @f$\mu_{\mathrm{eff}}@f$ is the effective mutation
+        * probability towards one specific alternative strategy, as defined by
+        * `effective_mutation_probability_`.
+        *
+        * The first term is the selection contribution, scaled by @f$(1-\mu)@f$, while the second term is
+        * the mutation drift induced by uniform mutation towards the other strategies.
+        *
+        * As in the mutation-free case, the resulting vector is tangent to the simplex:
+        * @f[
+        * \sum_{i=1}^n g_i^{(\mu)}(x) = 0.
+        * @f]
+        *
+        * @note This method is kept separate from `calculate_gradient_of_selection` to avoid introducing
+        * additional branching or overloading overhead in a function that may be called repeatedly in tight loops.
+        *
+        * @param beta Intensity of selection @f$\beta@f$.
+        * @param mu Mutation probability @f$\mu@f$.
+        * @param state Population state @f$x@f$, given as strategy counts.
+        * @return Vector of size @f$n@f$ containing the gradient with mutation at the given state.
+        */
+        Vector calculate_gradient_of_selection_with_mutation(double beta,
+                                                             double mu,
+                                                             const Eigen::Ref<const VectorXui> &state) const;
+
+        /**
+         * @brief Calculates the fixation probability of a mutant strategy in a resident population.
          *
-         * @param index_invading_strategy : index of the invading strategy
-         * @param index_resident_strategy : index of the resident strategy
-         * @param beta : intensity of selection
-         * @return fixation probability
+         * This method considers the one-dimensional edge of the simplex involving only the invading
+         * and resident strategies. It returns the probability that a single individual using the
+         * invading strategy eventually takes over a population initially composed of residents.
+         *
+         * Formally, this is the probability that the birth-death chain on states
+         * @f$k = 0, 1, \dots, Z@f$ reaches @f$k=Z@f$ before @f$k=0@f$, starting from @f$k=1@f$,
+         * where @f$k@f$ is the number of invaders.
+         *
+         * @param index_invading_strategy Index of the invading strategy.
+         * @param index_resident_strategy Index of the resident strategy.
+         * @param beta Intensity of selection @f$\beta@f$.
+         * @return Fixation probability of one invader in a resident population.
          */
         double calculate_fixation_probability(int index_invading_strategy, int index_resident_strategy, double beta);
 
         /**
-         * @brief Calculates the transition matrix of the reduced Markov Chain that emerges when assuming SML.
+         * @brief Computes the reduced Markov chain and fixation matrix under the Small Mutation Limit.
          *
-         * By assuming the limit of small mutations (SML), we can reduce the number of states of the dynamical system
-         * to those which are monomorphic, i.e., the whole population adopts the same strategy.
+         * In the Small Mutation Limit (SML), mutations are assumed sufficiently rare that the population
+         * is almost always monomorphic before the next mutation occurs. The full dynamics can then be
+         * approximated by a Markov chain on the @f$n@f$ monomorphic states only.
          *
-         * Thus, the dimensions of the transition matrix in the SML is (nb_strategies, nb_strategies), and
-         * the transitions are given by the normalized fixation probabilities. This means that a transition
-         * where i \neq j, T[i, j] = fixation(i, j) / (nb_strategies - 1) and T[i, i] = 1 - \sum{T[i, j]}.
+         * If the current monomorphic population uses strategy @f$i@f$, the probability of transitioning
+         * to monomorphic strategy @f$j@f$ is proportional to the fixation probability of one mutant
+         * @f$j@f$ in a resident population of @f$i@f$:
+         * @f[
+         * T_{ij}^{\mathrm{SML}}
+         * =
+         * \frac{\rho_{ij}}{n-1},
+         * \qquad i \ne j,
+         * @f]
+         * where @f$\rho_{ij}@f$ is the fixation probability of one @f$j@f$ mutant in a population of @f$i@f$.
+         * The diagonal terms are set so that each row sums to one:
+         * @f[
+         * T_{ii}^{\mathrm{SML}} = 1 - \sum_{j \ne i} T_{ij}^{\mathrm{SML}}.
+         * @f]
          *
-         * This method will also return the matrix of fixation probabilities,
-         * where fixation_probabilities[i, j] gives the probability that one mutant j fixates in a population
-         * of i.
+         * The returned fixation matrix satisfies:
+         * - `fixation_probabilities(i, j)` = probability that one mutant @f$j@f$ fixates in a population of @f$i@f$.
          *
-         *
-         * @param beta : intensity of selection
-         * @return std::tuple<Matrix2D, Matrix2D> A tuple including the transition matrix
-         *         and a matrix with the fixation probabilities.
+         * @param beta Intensity of selection @f$\beta@f$.
+         * @return Tuple containing:
+         *         - the reduced SML transition matrix,
+         *         - the matrix of pairwise fixation probabilities.
          */
         std::tuple<Matrix2D, Matrix2D> calculate_transition_and_fixation_matrix_sml(double beta);
 
-        //        Vector calculate_gradient_of_selection(const Eigen::Ref<const Matrix2D> &transition_matrix,
-        //                                               const Eigen::Ref<const Vector> &stationary_distribution,
-        //                                               const Eigen::Ref<const VectorXui> &state);
-
         // setters
+
+        /**
+         * @brief Updates the population size and recomputes dependent dimensions.
+         *
+         * Changing the population size changes the state space size
+         * @f$\binom{Z+n-1}{n-1}@f$, so any cached or precomputed quantities that depend on @f$Z@f$
+         * should be considered specific to the new population size only.
+         *
+         * @param population_size New population size @f$Z@f$.
+         */
         void update_population_size(int population_size);
 
         // getters
+
+        /**
+         * @brief Returns the number of strategies.
+         *
+         * @return Number of strategies @f$n@f$.
+         */
         [[nodiscard]] int nb_strategies() const;
 
+        /**
+         * @brief Returns the number of population states.
+         *
+         * This is the cardinality of the simplex lattice
+         * @f[
+         * |\mathcal{S}| = \binom{Z+n-1}{n-1}.
+         * @f]
+         *
+         * @return Number of states in the full Markov chain.
+         */
         [[nodiscard]] int64_t nb_states() const;
 
+        /**
+         * @brief Returns the population size.
+         *
+         * @return Population size @f$Z@f$.
+         */
         [[nodiscard]] int population_size() const;
 
+        /**
+         * @brief Returns the underlying game.
+         *
+         * @return Reference to the game used to evaluate fitnesses.
+         */
         [[nodiscard]] const AbstractGame &game() const;
 
     private:
@@ -158,23 +324,65 @@ namespace egttools::FinitePopulations::analytical {
         Cache cache_;
 
         /**
-         * @brief calculates a transition probability.
+         * @brief Computes the local pairwise contribution to the mutation-free gradient.
          *
-         * This method calculates the transition probability from the current @param state
-         * to a new state containing one more @param increasing_strategy and one less
-         * @param decreasing_strategy.
+         * For a pair of distinct strategies, this method evaluates the antisymmetric local contribution
+         * to the gradient associated with the transition
+         * @f[
+         * x \mapsto x + e_{\text{increasing}} - e_{\text{decreasing}},
+         * @f]
+         * where one individual of `decreasing_strategy` is replaced by one individual of
+         * `increasing_strategy`.
          *
-         * @param decreasing_strategy : index of the strategy that will decrease
-         * @param increasing_strategy : index of the strategy that will increase
-         * @param beta : intensity of selection
-         * @param state : Vector containing the counts of the strategies in the population
-         * @return the transition probability
+         * Under the Fermi rule, the corresponding local net contribution is
+         * @f[
+         * \frac{x_i x_j}{Z(Z-1)}
+         * \tanh\!\left(\frac{\beta}{2}(f_i(x)-f_j(x))\right),
+         * @f]
+         * with @f$i =@f$ `increasing_strategy` and @f$j =@f$ `decreasing_strategy`.
+         *
+         * @param decreasing_strategy Index of the strategy that decreases by one individual.
+         * @param increasing_strategy Index of the strategy that increases by one individual.
+         * @param beta Intensity of selection @f$\beta@f$.
+         * @param state Current population state.
+         * @return Local mutation-free net flux from `decreasing_strategy` to `increasing_strategy`.
          */
-        //        inline double calculate_transition_(int decreasing_strategy, int increasing_strategy, double beta, double mu, VectorXui &state);
-
         inline double calculate_local_gradient_(int decreasing_strategy, int increasing_strategy, double beta,
                                                 VectorXui &state) const;
 
+        /**
+        * @brief Returns the effective mutation probability towards one specific alternative strategy.
+        *
+        * In the transition rule used by this class, mutation is first triggered with probability @f$\mu@f$.
+        * Conditional on mutation, the offspring adopts one of the other @f$n-1@f$ strategies uniformly at random.
+        * Therefore, the probability of mutating from a focal strategy into one specific alternative strategy is
+        * @f[
+        * \mu_{\mathrm{eff}} =
+        * \begin{cases}
+        * \mu, & n = 2, \\[4pt]
+        * \mu / (n - 1), & n > 2,
+        * \end{cases}
+        * @f]
+        * where @f$n@f$ is the number of strategies.
+        *
+        * This quantity is used in the mutation contribution to the drift/gradient.
+        *
+        * @param mu Mutation probability @f$\mu@f$.
+        * @return Effective mutation probability towards one specific alternative strategy.
+        */
+        inline double effective_mutation_probability_(double mu) const;;
+
+        /**
+         * @brief Computes the fitness of one strategy in a given population state.
+         *
+         * This method delegates the actual fitness computation to the underlying game and may use the
+         * internal LRU cache to avoid recomputing previously requested values.
+         *
+         * @param strategy_index Index of the focal strategy.
+         * @param state Current population state.
+         * @param state_index Integer index associated with the population state.
+         * @return Fitness of the focal strategy in the given state.
+         */
         inline double calculate_fitness_(int strategy_index,
                                          const VectorXui &state,
                                          int64_t state_index);

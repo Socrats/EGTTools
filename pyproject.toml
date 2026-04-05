@@ -64,15 +64,12 @@ dependencies = [
 
 [project.optional-dependencies]
 docs = [
-    # EGTtools runtime dependencies (manually copied from requirements.txt and examples/requirements.txt)
     "numpy>=1.24",
     "scipy>=1.10.1",
     "matplotlib>=3.7.1",
     "pandas>=2.0.1",
     "networkx>=3.1",
     "pybind11>=2.10",
-
-    # Sphinx toolchain
     "sphinx>=7.2",
     "sphinx-rtd-theme>=2.0.0",
     "furo>=2024.1.29",
@@ -83,18 +80,12 @@ docs = [
     "pygments",
     "docutils",
     "prompt-toolkit",
-    "pandoc",  # You need pandoc installed system-wide; pip package may not be enough
-
-    # Jupyter support for notebooks
+    "pandoc",
     "ipykernel",
     "ipywidgets",
-
-    # For GitHub artifact download (only needed on RTD builds)
     "gitpython>=3.1.31",
     "PyGithub>=1.58.0",
     "requests>=2.29.0",
-
-    # Extra for handling examples
     "beautifulsoup4>=4.12.2",
 ]
 
@@ -103,6 +94,24 @@ docs-minimal = [
     "sphinx-rtd-theme",
     "sphinx-autodoc-typehints",
     "furo",
+]
+
+[tool.setuptools.package-data]
+egttools = [
+    "py.typed",
+    "*.pyi",
+    "numerical/*.pyi",
+    "games/*.pyi",
+    "helpers/*.pyi",
+    "plotting/*.pyi",
+]
+"egttools.numerical" = [
+    "*.so",
+    "*.dylib",
+    "*.pyd",
+    "*.pyi",
+    "lib/*.dylib",
+    "lib/*.so",
 ]
 
 [tool.check-manifest]
@@ -129,8 +138,6 @@ test-requires = "pytest"
 test-command = "pytest {project}/tests"
 
 [tool.pytest.ini_options]
-# disable-pytest-warnings should be removed once we rewrite tests
-# using yield with parametrize
 addopts = """
     --ignore build_tools
     --ignore docs
