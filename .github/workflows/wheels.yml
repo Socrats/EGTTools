@@ -96,40 +96,46 @@ jobs:
           path: wheelhouse/*.tar.gz
 
   build_wheels:
-    name: Build wheel for ${{ matrix.platform_id }}-${{ matrix.manylinux_image }}
+    name: Build wheel for ${{ matrix.platform_id }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
+          # Windows x86_64
           - os: windows-latest
             platform_id: win_amd64
             arch: AMD64
             openmp_enabled: "ON"
 
+          # Windows arm64 (cross-compiled on x86_64 runner, cannot be tested)
           - os: windows-latest
             platform_id: win_arm64
             arch: ARM64
             openmp_enabled: "ON"
 
+          # Linux x86_64
           - os: ubuntu-latest
             platform_id: manylinux_x86_64
             arch: x86_64
             manylinux_image: manylinux_2_28
             openmp_enabled: "ON"
 
-          - os: macos-13
-            platform_id: macosx_x86_64
-            arch: x86_64
-            macosx_deployment_target: "13.0"
-            openmp_enabled: "ON"
-            skip_vcpkg: "OFF"
-
-          - os: macos-14
+          # macOS arm64 (Apple Silicon) — macos-15 is the current free arm64 runner
+          - os: macos-15
             platform_id: macosx_arm64
             arch: arm64
             macosx_deployment_target: "14.0"
             openmp_enabled: "ON"
+            skip_vcpkg: "OFF"
+
+          # macOS x86_64 — cross-compiled from arm64 runner (macos-13 Intel runner is gone)
+          # Wheels are built but cannot be tested on this runner
+          - os: macos-15
+            platform_id: macosx_x86_64
+            arch: x86_64
+            macosx_deployment_target: "13.0"
+            openmp_enabled: "OFF"
             skip_vcpkg: "OFF"
 
     steps:
@@ -197,9 +203,14 @@ jobs:
         run: ./vcpkg/vcpkg install --x-binarycaching
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.23.3
+        uses: pypa/cibuildwheel@v2.23.4
         env:
           CIBW_ARCHS: ${{ matrix.arch }}
+          CIBW_BUILD: >-
+            cp310-${{ matrix.platform_id }}
+            cp311-${{ matrix.platform_id }}
+            cp312-${{ matrix.platform_id }}
+            cp313-${{ matrix.platform_id }}
           CIBW_ENVIRONMENT_LINUX: >-
             VCPKG_PATH={package}
             EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
@@ -211,12 +222,13 @@ jobs:
           CIBW_ENVIRONMENT_WINDOWS: >-
             VCPKG_PATH={package}
             EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
-          CIBW_BUILD: "cp310-${{ matrix.platform_id }} cp311-${{ matrix.platform_id }} cp312-${{ matrix.platform_id }}"
           CIBW_BEFORE_ALL_LINUX: bash {package}/build_tools/github/install_blas_openmp.sh
           CIBW_BEFORE_ALL_MACOS: bash {package}/build_tools/github/install_blas_openmp.sh
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
-          CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
+          CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_CONFIG_SETTINGS_WINDOWS: "setup-args=--vsenv"
+          # Cross-compiled wheels (x86_64 on arm64 runner, win_arm64) cannot be tested
+          CIBW_TEST_SKIP: "*-macosx_x86_64 *-win_arm64"
         with:
           package-dir: .
           output-dir: wheelhouse
