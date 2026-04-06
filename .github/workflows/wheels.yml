@@ -123,12 +123,6 @@ jobs:
             manylinux_image: manylinux_2_28
             openmp_enabled: "ON"
 
-          # Linux arm64 — native arm64 runner, no QEMU emulation
-          - os: ubuntu-24.04-arm
-            platform_id: manylinux_aarch64
-            arch: aarch64
-            manylinux_image: manylinux_2_28
-            openmp_enabled: "ON"
 
           # macOS arm64 (Apple Silicon) — macos-15 runner; Homebrew libomp on this
           # runner is built for macOS 15 so the deployment target must match.
@@ -244,7 +238,6 @@ jobs:
           # VS environment is activated by scikit-build via setup-args=--vsenv.
           CIBW_BEFORE_BUILD_WINDOWS: pip install cmake ninja
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
-          CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_CONFIG_SETTINGS_WINDOWS: "setup-args=--vsenv"
           # win_arm64 is cross-compiled on x86_64 runner and cannot be tested
           CIBW_TEST_SKIP: "*-win_arm64"
