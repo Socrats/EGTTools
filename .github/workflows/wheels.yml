@@ -129,14 +129,6 @@ jobs:
             openmp_enabled: "ON"
             skip_vcpkg: "OFF"
 
-          # macOS x86_64 — cross-compiled from arm64 runner (macos-13 Intel runner is gone)
-          # Wheels are built but cannot be tested on this runner
-          - os: macos-15
-            platform_id: macosx_x86_64
-            arch: x86_64
-            macosx_deployment_target: "13.0"
-            openmp_enabled: "OFF"
-            skip_vcpkg: "OFF"
 
     steps:
       - name: Checkout code
@@ -239,8 +231,8 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_CONFIG_SETTINGS_WINDOWS: "setup-args=--vsenv"
-          # Cross-compiled wheels (x86_64 on arm64 runner, win_arm64) cannot be tested
-          CIBW_TEST_SKIP: "*-macosx_x86_64 *-win_arm64"
+          # win_arm64 is cross-compiled on x86_64 runner and cannot be tested
+          CIBW_TEST_SKIP: "*-win_arm64"
         with:
           package-dir: .
           output-dir: wheelhouse
