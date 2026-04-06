@@ -121,11 +121,12 @@ jobs:
             manylinux_image: manylinux_2_28
             openmp_enabled: "ON"
 
-          # macOS arm64 (Apple Silicon) — macos-15 is the current free arm64 runner
+          # macOS arm64 (Apple Silicon) — macos-15 runner; Homebrew libomp on this
+          # runner is built for macOS 15 so the deployment target must match.
           - os: macos-15
             platform_id: macosx_arm64
             arch: arm64
-            macosx_deployment_target: "14.0"
+            macosx_deployment_target: "15.0"
             openmp_enabled: "ON"
             skip_vcpkg: "OFF"
 
@@ -228,6 +229,9 @@ jobs:
               {package}/vcpkg/vcpkg install --x-binarycaching
             fi
           CIBW_BEFORE_ALL_MACOS: bash {package}/build_tools/github/install_blas_openmp.sh
+          # Install cmake and ninja into the build venv so vcpkg compiler detection works.
+          # VS environment is activated by scikit-build via setup-args=--vsenv.
+          CIBW_BEFORE_BUILD_WINDOWS: pip install cmake ninja
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_CONFIG_SETTINGS_WINDOWS: "setup-args=--vsenv"
