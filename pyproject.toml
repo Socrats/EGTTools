@@ -5,8 +5,6 @@ requires = [
     "scikit-build>=0.13.1",
     "cmake>=3.18",
     "ninja; platform_system!='Windows'",
-    "numpy",
-    "scipy",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -135,7 +133,7 @@ ignore = [
 ]
 
 [tool.cibuildwheel]
-build-frontend = "build"
+build-frontend = "pip"
 test-requires = "pytest"
 test-command = "pytest {project}/tests"
 
