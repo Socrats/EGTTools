@@ -8,6 +8,10 @@ from .indicators import (
     draw_invasion_diagram
 )
 from .simplex2d import Simplex2D
+try:
+    from .simplex3d import Simplex3D
+except ImportError:
+    pass  # plotly not installed; Simplex3D unavailable
 from .simplified import (
     plot_replicator_dynamics_in_simplex,
     plot_pairwise_comparison_rule_dynamics_in_simplex,
