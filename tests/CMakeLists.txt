@@ -15,11 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
+enable_testing()
+
 # ------------------------------------------------------------------------------
-# Enable CTest and test integration
+# External dependencies
 # ------------------------------------------------------------------------------
 
-enable_testing()
+find_package(Boost REQUIRED)
+find_package(OpenMP)
 
 # ------------------------------------------------------------------------------
 # Helper function to register a test binary
@@ -29,20 +32,10 @@ function(add_egttools_test target_name source_file)
     add_executable(${target_name} ${source_file})
     target_link_libraries(${target_name} PRIVATE egttoolsNumerical)
 
-    if (Boost_FOUND)
-        target_include_directories(${target_name} PRIVATE ${Boost_INCLUDE_DIRS})
-        target_link_libraries(${target_name} PRIVATE Boost::multiprecision)
-    endif ()
-
-    if (OpenMP_CXX_FOUND)
-        target_link_libraries(${target_name} PRIVATE OpenMP::OpenMP_CXX)
-    endif ()
-
     if (APPLE)
         target_link_libraries(${target_name} PRIVATE "-framework Accelerate")
     endif ()
 
-    # ✅ Register test with CTest
     add_test(NAME ${target_name} COMMAND ${target_name})
 endfunction()
 
@@ -77,18 +70,28 @@ set_target_properties(egttoolsNumerical PROPERTIES
         CXX_EXTENSIONS FALSE
 )
 
-# ------------------------------------------------------------------------------
-# External dependencies
-# ------------------------------------------------------------------------------
+target_include_directories(egttoolsNumerical
+        PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/../cpp/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/../cpp/src
+)
 
-find_package(Boost REQUIRED COMPONENTS multiprecision)
+target_link_libraries(egttoolsNumerical
+        PUBLIC
+        Boost::headers
+)
 
-if (Boost_FOUND)
-    get_target_property(Boost_INCLUDE_DIRS Boost::multiprecision INTERFACE_INCLUDE_DIRECTORIES)
-    message(STATUS "Boost Include Directories: ${Boost_INCLUDE_DIRS}")
-    target_include_directories(egttoolsNumerical PRIVATE ${Boost_INCLUDE_DIRS})
-    target_link_libraries(egttoolsNumerical PRIVATE Boost::multiprecision)
-    add_definitions(-DHAS_BOOST)
+target_compile_definitions(egttoolsNumerical
+        PUBLIC
+        HAS_BOOST
+)
+
+if (OpenMP_CXX_FOUND)
+    target_link_libraries(egttoolsNumerical PUBLIC OpenMP::OpenMP_CXX)
+endif ()
+
+if (APPLE)
+    target_link_libraries(egttoolsNumerical PUBLIC "-framework Accelerate")
 endif ()
 
 # ------------------------------------------------------------------------------
@@ -113,6 +116,7 @@ add_egttools_test(testOneShotNetworkGame cpp/test_one_shot_network_game.cpp)
 add_egttools_test(testNetworkEvolver cpp/test_network_evolver.cpp)
 add_egttools_test(testFixations cpp/test_calculate_fixation_probabilities.cpp)
 add_egttools_test(testTSLRUCache cpp/test_thread_safe_lru_cache.cpp)
+add_egttools_test(testPairwiseComparisonAnalytical cpp/test_pairwise_comparison_analytical.cpp)
 
 if (APPLE)
     add_egttools_test(testBLASLAPACK cpp/test_blas_lapack.cpp)
@@ -137,15 +141,16 @@ add_custom_target(pytest
         PYTHONPATH=$<TARGET_FILE_DIR:numerical_>
         ${Python_EXECUTABLE} -m pytest -v
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        DEPENDS numerical)
+        DEPENDS numerical
+)
 
 add_test(NAME PythonTests
         COMMAND ${CMAKE_COMMAND} -E env
         PYTHONPATH=$<TARGET_FILE_DIR:numerical_>
         ${Python_EXECUTABLE} -m pytest -v
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 set_tests_properties(PythonTests PROPERTIES LABELS "python")
 
-# Convenience alias
 add_custom_target(tests DEPENDS pytest)

@@ -8,6 +8,7 @@
 #include <egttools/finite_populations/games/NormalFormGame.h>
 #include <egttools/finite_populations/games/NormalFormNetworkGame.h>
 
+#include <egttools/infinite_populations/AbstractReplicatorGame.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <egttools/finite_populations/games/AbstractNPlayerGame.hpp>
 #include <egttools/finite_populations/games/AbstractSpatialGame.hpp>

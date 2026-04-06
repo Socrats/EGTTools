@@ -1,4 +1,4 @@
-/** Copyright (c) 2022-2023  Elias Fernandez
+/** Copyright (c) 2022-2026  Elias Fernandez
 *
 * This file is part of EGTtools.
 *
@@ -18,272 +18,319 @@
 #include "distributions.hpp"
 
 void init_distributions(py::module_ &mDistributions) {
-    mDistributions.attr("__init__") = py::str(
-            "The `egttools.numerical.distributions` submodule contains "
-            "functions and classes that produce stochastic distributions.");
+    mDistributions.doc() =
+            "The `egttools.numerical.distributions` submodule contains functions and classes "
+            "for probability distributions and timing uncertainty."; {
+        py::options options;
+        options.disable_function_signatures();
 
-    py::class_<egttools::utils::TimingUncertainty<>>(mDistributions, "TimingUncertainty")
-            .def(py::init<double, int>(),
-                 R"pbdoc(
-                    Timing uncertainty distribution container.
+        py::class_<egttools::utils::TimingUncertainty<> >(
+                    mDistributions,
+                    "TimingUncertainty",
+                    R"pbdoc(
+                Timing uncertainty distribution container.
 
-                    This class provides methods to calculate the final round of the game according to some predifined distribution, which is geometric by default.
+                This class provides methods to sample the final round of a game.
+                By default, the timing uncertainty follows a geometric distribution.
 
-                    Parameters
-                    ----------
-                    p : float
-                        Probability that the game will end after the minimum number of rounds.
-                    max_rounds : int
-                        maximum number of rounds that the game can take (if 0, there is no maximum).
-                    )pbdoc",
-                 py::arg("p"), py::arg("max_rounds") = 0)
-            .def("calculate_end", &egttools::utils::TimingUncertainty<>::calculate_end,
-                 "Calculates the final round limiting by max_rounds, i.e., outputs a value between"
-                 "[min_rounds, max_rounds].",
-                 py::arg("min_rounds"), py::arg("random_generator"))
-            .def("calculate_full_end", &egttools::utils::TimingUncertainty<>::calculate_full_end,
-                 "Calculates the final round, i.e., outputs a value between"
-                 "[min_rounds, Inf].",
-                 py::arg("min_rounds"), py::arg("random_generator"))
-            .def_property_readonly("p", &egttools::utils::TimingUncertainty<>::probability)
-            .def_property("max_rounds", &egttools::utils::TimingUncertainty<>::max_rounds,
-                          &egttools::utils::TimingUncertainty<>::set_max_rounds);
+                Parameters
+                ----------
+                p : float
+                    Probability that the game ends after the minimum number of rounds.
+                max_rounds : int, optional
+                    Maximum number of rounds allowed. If 0, no maximum is enforced.
 
-    mDistributions.def("multinomial_pmf", &egttools::multinomialPMF,
-                       R"pbdoc(
-                                Calculates the probability density function of a multivariate hyper-geometric distribution.
+                Examples
+                --------
+                >>> from egttools.numerical.distributions import TimingUncertainty
+                >>> tu = TimingUncertainty(0.2, 20)
+            )pbdoc"
+                )
+                .def(
+                    py::init<double, int>(),
+                    py::arg("p"),
+                    py::arg("max_rounds") = 0
+                )
+                .def(
+                    "calculate_end",
+                    &egttools::utils::TimingUncertainty<>::calculate_end,
+                    R"pbdoc(
+                    Sample the final round, truncated by `max_rounds`.
 
-                                This function returns the probability that a sample of size
-                                :param n with counts of each type indicated by :param x
-                                would be drawn from a population with frequencies :param p.
-
-                                Both :param population_counts and :param sample_counts must be of shape
-                                (k,), where k is the number of types of `objects` in the population.
-
-                                For the application often used in this library, :param n would be the size of the group,
-                                :param k would be the number of strategies, :param x would be group configuration and
-                                :param p would be the state of the population (in infinite populations).
-
-                                Parameters
-                                ----------
-                                x : numpy.ndarray
-                                    Vector of containing the counts of each element that should be drawn.
-                                    Must sum to n.
-                                n : int
-                                    Total number of elements to draw
-                                p : numpy.ndarray
-                                    Vector indicating the total frequency of each element. Must sum to 1.
-
-                                Returns
-                                -------
-                                float
-                                    The probability that a sample of size n with counts x of each type is
-                                    draw from a population with total frequencies per type defined by p.
-
-                                See Also
-                                --------
-                                egttools.distributions.multivariate_hypergeometric_pdf
-                                egttools.distributions.binom
-                                egttools.distributions.comb
-                        )pbdoc", py::arg("x"), py::arg("n"), py::arg("p")
-                       );
-
-    mDistributions.def("multivariate_hypergeometric_pdf",
-                       static_cast<double (*)(size_t, size_t, size_t, const std::vector<size_t> &,
-                                              const Eigen::Ref<const egttools::VectorXui> &)>(&egttools::multivariateHypergeometricPDF),
-                       R"pbdoc(
-                                Calculates the probability density function of a multivariate hyper-geometric distribution.
-
-                                This function returns the probability that a sample :param sample_counts
-                                would be drawn from a population :param population_counts. Assuming that
-                                the population is of size :param m, has :param k objects, and the sample
-                                has size :param n.
-
-                                Both :param population_counts and :param sample_counts must be of shape
-                                (k,). The sum of all entries in :param population_counts,
-                                must sum to :param m, and the sum of all entries in :param sample_counts
-                                must sum to :param n.
-
-                                For the application often used in this library, :param m would be the size of the population,
-                                :param k would be the number of strategies, :param n would be the group size, :param sample_counts
-                                would contain the counts of each strategy in the group, and :param population_counts contains the
-                                counts of each strategy in the population.
-
-                                Parameters
-                                ----------
-                                m : int
-                                    size of the population
-                                k : int
-                                    number of objects in the population
-                                n : int
-                                    size of the sample
-                                sample_counts : List[int]
-                                    a vector containing the counts of each objects in the sample
-                                population_counts : numpy.ndarray
-                                    a vector containing the counts of each objects in the population
-
-                                Returns
-                                -------
-                                float
-                                    The probability that a sample of size n in a population of k objects
-
-                                See Also
-                                --------
-                                egttools.distributions.binom
-                                egttools.distributions.comb
-                        )pbdoc",
-                       py::arg("m"),
-                       py::arg("k"),
-                       py::arg("n"),
-                       py::arg("sample_counts"),
-                       py::arg("population_counts"));
-
-    mDistributions.def("multivariate_hypergeometric_pdf",
-                       static_cast<double (*)(size_t, size_t, size_t, const Eigen::Ref<const egttools::VectorXui> &,
-                                              const Eigen::Ref<const egttools::VectorXui> &)>(&egttools::multivariateHypergeometricPDF),
-                       R"pbdoc(
-                                Calculates the probability density function of a multivariate hyper-geometric distribution.
-
-                                This function returns the probability that a sample :param sample_counts
-                                would be drawn from a population :param population_counts. Assuming that
-                                the population is of size :param m, has :param k objects, and the sample
-                                has size :param n.
-
-                                Both :param population_counts and :param sample_counts must be of shape
-                                (k,). The sum of all entries in :param population_counts,
-                                must sum to :param m, and the sum of all entries in :param sample_counts
-                                must sum to :param n.
-
-                                For the application often used in this library, :param m would be the size of the population,
-                                :param k would be the number of strategies, :param n would be the group size, :param sample_counts
-                                would contain the counts of each strategy in the group, and :param population_counts contains the
-                                counts of each strategy in the population.
-
-                                Parameters
-                                ----------
-                                m : int
-                                    size of the population
-                                k : int
-                                    number of objects in the population
-                                n : int
-                                    size of the sample
-                                sample_counts : List[int]
-                                    a vector containing the counts of each objects in the sample
-                                population_counts : numpy.ndarray
-                                    a vector containing the counts of each objects in the population
-
-                                Returns
-                                -------
-                                float
-                                    The probability that a sample of size n in a population of k objects
-
-                                See Also
-                                --------
-                                egttools.distributions.binom
-                                egttools.distributions.comb
-                        )pbdoc",
-                       py::arg("m"),
-                       py::arg("k"),
-                       py::arg("n"),
-                       py::arg("sample_counts"),
-                       py::arg("population_counts"));
-
-    mDistributions.def("binom",
-                       &egttools::binomialCoeff<double, int64_t>,
-                       R"pbdoc(
-                                Calculates the binomial coefficient C(n, k).
-
-                                This method is approximate and will return a float value.
-                                The result should be equivalent to the one produced by
-                                `scipy.special.binom`.
-
-                                Parameters
-                                ----------
-                                n : int
-                                    size of the fixed set
-                                k : int
-                                    size of the unordered subset
-
-                                Returns
-                                -------
-                                float
-                                    The binomial coefficient C(n, k).
-
-                                See Also
-                                --------
-                                egttools.distributions.multivariate_hypergeometric_pdf
-                                egttools.distributions.comb
-                        )pbdoc",
-                       py::arg("n"),
-                       py::arg("k"));
-
-#if (HAS_BOOST)
-    mDistributions.def(
-            "comb", [](const size_t n, const size_t k) {
-                auto result = egttools::binomialCoeff<boost::multiprecision::cpp_int, size_t>(n, k);
-                return py::cast(result);
-            },
-            R"pbdoc(
-                    Calculates the binomial coefficient C(n, k).
-
-                    The number of combinations of :param n things taken :param k at a time.
-                    This is often expressed as "N choose k".
-
-                    This method is exact and should be equivalent `scipy.special.comb`.
-                    However, if the outcome or any intermediary product occupies more than
-                    an uint128_t, the result will not be correct, since there will be
-                    an overflow!
+                    The returned round lies in the interval
+                    `[min_rounds, max_rounds]` when `max_rounds > 0`.
 
                     Parameters
                     ----------
-                    n : int
-                        size of the fixed set
-                    k : int
-                        size of the unordered subset
+                    min_rounds : int
+                        Minimum number of rounds.
+                    random_generator : object
+                        Random number generator used internally.
 
                     Returns
                     -------
                     int
-                        The binomial coefficient C(n, k).
+                        Sampled final round.
+                )pbdoc",
+                    py::arg("min_rounds"),
+                    py::arg("random_generator")
+                )
+                .def(
+                    "calculate_full_end",
+                    &egttools::utils::TimingUncertainty<>::calculate_full_end,
+                    R"pbdoc(
+                    Sample the final round without truncation.
 
-                    See Also
-                    --------
-                    egttools.distributions.multivariate_hypergeometric_pdf
-                    egttools.distributions.binom
-            )pbdoc",
-            py::arg("n"), py::arg("k"));
+                    The returned round is at least `min_rounds`.
+
+                    Parameters
+                    ----------
+                    min_rounds : int
+                        Minimum number of rounds.
+                    random_generator : object
+                        Random number generator used internally.
+
+                    Returns
+                    -------
+                    int
+                        Sampled final round.
+                )pbdoc",
+                    py::arg("min_rounds"),
+                    py::arg("random_generator")
+                )
+                .def_property_readonly(
+                    "p",
+                    &egttools::utils::TimingUncertainty<>::probability,
+                    "Probability that the game ends after the minimum number of rounds."
+                )
+                .def_property(
+                    "max_rounds",
+                    &egttools::utils::TimingUncertainty<>::max_rounds,
+                    &egttools::utils::TimingUncertainty<>::set_max_rounds,
+                    "Maximum allowed number of rounds. A value of 0 means no maximum."
+                );
+    }
+
+    mDistributions.def(
+        "multinomial_pmf",
+        &egttools::multinomialPMF,
+        R"pbdoc(
+            Calculate the probability mass function of a multinomial distribution.
+
+            This function returns the probability of drawing counts `x` in a sample
+            of size `n`, given category probabilities `p`.
+
+            Parameters
+            ----------
+            x : numpy.ndarray
+                Counts for each category in the sample. Must sum to `n`.
+            n : int
+                Total number of draws.
+            p : numpy.ndarray
+                Category probabilities. Must sum to 1.
+
+            Returns
+            -------
+            float
+                Probability of observing the counts `x`.
+
+            See Also
+            --------
+            egttools.distributions.multivariate_hypergeometric_pdf
+            egttools.distributions.binom
+            egttools.distributions.comb
+
+            Examples
+            --------
+            >>> import numpy as np
+            >>> from egttools.numerical.distributions import multinomial_pmf
+            >>> multinomial_pmf(np.array([2, 1]), 3, np.array([0.5, 0.5]))
+        )pbdoc",
+        py::arg("x"),
+        py::arg("n"),
+        py::arg("p")
+    );
+
+    mDistributions.def(
+        "multivariate_hypergeometric_pdf",
+        static_cast<double (*)(
+            size_t,
+            size_t,
+            size_t,
+            const std::vector<size_t> &,
+            const Eigen::Ref<const egttools::VectorXui> &
+        )>(&egttools::multivariateHypergeometricPDF),
+        R"pbdoc(
+            Calculate the probability mass function of a multivariate hypergeometric distribution.
+
+            This function returns the probability of observing `sample_counts` when drawing
+            a sample of size `n` from a population of size `m`.
+
+            Parameters
+            ----------
+            m : int
+                Population size.
+            k : int
+                Number of categories in the population.
+            n : int
+                Sample size.
+            sample_counts : list[int]
+                Counts for each category in the sample. Must sum to `n`.
+            population_counts : numpy.ndarray
+                Counts for each category in the population. Must sum to `m`.
+
+            Returns
+            -------
+            float
+                Probability of observing `sample_counts`.
+
+            See Also
+            --------
+            egttools.distributions.binom
+            egttools.distributions.comb
+        )pbdoc",
+        py::arg("m"),
+        py::arg("k"),
+        py::arg("n"),
+        py::arg("sample_counts"),
+        py::arg("population_counts")
+    );
+
+    mDistributions.def(
+        "multivariate_hypergeometric_pdf",
+        static_cast<double (*)(
+            size_t,
+            size_t,
+            size_t,
+            const Eigen::Ref<const egttools::VectorXui> &,
+            const Eigen::Ref<const egttools::VectorXui> &
+        )>(&egttools::multivariateHypergeometricPDF),
+        R"pbdoc(
+            Calculate the probability mass function of a multivariate hypergeometric distribution.
+
+            This function returns the probability of observing `sample_counts` when drawing
+            a sample of size `n` from a population of size `m`.
+
+            Parameters
+            ----------
+            m : int
+                Population size.
+            k : int
+                Number of categories in the population.
+            n : int
+                Sample size.
+            sample_counts : numpy.ndarray
+                Counts for each category in the sample. Must sum to `n`.
+            population_counts : numpy.ndarray
+                Counts for each category in the population. Must sum to `m`.
+
+            Returns
+            -------
+            float
+                Probability of observing `sample_counts`.
+
+            See Also
+            --------
+            egttools.distributions.binom
+            egttools.distributions.comb
+        )pbdoc",
+        py::arg("m"),
+        py::arg("k"),
+        py::arg("n"),
+        py::arg("sample_counts"),
+        py::arg("population_counts")
+    );
+
+    mDistributions.def(
+        "binom",
+        &egttools::binomialCoeff<double, int64_t>,
+        R"pbdoc(
+            Calculate the binomial coefficient C(n, k).
+
+            This implementation returns a floating-point approximation and should
+            be equivalent to `scipy.special.binom`.
+
+            Parameters
+            ----------
+            n : int
+                Size of the full set.
+            k : int
+                Size of the subset.
+
+            Returns
+            -------
+            float
+                Binomial coefficient C(n, k).
+
+            See Also
+            --------
+            egttools.distributions.multivariate_hypergeometric_pdf
+            egttools.distributions.comb
+        )pbdoc",
+        py::arg("n"),
+        py::arg("k")
+    );
+
+#if (HAS_BOOST)
+    mDistributions.def(
+        "comb",
+        [](const size_t n, const size_t k) {
+            auto result = egttools::binomialCoeff<boost::multiprecision::cpp_int, size_t>(n, k);
+            return py::cast(result);
+        },
+        R"pbdoc(
+            Calculate the binomial coefficient C(n, k).
+
+            This implementation returns the exact result using multiprecision integers.
+
+            Parameters
+            ----------
+            n : int
+                Size of the full set.
+            k : int
+                Size of the subset.
+
+            Returns
+            -------
+            int
+                Binomial coefficient C(n, k).
+
+            See Also
+            --------
+            egttools.distributions.multivariate_hypergeometric_pdf
+            egttools.distributions.binom
+        )pbdoc",
+        py::arg("n"),
+        py::arg("k")
+    );
 #else
-    mDistributions.def("comb",
-                       &egttools::binomialCoeff<size_t, size_t>,
-                       R"pbdoc(
-                                Calculates the binomial coefficient C(n, k).
+    mDistributions.def(
+        "comb",
+        &egttools::binomialCoeff<size_t, size_t>,
+        R"pbdoc(
+            Calculate the binomial coefficient C(n, k).
 
-                                The number of combinations of :param n things taken :param k at a time.
-                                This is often expressed as "N choose k".
+            This implementation is exact only while intermediate results fit in `uint64_t`.
 
-                                This method is exact and should be equivalent `scipy.special.comb`.
-                                However, if the outcome or any intermediary product occupies more than
-                                an uint64_t, the result will not be correct, since there will be
-                                an overflow!
+            Parameters
+            ----------
+            n : int
+                Size of the full set.
+            k : int
+                Size of the subset.
 
-                                Parameters
-                                ----------
-                                n : int
-                                    size of the fixed set
-                                k : int
-                                    size of the unordered subset
+            Returns
+            -------
+            int
+                Binomial coefficient C(n, k).
 
-                                Returns
-                                -------
-                                int
-                                    The binomial coefficient C(n, k).
-
-                                See Also
-                                --------
-                                egttools.distributions.multivariate_hypergeometric_pdf
-                                egttools.distributions.binom
-                                )pbdoc",
-                       py::arg("n"),
-                       py::arg("k"));
+            See Also
+            --------
+            egttools.distributions.multivariate_hypergeometric_pdf
+            egttools.distributions.binom
+        )pbdoc",
+        py::arg("n"),
+        py::arg("k")
+    );
 #endif
 }
