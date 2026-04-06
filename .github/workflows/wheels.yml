@@ -121,6 +121,13 @@ jobs:
             manylinux_image: manylinux_2_28
             openmp_enabled: "ON"
 
+          # Linux arm64 — native arm64 runner, no QEMU emulation
+          - os: ubuntu-24.04-arm
+            platform_id: manylinux_aarch64
+            arch: aarch64
+            manylinux_image: manylinux_2_28
+            openmp_enabled: "ON"
+
           # macOS arm64 (Apple Silicon) — macos-15 runner; Homebrew libomp on this
           # runner is built for macOS 15 so the deployment target must match.
           - os: macos-15
