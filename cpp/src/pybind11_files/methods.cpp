@@ -1,4 +1,4 @@
-/** Copyright (c) 2022-2025  Elias Fernandez
+/** Copyright (c) 2022-2026  Elias Fernandez
 *
 * This file is part of EGTtools.
 *
@@ -17,7 +17,6 @@
 */
 
 #include "methods.hpp"
-
 
 using namespace egttools;
 using PairwiseComparison = FinitePopulations::PairwiseComparisonNumerical<>;
@@ -50,163 +49,149 @@ void init_methods(py::module_ &m) { {
 
         m.def(
             "calculate_state",
-            static_cast<size_t (*)(const size_t &, const egttools::Factors &)>(&
-                egttools::FinitePopulations::calculate_state),
+            static_cast<size_t (*)(const size_t &, const egttools::Factors &)>(
+                &egttools::FinitePopulations::calculate_state
+            ),
             R"pbdoc(
-        Converts a discrete population configuration into a unique index.
+Convert a discrete population configuration into a unique index.
 
-        This is typically used to map a population state (i.e., counts of each strategy)
-        to a 1D index, which is useful for vectorized representations and algorithms
-        like replicator dynamics or finite Markov chains.
+Parameters
+----------
+group_size : int
+    Total number of individuals.
+group_composition : list[int]
+    Number of individuals using each strategy.
 
-        Parameters
-        ----------
-        group_size : int
-            The total number of individuals (e.g., population size or group size).
-        group_composition : List[int]
-            A list representing the number of individuals using each strategy.
+Returns
+-------
+int
+    Unique index corresponding to the group composition.
 
-        Returns
-        -------
-        int
-            A unique index corresponding to the group composition.
+See Also
+--------
+egttools.sample_simplex
+egttools.calculate_nb_states
 
-        See Also
-        --------
-        egttools.sample_simplex
-        egttools.calculate_nb_states
-
-        Examples
-        --------
-        >>> calculate_state(3, [1, 1, 1])
-        3
-
-        >>> calculate_state(2, [2, 0, 0])
-        0
-        )pbdoc",
+Examples
+--------
+>>> calculate_state(3, [1, 1, 1])
+3
+>>> calculate_state(2, [2, 0, 0])
+0
+)pbdoc",
             py::arg("group_size"),
             py::arg("group_composition")
         );
 
         m.def(
             "calculate_state",
-            static_cast<size_t (*)(const size_t &, const Eigen::Ref<const egttools::VectorXui> &)>(&
-                egttools::FinitePopulations::calculate_state),
+            static_cast<size_t (*)(const size_t &, const Eigen::Ref<const egttools::VectorXui> &)>(
+                &egttools::FinitePopulations::calculate_state
+            ),
             R"pbdoc(
-        Converts a discrete population configuration (NumPy vector) into a unique index.
+Convert a discrete population configuration into a unique index.
 
-        This version takes an integer vector from NumPy and maps it to a 1D index, useful
-        for discrete state space indexing.
+Parameters
+----------
+group_size : int
+    Total number of individuals.
+group_composition : numpy.ndarray
+    One-dimensional integer array containing the number of individuals using each strategy.
 
-        Parameters
-        ----------
-        group_size : int
-            The total number of individuals in the population.
-        group_composition : NDArray[np.int64]
-            NumPy array of shape (n,) where n is the number of strategies.
+Returns
+-------
+int
+    Unique index corresponding to the group composition.
 
-        Returns
-        -------
-        int
-            A unique index corresponding to the input configuration.
+See Also
+--------
+egttools.sample_simplex
+egttools.calculate_nb_states
 
-        See Also
-        --------
-        egttools.sample_simplex
-        egttools.calculate_nb_states
-
-        Examples
-        --------
-        >>> calculate_state(3, np.array([1, 1, 1]))
-        3
-
-        >>> calculate_state(4, np.array([2, 2, 0]))
-        6
-        )pbdoc",
+Examples
+--------
+>>> calculate_state(3, np.array([1, 1, 1]))
+3
+>>> calculate_state(4, np.array([2, 2, 0]))
+6
+)pbdoc",
             py::arg("group_size"),
             py::arg("group_composition")
         );
 
-
         m.def(
             "sample_simplex",
-            static_cast<egttools::VectorXui (*)(size_t, const size_t &, const size_t &)>(&
-                egttools::FinitePopulations::sample_simplex),
+            static_cast<egttools::VectorXui (*)(size_t, const size_t &, const size_t &)>(
+                &egttools::FinitePopulations::sample_simplex
+            ),
             R"pbdoc(
-        Converts a state index into a group composition vector.
+Convert a state index into a group composition vector.
 
-        This function performs the inverse of `calculate_state`, returning a vector
-        representing the number of individuals using each strategy from a given index.
+This function is the inverse of `calculate_state`.
 
-        Parameters
-        ----------
-        index : int
-            Index of the population state (from 0 to total number of states - 1).
-        pop_size : int
-            Population size (total number of individuals in the group).
-        nb_strategies : int
-            Number of available strategies.
+Parameters
+----------
+index : int
+    Index of the population state.
+pop_size : int
+    Total number of individuals.
+nb_strategies : int
+    Number of available strategies.
 
-        Returns
-        -------
-        NDArray[np.int64]
-            A vector of length `nb_strategies` where each entry represents the
-            number of individuals using the corresponding strategy.
+Returns
+-------
+numpy.ndarray
+    One-dimensional integer array containing the number of individuals using each strategy.
 
-        See Also
-        --------
-        egttools.calculate_state
-        egttools.calculate_nb_states
+See Also
+--------
+egttools.calculate_state
+egttools.calculate_nb_states
 
-        Examples
-        --------
-        >>> sample_simplex(0, 3, 3)
-        array([3, 0, 0])
-
-        >>> sample_simplex(3, 3, 3)
-        array([1, 1, 1])
-        )pbdoc",
+Examples
+--------
+>>> sample_simplex(0, 3, 3)
+array([3, 0, 0])
+>>> sample_simplex(3, 3, 3)
+array([1, 1, 1])
+)pbdoc",
             py::arg("index"),
             py::arg("pop_size"),
             py::arg("nb_strategies"),
             py::return_value_policy::move
         );
+
         m.def(
             "sample_simplex_directly",
             &sample_simplex_directly,
             R"pbdoc(
-        Samples a discrete population state uniformly at random from the simplex.
+Sample a discrete population state uniformly at random from the simplex.
 
-        This method uses a direct sampling approach to draw a single composition
-        of strategies such that the total population size is preserved.
+Parameters
+----------
+nb_strategies : int
+    Number of available strategies.
+pop_size : int
+    Total number of individuals in the population.
 
-        Parameters
-        ----------
-        nb_strategies : int
-            Number of available strategies.
-        pop_size : int
-            Total number of individuals in the population.
+Returns
+-------
+numpy.ndarray
+    One-dimensional integer array containing the number of individuals using each strategy.
 
-        Returns
-        -------
-        NDArray[np.int64]
-            A vector of length `nb_strategies`, where each entry indicates how
-            many individuals adopt the corresponding strategy.
+See Also
+--------
+egttools.calculate_state
+egttools.calculate_nb_states
+egttools.sample_simplex
 
-        See Also
-        --------
-        egttools.calculate_state
-        egttools.calculate_nb_states
-        egttools.sample_simplex
-
-        Examples
-        --------
-        >>> sample_simplex_directly(3, 10)
-        array([3, 4, 3])
-
-        >>> sample_simplex_directly(2, 5)
-        array([2, 3])
-        )pbdoc",
+Examples
+--------
+>>> sample_simplex_directly(3, 10)
+array([3, 4, 3])
+>>> sample_simplex_directly(2, 5)
+array([2, 3])
+)pbdoc",
             py::arg("nb_strategies"),
             py::arg("pop_size"),
             py::return_value_policy::move
@@ -216,39 +201,33 @@ void init_methods(py::module_ &m) { {
             "sample_unit_simplex",
             &sample_unit_simplex,
             R"pbdoc(
-        Samples a continuous strategy composition uniformly at random from the unit simplex.
+Sample a point uniformly at random from the unit simplex.
 
-        This function generates a random vector of non-negative floats that sum to 1.
-        It is typically used to initialize strategy distributions in infinite population models.
+Parameters
+----------
+nb_strategies : int
+    Number of strategies in the population.
 
-        Parameters
-        ----------
-        nb_strategies : int
-            Number of strategies in the population.
+Returns
+-------
+numpy.ndarray
+    One-dimensional floating-point array representing a valid probability distribution.
 
-        Returns
-        -------
-        NDArray[np.float64]
-            A 1D array of length `nb_strategies`, representing a point in the unit simplex
-            (i.e., a valid probability distribution over strategies).
+See Also
+--------
+egttools.sample_simplex
+egttools.sample_simplex_directly
 
-        See Also
-        --------
-        egttools.sample_simplex
-        egttools.sample_simplex_directly
-
-        Examples
-        --------
-        >>> sample_unit_simplex(3)
-        array([0.25, 0.57, 0.18])
-
-        >>> sample_unit_simplex(2)
-        array([0.70, 0.30])
-        )pbdoc",
+Examples
+--------
+>>> sample_unit_simplex(3)
+array([0.25, 0.57, 0.18])
+>>> sample_unit_simplex(2)
+array([0.70, 0.30])
+)pbdoc",
             py::arg("nb_strategies"),
             py::return_value_policy::move
         );
-
 
 #if (HAS_BOOST)
         m.def(
@@ -258,112 +237,111 @@ void init_methods(py::module_ &m) { {
                 return py::cast(result);
             },
             R"pbdoc(
-        Calculates the number of possible states in a discrete simplex.
+Calculate the number of possible states in a discrete simplex.
 
-        This corresponds to the number of integer compositions of a population of size `group_size`
-        into `nb_strategies` categories. Internally, it uses the "stars and bars" combinatorial formula.
+This is the number of integer compositions of `group_size` individuals into
+`nb_strategies` categories.
 
-        Parameters
-        ----------
-        group_size : int
-            Size of the population or group (number of "stars").
-        nb_strategies : int
-            Number of available strategies (number of "bins").
+Parameters
+----------
+group_size : int
+    Total number of individuals.
+nb_strategies : int
+    Number of available strategies.
 
-        Returns
-        -------
-        int
-            The number of possible integer states of the simplex, i.e.,
-            the number of ways to assign `group_size` individuals to `nb_strategies` strategies.
+Returns
+-------
+int
+    Number of possible discrete states.
 
-        See Also
-        --------
-        egttools.sample_simplex
-        egttools.calculate_state
+See Also
+--------
+egttools.sample_simplex
+egttools.calculate_state
 
-        Examples
-        --------
-        >>> calculate_nb_states(4, 3)
-        15
-
-        >>> calculate_nb_states(10, 2)
-        11
-        )pbdoc",
+Examples
+--------
+>>> calculate_nb_states(4, 3)
+15
+>>> calculate_nb_states(10, 2)
+11
+)pbdoc",
             py::arg("group_size"),
             py::arg("nb_strategies")
         );
 #else
-    m.def("calculate_nb_states",
-          &egttools::starsBars<size_t>,
-          R"pbdoc(Calculates the average frequency of each strategy available in
-                the population given the stationary distribution.
+        m.def(
+            "calculate_nb_states",
+            &egttools::starsBars<size_t>,
+            R"pbdoc(
+Calculate the number of possible states in a discrete simplex.
 
-                It expects that the stationary_distribution is in sparse form.
+This is the number of integer compositions of `group_size` individuals into
+`nb_strategies` categories.
 
-                Parameters
-                ----------
-                pop_size : int
-                    Size of the population.
-                nb_strategies : int
-                    Number of strategies that can be assigned to players.
-                stationary_distribution : scipy.sparse.csr_matrix
-                    A sparse matrix which contains the stationary distribution (the frequency with which the evolutionary system visits each
-                    stationary state).
+Parameters
+----------
+group_size : int
+    Total number of individuals.
+nb_strategies : int
+    Number of available strategies.
 
-                Returns
-                -------
-                numpy.ndarray[numpy.float64[m, 1]]
-                    Average frequency of each strategy in the stationary evolutionary system.
+Returns
+-------
+int
+    Number of possible discrete states.
 
-                See Also
-                --------
-                egttools.numerical.calculate_state, egttools.numerical.sample_simplex,
-                egttools.numerical.calculate_nb_states, egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution,
-                egttools.numerical.calculate_nb_states, egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution_sparse
-                )pbdoc",
-          py::arg("group_size"), py::arg("nb_strategies"));
+See Also
+--------
+egttools.sample_simplex
+egttools.calculate_state
+
+Examples
+--------
+>>> calculate_nb_states(4, 3)
+15
+>>> calculate_nb_states(10, 2)
+11
+)pbdoc",
+            py::arg("group_size"),
+            py::arg("nb_strategies")
+        );
 #endif
-
 
         m.def(
             "calculate_strategies_distribution",
             &utils::calculate_strategies_distribution,
             R"pbdoc(
-        Calculates the average frequency of each strategy given a stationary distribution.
+Calculate the average frequency of each strategy given a stationary distribution.
 
-        This method computes the average strategy frequencies in the population
-        based on the stationary distribution over all population states.
-        It is assumed that the stationary distribution is sparse.
+Parameters
+----------
+pop_size : int
+    Total number of individuals in the population.
+nb_strategies : int
+    Number of strategies available in the population.
+stationary_distribution : scipy.sparse.csr_matrix
+    Sparse matrix representing the stationary distribution over population states.
 
-        Parameters
-        ----------
-        pop_size : int
-            Total number of individuals in the population.
-        nb_strategies : int
-            Number of strategies available in the population.
-        stationary_distribution : scipy.sparse.csr_matrix
-            Sparse matrix representing the stationary distribution over population states.
+Returns
+-------
+numpy.ndarray
+    One-dimensional array containing the average frequency of each strategy.
 
-        Returns
-        -------
-        NDArray[np.float64]
-            A 1D NumPy array of shape (nb_strategies,) containing the average frequency
-            of each strategy across all states in the stationary distribution.
+See Also
+--------
+egttools.calculate_state
+egttools.sample_simplex
+egttools.calculate_nb_states
+egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution_sparse
 
-        See Also
-        --------
-        egttools.calculate_state
-        egttools.sample_simplex
-        egttools.calculate_nb_states
-        egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution_sparse
-
-        Examples
-        --------
-        >>> from scipy.sparse import csr_matrix
-        >>> freq = calculate_strategies_distribution(10, 3, csr_matrix(...))
-        >>> freq.shape
-        (3,)
-        )pbdoc",
+Examples
+--------
+>>> from scipy.sparse import csr_matrix
+>>> freq = calculate_strategies_distribution(10, 3, csr_matrix(...))
+>>> freq.shape
+(3,)
+)pbdoc",
             py::arg("pop_size"),
             py::arg("nb_strategies"),
             py::arg("stationary_distribution"),
@@ -372,93 +350,95 @@ void init_methods(py::module_ &m) { {
 
         m.def(
             "replicator_equation",
-            &infinite_populations::replicator_equation,
+            py::overload_cast<
+                const egttools::Vector &,
+                const egttools::Matrix2D &>(&egttools::infinite_populations::replicator_equation),
             R"pbdoc(
-        Computes the replicator dynamics gradient for a 2-player game.
+Compute the replicator dynamics gradient for a two-player matrix game.
 
-        This function implements the standard replicator equation for infinite populations
-        interacting in pairwise games. The result is a vector of growth rates (gradients)
-        for each strategy.
+Parameters
+----------
+frequencies : numpy.ndarray
+    One-dimensional array containing the frequency of each strategy.
+payoff_matrix : numpy.ndarray
+    Two-dimensional payoff matrix.
 
-        Parameters
-        ----------
-        frequencies : NDArray[np.float64]
-            A 1D NumPy array of shape (nb_strategies,) representing the current frequency
-            of each strategy in the population. The entries should sum to 1.
-        payoff_matrix : NDArray[np.float64]
-            A 2D NumPy array of shape (nb_strategies, nb_strategies) containing payoffs.
-            Entry [i, j] is the payoff for strategy i when interacting with j.
+Returns
+-------
+numpy.ndarray
+    One-dimensional array containing the replicator gradient for each strategy.
 
-        Returns
-        -------
-        NDArray[np.float64]
-            A 1D NumPy array of shape (nb_strategies,) representing the replicator gradient
-            for each strategy.
-
-        See Also
-        --------
-        egttools.replicator_equation_n_player
-        egttools.games.AbstractGame
-        egttools.numerical.PairwiseComparison
-        egttools.analytical.StochDynamics
-
-        Examples
-        --------
-        >>> freqs = np.array([0.4, 0.6])
-        >>> A = np.array([[1, 0], [3, 2]])
-        >>> grad = replicator_equation(freqs, A)
-        >>> grad
-        array([-0.24,  0.24])
-        )pbdoc",
+See Also
+--------
+egttools.replicator_equation_n_player
+egttools.games.AbstractReplicatorGame
+)pbdoc",
             py::arg("frequencies"),
             py::arg("payoff_matrix"),
             py::return_value_policy::move
         );
 
         m.def(
-            "replicator_equation_n_player",
-            &egttools::infinite_populations::replicator_equation_n_player,
+            "replicator_equation",
+            py::overload_cast<
+                const egttools::Vector &,
+                const egttools::infinite_populations::AbstractReplicatorGame &>(
+                &egttools::infinite_populations::replicator_equation),
             R"pbdoc(
-        Computes the replicator dynamics gradient for N-player games.
+Compute the replicator dynamics gradient for a two-player game object.
 
-        This function extends the replicator equation to games involving more than two players.
-        The payoff for a strategy depends on the configuration of all other strategies in the group,
-        encoded in the `payoff_matrix`.
+Parameters
+----------
+frequencies : numpy.ndarray
+    One-dimensional array containing the frequency of each strategy.
+game : egttools.games.AbstractReplicatorGame
+    Game object used to compute expected fitness values.
 
-        Parameters
-        ----------
-        frequencies : NDArray[np.float64]
-            A 1D NumPy array of shape (nb_strategies,) representing the current frequency
-            of each strategy in the population. The entries must sum to 1.
-        payoff_matrix : NDArray[np.float64]
-            A 2D NumPy array of shape (nb_strategies, nb_group_configurations). Each row
-            corresponds to a strategy, and each column represents a group composition,
-            indexed using the lexicographic order defined by `egttools.sample_simplex`.
-        group_size : int
-            The number of players interacting simultaneously.
+Returns
+-------
+numpy.ndarray
+    One-dimensional array containing the replicator gradient for each strategy.
 
-        Returns
-        -------
-        NDArray[np.float64]
-            A 1D NumPy array of shape (nb_strategies,) containing the replicator gradient
-            for each strategy.
+See Also
+--------
+egttools.replicator_equation_n_player
+egttools.games.AbstractReplicatorGame
+)pbdoc",
+            py::arg("frequencies"),
+            py::arg("game"),
+            py::return_value_policy::move
+        );
 
-        See Also
-        --------
-        egttools.replicator_equation
-        egttools.games.AbstractGame
-        egttools.analytical.StochDynamics
-        egttools.numerical.PairwiseComparison
+        m.def(
+            "replicator_equation_n_player",
+            py::overload_cast<
+                const egttools::Vector &,
+                const egttools::Matrix2D &,
+                size_t
+            >(&egttools::infinite_populations::replicator_equation_n_player),
+            R"pbdoc(
+Compute the replicator dynamics gradient for an N-player game defined by a payoff table.
 
-        Examples
-        --------
-        >>> freqs = np.array([0.3, 0.5, 0.2])
-        >>> group_size = 3
-        >>> A = np.random.rand(3, 10)  # payoff matrix with nb_group_configurations columns
-        >>> grad = replicator_equation_n_player(freqs, A, group_size)
-        >>> grad.shape
-        (3,)
-        )pbdoc",
+Parameters
+----------
+frequencies : numpy.ndarray
+    One-dimensional array containing the frequency of each strategy.
+payoff_matrix : numpy.ndarray
+    Two-dimensional payoff table. Rows correspond to strategies and columns to
+    group configurations.
+group_size : int
+    Number of players interacting simultaneously.
+
+Returns
+-------
+numpy.ndarray
+    One-dimensional array containing the replicator gradient for each strategy.
+
+See Also
+--------
+egttools.replicator_equation
+egttools.games.AbstractReplicatorGame
+)pbdoc",
             py::arg("frequencies"),
             py::arg("payoff_matrix"),
             py::arg("group_size"),
@@ -466,52 +446,106 @@ void init_methods(py::module_ &m) { {
         );
 
         m.def(
-            "vectorized_replicator_equation_n_player",
-            &egttools::infinite_populations::vectorized_replicator_equation_n_player,
+            "replicator_equation_n_player",
+            py::overload_cast<
+                const egttools::Vector &,
+                const egttools::infinite_populations::AbstractReplicatorGame &>(
+                &egttools::infinite_populations::replicator_equation_n_player),
             R"pbdoc(
-        Vectorized computation of replicator dynamics for 3-strategy N-player games.
+Compute the replicator dynamics gradient for an N-player game object.
 
-        This function computes replicator gradients over a meshgrid of frequency values
-        for 3-strategy populations. It is optimized for performance using vectorization.
+Parameters
+----------
+frequencies : numpy.ndarray
+    One-dimensional array containing the frequency of each strategy.
+game : egttools.games.AbstractReplicatorGame
+    Game object used to compute expected fitness values.
 
-        The three input matrices `x1`, `x2`, `x3` must represent the frequencies of each
-        strategy over a 2D grid. The sum of x1 + x2 + x3 must equal 1 elementwise.
+Returns
+-------
+numpy.ndarray
+    One-dimensional array containing the replicator gradient for each strategy.
 
-        Parameters
-        ----------
-        x1 : NDArray[np.float64]
-            2D array of the first strategy's frequencies.
-        x2 : NDArray[np.float64]
-            2D array of the second strategy's frequencies.
-        x3 : NDArray[np.float64]
-            2D array of the third strategy's frequencies.
-        payoff_matrix : NDArray[np.float64]
-            Array of shape (3, nb_group_configurations) with payoffs for each strategy.
-        group_size : int
-            Number of players in a group interaction.
+See Also
+--------
+egttools.replicator_equation
+egttools.games.AbstractReplicatorGame
+)pbdoc",
+            py::arg("frequencies"),
+            py::arg("game"),
+            py::return_value_policy::move
+        );
 
-        Returns
-        -------
-        Tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
-            A tuple with three 2D arrays (same shape as input) representing the replicator
-            gradient for each strategy at each grid point.
+        m.def(
+            "vectorized_replicator_equation",
+            &egttools::infinite_populations::vectorized_replicator_equation,
+            R"pbdoc(
+Vectorized computation of the replicator dynamics for three-strategy two-player games.
 
-        See Also
-        --------
-        egttools.replicator_equation_n_player
-        egttools.vectorized_replicator_equation
+Parameters
+----------
+x1 : numpy.ndarray
+    Two-dimensional array containing the frequency of strategy 1 at each grid point.
+x2 : numpy.ndarray
+    Two-dimensional array containing the frequency of strategy 2 at each grid point.
+x3 : numpy.ndarray
+    Two-dimensional array containing the frequency of strategy 3 at each grid point.
+game : egttools.games.AbstractReplicatorGame
+    Two-player game object used to compute expected fitness values.
 
-        Examples
-        --------
-        >>> X, Y = np.meshgrid(np.linspace(0, 1, 50), np.linspace(0, 1, 50))
-        >>> x1 = X
-        >>> x2 = Y
-        >>> x3 = 1 - x1 - x2
-        >>> A = np.random.rand(3, 10)
-        >>> u1, u2, u3 = vectorized_replicator_equation_n_player(x1, x2, x3, A, 3)
-        >>> u1.shape
-        (50, 50)
-        )pbdoc",
+Returns
+-------
+tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]
+    Replicator gradients for the three strategies over the grid.
+
+See Also
+--------
+egttools.replicator_equation
+egttools.vectorized_replicator_equation_n_player
+)pbdoc",
+            py::arg("x1"),
+            py::arg("x2"),
+            py::arg("x3"),
+            py::arg("game"),
+            py::return_value_policy::move,
+            py::call_guard<py::gil_scoped_release>()
+        );
+
+        m.def(
+            "vectorized_replicator_equation_n_player",
+            py::overload_cast<
+                const egttools::Matrix2D &,
+                const egttools::Matrix2D &,
+                const egttools::Matrix2D &,
+                const egttools::Matrix2D &,
+                size_t
+            >(&egttools::infinite_populations::vectorized_replicator_equation_n_player),
+            R"pbdoc(
+Vectorized computation of the replicator dynamics for three-strategy N-player games.
+
+Parameters
+----------
+x1 : numpy.ndarray
+    Two-dimensional array containing the frequency of strategy 1 at each grid point.
+x2 : numpy.ndarray
+    Two-dimensional array containing the frequency of strategy 2 at each grid point.
+x3 : numpy.ndarray
+    Two-dimensional array containing the frequency of strategy 3 at each grid point.
+payoff_matrix : numpy.ndarray
+    Two-dimensional payoff table.
+group_size : int
+    Number of players in each interacting group.
+
+Returns
+-------
+tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]
+    Replicator gradients for the three strategies over the grid.
+
+See Also
+--------
+egttools.replicator_equation_n_player
+egttools.vectorized_replicator_equation
+)pbdoc",
             py::arg("x1"),
             py::arg("x2"),
             py::arg("x3"),
@@ -521,548 +555,641 @@ void init_methods(py::module_ &m) { {
             py::call_guard<py::gil_scoped_release>()
         );
 
-        py::class_<FinitePopulations::analytical::PairwiseComparison>(m, "PairwiseComparison")
+        m.def(
+            "vectorized_replicator_equation_n_player",
+            py::overload_cast<
+                const egttools::Matrix2D &,
+                const egttools::Matrix2D &,
+                const egttools::Matrix2D &,
+                const egttools::infinite_populations::AbstractReplicatorGame &>(
+                &egttools::infinite_populations::vectorized_replicator_equation_n_player),
+            R"pbdoc(
+Vectorized computation of the replicator dynamics for three-strategy N-player game objects.
+
+Parameters
+----------
+x1 : numpy.ndarray
+    Two-dimensional array containing the frequency of strategy 1 at each grid point.
+x2 : numpy.ndarray
+    Two-dimensional array containing the frequency of strategy 2 at each grid point.
+x3 : numpy.ndarray
+    Two-dimensional array containing the frequency of strategy 3 at each grid point.
+game : egttools.games.AbstractReplicatorGame
+    Game object used to compute expected fitness values.
+
+Returns
+-------
+tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]
+    Replicator gradients for the three strategies over the grid.
+
+See Also
+--------
+egttools.replicator_equation_n_player
+egttools.vectorized_replicator_equation
+)pbdoc",
+            py::arg("x1"),
+            py::arg("x2"),
+            py::arg("x3"),
+            py::arg("game"),
+            py::return_value_policy::move,
+            py::call_guard<py::gil_scoped_release>()
+        );
+
+        py::class_<FinitePopulations::analytical::PairwiseComparison>(
+                    m,
+                    "PairwiseComparison",
+                    R"pbdoc(
+Analytical pairwise-comparison process for finite populations.
+
+This class studies evolutionary dynamics in a well-mixed population of fixed size
+:math:`Z`, whose state is represented by a vector of strategy counts
+:math:`x = (x_1, \dots, x_n)` satisfying :math:`\sum_{i=1}^n x_i = Z`.
+
+Under the pairwise comparison rule, strategy updates are driven by pairwise imitation,
+typically through the Fermi kernel
+
+.. math::
+
+    p_{i \to j}(x) =
+    \frac{1}{1 + \exp[-\beta (f_j(x) - f_i(x))]},
+
+where :math:`\beta \ge 0` is the intensity of selection and :math:`f_i(x)` is the
+fitness of strategy :math:`i` in state :math:`x`.
+
+The class provides tools to construct the full Markov transition matrix, compute
+gradients of selection, fixation probabilities, and the reduced small-mutation-limit
+(SML) dynamics.
+)pbdoc"
+                )
                 .def(
                     py::init<int, FinitePopulations::AbstractGame &>(),
-                    R"pbdoc(
-            Analytical pairwise comparison model.
-
-            This class computes fixation probabilities, gradients of selection, and transition matrices
-            for finite populations using the pairwise comparison rule. Results are exact, and rely
-            on symbolic or deterministic calculation of fitness and payoffs.
-
-            Parameters
-            ----------
-            population_size : int
-                Size of the population.
-            game : egttools.games.AbstractGame
-                Game object that implements `AbstractGame`. Provides payoffs and fitness calculations.
-
-            See Also
-            --------
-            egttools.numerical.PairwiseComparisonNumerical
-            egttools.analytical.StochDynamics
-
-            Examples
-            --------
-            >>> from egttools.games import Matrix2PlayerGameHolder
-            >>> from egttools import PairwiseComparison
-            >>> game = Matrix2PlayerGameHolder(3, np.random.rand(3, 3))
-            >>> model = PairwiseComparison(100, game)
-        )pbdoc",
                     py::arg("population_size"),
                     py::arg("game"),
-                    py::keep_alive<0, 2>()
+                    py::keep_alive<0, 2>(),
+                    R"pbdoc(
+Construct an analytical pairwise-comparison process.
+
+Parameters
+----------
+population_size : int
+    Population size :math:`Z`.
+game : egttools.games.AbstractGame
+    Game defining the fitness of each strategy as a function of the current
+    population state.
+
+Notes
+-----
+The number of population states is
+
+.. math::
+
+    |\mathcal{S}| = \binom{Z + n - 1}{n - 1},
+
+where :math:`n` is the number of strategies.
+)pbdoc"
                 )
                 .def(
                     py::init<int, FinitePopulations::AbstractGame &, size_t>(),
-                    R"pbdoc(
-            Analytical pairwise comparison model with configurable cache.
-
-            Extends the base constructor with a specified cache size, which accelerates repeated
-            payoff/fitness evaluations in large simulations.
-
-            Parameters
-            ----------
-            population_size : int
-                Size of the population.
-            game : egttools.games.AbstractGame
-                Game object that implements `AbstractGame`. Provides payoffs and fitness calculations.
-            cache_size : int
-                Maximum number of evaluations to cache.
-
-            See Also
-            --------
-            egttools.numerical.PairwiseComparisonNumerical
-            egttools.analytical.StochDynamics
-
-            Note
-            ----
-            Avoid using this model for large state spaces due to memory and performance limitations.
-        )pbdoc",
                     py::arg("population_size"),
                     py::arg("game"),
                     py::arg("cache_size"),
-                    py::keep_alive<0, 2>()
+                    py::keep_alive<0, 2>(),
+                    R"pbdoc(
+Construct an analytical pairwise-comparison process with a configurable fitness cache.
+
+Parameters
+----------
+population_size : int
+    Population size :math:`Z`.
+game : egttools.games.AbstractGame
+    Game defining the fitness of each strategy as a function of the current
+    population state.
+cache_size : int
+    Maximum number of cached fitness evaluations.
+)pbdoc"
                 )
-                .def("pre_calculate_edge_fitnesses",
-                     &egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_edge_fitnesses,
-                     R"pbdoc(
-            Precompute fitnesses at the edges of the simplex.
+                .def(
+                    "pre_calculate_edge_fitnesses",
+                    &egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_edge_fitnesses,
+                    R"pbdoc(
+Precompute fitness values along all edges of the simplex.
 
-            This optimization step helps accelerate calculations when simulating dynamics
-            repeatedly over boundary conditions.
-        )pbdoc")
-                .def("calculate_transition_matrix",
-                     &FinitePopulations::analytical::PairwiseComparison::calculate_transition_matrix,
-                     py::arg("beta"),
-                     py::arg("mu"),
-                     py::return_value_policy::move,
-                     R"pbdoc(
-            Computes the full transition matrix under mutation.
+This is particularly useful for repeated pairwise fixation calculations, since
+fixation probabilities only depend on states involving two strategies at a time.
+)pbdoc"
+                )
+                .def(
+                    "calculate_transition_matrix",
+                    &FinitePopulations::analytical::PairwiseComparison::calculate_transition_matrix,
+                    py::arg("beta"),
+                    py::arg("mu"),
+                    py::return_value_policy::move,
+                    R"pbdoc(
+Compute the full transition matrix of the finite-population Markov chain.
 
-            Parameters
-            ----------
-            beta : float
-                Intensity of selection.
-            mu : float
-                Mutation probability.
+The chain evolves on the set of all population states
 
-            Returns
-            -------
-            scipy.sparse.csr_matrix
-                Sparse matrix of shape (nb_states, nb_states) representing transition probabilities.
-        )pbdoc")
-                .def("calculate_gradient_of_selection",
-                     &FinitePopulations::analytical::PairwiseComparison::calculate_gradient_of_selection,
-                     py::arg("beta"),
-                     py::arg("state"),
-                     R"pbdoc(
-            Computes the deterministic gradient of selection at a specific state.
+.. math::
 
-            Parameters
-            ----------
-            beta : float
-                Intensity of selection.
-            state : NDArray[np.int64]
-                Population state as a count vector of shape (nb_strategies,).
+    \mathcal{S} = \left\{x \in \mathbb{N}^n : \sum_{i=1}^n x_i = Z \right\}.
 
-            Returns
-            -------
-            NDArray[np.float64]
-                Gradient vector of shape (nb_strategies,).
+Each off-diagonal transition changes the state by replacing one individual of one
+strategy by one individual of another strategy. Mutation is incorporated directly
+into the transition probabilities, and diagonal entries are set so that each row
+sums to one.
 
-            Example
-            -------
-            >>> model.calculate_gradient_of_selection(beta=0.5, state=np.array([50, 25, 25]))
-        )pbdoc")
-                .def("calculate_fixation_probability",
-                     &FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability,
-                     py::arg("invading_strategy_index"),
-                     py::arg("resident_strategy_index"),
-                     py::arg("beta"),
-                     R"pbdoc(
-            Computes the fixation probability of one mutant in a monomorphic population.
+Parameters
+----------
+beta : float
+    Intensity of selection :math:`\beta`.
+mu : float
+    Mutation probability :math:`\mu`.
 
-            Parameters
-            ----------
-            invading_strategy_index : int
-                Index of the mutant strategy.
-            resident_strategy_index : int
-                Index of the resident strategy.
-            beta : float
-                Intensity of selection.
+Returns
+-------
+scipy.sparse.csr_matrix
+    Sparse transition matrix of shape `(nb_states, nb_states)`.
 
-            Returns
-            -------
-            float
-                Fixation probability of the mutant strategy.
+Notes
+-----
+For large state spaces, explicitly constructing this matrix may require a large
+amount of memory.
+)pbdoc"
+                )
+                .def(
+                    "calculate_gradient_of_selection",
+                    &FinitePopulations::analytical::PairwiseComparison::calculate_gradient_of_selection,
+                    py::arg("beta"),
+                    py::arg("state"),
+                    R"pbdoc(
+Compute the gradient of selection without mutation at a given population state.
 
-            Example
-            -------
-            >>> model.calculate_fixation_probability(1, 0, 0.1)
-        )pbdoc")
-                .def("calculate_transition_and_fixation_matrix_sml",
-                     &FinitePopulations::analytical::PairwiseComparison::calculate_transition_and_fixation_matrix_sml,
-                     py::arg("beta"),
-                     py::return_value_policy::move,
-                     py::call_guard<py::gil_scoped_release>(),
-                     R"pbdoc(
-            Returns transition and fixation matrices assuming small mutation limit (SML).
+Let :math:`x = (x_1,\dots,x_n)` be the current state. This method returns the
+expected one-step drift induced only by selection. For each strategy :math:`i`,
 
-            By assuming the limit of small mutations (SML), we can reduce the number of states of the dynamical system
-            to those which are monomorphic, i.e., the whole population adopts the same strategy.
+.. math::
 
-            Thus, the dimensions of the transition matrix in the SML is (nb_strategies, nb_strategies), and
-            the transitions are given by the normalized fixation probabilities. This means that a transition
-            where i \neq j, T[i, j] = fixation(i, j) / (nb_strategies - 1) and T[i, i] = 1 - \sum{T[i, j]}.
+    g_i(x)
+    =
+    \frac{1}{n}
+    \sum_{j \ne i}
+    \left[
+    T^{\mathrm{sel}}_{j \to i}(x) - T^{\mathrm{sel}}_{i \to j}(x)
+    \right],
 
-            This method will also return the matrix of fixation probabilities,
-            where fixation_probabilities[i, j] gives the probability that one mutant j fixates in a population
-            of i.
+where :math:`T^{\mathrm{sel}}_{j \to i}(x)` is the probability that one
+individual of strategy :math:`j` is replaced by one individual of strategy
+:math:`i` under pairwise comparison alone.
 
-            Parameters
-            ----------
-            beta : float
-                Selection strength.
+Under the Fermi rule, the local net flux can be written as
 
-            Returns
-            -------
-            Tuple[NDArray[np.float64], NDArray[np.float64]]
-                Tuple with transition matrix and fixation probabilities matrix.
-        )pbdoc")
-                .def("update_population_size",
-                     &egttools::FinitePopulations::analytical::PairwiseComparison::update_population_size)
-                .def("nb_strategies", &egttools::FinitePopulations::analytical::PairwiseComparison::nb_strategies)
-                .def("nb_states", &egttools::FinitePopulations::analytical::PairwiseComparison::nb_states)
-                .def("population_size", &egttools::FinitePopulations::analytical::PairwiseComparison::population_size)
-                .def("game", &egttools::FinitePopulations::analytical::PairwiseComparison::game);
+.. math::
+
+    T^{\mathrm{sel}}_{j \to i}(x) - T^{\mathrm{sel}}_{i \to j}(x)
+    =
+    \frac{x_i x_j}{Z(Z-1)}
+    \tanh\!\left(\frac{\beta}{2}(f_i(x)-f_j(x))\right).
+
+The resulting vector is tangent to the simplex, so
+
+.. math::
+
+    \sum_{i=1}^n g_i(x) = 0.
+
+Parameters
+----------
+beta : float
+    Intensity of selection :math:`\beta`.
+state : numpy.ndarray
+    One-dimensional integer array of shape `(nb_strategies,)` containing the
+    current population state.
+
+Returns
+-------
+numpy.ndarray
+    One-dimensional array of shape `(nb_strategies,)` containing the mutation-free
+    gradient of selection.
+)pbdoc"
+                )
+                .def(
+                    "calculate_gradient_of_selection_with_mutation",
+                    &FinitePopulations::analytical::PairwiseComparison::calculate_gradient_of_selection_with_mutation,
+                    py::arg("beta"),
+                    py::arg("mu"),
+                    py::arg("state"),
+                    R"pbdoc(
+Compute the gradient of selection with mutation at a given population state.
+
+Let :math:`x = (x_1,\dots,x_n)` be the current state, with population size
+:math:`Z` and :math:`n` strategies. This method returns the expected one-step
+drift when both pairwise comparison and mutation are active:
+
+.. math::
+
+    g_i^{(\mu)}(x)
+    =
+    (1-\mu)\, g_i(x)
+    +
+    \frac{\mu_{\mathrm{eff}}}{nZ}\left(Z - n x_i\right),
+
+where :math:`g_i(x)` is the mutation-free gradient returned by
+:meth:`calculate_gradient_of_selection`, and :math:`\mu_{\mathrm{eff}}` is the
+effective mutation probability towards one specific alternative strategy:
+
+.. math::
+
+    \mu_{\mathrm{eff}} =
+    \begin{cases}
+    \mu, & n = 2, \\
+    \mu/(n-1), & n > 2.
+    \end{cases}
+
+The first term is the selection contribution scaled by :math:`(1-\mu)`, and the
+second term is the mutation drift induced by uniform mutation towards the other
+strategies.
+
+As in the mutation-free case, the resulting vector is tangent to the simplex:
+
+.. math::
+
+    \sum_{i=1}^n g_i^{(\mu)}(x) = 0.
+
+Parameters
+----------
+beta : float
+    Intensity of selection :math:`\beta`.
+mu : float
+    Mutation probability :math:`\mu`.
+state : numpy.ndarray
+    One-dimensional integer array of shape `(nb_strategies,)` containing the
+    current population state.
+
+Returns
+-------
+numpy.ndarray
+    One-dimensional array of shape `(nb_strategies,)` containing the gradient
+    with mutation.
+)pbdoc"
+                )
+                .def(
+                    "calculate_fixation_probability",
+                    &FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability,
+                    py::arg("invading_strategy_index"),
+                    py::arg("resident_strategy_index"),
+                    py::arg("beta"),
+                    R"pbdoc(
+Compute the fixation probability of one mutant in a monomorphic resident population.
+
+This method restricts the dynamics to the one-dimensional edge involving the
+invading and resident strategies only. It returns the probability that a single
+invader eventually takes over the whole population.
+
+Parameters
+----------
+invading_strategy_index : int
+    Index of the invading strategy.
+resident_strategy_index : int
+    Index of the resident strategy.
+beta : float
+    Intensity of selection :math:`\beta`.
+
+Returns
+-------
+float
+    Probability that one invader fixates in a population of residents.
+)pbdoc"
+                )
+                .def(
+                    "calculate_transition_and_fixation_matrix_sml",
+                    &FinitePopulations::analytical::PairwiseComparison::calculate_transition_and_fixation_matrix_sml,
+                    py::arg("beta"),
+                    py::return_value_policy::move,
+                    py::call_guard<py::gil_scoped_release>(),
+                    R"pbdoc(
+Return the reduced transition matrix and fixation matrix in the small-mutation limit.
+
+In the Small Mutation Limit (SML), mutations are assumed sufficiently rare that
+the population is almost always monomorphic before the next mutation occurs.
+The resulting reduced Markov chain acts only on the monomorphic states.
+
+If the current monomorphic state is strategy :math:`i`, then for :math:`i \ne j`
+
+.. math::
+
+    T_{ij}^{\mathrm{SML}} = \frac{\rho_{ij}}{n-1},
+
+where :math:`\rho_{ij}` is the fixation probability of one mutant of strategy
+:math:`j` in a resident population of strategy :math:`i`. The diagonal entries
+are set so that each row sums to one.
+
+Parameters
+----------
+beta : float
+    Intensity of selection :math:`\beta`.
+
+Returns
+-------
+tuple[numpy.ndarray, numpy.ndarray]
+    A tuple `(transition_matrix, fixation_probabilities)` where:
+
+    - `transition_matrix` is the reduced SML transition matrix of shape
+      `(nb_strategies, nb_strategies)`;
+    - `fixation_probabilities[i, j]` is the probability that one mutant of
+      strategy `j` fixates in a population of strategy `i`.
+)pbdoc"
+                )
+                .def(
+                    "update_population_size",
+                    &egttools::FinitePopulations::analytical::PairwiseComparison::update_population_size,
+                    py::arg("population_size"),
+                    R"pbdoc(
+Update the population size.
+
+Parameters
+----------
+population_size : int
+    New population size :math:`Z`.
+)pbdoc"
+                )
+                .def(
+                    "nb_strategies",
+                    &egttools::FinitePopulations::analytical::PairwiseComparison::nb_strategies,
+                    R"pbdoc(
+Return the number of strategies.
+
+Returns
+-------
+int
+    Number of strategies.
+)pbdoc"
+                )
+                .def(
+                    "nb_states",
+                    &egttools::FinitePopulations::analytical::PairwiseComparison::nb_states,
+                    R"pbdoc(
+Return the total number of population states.
+
+Returns
+-------
+int
+    Number of states in the full Markov chain.
+)pbdoc"
+                )
+                .def(
+                    "population_size",
+                    &egttools::FinitePopulations::analytical::PairwiseComparison::population_size,
+                    R"pbdoc(
+Return the population size.
+
+Returns
+-------
+int
+    Population size :math:`Z`.
+)pbdoc"
+                )
+                .def(
+                    "game",
+                    &egttools::FinitePopulations::analytical::PairwiseComparison::game,
+                    py::return_value_policy::reference_internal,
+                    R"pbdoc(
+Return the underlying game.
+
+Returns
+-------
+egttools.games.AbstractGame
+    Reference to the game used to evaluate fitness.
+)pbdoc"
+                );
 
         options.enable_function_signatures();
     } {
         py::options options;
         options.disable_function_signatures();
 
-        auto pair_comp = py::class_<PairwiseComparison>(m, "PairwiseComparisonNumerical",
-                                                        R"pbdoc(
-        Numerical solver for evolutionary dynamics under the Pairwise Comparison rule.
+        auto pair_comp = py::class_<PairwiseComparison>(
+                    m,
+                    "PairwiseComparisonNumerical",
+                    R"pbdoc(
+Numerical solver for evolutionary dynamics under the pairwise comparison rule.
+)pbdoc"
+                )
+                .def(
+                    py::init<size_t, FinitePopulations::AbstractGame &, size_t>(),
+                    py::arg("pop_size"),
+                    py::arg("game"),
+                    py::arg("cache_size"),
+                    py::keep_alive<0, 2>(),
+                    R"pbdoc(
+Construct a numerical solver for a finite-population game.
 
-        This class provides efficient simulation-based methods to estimate the fixation probabilities,
-        stationary distributions, and evolutionary trajectories in finite populations.
+Parameters
+----------
+pop_size : int
+    Number of individuals in the population.
+game : egttools.games.AbstractGame
+    Game object implementing the payoff and fitness structure.
+cache_size : int
+    Maximum cache size for fitness computations.
+)pbdoc"
+                )
+                .def(
+                    "evolve",
+                    static_cast<VectorXui (PairwiseComparison::*)(
+                        size_t, double, double, const Eigen::Ref<const VectorXui> &
+                    )>(&PairwiseComparison::evolve),
+                    py::arg("nb_generations"),
+                    py::arg("beta"),
+                    py::arg("mu"),
+                    py::arg("init_state"),
+                    py::return_value_policy::move,
+                    R"pbdoc(
+Simulate the pairwise comparison process with mutation.
 
-        See Also
-        --------
-        egttools.analytical.PairwiseComparison
-        egttools.analytical.StochDynamics
-        egttools.games.AbstractGame
-        )pbdoc")
-                .def(py::init<size_t, FinitePopulations::AbstractGame &, size_t>(),
-                     py::arg("pop_size"), py::arg("game"), py::arg("cache_size"), py::keep_alive<0, 2>(),
-                     R"pbdoc(
-                    Construct a numerical solver for a finite population game.
+Parameters
+----------
+nb_generations : int
+    Number of generations to simulate.
+beta : float
+    Intensity of selection.
+mu : float
+    Mutation rate.
+init_state : numpy.ndarray
+    Initial population state.
 
-                    This class defines methods to estimate numerically fixation probabilities, stationary distributions with or without
-                    mutation, and strategy distributions.
+Returns
+-------
+numpy.ndarray
+    Final population state.
+)pbdoc"
+                )
+                .def(
+                    "estimate_fixation_probability",
+                    &PairwiseComparison::estimate_fixation_probability,
+                    py::arg("index_invading_strategy"),
+                    py::arg("index_resident_strategy"),
+                    py::arg("nb_runs"),
+                    py::arg("nb_generations"),
+                    py::arg("beta"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    R"pbdoc(
+Estimate the fixation probability of an invading strategy in a resident population.
+)pbdoc"
+                )
+                .def(
+                    "estimate_stationary_distribution",
+                    &PairwiseComparison::estimate_stationary_distribution,
+                    py::arg("nb_runs"),
+                    py::arg("nb_generations"),
+                    py::arg("transitory"),
+                    py::arg("beta"),
+                    py::arg("mu"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    R"pbdoc(
+Estimate the stationary distribution of population states.
 
-                    Parameters
-                    ----------
-                    pop_size : int
-                        The number of individuals in the population.
-                    game : AbstractGame
-                        A game object implementing the payoff and fitness structure.
-                    cache_size : int
-                        The maximum size of the cache to store fitness computations.
+Returns
+-------
+numpy.ndarray
+    Estimated stationary distribution.
+)pbdoc"
+                )
+                .def(
+                    "estimate_stationary_distribution_sparse",
+                    &PairwiseComparison::estimate_stationary_distribution_sparse,
+                    py::arg("nb_runs"),
+                    py::arg("nb_generations"),
+                    py::arg("transitory"),
+                    py::arg("beta"),
+                    py::arg("mu"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    R"pbdoc(
+Estimate the stationary distribution in sparse format.
 
-                    Example
-                    -------
-                    >>> game = egttools.games.Matrix2PlayerGameHolder(3, payoff_matrix)
-                    >>> pc = egttools.PairwiseComparisonNumerical(100, game, 10000)
+Returns
+-------
+scipy.sparse.csr_matrix
+    Estimated stationary distribution in sparse format.
+)pbdoc"
+                )
+                .def(
+                    "estimate_strategy_distribution",
+                    &PairwiseComparison::estimate_strategy_distribution,
+                    py::arg("nb_runs"),
+                    py::arg("nb_generations"),
+                    py::arg("transitory"),
+                    py::arg("beta"),
+                    py::arg("mu"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    R"pbdoc(
+Estimate the average frequency of each strategy over time.
 
-                    Notes
-                    -----
-                    Numerical computations are not exact. Moreover, for now we still did not implement a method to automatically
-                    detect if the precision of the estimation of the stationary and strategy distributions are good enough and,
-                    thus, stop the simulation. You are advised to test different nb_generations and transitory periods for your
-                    specific problem (game).
-
-                    If you want to have exact calculations, you can use egttools.analytical.PairwiseComparison. However, this
-                    is only advisable for systems with a smaller number of states (i.e., not too big population size or number of strategies).
-                    Otherwise, the calculations might require too much memory.
-         )pbdoc")
-                .def("evolve",
-                     static_cast<VectorXui (PairwiseComparison::*)(
-                         size_t, double, double, const Eigen::Ref<const VectorXui> &
-                     )>(&PairwiseComparison::evolve),
-                     py::arg("nb_generations"), py::arg("beta"), py::arg("mu"), py::arg("init_state"),
-                     py::return_value_policy::move,
-                     R"pbdoc(
-         Simulate the pairwise comparison process with mutation.
-
-         Parameters
-         ----------
-         nb_generations : int
-             Number of generations to simulate.
-         beta : float
-             Intensity of selection.
-         mu : float
-             Mutation rate.
-         init_state : NDArray[np.int64]
-             Initial state vector of shape (n_strategies,) with counts per strategy.
-
-         Returns
-         -------
-         NDArray[np.int64]
-             Final population state as counts of each strategy.
-
-         Example
-         -------
-         >>> pc.evolve(5000, 1.0, 0.01, np.array([99, 1, 0]))
-         )pbdoc")
-                .def("estimate_fixation_probability",
-                     &PairwiseComparison::estimate_fixation_probability,
-                     py::arg("index_invading_strategy"), py::arg("index_resident_strategy"),
-                     py::arg("nb_runs"), py::arg("nb_generations"), py::arg("beta"),
-                     py::call_guard<py::gil_scoped_release>(),
-                     R"pbdoc(
-         Estimate fixation probability of an invading strategy in a resident population.
-
-        This method estimates the fixation probability of one mutant of the invading strategy
-        in a population where all other individuals adopt the resident strategy.
-        The parameter `nb_runs` is very important, since simulations
-        are stopped once a monomorphic state is reached (all individuals adopt the same
-        strategy). The more runs you specify, the better the estimation. You should consider
-        specifying at least a 1000 runs.
-
-         Parameters
-         ----------
-         index_invading_strategy : int
-         index_resident_strategy : int
-         nb_runs : int
-             Number of independent simulations.
-         nb_generations : int
-         beta : float
-
-         Returns
-         -------
-         float
-
-         Example
-         -------
-         >>> pc.estimate_fixation_probability(0, 1, 1000, 5000, 1.0)
-         )pbdoc")
-                .def("estimate_stationary_distribution",
-                     &PairwiseComparison::estimate_stationary_distribution,
-                     py::arg("nb_runs"), py::arg("nb_generations"), py::arg("transitory"),
-                     py::arg("beta"), py::arg("mu"),
-                     py::call_guard<py::gil_scoped_release>(),
-                     R"pbdoc(
-         Estimate the full stationary distribution of states in sparse format.
-
-        This method directly estimates how frequent each strategy is in the population, without calculating
-        the stationary distribution as an intermediary step. You should use this method when the number
-        of states of the system is bigger than `MAX_LONG_INT`, since it would not be possible to index the states
-        in this case, and estimate_stationary_distribution and estimate_stationary_distribution_sparse would run into an
-        overflow error.
-
-         Parameters
-         ----------
-         nb_runs : int
-            Number of independent simulations to perform. The final result will be an average over all the runs.
-         nb_generations : int
-         transitory : int
-             Burn-in generations to discard.
-         beta : float
-         mu : float
-
-         Returns
-         -------
-         NDArray[np.float64]
-            The average frequency of each strategy in the population stored in a sparse array.
-
-         Example
-         -------
-         >>> pc.estimate_stationary_distribution(100, 10000, 1000, 1.0, 0.01)
-         )pbdoc")
-                .def("estimate_stationary_distribution_sparse",
-                     &PairwiseComparison::estimate_stationary_distribution_sparse,
-                     py::arg("nb_runs"), py::arg("nb_generations"), py::arg("transitory"),
-                     py::arg("beta"), py::arg("mu"),
-                     py::call_guard<py::gil_scoped_release>(),
-                     R"pbdoc(
-        Sparse estimation of the stationary distribution. Optimized for large sparse state spaces.
-
-        Same as `estimate_stationary_distribution`, but faster and more memory efficient.
-
-        Parameters
-        ----------
-        nb_runs : int
-            Number of independent simulations to perform. The final result will be an average over all the runs.
-        nb_generations : int
-        transitory : int
-            Burn-in generations to discard.
-        beta : float
-        mu : float
-
-        Returns
-        -------
-        scipy.sparse.csr_matrix
-         )pbdoc")
-                .def("estimate_strategy_distribution",
-                     &PairwiseComparison::estimate_strategy_distribution,
-                     py::arg("nb_runs"), py::arg("nb_generations"), py::arg("transitory"),
-                     py::arg("beta"), py::arg("mu"),
-                     py::call_guard<py::gil_scoped_release>(),
-                     R"pbdoc(
-        Estimate average frequency of each strategy over time.
-
-        This method directly estimates how frequent each strategy is in the population, without calculating
-        the stationary distribution as an intermediary step. You should use this method when the number
-        of states of the system is bigger than MAX_LONG_INT, since it would not be possible to index the states
-        in this case, and estimate_stationary_distribution and estimate_stationary_distribution_sparse would run into an
-        overflow error.
-
-        Parameters
-        ----------
-        nb_runs : int
-            Number of independent simulations to perform. The final result will be an average over all the runs.
-        nb_generations : int
-        transitory : int
-            Burn-in generations to discard.
-        beta : float
-        mu : float
-
-        Returns
-        -------
-        NDArray[np.float64]
-
-        Example
-        -------
-        >>> pc.estimate_strategy_distribution(100, 10000, 1000, 1.0, 0.01)
-         )pbdoc")
+Returns
+-------
+numpy.ndarray
+    Average frequency of each strategy.
+)pbdoc"
+                )
                 .def_property_readonly("nb_strategies", &PairwiseComparison::nb_strategies,
                                        "Number of strategies in the population.")
-
                 .def_property_readonly("payoffs", &PairwiseComparison::payoffs,
                                        "Payoff matrix used for selection dynamics.")
-
                 .def_property_readonly("nb_states", &PairwiseComparison::nb_states,
                                        "Number of discrete states in the population.")
-
                 .def_property("pop_size",
                               &PairwiseComparison::population_size,
                               &PairwiseComparison::set_population_size,
                               "Current population size.")
-
                 .def_property("cache_size",
                               &PairwiseComparison::cache_size,
                               &PairwiseComparison::set_cache_size,
                               "Maximum number of cached fitness values.");
 
+        pair_comp.def(
+            "run_without_mutation",
+            static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(
+                int64_t, double, const Eigen::Ref<const egttools::VectorXui> &
+            )>(&PairwiseComparison::run),
+            py::arg("nb_generations"),
+            py::arg("beta"),
+            py::arg("init_state"),
+            py::return_value_policy::move,
+            R"pbdoc(
+Simulate the stochastic dynamics without mutation.
 
-        pair_comp.def("run_without_mutation",
-                      static_cast<egttools::MatrixXui2D (PairwiseComparison::*)(
-                          int64_t, double, const Eigen::Ref<const egttools::VectorXui> &
-                      )>(&PairwiseComparison::run),
-                      py::arg("nb_generations"),
-                      py::arg("beta"),
-                      py::arg("init_state"),
-                      py::return_value_policy::move,
-                      R"pbdoc(
-    Simulates the stochastic dynamics without mutation.
+Returns
+-------
+numpy.ndarray
+    Matrix containing all intermediate population states.
+)pbdoc"
+        );
 
-    This function returns all the intermediate states of the population for each generation,
-    starting from `init_state`. No mutation occurs; the process stops when fixation is reached
-    or all generations are simulated.
+        pair_comp.def(
+            "run_without_mutation",
+            static_cast<MatrixXui2D (PairwiseComparison::*)(
+                int64_t, int64_t, double, const Eigen::Ref<const VectorXui> &
+            )>(&PairwiseComparison::run),
+            py::arg("nb_generations"),
+            py::arg("transient"),
+            py::arg("beta"),
+            py::arg("init_state"),
+            py::return_value_policy::move,
+            R"pbdoc(
+Simulate the stochastic dynamics without mutation, skipping the transient phase.
 
-    Parameters
-    ----------
-    nb_generations : int
-        Number of generations to simulate.
-    beta : float
-        Intensity of selection.
-    init_state : NDArray[np.int64]
-        Initial population state (counts of each strategy).
+Returns
+-------
+numpy.ndarray
+    Matrix containing the population states after the transient period.
+)pbdoc"
+        );
 
-    Returns
-    -------
-    NDArray[np.int64]
-        Matrix of shape (nb_generations + 1, nb_strategies) containing all population states.
+        pair_comp.def(
+            "run_with_mutation",
+            static_cast<MatrixXui2D (PairwiseComparison::*)(
+                int64_t, double, double, const Eigen::Ref<const VectorXui> &
+            )>(&PairwiseComparison::run),
+            py::arg("nb_generations"),
+            py::arg("beta"),
+            py::arg("mu"),
+            py::arg("init_state"),
+            py::return_value_policy::move,
+            R"pbdoc(
+Simulate the stochastic dynamics with mutation.
 
-    Example
-    -------
-    >>> pc.run_without_mutation(1000, 1.0, np.array([99, 1, 0]))
-    )pbdoc");
+Returns
+-------
+numpy.ndarray
+    Matrix containing all intermediate population states.
+)pbdoc"
+        );
 
-        pair_comp.def("run_without_mutation",
-                      static_cast<MatrixXui2D (PairwiseComparison::*)(
-                          int64_t, int64_t, double, const Eigen::Ref<const VectorXui> &
-                      )>(&PairwiseComparison::run),
-                      py::arg("nb_generations"),
-                      py::arg("transient"),
-                      py::arg("beta"),
-                      py::arg("init_state"),
-                      py::return_value_policy::move,
-                      R"pbdoc(
-    Simulates the stochastic dynamics without mutation, skipping transient states.
+        pair_comp.def(
+            "run_with_mutation",
+            static_cast<MatrixXui2D (PairwiseComparison::*)(
+                int64_t, int64_t, double, double, const Eigen::Ref<const VectorXui> &
+            )>(&PairwiseComparison::run),
+            py::arg("nb_generations"),
+            py::arg("transient"),
+            py::arg("beta"),
+            py::arg("mu"),
+            py::arg("init_state"),
+            py::return_value_policy::move,
+            R"pbdoc(
+Simulate the stochastic dynamics with mutation, skipping the transient phase.
 
-    This overload skips the first `transient` generations in the output.
-
-    Parameters
-    ----------
-    nb_generations : int
-        Total number of generations to simulate.
-    transient : int
-        Burn-in period; these generations are excluded from the return.
-    beta : float
-        Intensity of selection.
-    init_state : NDArray[np.int64]
-        Initial population state (counts of each strategy).
-
-    Returns
-    -------
-    NDArray[np.int64]
-        Matrix of shape (nb_generations - transient, nb_strategies).
-
-    Example
-    -------
-    >>> pc.run_without_mutation(1000, 200, 1.0, np.array([50, 50, 0]))
-    )pbdoc");
-
-        pair_comp.def("run_with_mutation",
-                      static_cast<MatrixXui2D (PairwiseComparison::*)(
-                          int64_t, double, double, const Eigen::Ref<const VectorXui> &
-                      )>(&PairwiseComparison::run),
-                      py::arg("nb_generations"),
-                      py::arg("beta"),
-                      py::arg("mu"),
-                      py::arg("init_state"),
-                      py::return_value_policy::move,
-                      R"pbdoc(
-    Simulates stochastic dynamics with mutation for the specified number of generations.
-
-    All intermediate states are returned, starting from the initial condition.
-
-    Parameters
-    ----------
-    nb_generations : int
-        Number of generations to simulate.
-    beta : float
-        Intensity of selection.
-    mu : float
-        Mutation rate.
-    init_state : NDArray[np.int64]
-        Initial state of the population.
-
-    Returns
-    -------
-    NDArray[np.int64]
-        Matrix of shape (nb_generations + 1, nb_strategies) with population states.
-
-    Example
-    -------
-    >>> pc.run_with_mutation(5000, 1.0, 0.01, np.array([33, 33, 34]))
-    )pbdoc");
-
-        pair_comp.def("run_with_mutation",
-                      static_cast<MatrixXui2D (PairwiseComparison::*)(
-                          int64_t, int64_t, double, double, const Eigen::Ref<const VectorXui> &
-                      )>(&PairwiseComparison::run),
-                      py::arg("nb_generations"),
-                      py::arg("transient"),
-                      py::arg("beta"),
-                      py::arg("mu"),
-                      py::arg("init_state"),
-                      py::return_value_policy::move,
-                      R"pbdoc(
-    Simulates stochastic dynamics with mutation, skipping transient states.
-
-    Parameters
-    ----------
-    nb_generations : int
-        Total number of generations.
-    transient : int
-        Number of initial generations to discard from the result.
-    beta : float
-        Intensity of selection.
-    mu : float
-        Mutation rate.
-    init_state : NDArray[np.int64]
-        Initial state of the population.
-
-    Returns
-    -------
-    NDArray[np.int64]
-        Matrix of shape (nb_generations - transient, nb_strategies) with population states.
-
-    Example
-    -------
-    >>> pc.run_with_mutation(5000, 1000, 1.0, 0.01, np.array([33, 33, 34]))
-    )pbdoc");
-
+Returns
+-------
+numpy.ndarray
+    Matrix containing the population states after the transient period.
+)pbdoc"
+        );
 
         pair_comp.def("run", [](pybind11::object &self, py::args args) -> void {
-            PyErr_WarnEx(PyExc_DeprecationWarning, "DEPRECATED. Use run_without_mutation or run_with_mutation instead.",
-                         1);
+            PyErr_WarnEx(
+                PyExc_DeprecationWarning,
+                "DEPRECATED. Use run_without_mutation or run_with_mutation instead.",
+                1
+            );
         });
 
         options.enable_function_signatures();
@@ -1070,402 +1197,206 @@ void init_methods(py::module_ &m) { {
         py::options options;
         options.disable_function_signatures();
 
-        py::class_<FinitePopulations::evolvers::GeneralPopulationEvolver>(m, "GeneralPopulationEvolver")
-                .def(py::init<FinitePopulations::structure::AbstractStructure &>(),
-                     py::arg("structure"), py::keep_alive<1, 2>(),
-                     R"pbdoc(
-            Evolves a general population structure.
+        py::class_<FinitePopulations::evolvers::GeneralPopulationEvolver>(
+                    m,
+                    "GeneralPopulationEvolver",
+                    R"pbdoc(
+Evolver for a general population structure.
+)pbdoc"
+                )
+                .def(
+                    py::init<FinitePopulations::structure::AbstractStructure &>(),
+                    py::arg("structure"),
+                    py::keep_alive<1, 2>(),
+                    R"pbdoc(
+Construct an evolver for a general population structure.
 
-            This class simulates evolutionary dynamics based on a user-defined structure
-            (e.g., spatial, group, or network-based interaction).
+Parameters
+----------
+structure : egttools.numerical.structure.AbstractStructure
+    Structure defining how individuals interact and update their strategies.
+)pbdoc"
+                )
+                .def(
+                    "evolve",
+                    &FinitePopulations::evolvers::GeneralPopulationEvolver::evolve,
+                    py::call_guard<py::gil_scoped_release>(),
+                    py::arg("nb_generations"),
+                    py::return_value_policy::move,
+                    R"pbdoc(
+Evolve the population and return the final state.
+)pbdoc"
+                )
+                .def(
+                    "run",
+                    &egttools::FinitePopulations::evolvers::GeneralPopulationEvolver::run,
+                    py::call_guard<py::gil_scoped_release>(),
+                    py::arg("nb_generations"),
+                    py::arg("transitory"),
+                    py::return_value_policy::move,
+                    R"pbdoc(
+Run the population dynamics and return the result after discarding the transitory phase.
+)pbdoc"
+                )
+                .def(
+                    "structure",
+                    &FinitePopulations::evolvers::GeneralPopulationEvolver::structure,
+                    py::return_value_policy::reference_internal,
+                    R"pbdoc(
+Return the structure used by the evolver.
+)pbdoc"
+                );
 
-            Parameters
-            ----------
-            structure : egttools.numerical.structure.AbstractStructure
-                The structure that defines how individuals interact and update their strategies.
+        py::class_<FinitePopulations::evolvers::NetworkEvolver>(
+                    m,
+                    "NetworkEvolver",
+                    R"pbdoc(
+Utility class for evolving network-structured populations.
+)pbdoc"
+                )
+                .def_static(
+                    "evolve",
+                    static_cast<VectorXui (*)(
+                        int64_t,
+                        FinitePopulations::structure::AbstractNetworkStructure &
+                    )>(&FinitePopulations::evolvers::NetworkEvolver::evolve),
+                    py::arg("nb_generations"),
+                    py::arg("network"),
+                    py::return_value_policy::move,
+                    R"pbdoc(
+Evolve the network population and return the final state.
+)pbdoc"
+                )
 
-            See Also
-            --------
-            egttools.numerical.structure.AbstractStructure
-            egttools.numerical.PairwiseComparisonNumerical
+                .def_static(
+                    "evolve",
+                    static_cast<VectorXui (*)(
+                        int64_t,
+                        VectorXui &,
+                        FinitePopulations::structure::AbstractNetworkStructure &
+                    )>(&FinitePopulations::evolvers::NetworkEvolver::evolve),
+                    py::arg("nb_generations"),
+                    py::arg("initial_state"),
+                    py::arg("network"),
+                    py::return_value_policy::move,
+                    R"pbdoc(
+Evolve the network population from a given initial state and return the final state.
+)pbdoc"
+                )
 
-            Example
-            -------
-            >>> from egttools.numerical.structure import SomeConcreteStructure
-            >>> struct = SomeConcreteStructure(...)
-            >>> evolver = GeneralPopulationEvolver(struct)
-         )pbdoc")
+                .def_static(
+                    "run",
+                    static_cast<MatrixXui2D (*)(
+                        int64_t,
+                        int64_t,
+                        FinitePopulations::structure::AbstractNetworkStructure &
+                    )>(&FinitePopulations::evolvers::NetworkEvolver::run),
+                    py::arg("nb_generations"),
+                    py::arg("transitory"),
+                    py::arg("network"),
+                    py::return_value_policy::move,
+                    R"pbdoc(
+Simulate the full trajectory of the population states.
+)pbdoc"
+                )
 
-                .def("evolve",
-                     &FinitePopulations::evolvers::GeneralPopulationEvolver::evolve,
-                     py::call_guard<py::gil_scoped_release>(),
-                     py::arg("nb_generations"),
-                     py::return_value_policy::move,
-                     R"pbdoc(
-            Evolves the population and returns the final state.
+                .def_static(
+                    "run",
+                    static_cast<MatrixXui2D (*)(
+                        int64_t,
+                        int64_t,
+                        VectorXui &,
+                        FinitePopulations::structure::AbstractNetworkStructure &
+                    )>(&FinitePopulations::evolvers::NetworkEvolver::run),
+                    py::arg("nb_generations"),
+                    py::arg("transitory"),
+                    py::arg("initial_state"),
+                    py::arg("network"),
+                    py::return_value_policy::move,
+                    R"pbdoc(
+Run the simulation from a custom initial state and return the trajectory.
+)pbdoc"
+                )
 
-            Runs the simulation for a fixed number of generations and returns
-            the final counts of each strategy in the population.
+                .def_static(
+                    "estimate_time_dependent_average_gradients_of_selection",
+                    static_cast<Matrix2D (*)(
+                        std::vector<VectorXui> &,
+                        int64_t,
+                        int64_t,
+                        int64_t,
+                        FinitePopulations::structure::AbstractNetworkStructure &
+                    )>(&
+                        FinitePopulations::evolvers::NetworkEvolver::estimate_time_dependent_average_gradients_of_selection),
+                    py::arg("states"),
+                    py::arg("nb_simulations"),
+                    py::arg("generation_start"),
+                    py::arg("generation_stop"),
+                    py::arg("network"),
+                    py::return_value_policy::move,
+                    R"pbdoc(
+Estimate time-dependent average gradients of selection for a set of states.
+)pbdoc"
+                )
 
-            Parameters
-            ----------
-            nb_generations : int
-                Number of generations to simulate.
+                .def_static(
+                    "estimate_time_dependent_average_gradients_of_selection",
+                    static_cast<Matrix2D (*)(
+                        std::vector<VectorXui> &,
+                        int64_t,
+                        int64_t,
+                        int64_t,
+                        std::vector<FinitePopulations::structure::AbstractNetworkStructure *>)>(&
+                        FinitePopulations::evolvers::NetworkEvolver::estimate_time_dependent_average_gradients_of_selection),
+                    py::arg("states"),
+                    py::arg("nb_simulations"),
+                    py::arg("generation_start"),
+                    py::arg("generation_stop"),
+                    py::arg("networks"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    py::return_value_policy::move,
+                    R"pbdoc(
+Estimate time-dependent average gradients of selection across multiple networks.
+)pbdoc"
+                )
 
-            Returns
-            -------
-            NDArray[np.int64]
-                Final counts of each strategy in the population.
+                .def_static(
+                    "estimate_time_independent_average_gradients_of_selection",
+                    static_cast<Matrix2D (*)(
+                        std::vector<VectorXui> &,
+                        int64_t,
+                        int64_t,
+                        FinitePopulations::structure::AbstractNetworkStructure &
+                    )>(&
+                        FinitePopulations::evolvers::NetworkEvolver::estimate_time_independent_average_gradients_of_selection),
+                    py::arg("states"),
+                    py::arg("nb_simulations"),
+                    py::arg("nb_generations"),
+                    py::arg("network"),
+                    py::return_value_policy::move,
+                    R"pbdoc(
+Estimate time-independent average gradients of selection for a set of states.
+)pbdoc"
+                )
 
-            Example
-            -------
-            >>> final = evolver.evolve(1000)
-         )pbdoc")
-
-                .def("run",
-                     &egttools::FinitePopulations::evolvers::GeneralPopulationEvolver::run,
-                     py::call_guard<py::gil_scoped_release>(),
-                     py::arg("nb_generations"), py::arg("transitory"),
-                     py::return_value_policy::move,
-                     R"pbdoc(
-            Simulates the population and returns the final state after discarding transitory steps.
-
-            This method evolves the population for `nb_generations` generations but returns the
-            final state after discarding the first `transitory` generations.
-
-            Parameters
-            ----------
-            nb_generations : int
-                Total number of generations to simulate.
-            transitory : int
-                Number of initial generations to discard (burn-in period).
-
-            Returns
-            -------
-            NDArray[np.int64]
-                Final counts of each strategy after the transitory phase.
-
-            Example
-            -------
-            >>> final = evolver.run(2000, 500)
-         )pbdoc")
-
-                .def("structure",
-                     &FinitePopulations::evolvers::GeneralPopulationEvolver::structure,
-                     R"pbdoc(
-            Returns the structure used by the evolver.
-
-            Returns
-            -------
-            egttools.numerical.structure.AbstractStructure
-                The structure defining interaction and update rules.
-
-            Example
-            -------
-            >>> structure = evolver.structure()
-         )pbdoc");
-
-
-        py::class_<FinitePopulations::evolvers::NetworkEvolver>(m, "NetworkEvolver")
-
-                .def_static("evolve",
-                            static_cast<VectorXui (*)(
-                                int64_t,
-                                FinitePopulations::structure::AbstractNetworkStructure &
-                            )>(&FinitePopulations::evolvers::NetworkEvolver::evolve),
-                            py::arg("nb_generations"),
-                            py::arg("network"),
-                            py::return_value_policy::move,
-                            R"pbdoc(
-            Evolves the network population and returns the final state.
-
-            This simulates the dynamics over the given network structure and returns
-            the final strategy counts after a number of generations.
-
-            Parameters
-            ----------
-            nb_generations : int
-                Number of generations to simulate.
-            network : egttools.numerical.structure.AbstractNetworkStructure
-                The network structure describing the population and its interactions.
-
-            Returns
-            -------
-            NDArray[np.int64]
-                Final strategy counts after evolution.
-
-            Example
-            -------
-            >>> final = NetworkEvolver.evolve(1000, my_network)
-        )pbdoc")
-
-                .def_static("evolve",
-                            static_cast<VectorXui (*)(
-                                int64_t,
-                                VectorXui &,
-                                FinitePopulations::structure::AbstractNetworkStructure &
-                            )>(&FinitePopulations::evolvers::NetworkEvolver::evolve),
-                            py::arg("nb_generations"),
-                            py::arg("initial_state"),
-                            py::arg("network"),
-                            py::return_value_policy::move,
-                            R"pbdoc(
-            Evolves the network population from a given initial state.
-
-            Parameters
-            ----------
-            nb_generations : int
-                Number of generations to simulate.
-            initial_state : NDArray[np.int64]
-                Initial counts of each strategy in the population.
-            network : egttools.numerical.structure.AbstractNetworkStructure
-                The network structure containing the population.
-
-            Returns
-            -------
-            NDArray[np.int64]
-                Final strategy counts after evolution.
-
-            Example
-            -------
-            >>> final = NetworkEvolver.evolve(1000, initial_state, my_network)
-        )pbdoc")
-
-                .def_static("run",
-                            static_cast<MatrixXui2D (*)(
-                                int64_t,
-                                int64_t,
-                                FinitePopulations::structure::AbstractNetworkStructure &
-                            )>(&FinitePopulations::evolvers::NetworkEvolver::run),
-                            py::arg("nb_generations"),
-                            py::arg("transitory"),
-                            py::arg("network"),
-                            py::return_value_policy::move,
-                            R"pbdoc(
-            Simulates the full trajectory of the population states.
-
-            This method runs the simulation and returns all population states
-            after the transitory period.
-
-            Parameters
-            ----------
-            nb_generations : int
-                Total number of generations to simulate.
-            transitory : int
-                Number of generations to discard before returning results.
-            network : egttools.numerical.structure.AbstractNetworkStructure
-                The network structure containing the population.
-
-            Returns
-            -------
-            NDArray[np.int64]
-                A matrix of shape (nb_generations - transitory, nb_strategies) representing
-                the strategy counts over time.
-
-            Example
-            -------
-            >>> trace = NetworkEvolver.run(1000, 100, my_network)
-        )pbdoc")
-
-                .def_static("run",
-                            static_cast<MatrixXui2D (*)(
-                                int64_t,
-                                int64_t,
-                                VectorXui &,
-                                FinitePopulations::structure::AbstractNetworkStructure &
-                            )>(&FinitePopulations::evolvers::NetworkEvolver::run),
-                            py::arg("nb_generations"),
-                            py::arg("transitory"),
-                            py::arg("initial_state"),
-                            py::arg("network"),
-                            py::return_value_policy::move,
-                            R"pbdoc(
-            Runs the simulation from a custom initial state.
-
-            Parameters
-            ----------
-            nb_generations : int
-                Total number of generations.
-            transitory : int
-                Number of initial generations to discard.
-            initial_state : NDArray[np.int64]
-                Initial counts of strategies in the population.
-            network : egttools.numerical.structure.AbstractNetworkStructure
-                A network structure containing the population.
-
-            Returns
-            -------
-            NDArray[np.int64]
-                Trajectory of population states after the transitory phase.
-
-            Example
-            -------
-            >>> trace = NetworkEvolver.run(1000, 100, init_state, my_network)
-        )pbdoc")
-
-                .def_static("estimate_time_dependent_average_gradients_of_selection",
-                            static_cast<Matrix2D (*)(
-                                std::vector<VectorXui> &,
-                                int64_t,
-                                int64_t,
-                                int64_t,
-                                FinitePopulations::structure::AbstractNetworkStructure &
-                            )>(&
-                                FinitePopulations::evolvers::NetworkEvolver::estimate_time_dependent_average_gradients_of_selection),
-                            py::arg("states"),
-                            py::arg("nb_simulations"),
-                            py::arg("generation_start"),
-                            py::arg("generation_stop"),
-                            py::arg("network"),
-                            py::return_value_policy::move,
-                            R"pbdoc(
-            Estimates the time-dependent gradient of selection for the specified states.
-
-            This method simulates evolution starting from each state and calculates
-            the average gradient of selection between `generation_start` and `generation_stop`.
-
-            Parameters
-            ----------
-            states : List[NDArray[np.int64]]
-                List of population states (strategy counts) to evaluate.
-            nb_simulations : int
-                Number of simulations per state.
-            generation_start : int
-                First generation to include in averaging.
-            generation_stop : int
-                Last generation to include in averaging.
-            network : egttools.numerical.structure.AbstractNetworkStructure
-                A network structure for population evolution.
-
-            Returns
-            -------
-            NDArray[np.float64]
-                Averaged gradient matrix for all given states.
-
-            Example
-            -------
-            >>> avg_grad = NetworkEvolver.estimate_time_dependent_average_gradients_of_selection(
-            ...     states, 50, 100, 200, my_network)
-        )pbdoc")
-
-                .def_static("estimate_time_dependent_average_gradients_of_selection",
-                            static_cast<Matrix2D (*)(
-                                std::vector<VectorXui> &,
-                                int64_t,
-                                int64_t,
-                                int64_t,
-                                std::vector<FinitePopulations::structure::AbstractNetworkStructure *>)>(&
-                                FinitePopulations::evolvers::NetworkEvolver::estimate_time_dependent_average_gradients_of_selection),
-                            py::arg("states"),
-                            py::arg("nb_simulations"),
-                            py::arg("generation_start"),
-                            py::arg("generation_stop"),
-                            py::arg("networks"),
-                            py::call_guard<py::gil_scoped_release>(),
-                            py::return_value_policy::move,
-                            R"pbdoc(
-            Same as the single-network version but averages over multiple networks.
-
-            Parameters
-            ----------
-            states : List[NDArray[np.int64]]
-                Initial population states.
-            nb_simulations : int
-                Number of simulations per state.
-            generation_start : int
-                First generation to consider.
-            generation_stop : int
-                Last generation to consider.
-            networks : List[egttools.numerical.structure.AbstractNetworkStructure]
-                Multiple network structures for averaging.
-
-            Returns
-            -------
-            NDArray[np.float64]
-                Averaged gradients for each initial state.
-
-            Example
-            -------
-            >>> avg_grad = NetworkEvolver.estimate_time_dependent_average_gradients_of_selection(
-            ...     states, 100, 50, 100, [net1, net2])
-        )pbdoc")
-
-                .def_static("estimate_time_independent_average_gradients_of_selection",
-                            static_cast<Matrix2D (*)(
-                                std::vector<VectorXui> &,
-                                int64_t,
-                                int64_t,
-                                FinitePopulations::structure::AbstractNetworkStructure &
-                            )>(&
-                                FinitePopulations::evolvers::NetworkEvolver::estimate_time_independent_average_gradients_of_selection),
-                            py::arg("states"),
-                            py::arg("nb_simulations"),
-                            py::arg("nb_generations"),
-                            py::arg("network"),
-                            py::return_value_policy::move,
-                            R"pbdoc(
-            Estimates time-independent gradients of selection for given states.
-
-            Parameters
-            ----------
-            states : List[NDArray[np.int64]]
-                Initial states to evaluate.
-            nb_simulations : int
-                Number of simulations per state.
-            nb_generations : int
-                Total generations to evolve per simulation.
-            network : AbstractNetworkStructure
-                Network describing the evolutionary interactions.
-
-            Returns
-            -------
-            NDArray[np.float64]
-                A matrix with one row per initial state and one column per strategy.
-
-            Example
-            -------
-            >>> gradients = NetworkEvolver.estimate_time_independent_average_gradients_of_selection(
-            ...     states, 100, 200, my_network)
-        )pbdoc")
-
-                .def_static("estimate_time_independent_average_gradients_of_selection",
-                            static_cast<Matrix2D (*)(
-                                std::vector<VectorXui> &,
-                                int64_t,
-                                int64_t,
-                                std::vector<FinitePopulations::structure::AbstractNetworkStructure *>)>(&
-                                FinitePopulations::evolvers::NetworkEvolver::estimate_time_independent_average_gradients_of_selection),
-                            py::arg("states"),
-                            py::arg("nb_simulations"),
-                            py::arg("nb_generations"),
-                            py::arg("networks"),
-                            py::call_guard<py::gil_scoped_release>(),
-                            py::return_value_policy::move,
-                            R"pbdoc(
-            Estimates time-independent gradients of selection across multiple networks.
-
-            Parameters
-            ----------
-            states : List[NDArray[np.int64]]
-                Initial population states.
-            nb_simulations : int
-                Number of simulations per state.
-            nb_generations : int
-                Number of generations per simulation.
-            networks : List[AbstractNetworkStructure]
-                List of network structures for averaging.
-
-            Returns
-            -------
-            NDArray[np.float64]
-                Matrix of averaged gradients, one row per state.
-
-            Example
-            -------
-            >>> gradients = NetworkEvolver.estimate_time_independent_average_gradients_of_selection(
-            ...     states, 50, 100, [net1, net2, net3])
-        )pbdoc");
-
+                .def_static(
+                    "estimate_time_independent_average_gradients_of_selection",
+                    static_cast<Matrix2D (*)(
+                        std::vector<VectorXui> &,
+                        int64_t,
+                        int64_t,
+                        std::vector<FinitePopulations::structure::AbstractNetworkStructure *>)>(&
+                        FinitePopulations::evolvers::NetworkEvolver::estimate_time_independent_average_gradients_of_selection),
+                    py::arg("states"),
+                    py::arg("nb_simulations"),
+                    py::arg("nb_generations"),
+                    py::arg("networks"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    py::return_value_policy::move,
+                    R"pbdoc(
+Estimate time-independent average gradients of selection across multiple networks.
+)pbdoc"
+                );
 
         options.enable_function_signatures();
     }

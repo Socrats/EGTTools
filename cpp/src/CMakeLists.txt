@@ -108,9 +108,11 @@ egttools_enable_blas_lapack(numerical_)
 # Create EGTToolsTargets export
 # ------------------------------------------------------------------------------
 
-install(TARGETS numerical_
-        EXPORT EGTToolsTargets
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+if (NOT SKBUILD)
+    install(TARGETS numerical_
+            EXPORT EGTToolsTargets
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+endif ()

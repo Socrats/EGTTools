@@ -44,7 +44,9 @@ jobs:
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v2
         with:
-          cmake-version: 'latest'
+          # vcpkg bundles cmakerc which uses cmake_minimum_required < 3.5,
+          # removed in CMake 4.0. Pin to 3.x until the vcpkg submodule is updated.
+          cmake-version: '3.31'
 
       - name: Install system packages (OpenMP, BLAS/LAPACK)
         run: bash build_tools/github/install_blas_openmp.sh
@@ -63,38 +65,31 @@ jobs:
             ${{ runner.os }}-vcpkg-
 
       - name: Bootstrap vcpkg
-        run: |
-          ./vcpkg/bootstrap-vcpkg.sh
+        run: ./vcpkg/bootstrap-vcpkg.sh
 
       - name: Install dependencies with vcpkg
         if: steps.cache-vcpkg.outputs.cache-hit != 'true'
-        run: |
-          ./vcpkg/vcpkg install --x-binarycaching
+        run: ./vcpkg/vcpkg install --x-binarycaching
 
       - name: Set VCPKG_PATH environment variable
-        run: |
-          echo "VCPKG_PATH=$(pwd)" >> $GITHUB_ENV
+        run: echo "VCPKG_PATH=$(pwd)" >> $GITHUB_ENV
 
       - name: Install Python requirements
-        run: |
-          pip install --user check-manifest twine
+        run: pip install --user check-manifest twine build
 
       - name: Build sdist
         run: |
-          echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DUSE_OPENMP=OFF'" >> $GITHUB_ENV
+          echo "EGTTOOLS_EXTRA_CMAKE_ARGS=-DUSE_OPENMP=OFF" >> $GITHUB_ENV
           python -m build --sdist --outdir wheelhouse
 
       - name: Run check-manifest
-        run: |
-          python -m check_manifest --verbose
+        run: python -m check_manifest --verbose
 
       - name: Install from sdist
-        run: |
-          pip install --user wheelhouse/*.tar.gz
+        run: pip install --user wheelhouse/*.tar.gz
 
       - name: Check sdist metadata
-        run: |
-          python -m twine check wheelhouse/*
+        run: python -m twine check wheelhouse/*
 
       - name: Upload sdist
         uses: actions/upload-artifact@v4
@@ -103,34 +98,38 @@ jobs:
           path: wheelhouse/*.tar.gz
 
   build_wheels:
-    name: Build wheel for ${{ matrix.platform_id }}-${{ matrix.manylinux_image }}
+    name: Build wheel for ${{ matrix.platform_id }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
+          # Windows x86_64
           - os: windows-latest
             platform_id: win_amd64
+            arch: AMD64
             openmp_enabled: "ON"
 
+          # Windows arm64 (cross-compiled on x86_64 runner, cannot be tested)
           - os: windows-latest
             platform_id: win_arm64
+            arch: ARM64
             openmp_enabled: "ON"
 
+          # Linux x86_64
           - os: ubuntu-latest
             platform_id: manylinux_x86_64
-            manylinux_image: manylinux2014
+            arch: x86_64
+            manylinux_image: manylinux_2_28
             openmp_enabled: "ON"
 
-          - os: macos-13
-            platform_id: macosx_x86_64
-            macosx_deployment_target: "13.0"
-            openmp_enabled: "ON"
-            skip_vcpkg: "OFF"
 
-          - os: macos-14
+          # macOS arm64 (Apple Silicon) — macos-15 runner; Homebrew libomp on this
+          # runner is built for macOS 15 so the deployment target must match.
+          - os: macos-15
             platform_id: macosx_arm64
-            macosx_deployment_target: "14.0"
+            arch: arm64
+            macosx_deployment_target: "15.0"
             openmp_enabled: "ON"
             skip_vcpkg: "OFF"
 
@@ -157,19 +156,19 @@ jobs:
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v2
         with:
-          cmake-version: 'latest'
+          # vcpkg bundles cmakerc which uses cmake_minimum_required < 3.5,
+          # removed in CMake 4.0. Pin to 3.x until the vcpkg submodule is updated.
+          cmake-version: '3.31'
 
-      - name: Set MACOSX_DEPLOYMENT_TARGET globally
+      - name: Set macOS deployment target and cmake args
         if: runner.os == 'macOS'
         run: |
-          echo "Setting MACOSX_DEPLOYMENT_TARGET=${{ matrix.macosx_deployment_target }}"
           echo "MACOSX_DEPLOYMENT_TARGET=${{ matrix.macosx_deployment_target }}" >> $GITHUB_ENV
-          echo "EGTTOOLS_EXTRA_CMAKE_ARGS='-DUSE_OPENMP=${{ matrix.openmp_enabled }} -DSKIP_VCPKG=${{ matrix.skip_vcpkg }}'" >> $GITHUB_ENV
+          echo "EGTTOOLS_EXTRA_CMAKE_ARGS=-DUSE_OPENMP=${{ matrix.openmp_enabled }} -DSKIP_VCPKG=${{ matrix.skip_vcpkg }}" >> $GITHUB_ENV
 
       - name: Check MACOSX_DEPLOYMENT_TARGET inside Python
         if: runner.os == 'macOS'
-        run: |
-          python3 -c "import sysconfig; print('Python sees MACOSX_DEPLOYMENT_TARGET =', sysconfig.get_config_var('MACOSX_DEPLOYMENT_TARGET'))"
+        run: python3 -c "import sysconfig; print('Python sees MACOSX_DEPLOYMENT_TARGET =', sysconfig.get_config_var('MACOSX_DEPLOYMENT_TARGET'))"
 
       - name: Setup cache for vcpkg
         id: cache-vcpkg
@@ -185,8 +184,8 @@ jobs:
             ${{ runner.os }}-vcpkg-${{ matrix.platform_id }}-
             ${{ runner.os }}-vcpkg-
 
-      - name: Bootstrap vcpkg
-        if: runner.os == 'Linux' || (runner.os == 'macOS' && matrix.platform_id != 'macosx_universal2')
+      - name: Bootstrap vcpkg (Linux / macOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
         run: |
           ./vcpkg/bootstrap-vcpkg.sh
           echo "VCPKG_PATH=$(pwd)" >> $GITHUB_ENV
@@ -195,40 +194,62 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           ./vcpkg/bootstrap-vcpkg.bat
+          echo "VCPKG_PATH=${{ github.workspace }}" >> $env:GITHUB_ENV
 
       - name: Install dependencies with vcpkg
-        if: steps.cache-vcpkg.outputs.cache-hit != 'true'
-        run: |
-          ./vcpkg/vcpkg install --x-binarycaching
+        # Linux: vcpkg packages are installed inside the manylinux container via
+        # CIBW_BEFORE_ALL_LINUX; skip on the outer runner.
+        if: steps.cache-vcpkg.outputs.cache-hit != 'true' && runner.os != 'Linux'
+        run: ./vcpkg/vcpkg install --x-binarycaching
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.3.1
         env:
-          CIBW_ARCHS: all
-          CIBW_ENVIRONMENT_LINUX: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
-          CIBW_ENVIRONMENT_MACOS: |
-            SKIP_VCPKG=${{ matrix.skip_vcpkg }} EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=${{ matrix.openmp_enabled }}" MACOSX_DEPLOYMENT_TARGET=${{ matrix.macosx_deployment_target }}
-          CIBW_ENVIRONMENT_WINDOWS: VCPKG_PATH=$(pwd) EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
-          CIBW_BUILD: "cp310-${{ matrix.platform_id }} cp311-${{ matrix.platform_id }} cp312-${{ matrix.platform_id }}"
-          CIBW_BEFORE_ALL_LINUX: bash {package}/build_tools/github/install_blas_openmp.sh
+          CIBW_ARCHS: ${{ matrix.arch }}
+          CIBW_BUILD: >-
+            cp310-${{ matrix.platform_id }}
+            cp311-${{ matrix.platform_id }}
+            cp312-${{ matrix.platform_id }}
+            cp313-${{ matrix.platform_id }}
+          # Linux: project is mounted at /project inside the manylinux container.
+          # macOS/Windows: runs on the host; VCPKG_PATH is set via $GITHUB_ENV in the
+          # bootstrap step and referenced explicitly here to avoid relying on inheritance.
+          CIBW_ENVIRONMENT_LINUX: >-
+            VCPKG_PATH=/project
+            EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
+          CIBW_ENVIRONMENT_MACOS: >-
+            VCPKG_PATH=$VCPKG_PATH
+            SKIP_VCPKG=${{ matrix.skip_vcpkg }}
+            EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=${{ matrix.openmp_enabled }}"
+            MACOSX_DEPLOYMENT_TARGET=${{ matrix.macosx_deployment_target }}
+          CIBW_ENVIRONMENT_WINDOWS: >-
+            VCPKG_PATH=$VCPKG_PATH
+            EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
+          # Inside the manylinux container the outer runner's vcpkg binary is unusable
+          # (different glibc). Re-bootstrap and re-install vcpkg inside the container.
+          CIBW_BEFORE_ALL_LINUX: |
+            bash {package}/build_tools/github/install_blas_openmp.sh
+            if [ -f "{package}/vcpkg/bootstrap-vcpkg.sh" ]; then
+              {package}/vcpkg/bootstrap-vcpkg.sh --disableMetrics
+              {package}/vcpkg/vcpkg install --x-binarycaching
+            fi
           CIBW_BEFORE_ALL_MACOS: bash {package}/build_tools/github/install_blas_openmp.sh
-          # Optionally for Windows too, if needed
-          # CIBW_BEFORE_ALL_WINDOWS: bash {package}/build_tools/github/install_blas_openmp.sh
+          # Install cmake and ninja into the build venv so vcpkg compiler detection works.
+          # VS environment is activated by scikit-build via setup-args=--vsenv.
+          CIBW_BEFORE_BUILD_WINDOWS: pip install cmake ninja
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
-          CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_CONFIG_SETTINGS_WINDOWS: "setup-args=--vsenv"
-          CIBW_ENVIRONMENT_PASS_LINUX: RUNNER_OS
+          # win_arm64 is cross-compiled on x86_64 runner and cannot be tested
+          CIBW_TEST_SKIP: "*-win_arm64"
         with:
           package-dir: .
           output-dir: wheelhouse
           config-file: "{package}/pyproject.toml"
 
-
       - uses: actions/upload-artifact@v4
         with:
-          name: cibw-wheels-${{ matrix.os }}-${{ matrix.platform }}-${{ strategy.job-index }}
+          name: cibw-wheels-${{ matrix.os }}-${{ matrix.platform_id }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
-
 
       - name: Upload wheel for ReadTheDocs
         if: runner.os == 'Linux' && matrix.platform_id == 'manylinux_x86_64' && startsWith(github.ref, 'refs/heads/') && !startsWith(github.ref, 'refs/heads/actions')
@@ -253,12 +274,14 @@ jobs:
     steps:
       - name: Get branch name
         id: get_branch
-        run: |
-          echo "::set-output name=branch::${GITHUB_REF##refs/heads/}"
+        run: echo "branch=${GITHUB_REF##refs/heads/}" >> $GITHUB_OUTPUT
 
       - name: Trigger ReadTheDocs webhook
         run: |
-          curl -X POST -d "branches=${{ steps.get_branch.outputs.branch }}" -d "token=${{ secrets.READTHEDOCS_WEBHOOK_TOKEN }}" https://readthedocs.org/api/v2/webhook/egttools/180432/
+          curl -X POST \
+            -d "branches=${{ steps.get_branch.outputs.branch }}" \
+            -d "token=${{ secrets.READTHEDOCS_WEBHOOK_TOKEN }}" \
+            https://readthedocs.org/api/v2/webhook/egttools/180432/
 
   create_release:
     name: Create release
@@ -278,11 +301,9 @@ jobs:
           find all_artifacts -name '*.whl' -exec cp {} wheelhouse/ \;
           find all_artifacts -name '*.tar.gz' -exec cp {} wheelhouse/ \;
 
-
       - name: Get release name
         id: get_version
-        run: |
-          echo "::set-output name=version::${GITHUB_REF##refs/tags/v}"
+        run: echo "version=${GITHUB_REF##refs/tags/v}" >> $GITHUB_OUTPUT
 
       - name: Upload sdist and wheels to release
         uses: ncipollo/release-action@v1.20.0

@@ -18,6 +18,14 @@
 
 #include <egttools/finite_populations/analytical/PairwiseComparison.hpp>
 
+namespace {
+    inline std::uint64_t make_fitness_cache_key(const int64_t state_index,
+                                                const int strategy_index) {
+        return (static_cast<std::uint64_t>(state_index) << 32) |
+               static_cast<std::uint32_t>(strategy_index);
+    }
+} // namespace
+
 egttools::FinitePopulations::analytical::PairwiseComparison::PairwiseComparison(int population_size,
     AbstractGame &game) : population_size_(population_size),
                           cache_size_(100),
@@ -48,10 +56,10 @@ egttools::FinitePopulations::analytical::PairwiseComparison::PairwiseComparison(
 
 void egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_edge_fitnesses() {
     Matrix2D fitnesses = Matrix2D::Zero(nb_strategies_, (population_size_ - 1) * nb_strategies_);
-    const int nb_elements = population_size_ - 2;
+    const int nb_elements = population_size_ - 1;
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for default(none) shared(fitnesses, nb_strategies_, population_size_, game_, nb_elements, Eigen::Dynamic)
+#pragma omp parallel for default(none) shared(fitnesses, nb_strategies_, population_size_, game_, nb_elements)
 #endif
     for (int i = 0; i < nb_strategies_; ++i) {
         VectorXui population_state = VectorXui::Zero(nb_strategies_);
@@ -82,10 +90,12 @@ void egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_
                 population_state(i) = z;
                 population_state(j) = population_size_ - z;
                 // add fitness value to cache
-                std::stringstream result;
-                result << population_state;
-                std::string key1 = std::to_string(i) + result.str();
-                std::string key2 = std::to_string(j) + result.str();
+                const int64_t state_index =
+                        static_cast<int64_t>(calculate_state(
+                            population_size_, population_state));
+
+                const auto key1 = make_fitness_cache_key(state_index, i);
+                const auto key2 = make_fitness_cache_key(state_index, j);
 
                 cache_.put(key1, fitnesses(i, j * nb_elements + (z - 1)));
                 cache_.put(key2, fitnesses(j, i * nb_elements + (population_size_ - z - 1)));
@@ -96,142 +106,205 @@ void egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_
     }
 }
 
-egttools::SparseMatrix2D egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_matrix(
-    const double beta, const double mu) {
-    // Check if beta is positive
-    if (beta < 0) {
-        throw std::invalid_argument(
-            "The intensity of selection beta must not be negative!");
+egttools::SparseMatrix2D
+egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_matrix(
+    const double beta,
+    const double mu) {
+    if (beta < 0.0) {
+        throw std::invalid_argument("beta must be >= 0");
     }
-    // First we initialize the container for the stationary distribution
-    auto transition_matrix = SparseMatrix2D(nb_states_, nb_states_);
-    // Then we sample a random population state
-    VectorXui current_state = VectorXui::Zero(nb_strategies_);
-    VectorXui new_state(current_state);
-
-    double not_mu = 1. - mu;
-    double mutation_probability;
-    if (nb_strategies_ > 2) {
-        mutation_probability = mu / (nb_strategies_ - 1);
-    } else {
-        mutation_probability = mu;
+    if (mu < 0.0 || mu > 1.0) {
+        throw std::invalid_argument("mu must be in [0,1]");
+    }
+    if (nb_strategies_ < 2) {
+        throw std::invalid_argument("At least 2 strategies are required");
     }
 
-    // #pragma omp parallel for reduction(+ : transition_matrix) default(none) shared(beta, mu, not_mu, mutation_probability, nb_strategies_, population_size_)
-    for (int64_t current_state_index = 0; current_state_index < nb_states_; ++current_state_index) {
-        double total_probability = 0.;
+    using Triplet = Eigen::Triplet<double>;
+    constexpr double row_tol = 1e-10;
 
-        // get current state
-        sample_simplex(current_state_index, population_size_, nb_strategies_,
-                       current_state);
+    const int64_t S = nb_states_;
+    const int k = nb_strategies_;
+    const int N = population_size_;
 
-        // copy current state
-        new_state = current_state;
+    if (N < 2) {
+        throw std::invalid_argument("Population size must be >= 2");
+    }
 
-        // First check if we are in a monomorphic state
-        // If that is the case, the probability of remaining in the current
-        // state is 1 - mu, and the probability of moving to any other
-        // adjacent state is mu/(nb_strategies - 1)
-        bool homomorphic = false;
-        for (int i = 0; i < nb_strategies_; ++i) {
-            if (current_state(i) == static_cast<size_t>(population_size_)) {
-                homomorphic = true;
-                new_state(i) -= 1;
-                break;
+    const double one_minus_mu = 1.0 - mu;
+    const double mutation_probability =
+            (k > 2) ? (mu / static_cast<double>(k - 1)) : mu;
+
+    const double inv_N = 1.0 / static_cast<double>(N);
+    const double inv_Nm1 = 1.0 / static_cast<double>(N - 1);
+
+    std::vector<Triplet> trips;
+    trips.reserve(static_cast<size_t>(S) * static_cast<size_t>(k * (k - 1) + 1));
+
+    VectorXui current(k);
+    std::vector<int> present;
+    present.reserve(k);
+    std::vector<double> fitness(k, 0.0);
+
+    for (int64_t row = 0; row < S; ++row) {
+        sample_simplex(row, N, k, current);
+
+        present.clear();
+        for (int i = 0; i < k; ++i) {
+            if (current(i) > 0) {
+                present.push_back(i);
             }
         }
 
-        // We need now to look at all possible transitions
-        // That is all possible changes of 1 individual in the population
-        // This excludes strategies that are not currently present in the population
-        // (their count is zero)
-        for (int i = 0; i < nb_strategies_; ++i) {
-            // This will happen only when we are in a monomorphic state
-            if (current_state(i) == static_cast<size_t>(population_size_)) continue;
+        double total_offdiag = 0.0;
 
-            new_state(i) += 1;
+        if (present.size() == 1) {
+            const int mono_idx = present[0];
 
-            if (homomorphic) {
-                auto new_state_index = egttools::FinitePopulations::calculate_state(population_size_, new_state);
-                // update transition matrix
+            for (int i = 0; i < k; ++i) {
+                if (i == mono_idx) continue;
 
-                transition_matrix.coeffRef(current_state_index, static_cast<int64_t>(new_state_index)) =
-                        mutation_probability;
-            } else {
-                // If the increasing strategy has currently 0 count, it can only
-                // increase through mutation
-                if (current_state(i) == 0) {
-                    for (int j = 0; j < nb_strategies_; ++j) {
-                        // if the strategy to decrease already has count 0
-                        // continue, or if we are tying to increase and decrease the same strategy
-                        if ((i == j) || (current_state(j) == 0))
-                            continue;
+                current(mono_idx) -= 1;
+                current(i) += 1;
 
-                        new_state(j) -= 1;
-                        const auto new_state_index =
-                                calculate_state(population_size_, new_state);
+                const int64_t col = static_cast<int64_t>(calculate_state(N, current));
 
-                        // calculate transition probability
-                        const double transition_probability =
-                                (static_cast<double>(current_state(j)) / population_size_) * mutation_probability;
+#ifndef NDEBUG
+                if (col < 0 || col >= S) {
+                    throw std::runtime_error(
+                        "Calculated next-state index out of bounds in monomorphic row " +
+                        std::to_string(row) + ", col=" + std::to_string(col));
+                }
+#endif
 
-                        // update transition matrix
-                        transition_matrix.coeffRef(current_state_index, static_cast<int64_t>(new_state_index)) =
-                                transition_probability;
+                current(i) -= 1;
+                current(mono_idx) += 1;
 
-                        total_probability += transition_probability;
-                        new_state(j) += 1;
+                trips.emplace_back(row, col, mutation_probability);
+                total_offdiag += mutation_probability;
+            }
+        } else {
+            for (const int i: present) {
+                fitness[i] = calculate_fitness_(i, current, row);
+#ifndef NDEBUG
+                if (!std::isfinite(fitness[i])) {
+                    throw std::runtime_error(
+                        "Non-finite fitness at row " + std::to_string(row) +
+                        ", strategy=" + std::to_string(i));
+                }
+#endif
+            }
+
+            for (int i = 0; i < k; ++i) {
+                if (current(i) == 0) {
+                    // Strategy i is absent: it can only increase via mutation from a present strategy j.
+                    current(i) += 1;
+
+                    for (const int j: present) {
+                        if (j == i) continue;
+
+                        current(j) -= 1;
+                        const int64_t col = static_cast<int64_t>(calculate_state(N, current));
+                        current(j) += 1;
+
+#ifndef NDEBUG
+                        if (col < 0 || col >= S) {
+                            throw std::runtime_error(
+                                "Calculated next-state index out of bounds at row " +
+                                std::to_string(row) + ", col=" + std::to_string(col));
+                        }
+#endif
+
+                        const double prob =
+                                static_cast<double>(current(j)) * inv_N * mutation_probability;
+
+#ifndef NDEBUG
+                        if (!std::isfinite(prob) || prob < 0.0) {
+                            throw std::runtime_error(
+                                "Invalid mutation probability at row " + std::to_string(row) +
+                                ", i=" + std::to_string(i) +
+                                ", j=" + std::to_string(j) +
+                                ", prob=" + std::to_string(prob));
+                        }
+#endif
+
+                        if (prob > 0.0) {
+                            trips.emplace_back(row, col, prob);
+                            total_offdiag += prob;
+                        }
                     }
+
+                    current(i) -= 1;
                 } else {
-                    // calculate fitness of the increasing strategy
-                    const auto fitness_increase = calculate_fitness_(i, current_state);
+                    // Strategy i is present: it can increase via mutation and selection.
+                    const double f_i = fitness[i];
+                    const double selection_prefactor =
+                            one_minus_mu * static_cast<double>(current(i)) * inv_Nm1;
 
-                    for (int j = 0; j < nb_strategies_; ++j) {
-                        // if the strategy to decrease already has count 0
-                        // continue, or if we are tying to increase and decrease the same strategy
-                        if ((i == j) || (current_state(j) == 0))
-                            continue;
+                    current(i) += 1;
 
-                        new_state(j) -= 1;
-                        auto new_state_index =
-                                calculate_state(population_size_, new_state);
+                    for (const int j: present) {
+                        if (j == i) continue;
 
-                        // calculate fitness of the decreasing strategy
-                        const auto fitness_decrease = calculate_fitness_(j, current_state);
+                        current(j) -= 1;
+                        const int64_t col = static_cast<int64_t>(calculate_state(N, current));
+                        current(j) += 1;
 
-                        // calculate transition probability
-                        double transition_probability =
-                                not_mu * (static_cast<double>(current_state(i)) / (population_size_ - 1));
-                        transition_probability *= fermi(
-                            beta, fitness_decrease, fitness_increase);
-                        transition_probability =
-                                (static_cast<double>(current_state(j)) / population_size_) * (
-                                    transition_probability + mutation_probability);
+#ifndef NDEBUG
+                        if (col < 0 || col >= S) {
+                            throw std::runtime_error(
+                                "Calculated next-state index out of bounds at row " +
+                                std::to_string(row) + ", col=" + std::to_string(col));
+                        }
+#endif
 
-                        // update transition matrix
-                        transition_matrix.coeffRef(current_state_index, static_cast<int64_t>(new_state_index)) =
-                                transition_probability;
+                        const double selection_probability =
+                                selection_prefactor * fermi(beta, fitness[j], f_i);
 
-                        total_probability += transition_probability;
-                        new_state(j) += 1;
+                        const double prob =
+                                static_cast<double>(current(j)) * inv_N *
+                                (selection_probability + mutation_probability);
+
+#ifndef NDEBUG
+                        if (!std::isfinite(prob) || prob < 0.0) {
+                            throw std::runtime_error(
+                                "Invalid transition probability at row " + std::to_string(row) +
+                                ", i=" + std::to_string(i) +
+                                ", j=" + std::to_string(j) +
+                                ", prob=" + std::to_string(prob));
+                        }
+#endif
+
+                        if (prob > 0.0) {
+                            trips.emplace_back(row, col, prob);
+                            total_offdiag += prob;
+                        }
                     }
+
+                    current(i) -= 1;
                 }
             }
-            new_state(i) -= 1;
         }
-        // update transition matrix with probability of staying in the current state
-        if (homomorphic) {
-            transition_matrix.coeffRef(current_state_index, current_state_index) = not_mu;
-        } else {
-            transition_matrix.coeffRef(current_state_index, current_state_index) = 1 - total_probability;
+
+        if (total_offdiag > 1.0 + row_tol) {
+            throw std::runtime_error(
+                "Transition matrix row sum exceeded 1 at row " + std::to_string(row) +
+                ", total_offdiag=" + std::to_string(total_offdiag));
         }
+
+        const double diag = std::max(0.0, 1.0 - total_offdiag);
+        trips.emplace_back(row, row, diag);
     }
+
+    SparseMatrix2D transition_matrix(S, S);
+    transition_matrix.setFromTriplets(trips.begin(), trips.end());
+    transition_matrix.makeCompressed();
 
     return transition_matrix;
 }
 
 egttools::Vector egttools::FinitePopulations::analytical::PairwiseComparison::calculate_gradient_of_selection(
-    const double beta, const Eigen::Ref<const VectorXui> &state) {
+    const double beta, const Eigen::Ref<const VectorXui> &state) const {
     // The gradient of selection can be calculated by summing all
     // transition incoming transition probabilities and resting all
     // outgoing transition probabilities.
@@ -264,6 +337,68 @@ egttools::Vector egttools::FinitePopulations::analytical::PairwiseComparison::ca
     return gradients / nb_strategies_;
 }
 
+double egttools::FinitePopulations::analytical::PairwiseComparison::effective_mutation_probability_(
+    const double mu) const {
+    return (nb_strategies_ > 2)
+               ? (mu / static_cast<double>(nb_strategies_ - 1))
+               : mu;
+}
+
+egttools::Vector
+egttools::FinitePopulations::analytical::PairwiseComparison::calculate_gradient_of_selection_with_mutation(
+    const double beta,
+    const double mu,
+    const Eigen::Ref<const VectorXui> &state) const {
+    if (beta < 0.0) {
+        throw std::invalid_argument("beta must be >= 0");
+    }
+    if (mu < 0.0 || mu > 1.0) {
+        throw std::invalid_argument("mu must be in [0,1]");
+    }
+
+    // Fast path: no mutation -> reuse the existing implementation exactly.
+    if (mu == 0.0) {
+        return calculate_gradient_of_selection(beta, state);
+    }
+
+    Vector gradients = Vector::Zero(nb_strategies_);
+
+    // Selection contribution.
+    // This is by far the expensive part because it requires repeated fitness evaluations.
+    // If mu == 1, selection disappears completely, so we skip it.
+    if (mu < 1.0) {
+        gradients = (1.0 - mu) * calculate_gradient_of_selection(beta, state);
+    }
+
+    // Mutation contribution.
+    //
+    // Under the current transition convention, the mutation-only contribution for strategy i is
+    //
+    //   (1 / nb_strategies_) * sum_{j != i} [ x_j / Z * m_eff - x_i / Z * m_eff ]
+    //
+    // where
+    //   m_eff = mu / (nb_strategies - 1)    if nb_strategies > 2
+    //   m_eff = mu                           if nb_strategies == 2
+    //
+    // which simplifies to
+    //
+    //   m_eff / (nb_strategies * Z) * (Z - nb_strategies * x_i).
+    //
+    const double mutation_probability = effective_mutation_probability_(mu);
+    const double inv_population_size = 1.0 / static_cast<double>(population_size_);
+    const double inv_nb_strategies = 1.0 / static_cast<double>(nb_strategies_);
+    const double mutation_prefactor =
+            mutation_probability * inv_population_size * inv_nb_strategies;
+
+    for (int i = 0; i < nb_strategies_; ++i) {
+        gradients(i) += mutation_prefactor *
+        (static_cast<double>(population_size_) -
+         static_cast<double>(nb_strategies_) * static_cast<double>(state(i)));
+    }
+
+    return gradients;
+}
+
 #if (HAS_BOOST)
 double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability(
     int index_invading_strategy, int index_resident_strategy, const double beta) {
@@ -276,9 +411,15 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fi
         population_state(index_invading_strategy) = i;
         population_state(index_resident_strategy) = population_size_ - i;
 
+        const int64_t state_index =
+                static_cast<int64_t>(egttools::FinitePopulations::calculate_state(
+                    population_size_, population_state));
+
         // calculate fitness of invading strategy
-        const auto fitness_invading_strategy = calculate_fitness_(index_invading_strategy, population_state);
-        const auto fitness_resident_strategy = calculate_fitness_(index_resident_strategy, population_state);
+        const auto fitness_invading_strategy = calculate_fitness_(index_invading_strategy, population_state,
+                                                                  state_index);
+        const auto fitness_resident_strategy = calculate_fitness_(index_resident_strategy, population_state,
+                                                                  state_index);
 
         // Calculate the probability that the invading strategy will increase
         cpp_dec_float_100 probability_increase = (static_cast<double>(population_size_ - i) / population_size_) * (
@@ -302,7 +443,8 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fi
     return fixation_probability.convert_to<double>();
 }
 #else
-double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability(int index_invading_strategy, int index_resident_strategy, double beta) {
+double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability(
+    int index_invading_strategy, int index_resident_strategy, double beta) {
     double phi = 0;
     double prod = 1;
     double probability_increase, probability_decrease;
@@ -313,15 +455,24 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fi
         population_state(index_invading_strategy) = i;
         population_state(index_resident_strategy) = population_size_ - i;
 
+        const int64_t state_index =
+                static_cast<int64_t>(egttools::FinitePopulations::calculate_state(
+                    population_size_, population_state));
+
         // calculate fitness of invading strategy
-        auto fitness_invading_strategy = calculate_fitness_(index_invading_strategy, population_state);
-        auto fitness_resident_strategy = calculate_fitness_(index_resident_strategy, population_state);
+        auto fitness_invading_strategy = calculate_fitness_(index_invading_strategy, population_state, state_index);
+        auto fitness_resident_strategy = calculate_fitness_(index_resident_strategy, population_state, state_index);
 
         // Calculate the probability that the invading strategy will increase
-        probability_increase = (static_cast<double>(population_state(index_resident_strategy)) / population_size_) * (static_cast<double>(i) / (population_size_ - 1));
-        probability_increase *= egttools::FinitePopulations::fermi(beta, fitness_resident_strategy, fitness_invading_strategy);
-        probability_decrease = (static_cast<double>(i) / population_size_) * (static_cast<double>(population_state(index_resident_strategy)) / (population_size_ - 1));
-        probability_decrease *= egttools::FinitePopulations::fermi(beta, fitness_invading_strategy, fitness_resident_strategy);
+        probability_increase = (static_cast<double>(population_state(index_resident_strategy)) / population_size_) * (
+                                   static_cast<double>(i) / (population_size_ - 1));
+        probability_increase *= egttools::FinitePopulations::fermi(beta, fitness_resident_strategy,
+                                                                   fitness_invading_strategy);
+        probability_decrease = (static_cast<double>(i) / population_size_) * (
+                                   static_cast<double>(population_state(index_resident_strategy)) / (
+                                       population_size_ - 1));
+        probability_decrease *= egttools::FinitePopulations::fermi(beta, fitness_invading_strategy,
+                                                                   fitness_resident_strategy);
 
         prod *= probability_decrease / probability_increase;
         phi += prod;
@@ -422,24 +573,21 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_lo
 }
 
 double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fitness_(
-    const int &strategy_index, VectorXui &state) {
-    double fitness;
-    std::stringstream result;
-    result << state;
+    const int strategy_index,
+    const VectorXui &state,
+    const int64_t state_index) {
+    const auto key = make_fitness_cache_key(state_index, strategy_index);
 
-    const std::string key = std::to_string(strategy_index) + result.str();
-
-    // First we check if fitness value is in the lookup table
     if (const auto value = cache_.get(key); value) {
-        fitness = *value;
-    } else {
-        state(strategy_index) -= 1;
-        fitness = game_.calculate_fitness(strategy_index, population_size_, state);
-        state(strategy_index) += 1;
-
-        // Finally we store the new fitness in the Cache. We also keep a Cache for the payoff given each group combination
-        cache_.put(key, fitness);
+        return *value;
     }
 
+    VectorXui tmp(state);
+    tmp(strategy_index) -= 1;
+
+    const double fitness =
+            game_.calculate_fitness(strategy_index, population_size_, tmp);
+
+    cache_.put(key, fitness);
     return fitness;
 }

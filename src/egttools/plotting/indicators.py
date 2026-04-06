@@ -318,7 +318,7 @@ def draw_invasion_diagram(strategies: List[str], drift: float, fixation_probabil
     stationary_distribution : numpy.ndarray[float, 1]
         An array containing the stationary distribution (probability of each state in the system).
     atol : float
-        The tolerance for considering a value equal to 1 (to detect wheter there is random drift). Default is 1e-4.
+        The tolerance for considering a value equal to 1 (to detect whether there is random drift). Default is 1e-4.
     max_displayed_label_letters : int
         Maximum number of letters of the strategy labels contained in the `strategies` List to
         be displayed.
