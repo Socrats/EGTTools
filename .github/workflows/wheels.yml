@@ -199,7 +199,9 @@ jobs:
           echo "VCPKG_PATH=${{ github.workspace }}" >> $env:GITHUB_ENV
 
       - name: Install dependencies with vcpkg
-        if: steps.cache-vcpkg.outputs.cache-hit != 'true'
+        # Linux: vcpkg packages are installed inside the manylinux container via
+        # CIBW_BEFORE_ALL_LINUX; skip on the outer runner.
+        if: steps.cache-vcpkg.outputs.cache-hit != 'true' && runner.os != 'Linux'
         run: ./vcpkg/vcpkg install --x-binarycaching
 
       - name: Build wheels
@@ -225,7 +227,14 @@ jobs:
           CIBW_ENVIRONMENT_WINDOWS: >-
             VCPKG_PATH=$VCPKG_PATH
             EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
-          CIBW_BEFORE_ALL_LINUX: bash {package}/build_tools/github/install_blas_openmp.sh
+          # Inside the manylinux container the outer runner's vcpkg binary is unusable
+          # (different glibc). Re-bootstrap and re-install vcpkg inside the container.
+          CIBW_BEFORE_ALL_LINUX: |
+            bash {package}/build_tools/github/install_blas_openmp.sh
+            if [ -f "{package}/vcpkg/bootstrap-vcpkg.sh" ]; then
+              {package}/vcpkg/bootstrap-vcpkg.sh --disableMetrics
+              {package}/vcpkg/vcpkg install --x-binarycaching
+            fi
           CIBW_BEFORE_ALL_MACOS: bash {package}/build_tools/github/install_blas_openmp.sh
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux_image }}
