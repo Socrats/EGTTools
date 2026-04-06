@@ -197,6 +197,28 @@ class Simplex2D:
 
         return self
 
+    def draw_axes(self, visible: bool = True) -> SelfSimplex2D:
+        """
+        Show or hide the matplotlib axes frame, ticks and tick labels.
+
+        Call with ``visible=False`` to display only the triangle and its interior
+        — no bounding box, no axis labels, no tick marks — which is the standard
+        presentation for simplex plots.
+
+        Parameters
+        ----------
+        visible: bool
+            ``True`` (default) keeps the default matplotlib axes decoration.
+            ``False`` turns off the frame, all ticks and all tick labels.
+
+        Returns
+        -------
+        Simplex2D
+            A reference to the current object.
+        """
+        self.ax.set_axis_on() if visible else self.ax.set_axis_off()
+        return self
+
     def add_edges_with_random_drift(self, random_drift_edges: List[Tuple[int, int]]) -> SelfSimplex2D:
         """
         Adds information to the class about which edges have random drift.
@@ -259,9 +281,17 @@ class Simplex2D:
         return self
 
     def draw_triangle(self, color: Optional[str] = 'k', linewidth: Optional[int] = 2,
-                      linewidth_random_drift: Optional[int] = 4) -> SelfSimplex2D:
+                      linewidth_random_drift: Optional[int] = 4,
+                      offset: Optional[float] = 0.0,
+                      corner_gap: Optional[float] = 0.05) -> SelfSimplex2D:
         """
         Draws the borders of a triangle enclosing the 2-simplex.
+
+        When ``offset > 0`` the three edges are drawn as separate line segments, each shifted
+        outward (away from the centroid) by ``offset`` units. The segments are shortened at
+        both ends by ``corner_gap`` (in the edge's own direction) so they do not meet at the
+        corners, giving a floating-frame appearance that works well when the interior is filled
+        with discrete markers.
 
         Parameters
         ----------
@@ -271,17 +301,60 @@ class Simplex2D:
             The width of the borders of the triangle.
         linewidth_random_drift: Optional[int]
             The width of the dashed line that represents the edges with random drift.
+        offset: Optional[float]
+            Distance to push each edge outward from the centroid. 0 (default) gives the
+            original behaviour with edges meeting at corners.
+        corner_gap: Optional[float]
+            When offset > 0, fraction of the edge length to leave undrawn at each end so the
+            segments appear visually separated at corners. Has no effect when offset == 0.
 
         Returns
         -------
         Simplex2D
-            A refernece to the class object.
+            A reference to the class object.
         """
-        self.ax.triplot(self.triangle, color=color, linewidth=linewidth)
-        for edge in self.random_drift_edges:
-            self.ax.plot([self.corners[edge[0], 0], self.corners[edge[1], 0]],
-                         [self.corners[edge[0], 1], self.corners[edge[1], 1]], lw=linewidth_random_drift,
-                         linestyle='dashed', color=color)
+        if offset == 0.0:
+            self.ax.triplot(self.triangle, color=color, linewidth=linewidth)
+        else:
+            centroid = self.corners.mean(axis=0)
+            # edges as pairs of corner indices: bottom, right, left
+            edges = [(0, 2), (2, 1), (1, 0)]
+            for i, j in edges:
+                p0, p1 = self.corners[i].copy(), self.corners[j].copy()
+                edge_vec = p1 - p0
+                edge_len = np.linalg.norm(edge_vec)
+                edge_dir = edge_vec / edge_len
+
+                # outward normal: perpendicular to edge, pointing away from centroid
+                normal = np.array([-edge_dir[1], edge_dir[0]])
+                mid = (p0 + p1) / 2
+                if np.dot(normal, mid - centroid) < 0:
+                    normal = -normal
+
+                # shift edge outward
+                p0_off = p0 + offset * normal
+                p1_off = p1 + offset * normal
+
+                # pull endpoints inward along edge to leave a gap at corners
+                gap = corner_gap * edge_len
+                p0_off = p0_off + gap * edge_dir
+                p1_off = p1_off - gap * edge_dir
+
+                lw = linewidth_random_drift if any(
+                    (i in e and j in e) for e in self.random_drift_edges
+                ) else linewidth
+                ls = 'dashed' if any(
+                    (i in e and j in e) for e in self.random_drift_edges
+                ) else 'solid'
+                self.ax.plot([p0_off[0], p1_off[0]], [p0_off[1], p1_off[1]],
+                             color=color, linewidth=lw, linestyle=ls)
+
+        if offset == 0.0:
+            for edge in self.random_drift_edges:
+                self.ax.plot([self.corners[edge[0], 0], self.corners[edge[1], 0]],
+                             [self.corners[edge[0], 1], self.corners[edge[1], 1]],
+                             lw=linewidth_random_drift, linestyle='dashed', color=color)
+
         return self
 
     def draw_gradients(self, arrowsize: Optional[float] = 2,
@@ -735,6 +808,128 @@ class Simplex2D:
                 # noinspection PyTypeChecker
                 v = barycentric_to_xy_coordinates(x, self.corners)
                 self.ax.scatter(v[:, 0], v[:, 1], s, color=color, marker=marker, zorder=zorder)
+
+        return self
+
+    def draw_stationary_distribution_discrete(
+            self,
+            stationary_distribution: np.ndarray,
+            marker: Optional[str] = 'h',
+            marker_size: Optional[float] = None,
+            cmap: Optional[Union[str, matplotlib.colors.Colormap]] = 'binary',
+            alpha: Optional[float] = 1.,
+            vmin: Optional[float] = None,
+            vmax: Optional[float] = None,
+            zorder: Optional[int] = 1,
+            colorbar: Optional[bool] = True,
+            aspect: Optional[float] = 10,
+            anchor: Optional[Tuple[float, float]] = (-0.5, 0.5),
+            panchor: Optional[Tuple[float, float]] = (0, 0),
+            shrink: Optional[float] = 0.6,
+            label: Optional[str] = 'stationary distribution',
+            label_rotation: Optional[int] = 270,
+            label_fontsize: Optional[int] = 16,
+            labelpad: Optional[float] = 20) -> SelfSimplex2D:
+        """
+        Draws the stationary distribution as uniformly-sized discrete markers placed at
+        each population state on the simplex, coloured by probability.
+
+        All markers are the same size; the stationary probability is encoded purely through
+        colour (using ``cmap``). This makes the tiling nature of the discrete simplex explicit
+        while avoiding the perceptual ambiguity of size-encoded probability.
+
+        Parameters
+        ----------
+        stationary_distribution: numpy.ndarray
+            Array of stationary probabilities, one per state, in the order produced by
+            :func:`egttools.sample_simplex` when iterating from 0 to nb_states.
+        marker: Optional[str]
+            Matplotlib marker string. Use ``'h'`` for hexagons (default) or ``'o'`` for
+            circles. Any valid matplotlib marker is accepted.
+        marker_size: Optional[float]
+            Size of every marker in points². If ``None`` (default) it is computed
+            automatically so that markers roughly tile the simplex without overlap,
+            based on the population size and the current figure dimensions.
+        cmap: Optional[Union[str, matplotlib.colors.Colormap]]
+            Colormap used to colour the markers by probability value.
+        alpha: Optional[float]
+            Marker transparency.
+        vmin: Optional[float]
+            Lower bound of the colormap range. Defaults to the minimum of the distribution.
+        vmax: Optional[float]
+            Upper bound of the colormap range. Defaults to the maximum of the distribution.
+        zorder: Optional[int]
+            Drawing order relative to other artists on the axes.
+        colorbar: Optional[bool]
+            Whether to add a colourbar.
+        aspect: Optional[float]
+            Aspect ratio of the colourbar.
+        anchor: Optional[Tuple[float, float]]
+            Anchor point of the colourbar axes.
+        panchor: Optional[Tuple[float, float]]
+            Parent anchor point for the colourbar.
+        shrink: Optional[float]
+            Fraction by which to shrink the colourbar.
+        label: Optional[str]
+            Colourbar label.
+        label_rotation: Optional[int]
+            Rotation of the colourbar label in degrees.
+        label_fontsize: Optional[int]
+            Font size of the colourbar label.
+        labelpad: Optional[float]
+            Padding between the colourbar and its label.
+
+        Returns
+        -------
+        Simplex2D
+            A reference to the current object.
+        """
+        if not self.discrete:
+            raise Exception(
+                "draw_stationary_distribution_discrete requires a discrete simplex "
+                "(pass discrete=True and size=Z when constructing Simplex2D)."
+            )
+
+        # Retrieve the xy position of every discrete state (stored during __init__)
+        x = self.triangle_discrete.x
+        y = self.triangle_discrete.y
+
+        _vmax = vmax if vmax is not None else stationary_distribution.max()
+        _vmin = vmin if vmin is not None else stationary_distribution.min()
+
+        if marker_size is None:
+            # Auto-size: fit markers so they tile the simplex without overlapping.
+            #
+            # All adjacent discrete states are separated by exactly 1/size in
+            # Cartesian data units (equilateral triangular lattice).
+            #
+            # Scatter `s` is in points² (1 pt = 1/72 inch).  We convert the
+            # inter-state spacing from data units → inches → points using the
+            # axis position (figure fractions) and the figure size in inches,
+            # then account for the actual data range visible in each axis.
+            # Using 72 pt/inch (not figure.dpi, which gives pixels not points).
+            ax_pos = self.ax.get_position()  # fractional position in figure
+            fig_w_pts = self.figure.get_figwidth() * 72.0
+            fig_h_pts = self.figure.get_figheight() * 72.0
+            ax_w_pts = ax_pos.width * fig_w_pts
+            ax_h_pts = ax_pos.height * fig_h_pts
+            xlim = self.ax.get_xlim()
+            ylim = self.ax.get_ylim()
+            pts_per_x = ax_w_pts / (xlim[1] - xlim[0])
+            pts_per_y = ax_h_pts / (ylim[1] - ylim[0])
+            # Use the tighter scale so markers never overlap along either axis
+            spacing_pts = (1.0 / self.size) * min(pts_per_x, pts_per_y)
+            # Diameter = 0.8 × spacing → 20 % gap between adjacent markers
+            marker_size = np.pi * (0.8 * spacing_pts / 2) ** 2
+
+        sc = self.ax.scatter(x, y, s=marker_size, c=stationary_distribution,
+                             cmap=cmap, alpha=alpha, vmin=_vmin, vmax=_vmax,
+                             marker=marker, zorder=zorder, linewidths=0)
+
+        if colorbar:
+            cbar = self.figure.colorbar(sc, aspect=aspect, anchor=anchor, panchor=panchor,
+                                        shrink=shrink, ax=self.ax)
+            cbar.set_label(label, rotation=label_rotation, fontsize=label_fontsize, labelpad=labelpad)
 
         return self
 

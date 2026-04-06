@@ -373,3 +373,217 @@ def test_plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots_with_ga
     assert callable(grad_fn)
     assert returned_game is game
     assert isinstance(evolver, egt.analytical.PairwiseComparison)
+
+
+# ---------------------------------------------------------------------------
+# Tests for draw_triangle with offset and draw_stationary_distribution_discrete
+# ---------------------------------------------------------------------------
+
+def _make_discrete_simplex(size: int = 10):
+    """Helper: return a discrete Simplex2D with an axis attached."""
+    simplex = egt.plotting.Simplex2D(discrete=True, size=size)
+    simplex.add_axis(figsize=(6, 5))
+    return simplex
+
+
+def _uniform_sd(size: int = 10):
+    """Uniform stationary distribution over the discrete 3-strategy simplex."""
+    nb_states = egt.calculate_nb_states(size, 3)
+    sd = np.ones(nb_states) / nb_states
+    return sd
+
+
+# --- draw_triangle tests ---
+
+def test_draw_triangle_default():
+    """Default call (offset=0) draws the triangle without raising."""
+    simplex = _make_discrete_simplex()
+    result = simplex.draw_triangle()
+    assert result is simplex
+    plt.close("all")
+
+
+def test_draw_triangle_with_offset_returns_self():
+    """draw_triangle with offset > 0 returns self for method chaining."""
+    simplex = _make_discrete_simplex()
+    result = simplex.draw_triangle(offset=0.03, corner_gap=0.05)
+    assert result is simplex
+    plt.close("all")
+
+
+def test_draw_triangle_offset_produces_three_lines():
+    """draw_triangle with offset draws exactly 3 line artists."""
+    simplex = _make_discrete_simplex()
+    n_before = len(simplex.ax.lines)
+    simplex.draw_triangle(offset=0.03, corner_gap=0.05)
+    n_after = len(simplex.ax.lines)
+    assert n_after - n_before == 3
+    plt.close("all")
+
+
+def test_draw_triangle_no_offset_uses_fewer_lines_than_offset():
+    """draw_triangle without offset uses triplot (not 3 individual segments)."""
+    simplex_no_offset = _make_discrete_simplex()
+    n_before = len(simplex_no_offset.ax.lines)
+    simplex_no_offset.draw_triangle(offset=0.0)
+    n_no_offset = len(simplex_no_offset.ax.lines) - n_before
+
+    simplex_offset = _make_discrete_simplex()
+    n_before2 = len(simplex_offset.ax.lines)
+    simplex_offset.draw_triangle(offset=0.03)
+    n_with_offset = len(simplex_offset.ax.lines) - n_before2
+
+    # offset mode adds exactly 3 separate line segments; triplot adds fewer
+    assert n_with_offset == 3
+    assert n_no_offset != 3
+    plt.close("all")
+
+
+def test_draw_triangle_offset_segments_are_outside_corners():
+    """Each offset edge segment should lie further from the centroid than the original edge."""
+    simplex = _make_discrete_simplex()
+    offset = 0.04
+    simplex.draw_triangle(offset=offset, corner_gap=0.0)
+    centroid = simplex.corners.mean(axis=0)
+    # For each drawn segment the midpoint should be further from the centroid than
+    # the corresponding original edge midpoint.
+    orig_edges = [(0, 2), (2, 1), (1, 0)]
+    for line, (i, j) in zip(simplex.ax.lines, orig_edges):
+        xdata, ydata = line.get_xdata(), line.get_ydata()
+        mid_drawn = np.array([(xdata[0] + xdata[1]) / 2, (ydata[0] + ydata[1]) / 2])
+        mid_orig = (simplex.corners[i] + simplex.corners[j]) / 2
+        d_drawn = np.linalg.norm(mid_drawn - centroid)
+        d_orig = np.linalg.norm(mid_orig - centroid)
+        assert d_drawn > d_orig - 1e-9
+    plt.close("all")
+
+
+# --- draw_stationary_distribution_discrete tests ---
+
+def test_draw_stationary_distribution_discrete_returns_self():
+    simplex = _make_discrete_simplex()
+    sd = _uniform_sd()
+    result = simplex.draw_stationary_distribution_discrete(sd)
+    assert result is simplex
+    plt.close("all")
+
+
+def test_draw_stationary_distribution_discrete_adds_scatter():
+    """The method should add exactly one PathCollection (scatter) to the axes."""
+    simplex = _make_discrete_simplex()
+    sd = _uniform_sd()
+    n_before = len(simplex.ax.collections)
+    simplex.draw_stationary_distribution_discrete(sd, colorbar=False)
+    n_after = len(simplex.ax.collections)
+    assert n_after - n_before == 1
+    plt.close("all")
+
+
+def test_draw_stationary_distribution_discrete_correct_number_of_points():
+    """Scatter should contain one point per discrete state."""
+    size = 10
+    simplex = _make_discrete_simplex(size)
+    sd = _uniform_sd(size)
+    simplex.draw_stationary_distribution_discrete(sd, colorbar=False)
+    collection = simplex.ax.collections[-1]
+    assert len(collection.get_offsets()) == len(sd)
+    plt.close("all")
+
+
+def test_draw_stationary_distribution_discrete_with_hexagons():
+    simplex = _make_discrete_simplex()
+    sd = _uniform_sd()
+    result = simplex.draw_stationary_distribution_discrete(sd, marker='h', colorbar=False)
+    assert result is simplex
+    plt.close("all")
+
+
+def test_draw_stationary_distribution_discrete_raises_on_continuous_simplex():
+    """Should raise if called on a non-discrete simplex."""
+    simplex = egt.plotting.Simplex2D(discrete=False)
+    simplex.add_axis()
+    sd = np.array([0.5, 0.5])
+    with pytest.raises(Exception, match="discrete"):
+        simplex.draw_stationary_distribution_discrete(sd)
+    plt.close("all")
+
+
+def test_draw_stationary_distribution_discrete_uniform_sizes():
+    """All markers should be the same size; probability is encoded via colour only."""
+    size = 5
+    simplex = _make_discrete_simplex(size)
+    nb_states = egt.calculate_nb_states(size, 3)
+    sd = np.zeros(nb_states)
+    sd[0] = 1.0  # all mass on first state
+    simplex.draw_stationary_distribution_discrete(sd, colorbar=False)
+    collection = simplex.ax.collections[-1]
+    sizes = collection.get_sizes()
+    # Every marker must be exactly the same size
+    assert np.all(sizes == pytest.approx(sizes[0], rel=1e-6))
+    plt.close("all")
+
+
+def test_draw_stationary_distribution_discrete_custom_marker_size():
+    """Passing marker_size should override the auto-computed size."""
+    simplex = _make_discrete_simplex()
+    sd = _uniform_sd()
+    custom_size = 42.0
+    simplex.draw_stationary_distribution_discrete(sd, marker_size=custom_size, colorbar=False)
+    collection = simplex.ax.collections[-1]
+    sizes = collection.get_sizes()
+    assert np.all(sizes == pytest.approx(custom_size, rel=1e-6))
+    plt.close("all")
+
+
+def test_draw_triangle_offset_and_discrete_distribution_compose():
+    """Offset triangle and discrete distribution should compose without errors."""
+    size = 8
+    simplex = _make_discrete_simplex(size)
+    sd = _uniform_sd(size)
+    (simplex
+     .draw_triangle(offset=0.03, corner_gap=0.05)
+     .draw_stationary_distribution_discrete(sd, colorbar=False))
+    assert len(simplex.ax.collections) >= 1
+    assert len(simplex.ax.lines) == 3
+    plt.close("all")
+
+
+# --- Visual test (saves to /tmp for manual inspection) ---
+
+def test_visual_discrete_stationary_distribution(tmp_path):
+    """Visual test: renders offset triangle + discrete stationary distribution.
+
+    The resulting figure is saved to tmp_path/visual_discrete_sd.png so you
+    can inspect it manually.  The test passes as long as no exception is raised.
+    """
+    import os
+
+    size = 12
+    simplex = egt.plotting.Simplex2D(discrete=True, size=size)
+    fig, ax = plt.subplots(figsize=(6, 5))
+    simplex.add_axis(ax=ax)
+
+    # Build a non-uniform stationary distribution (peaked near first corner)
+    nb_states = egt.calculate_nb_states(size, 3)
+    rng = np.random.default_rng(42)
+    sd_raw = rng.exponential(scale=1.0, size=nb_states)
+    sd = sd_raw / sd_raw.sum()
+
+    (simplex
+     .draw_triangle(offset=0.04, corner_gap=0.04)
+     .draw_stationary_distribution_discrete(sd, colorbar=True,
+                                            label='stationary dist.',
+                                            shrink=0.5)
+     .draw_axes(visible=False)
+     .add_vertex_labels(['A', 'B', 'C']))
+
+    ax.set_title("Discrete stationary distribution on Simplex2D\n"
+                 "(offset triangle + hexagon markers, no axes)")
+    fig.tight_layout()
+
+    out = tmp_path / "visual_discrete_sd.png"
+    fig.savefig(str(out), dpi=120)
+    plt.close("all")
+
+    assert out.exists(), f"Figure was not saved to {out}"
+    print(f"\nVisual output saved to: {out}")
