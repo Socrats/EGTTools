@@ -112,6 +112,8 @@ egttools = [
     "*.pyi",
     "lib/*.dylib",
     "lib/*.so",
+    "numerical_/*.pyi",
+    "numerical_/**/*.pyi",
 ]
 
 [tool.check-manifest]

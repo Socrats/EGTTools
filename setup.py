@@ -116,6 +116,7 @@ setup(
     include_package_data=True,  # required to honor MANIFEST.in
     package_data={
         "egttools": ["*.pyi", "py.typed"],
-        "egttools.numerical": ["*.so", "*.dylib", "*.pyd", "*.pyi", "lib/*.dylib", "lib/*.so"],
+        "egttools.numerical": ["*.so", "*.dylib", "*.pyd", "*.pyi", "lib/*.dylib", "lib/*.so",
+                               "numerical_/*.pyi", "numerical_/**/*.pyi"],
     },
 )

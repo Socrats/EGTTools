@@ -46,6 +46,7 @@ graft tests
 
 # pybind11 stubs
 recursive-include src/egttools *.pyi py.typed
+recursive-include src/egttools/numerical/numerical_ *.pyi
 
 prune vcpkg
 prune vcpkg_installed
