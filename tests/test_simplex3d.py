@@ -1,6 +1,7 @@
 """Tests for egttools.plotting.simplex3d."""
 import numpy as np
 import pytest
+import egttools as egt
 
 from egttools.plotting.simplex3d import (
     Simplex3D,
@@ -204,6 +205,58 @@ def test_draw_trajectory_returns_self():
     assert result is s
 
 
+def test_draw_stationary_distribution_returns_self():
+    """draw_stationary_distribution returns self for chaining."""
+    Z = 10
+    nb_states = egt.calculate_nb_states(Z, 4)
+    sd = np.ones(nb_states) / nb_states
+    s = Simplex3D()
+    result = s.draw_stationary_distribution(sd, population_size=Z, colorbar=False)
+    assert result is s
+
+
+def test_draw_stationary_distribution_adds_traces():
+    Z = 10
+    nb_states = egt.calculate_nb_states(Z, 4)
+    sd = np.ones(nb_states) / nb_states
+    s = Simplex3D()
+    n_before = len(s._traces)
+    s.draw_stationary_distribution(sd, population_size=Z, colorbar=False)
+    assert len(s._traces) > n_before
+
+
+def test_draw_stationary_distribution_threshold():
+    """With threshold=0.5, only top half of states are drawn."""
+    Z = 10
+    nb_states = egt.calculate_nb_states(Z, 4)
+    sd = np.zeros(nb_states)
+    sd[:5] = 1.0  # only first 5 states have mass
+    sd /= sd.sum()
+
+    s_all = Simplex3D()
+    s_all.draw_stationary_distribution(sd, population_size=Z, threshold=0.0, colorbar=False)
+
+    s_thresh = Simplex3D()
+    s_thresh.draw_stationary_distribution(sd, population_size=Z, threshold=0.5, colorbar=False)
+
+    # threshold should produce fewer or equal traces
+    assert len(s_thresh._traces) <= len(s_all._traces)
+
+
+def test_draw_stationary_distribution_top_k():
+    Z = 10
+    nb_states = egt.calculate_nb_states(Z, 4)
+    sd = np.random.default_rng(0).exponential(size=nb_states)
+    sd /= sd.sum()
+    s = Simplex3D()
+    # With top_k=5 there should be very few non-empty bucket traces
+    s.draw_stationary_distribution(sd, population_size=Z, top_k=5,
+                                   threshold=0.0, colorbar=False)
+    # Total points across all bucket traces should be ≤ 5
+    total_pts = sum(len(t.x) for t in s._traces if hasattr(t, 'x') and t.x is not None)
+    assert total_pts <= 5
+
+
 def test_draw_stationary_points_returns_self():
     pts = np.array([[0.25, 0.25, 0.25, 0.25]])
     s = Simplex3D()
@@ -351,3 +404,55 @@ def test_visual_simplex3d_normalform_game(tmp_path):
     s.build().write_html(str(out), include_plotlyjs='cdn')
     assert out.exists()
     print(f"\nVisual (NormalFormGame) saved to: {out}")
+
+
+def test_visual_simplex3d_stationary_distribution(tmp_path):
+    """Visual test: stationary distribution as transparent spheres (Z=15).
+
+    Uses a real PairwiseComparison + stationary distribution computation.
+    Z=15 keeps computation under ~0.5 s.
+    """
+    from egttools.analytical import PairwiseComparison
+
+    payoff_matrix = np.array([
+        [ 3,  0,  3,  3],   # AllC
+        [ 5,  1,  1,  1],   # AllD
+        [ 3,  1,  3,  3],   # TFT
+        [ 3,  1,  3,  3],   # Grim
+    ], dtype=float)
+
+    Z = 15; beta = 5.0; mu = beta / Z
+    game = egt.games.Matrix2PlayerGameHolder(4, payoff_matrix)
+    pc = PairwiseComparison(Z, game)
+    # Note: T must be transposed for correct stationary distribution
+    T = pc.calculate_transition_matrix(beta, mu)
+    sd = egt.utils.calculate_stationary_distribution(T.T)
+
+    def gradient(b):
+        state = np.floor(b * Z).astype(np.int64)
+        state[np.argmax(b)] += Z - state.sum()
+        return pc.calculate_gradient_of_selection(beta, state)
+
+    s = Simplex3D(figure_size=(900, 650))
+    (s.draw_tetrahedron()
+       # reference slices with in-plane streamplot
+      .draw_slice(fixed_strategy=1, value=0.10, gradient_fn=gradient,
+                  n_grid=8, n_seeds=6, slice_color='lightblue',
+                  colorscale='Blues', cone_scale=0.025)
+      .draw_slice(fixed_strategy=1, value=0.40, gradient_fn=gradient,
+                  n_grid=8, n_seeds=6, slice_color='lightcyan',
+                  colorscale='Blues', cone_scale=0.025)
+      # stationary distribution: grayscale spheres, opacity ∝ probability
+      .draw_stationary_distribution(
+          sd, population_size=Z,
+          colorscale='Greys', opacity_scale=4.0,
+          min_opacity=0.0, max_opacity=0.95,
+          marker_size=6, threshold=0.3, colorbar=True,
+          colorbar_label='stationary distribution')
+      .add_vertex_labels(['AllC', 'AllD', 'TFT', 'Grim']))
+
+    out = tmp_path / "simplex3d_stationary.html"
+    s.build(colorbar=True, colorbar_label='gradient of selection').write_html(
+        str(out), include_plotlyjs='cdn')
+    assert out.exists()
+    print(f"\nVisual (stationary distribution) saved to: {out}")

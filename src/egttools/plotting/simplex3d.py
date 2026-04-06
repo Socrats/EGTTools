@@ -851,6 +851,163 @@ class Simplex3D:
         ))
         return self
 
+    def draw_stationary_distribution(
+            self,
+            stationary_distribution: np.ndarray,
+            population_size: int,
+            colorscale: str = 'Greys',
+            opacity_scale: float = 3.0,
+            min_opacity: float = 0.0,
+            max_opacity: float = 0.9,
+            marker_size: float = 6.0,
+            threshold: float = 0.0,
+            top_k: Optional[int] = None,
+            colorbar: bool = True,
+            colorbar_label: str = 'stationary distribution',
+    ) -> 'Simplex3D':
+        """Draw the stationary distribution as transparent spheres in 3D.
+
+        Each population state is a point in the interior or on the boundary of
+        the tetrahedron.  Marker opacity and colour both encode the stationary
+        probability, so high-probability states (near attractors) are opaque
+        and vivid while low-probability states fade out.
+
+        To avoid visual clutter only states above ``threshold`` are shown, and
+        optionally only the top ``top_k`` by probability.
+
+        Parameters
+        ----------
+        stationary_distribution : np.ndarray, shape (nb_states,)
+            Stationary probabilities in the order produced by
+            ``egt.sample_simplex(i, population_size, 4)`` for i=0..nb_states-1.
+        population_size : int
+            Population size ``Z`` used when computing the distribution.
+        colorscale : str
+            Plotly colorscale for marker colour (e.g. ``'Reds'``, ``'Hot'``).
+        opacity_scale : float
+            Controls how steeply opacity rises with probability.  Higher values
+            make only the very brightest states visible.
+        min_opacity : float
+            Minimum marker opacity (for the lowest shown probability).
+        max_opacity : float
+            Maximum marker opacity.
+        marker_size : float
+            Diameter of each sphere in pixels.
+        threshold : float
+            States with probability below this fraction of the maximum are
+            not drawn.  0 = draw all states.
+        top_k : int, optional
+            If given, draw only the ``top_k`` highest-probability states.
+        colorbar : bool
+            Whether to add a colorbar for the distribution.
+        colorbar_label : str
+            Colorbar title.
+        """
+        from egttools import sample_simplex, calculate_nb_states
+
+        nb_states = len(stationary_distribution)
+        sd = np.asarray(stationary_distribution, dtype=float)
+
+        # --- filter states ---
+        sd_max = sd.max()
+        if sd_max < 1e-30:
+            return self
+
+        mask = sd >= threshold * sd_max
+        if top_k is not None:
+            top_indices = np.argsort(sd)[-top_k:]
+            top_mask = np.zeros(nb_states, dtype=bool)
+            top_mask[top_indices] = True
+            mask = mask & top_mask
+
+        indices = np.where(mask)[0]
+        if len(indices) == 0:
+            return self
+
+        # --- barycentric → Cartesian ---
+        bary = np.array([
+            sample_simplex(int(i), population_size, 4) / population_size
+            for i in indices
+        ])
+        xyz = barycentric_to_cartesian(bary)
+        probs = sd[indices]
+
+        # --- opacity: nonlinear scaling so attractors stand out ---
+        norm_probs = probs / sd_max
+        opacities = min_opacity + (max_opacity - min_opacity) * (
+            norm_probs ** (1.0 / max(opacity_scale, 0.1))
+        )
+
+        self._traces.append(go.Scatter3d(
+            x=xyz[:, 0], y=xyz[:, 1], z=xyz[:, 2],
+            mode='markers',
+            marker=dict(
+                size=marker_size,
+                color=probs,
+                colorscale=colorscale,
+                cmin=0,
+                cmax=float(sd_max),
+                opacity=float(opacities.mean()),   # Plotly scalar opacity
+                showscale=colorbar,
+                colorbar=dict(
+                    title=dict(text=colorbar_label, side='right'),
+                    thickness=15,
+                    len=0.5,
+                    x=1.02,
+                ) if colorbar else None,
+                line=dict(width=0),
+            ),
+            # Per-point transparency via customdata hack: render multiple
+            # traces grouped by opacity bucket for proper per-point opacity.
+            showlegend=False,
+            hoverinfo='skip',
+        ))
+
+        # Override with per-point opacity by splitting into buckets
+        # (Plotly Scatter3d doesn't support per-marker opacity in one trace).
+        # Remove the single trace and replace with N_BUCKETS traces.
+        self._traces.pop()
+
+        N_BUCKETS = 8
+        bucket_edges = np.linspace(0, 1, N_BUCKETS + 1)
+        bucket_opacities = np.linspace(min_opacity, max_opacity, N_BUCKETS)
+
+        for b in range(N_BUCKETS):
+            lo, hi = bucket_edges[b], bucket_edges[b + 1]
+            in_bucket = (norm_probs >= lo) & (norm_probs < hi + 1e-9)
+            if not np.any(in_bucket):
+                continue
+            op = float(bucket_opacities[b])
+            if op < 1e-3:
+                continue
+
+            self._traces.append(go.Scatter3d(
+                x=xyz[in_bucket, 0],
+                y=xyz[in_bucket, 1],
+                z=xyz[in_bucket, 2],
+                mode='markers',
+                marker=dict(
+                    size=marker_size,
+                    color=probs[in_bucket],
+                    colorscale=colorscale,
+                    cmin=0,
+                    cmax=float(sd_max),
+                    opacity=op,
+                    showscale=(colorbar and b == N_BUCKETS - 1),
+                    colorbar=dict(
+                        title=dict(text=colorbar_label, side='right'),
+                        thickness=15,
+                        len=0.5,
+                        x=1.15,  # right of gradient colorbar at 1.02
+                    ) if (colorbar and b == N_BUCKETS - 1) else None,
+                    line=dict(width=0),
+                ),
+                showlegend=False,
+                hoverinfo='skip',
+            ))
+
+        return self
+
     def draw_stationary_points(
             self,
             points: np.ndarray,
@@ -940,7 +1097,7 @@ class Simplex3D:
     def build(
             self,
             colorbar: bool = True,
-            colorbar_label: str = 'gradient magnitude',
+            colorbar_label: str = 'gradient of selection',
             colorbar_thickness: int = 15,
             colorbar_len: float = 0.5,
     ) -> go.Figure:
@@ -996,7 +1153,7 @@ class Simplex3D:
                 aspectmode='data',
             ),
             paper_bgcolor='white',
-            margin=dict(l=0, r=60, t=0, b=0),
+            margin=dict(l=0, r=120, t=0, b=0),
         )
         return fig
 
