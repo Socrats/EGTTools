@@ -211,16 +211,19 @@ jobs:
             cp311-${{ matrix.platform_id }}
             cp312-${{ matrix.platform_id }}
             cp313-${{ matrix.platform_id }}
+          # Linux: project is mounted at /project inside the manylinux container.
+          # macOS/Windows: runs on the host; VCPKG_PATH is set via $GITHUB_ENV in the
+          # bootstrap step and referenced explicitly here to avoid relying on inheritance.
           CIBW_ENVIRONMENT_LINUX: >-
-            VCPKG_PATH={package}
+            VCPKG_PATH=/project
             EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
           CIBW_ENVIRONMENT_MACOS: >-
-            VCPKG_PATH={package}
+            VCPKG_PATH=$VCPKG_PATH
             SKIP_VCPKG=${{ matrix.skip_vcpkg }}
             EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=${{ matrix.openmp_enabled }}"
             MACOSX_DEPLOYMENT_TARGET=${{ matrix.macosx_deployment_target }}
           CIBW_ENVIRONMENT_WINDOWS: >-
-            VCPKG_PATH={package}
+            VCPKG_PATH=$VCPKG_PATH
             EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=ON"
           CIBW_BEFORE_ALL_LINUX: bash {package}/build_tools/github/install_blas_openmp.sh
           CIBW_BEFORE_ALL_MACOS: bash {package}/build_tools/github/install_blas_openmp.sh
