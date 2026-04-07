@@ -314,6 +314,28 @@ def test_draw_streamlines_raises_without_seeds_or_slice():
         s.draw_streamlines(GRADIENT)
 
 
+def test_draw_streamlines_cone_scale_controls_cone_size():
+    """cone_scale must directly set the rendered cone size (sizeref in absolute mode).
+
+    Previously, sizemode='scaled' caused Plotly to normalise all cones relative
+    to max(norm(u,v,w)).  Because every vector was normalised to the same magnitude,
+    cone_scale cancelled out and had no effect.  The fix uses sizemode='absolute'
+    with sizeref=cone_scale so the value is respected directly.
+    """
+    import plotly.graph_objects as go
+
+    seeds = np.array([[0.25, 0.25, 0.25, 0.25]])
+
+    for scale in (0.01, 0.05):
+        s = Simplex3D()
+        s.draw_streamlines(GRADIENT, seeds=seeds, cone_scale=scale)
+        cones = [t for t in s._traces if isinstance(t, go.Cone)]
+        assert cones, "draw_streamlines should produce at least one Cone trace"
+        cone = cones[0]
+        assert cone.sizemode == 'absolute', "sizemode must be 'absolute' for cone_scale to take effect"
+        assert cone.sizeref == scale, f"sizeref {cone.sizeref!r} != cone_scale {scale!r}"
+
+
 def test_method_chaining_full():
     """Full chain should build without error."""
     s = Simplex3D()

@@ -796,16 +796,16 @@ class Simplex3D:
             mag = np.linalg.norm(uvw)
             if mag < 1e-12:
                 continue
-            direction = uvw / mag * cone_scale
+            unit = uvw / mag  # direction only; size controlled by sizeref below
             xyz_pt = barycentric_to_cartesian(b_pt)
             cx.append(xyz_pt[0]); cy.append(xyz_pt[1]); cz.append(xyz_pt[2])
-            cu.append(direction[0]); cv.append(direction[1]); cw.append(direction[2])
+            cu.append(unit[0]); cv.append(unit[1]); cw.append(unit[2])
 
         if cx:
             cone_kw = dict(
                 x=cx, y=cy, z=cz,
                 u=cu, v=cv, w=cw,
-                sizemode='scaled', sizeref=0.3,
+                sizemode='absolute', sizeref=cone_scale,
                 anchor='tail',
                 showlegend=False, hoverinfo='skip',
             )
