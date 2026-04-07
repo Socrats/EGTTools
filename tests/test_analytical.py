@@ -1,3 +1,6 @@
+import gc
+import weakref
+
 import numpy as np
 import pytest
 import egttools as egt
@@ -337,3 +340,44 @@ def test_replicator_dynamics_n_player_with_abstract_replicator_game_matches_matr
     result_game = egt.analytical.replicator_equation_n_player(x, game)
 
     np.testing.assert_allclose(result_game, result_matrix)
+
+
+def test_pairwise_comparison_keeps_game_alive():
+    """Regression test for incorrect py::keep_alive indices in PairwiseComparison bindings.
+
+    Previously, the pybind11 constructor used keep_alive<0,2> / keep_alive<1,2>, which
+    kept the *population_size* integer alive instead of the *game* object. This caused
+    PairwiseComparison to hold a dangling C++ reference whenever the Python game object
+    was garbage-collected after the constructor returned (e.g. when the game was created
+    inside a factory function and its only Python reference was the local variable).
+
+    The fix is keep_alive<1,3>: keep argument 3 (game) alive as long as self (index 1)
+    is alive.
+    """
+    v = 2
+    d = 3
+    t = 1
+    payoff_matrix = np.array([
+        [(v - d) / 2, v],
+        [0, (v / 2) - t],
+    ])
+
+    def build_evolver():
+        game = egt.games.Matrix2PlayerGameHolder(2, payoff_matrix=payoff_matrix)
+        wr = weakref.ref(game)
+        evolver = egt.analytical.PairwiseComparison(100, game)
+        return evolver, wr
+
+    evolver, wr = build_evolver()
+    gc.collect()
+
+    assert wr() is not None, (
+        "Game was garbage-collected while PairwiseComparison still holds a reference to it. "
+        "Check py::keep_alive indices in PairwiseComparison bindings."
+    )
+
+    # Also verify the evolver works for a non-monomorphic state. Before the fix this would
+    # segfault because game_.calculate_fitness() accessed freed memory (the GC'd Python game).
+    gradient = evolver.calculate_gradient_of_selection(1.0, np.array([30, 70], dtype=np.uint64))
+    assert gradient.shape == (2,)
+    assert np.isfinite(gradient).all()

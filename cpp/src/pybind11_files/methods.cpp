@@ -625,7 +625,7 @@ gradients of selection, fixation probabilities, and the reduced small-mutation-l
                     py::init<int, FinitePopulations::AbstractGame &>(),
                     py::arg("population_size"),
                     py::arg("game"),
-                    py::keep_alive<0, 2>(),
+                    py::keep_alive<1, 3>(),
                     R"pbdoc(
 Construct an analytical pairwise-comparison process.
 
@@ -653,7 +653,7 @@ where :math:`n` is the number of strategies.
                     py::arg("population_size"),
                     py::arg("game"),
                     py::arg("cache_size"),
-                    py::keep_alive<0, 2>(),
+                    py::keep_alive<1, 3>(),
                     R"pbdoc(
 Construct an analytical pairwise-comparison process with a configurable fitness cache.
 

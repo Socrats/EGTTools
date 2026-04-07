@@ -2146,7 +2146,7 @@ PYBIND11_MODULE(numerical, m) {
                 Also, for now it is not possible to update the game without having to instantiate PairwiseComparison
                 again. Hopefully, this will be fixed in the future.
                 )pbdoc",
-                 py::arg("population_size"), py::arg("game"), py::keep_alive<1, 2>())
+                 py::arg("population_size"), py::arg("game"), py::keep_alive<1, 3>())
             .def("calculate_transition_matrix",
                  &egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_matrix,
                  "Calculates the transition matrix of the Markov Chain that defines the dynamics of the system.",
