@@ -59,6 +59,7 @@ dependencies = [
     "matplotlib>=3.8.2",
     "seaborn>=0.13.2",
     "networkx>=3.2.1",
+    "plotly>=5.0.0",
 ]
 
 [project.optional-dependencies]
