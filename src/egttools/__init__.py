@@ -62,7 +62,10 @@ else:
     from .numerical.numerical_.random import Random
     from .numerical.numerical_ import (sample_simplex, sample_unit_simplex, calculate_nb_states,
                                        calculate_state,
-                                       calculate_strategies_distribution, )
+                                       calculate_strategies_distribution,
+                                       calculate_expected_payoff,
+                                       calculate_expected_indicator,
+                                       calculate_expected_group_success, )
 
     import egttools.games as games
     import egttools.behaviors as behaviors
@@ -76,4 +79,7 @@ __all__ = ['utils', 'plotting', 'analytical',
            'games', 'behaviors', 'numerical',
            'distributions', 'datastructures', '__version__', 'VERSION', 'Random',
            'sample_simplex', 'sample_unit_simplex', 'calculate_nb_states', 'calculate_state',
-           'calculate_strategies_distribution']
+           'calculate_strategies_distribution',
+           'calculate_expected_payoff',
+           'calculate_expected_indicator',
+           'calculate_expected_group_success']

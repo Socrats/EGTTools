@@ -21,6 +21,7 @@
 #include <string>
 
 #include "egttools_common.hpp"
+#include <pybind11/functional.h>
 
 #if (HAS_BOOST)
 #include <boost/multiprecision/cpp_int.hpp>

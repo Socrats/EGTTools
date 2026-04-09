@@ -345,7 +345,153 @@ Examples
             py::arg("pop_size"),
             py::arg("nb_strategies"),
             py::arg("stationary_distribution"),
-            py::return_value_policy::move
+            py::return_value_policy::move,
+            // Pure C++: no Python callbacks, safe to release the GIL.
+            py::call_guard<py::gil_scoped_release>()
+        );
+
+        m.def(
+            "calculate_expected_payoff",
+            &utils::calculate_expected_payoff,
+            R"pbdoc(
+Calculate the expected payoff averaged over the stationary distribution.
+
+E[payoff] = sum_s sd(s) * sum_g P(g|s) * avg_payoff(g)
+
+where avg_payoff(g) = sum_j (g[j] / group_size) * payoff_matrix(j, g_index).
+Each strategy's payoff is weighted by its frequency inside the sampled group.
+
+Parameters
+----------
+pop_size : int
+    Total number of individuals in the population.
+group_size : int
+    Number of individuals sampled per group interaction.
+nb_strategies : int
+    Number of strategies available in the population.
+stationary_distribution : scipy.sparse.csr_matrix
+    Sparse matrix representing the stationary distribution over population states.
+payoff_matrix : numpy.ndarray
+    Matrix of shape (nb_strategies, nb_group_compositions); entry (j, g) is the
+    payoff of strategy j when the group composition index is g.
+
+Returns
+-------
+float
+    Expected payoff scalar.
+)pbdoc",
+            py::arg("pop_size"),
+            py::arg("group_size"),
+            py::arg("nb_strategies"),
+            py::arg("stationary_distribution"),
+            py::arg("payoff_matrix"),
+            // Pure C++: no Python callbacks, GIL not needed; release it so other
+            // threads can run and so OpenMP threads inside the template are safe.
+            py::call_guard<py::gil_scoped_release>()
+        );
+
+        m.def(
+            "calculate_expected_indicator",
+            static_cast<double (*)(int64_t, int64_t, int64_t,
+                                   egttools::SparseMatrix2D &,
+                                   const std::function<double(const std::vector<size_t> &)> &)>(
+                &utils::calculate_expected_indicator),
+            R"pbdoc(
+Calculate E[f] = sum_s sd(s) * sum_g P(g|s) * f(g) for an arbitrary indicator f.
+
+The callable ``indicator`` receives a list of ints representing the count of each
+strategy in the sampled group (length nb_strategies, sums to group_size) and must
+return a float.
+
+Parameters
+----------
+pop_size : int
+    Total number of individuals in the population.
+group_size : int
+    Number of individuals sampled per group interaction.
+nb_strategies : int
+    Number of strategies available in the population.
+stationary_distribution : scipy.sparse.csr_matrix
+    Sparse matrix representing the stationary distribution over population states.
+indicator : callable
+    Function with signature ``f(group_config: list[int]) -> float``.
+
+Returns
+-------
+float
+    Expected value of the indicator.
+
+Examples
+--------
+>>> # Expected group success for CRD: cooperators are strategy 0, threshold = 3
+>>> eta_G = calculate_expected_indicator(
+...     pop_size, group_size, nb_strategies, sd,
+...     lambda g: float(g[0] >= 3)
+... )
+)pbdoc",
+            py::arg("pop_size"),
+            py::arg("group_size"),
+            py::arg("nb_strategies"),
+            py::arg("stationary_distribution"),
+            py::arg("indicator")
+            // No gil_scoped_release: indicator is a Python callable and must be
+            // invoked with the GIL held.  The std::function overload deliberately
+            // runs the serial loop to avoid calling Python from OpenMP threads.
+        );
+
+        m.def(
+            "calculate_expected_group_success",
+            &utils::calculate_expected_group_success,
+            R"pbdoc(
+Calculate the expected group success eta_G under the stationary distribution.
+
+eta_G = sum_s sd(s) * sum_g P(g|s) * I(sum_{k in contributing_strategies} g[k] >= threshold)
+
+Any strategy whose index appears in ``contributing_strategies`` contributes its
+group count towards the threshold check.  This supports games where multiple
+strategy types each contribute to collective success (e.g. cooperators + altruists).
+
+Parameters
+----------
+pop_size : int
+    Total number of individuals in the population.
+group_size : int
+    Number of individuals sampled per group interaction.
+nb_strategies : int
+    Number of strategies available in the population.
+stationary_distribution : scipy.sparse.csr_matrix
+    Sparse matrix representing the stationary distribution over population states.
+threshold : int
+    Minimum total count of contributing strategies required for the group to succeed.
+contributing_strategies : list[int]
+    Indices of the strategies that count towards the threshold.
+
+Returns
+-------
+float
+    Expected group success in [0, 1].
+
+Examples
+--------
+>>> # CRD: only cooperators (strategy 0) count, threshold = 3
+>>> eta_G = calculate_expected_group_success(
+...     pop_size, group_size, nb_strategies, sd,
+...     threshold=3, contributing_strategies=[0]
+... )
+>>> # Extended CRD: cooperators (0) and altruists (2) both count
+>>> eta_G = calculate_expected_group_success(
+...     pop_size, group_size, nb_strategies, sd,
+...     threshold=3, contributing_strategies=[0, 2]
+... )
+)pbdoc",
+            py::arg("pop_size"),
+            py::arg("group_size"),
+            py::arg("nb_strategies"),
+            py::arg("stationary_distribution"),
+            py::arg("threshold"),
+            py::arg("contributing_strategies"),
+            // Pure C++: lambdas capture only C++ data, GIL not needed.
+            py::call_guard<py::gil_scoped_release>()
         );
 
         m.def(

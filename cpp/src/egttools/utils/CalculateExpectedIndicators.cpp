@@ -1,4 +1,4 @@
-/** Copyright (c) 2019-2021  Elias Fernandez
+/** Copyright (c) 2019-2026  Elias Fernandez
   *
   * This file is part of EGTtools.
   *
@@ -20,71 +20,89 @@
 
 egttools::Vector egttools::utils::calculate_strategies_distribution(size_t pop_size,
                                                                     size_t nb_strategies,
-                                                                    SparseMatrix2D& stationary_distribution) {
+                                                                    SparseMatrix2D &stationary_distribution) {
     egttools::Vector strategy_distribution = egttools::Vector::Zero(static_cast<signed long>(nb_strategies));
     egttools::VectorXui state = egttools::VectorXui::Zero(static_cast<signed long>(nb_strategies));
 
     for (SparseMatIt it(stationary_distribution, 0); it; ++it) {
         egttools::FinitePopulations::sample_simplex(it.index(), pop_size, nb_strategies, state);
-        strategy_distribution += (state.cast<double>() / pop_size) * it.value();
+        strategy_distribution += (state.cast<double>() / static_cast<double>(pop_size)) * it.value();
     }
 
     return strategy_distribution;
 }
 
-double egttools::utils::calculate_expected_payoff(int64_t pop_size, int64_t group_size, int64_t nb_strategies, SparseMatrix2D& stationary_distribution, Matrix2D& payoff_matrix) {
-    // This function calculates the expected payoff of a population
-    // This is: E[Payoff] = sum_for_all_states(P(state) *
-    //                          (sum_for_all_group_configurations(P(group_config) * avg_payoff_group_config))
-    double expected_payoff = 0;
-    auto nb_group_configurations = egttools::starsBars<int64_t>(group_size, nb_strategies);
+double egttools::utils::calculate_expected_payoff(int64_t pop_size, int64_t group_size, int64_t nb_strategies,
+                                                  SparseMatrix2D &stationary_distribution,
+                                                  Matrix2D &payoff_matrix) {
+    // E[payoff] = sum_s sd(s) * sum_g P(g|s) * avg_payoff(g)
+    // avg_payoff(g) = sum_j (g[j] / group_size) * payoff_matrix(j, g_index)
+    return calculate_expected_indicator(
+        pop_size, group_size, nb_strategies, stationary_distribution,
+        [&](const std::vector<size_t> &group_config) -> double {
+            // Recover the column index in the payoff matrix for this group configuration.
+            const auto col = static_cast<int64_t>(
+                egttools::FinitePopulations::calculate_state(
+                    static_cast<size_t>(group_size), group_config));
+            // Weight each strategy's payoff by its frequency inside the sampled group.
+            double weighted = 0.0;
+            for (int64_t j = 0; j < nb_strategies; ++j) {
+                weighted += (static_cast<double>(group_config[static_cast<size_t>(j)]) / static_cast<double>(group_size))
+                            * payoff_matrix(j, col);
+            }
+            return weighted;
+        });
+}
+
+double egttools::utils::calculate_expected_indicator(
+    int64_t pop_size, int64_t group_size, int64_t nb_strategies,
+    SparseMatrix2D &stationary_distribution,
+    const std::function<double(const std::vector<size_t> &)> &indicator) {
+    // NOTE: this overload is called with a Python callable from pybind11.
+    // It deliberately does NOT delegate to the OpenMP template: calling a Python
+    // object from an OpenMP worker thread without holding the GIL is undefined
+    // behaviour.  The GIL must remain held for the entire duration of this call,
+    // and the inner loop must stay serial.
+    double result = 0.0;
+    const auto nb_group_configs = egttools::starsBars<int64_t>(group_size, nb_strategies);
+    const auto nb_strategies_sz = static_cast<size_t>(nb_strategies);
+    const auto pop_size_sz = static_cast<size_t>(pop_size);
+    const auto group_size_sz = static_cast<size_t>(group_size);
 
     egttools::VectorXui state = egttools::VectorXui::Zero(static_cast<signed long>(nb_strategies));
-    std::vector<size_t> group_configuration(nb_strategies, 0);
+    std::vector<size_t> group_config(nb_strategies_sz, 0);
 
     for (SparseMatIt it(stationary_distribution, 0); it; ++it) {
-        egttools::FinitePopulations::sample_simplex(it.index(), pop_size, nb_strategies, state);
+        egttools::FinitePopulations::sample_simplex(
+            static_cast<size_t>(it.index()), pop_size_sz, nb_strategies_sz, state);
 
-        double expected_payoff_state = 0;
+        double state_contrib = 0.0;
+        for (int64_t i = 0; i < nb_group_configs; ++i) {
+            egttools::FinitePopulations::sample_simplex(
+                static_cast<size_t>(i), group_size_sz, nb_strategies_sz, group_config);
 
-        for (int64_t i = 0; i < nb_group_configurations; ++i) {
-            // Update strategy counts based on the current state
-            egttools::FinitePopulations::sample_simplex(i, group_size, nb_strategies, group_configuration);
+            const double prob = egttools::multivariateHypergeometricPDF(
+                pop_size_sz, nb_strategies_sz, group_size_sz, group_config, state);
 
-            // Calculate probability of encountering the current group
-            auto prob = egttools::multivariateHypergeometricPDF(pop_size, nb_strategies, group_size,
-                                                                group_configuration,
-                                                                state);
-
-            expected_payoff_state += prob * payoff_matrix.col(i).mean();
+            state_contrib += prob * indicator(group_config);
         }
-
-        expected_payoff += expected_payoff_state * it.value();
+        result += state_contrib * it.value();
     }
-    return expected_payoff;
+    return result;
 }
-//
-//void egttools::utils::calculate_strategies_distribution(size_t pop_size, size_t nb_strategies,
-//                                                        egttools::SparseMatrix2D& stationary_distribution,
-//                                                        egttools::Vector& strategy_distribution) {
-//    strategy_distribution.setZero();
-//    egttools::VectorXui state = egttools::VectorXui::Zero(static_cast<signed long>(nb_strategies));
-//    //#pragma omp simd
-//    for (SparseMatIt it(stationary_distribution, 0); it; ++it) {
-//        egttools::FinitePopulations::sample_simplex(it.index(), pop_size, nb_strategies, state);
-//        strategy_distribution += (state.cast<double>() / pop_size) * it.value();
-//    }
-//}
-//
-//void egttools::utils::calculate_strategies_distribution(size_t pop_size, size_t nb_strategies,
-//                                                        egttools::SparseMatrix2D& stationary_distribution,
-//                                                        egttools::Vector& strategy_distribution,
-//                                                        egttools::VectorXui& state) {
-//    strategy_distribution.setZero();
-//    state.setZero();
-//    //#pragma omp simd
-//    for (SparseMatIt it(stationary_distribution, 0); it; ++it) {
-//        egttools::FinitePopulations::sample_simplex(it.index(), pop_size, nb_strategies, state);
-//        strategy_distribution += (state.cast<double>() / pop_size) * it.value();
-//    }
-//}
+
+double egttools::utils::calculate_expected_group_success(int64_t pop_size, int64_t group_size, int64_t nb_strategies,
+                                                         SparseMatrix2D &stationary_distribution,
+                                                         int64_t threshold,
+                                                         const std::vector<int64_t> &contributing_strategies) {
+    // eta_G = sum_s sd(s) * sum_g P(g|s) * I(sum_{k in contributing_strategies} g[k] >= threshold)
+    return calculate_expected_indicator(
+        pop_size, group_size, nb_strategies, stationary_distribution,
+        [&](const std::vector<size_t> &group_config) -> double {
+            size_t count = 0;
+            for (const int64_t k : contributing_strategies) {
+                count += group_config[static_cast<size_t>(k)];
+            }
+            return count >= static_cast<size_t>(threshold) ? 1.0 : 0.0;
+        });
+}

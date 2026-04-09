@@ -28,7 +28,8 @@ def test_sample_unit_simplex():
 
 
 def test_calculate_strategies_distribution():
-    pass
+    # Delegate to the dedicated test module; keep this as a smoke-test alias check.
+    assert egt.calculate_strategies_distribution is not None
 
 
 def test_random():
