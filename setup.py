@@ -19,9 +19,7 @@
 The code used in here has been adapted from https://github.com/YannickJadoul/Parselmouth/blob/master/setup.py
 """
 
-import io
 import os
-import re
 import shlex
 import sys
 
@@ -76,17 +74,8 @@ else:
     cmake_args.append(f'-DSKIP_VCPKG=ON')
 
 
-def find_version():
-    with io.open(os.path.join(os.path.dirname(__file__), "cpp/src", "version.h"), encoding='utf8') as f:
-        version_file = f.read()
-    version_match = re.search(r'#define EGTTOOLS_VERSION_STRING\s+"([\d.]+)"', version_file)
-    if version_match:
-        return version_match.group(1)
-    raise RuntimeError("Unable to find version string.")
-
-
 setup(
-    version=find_version(),
+    use_scm_version=True,
     # packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     packages=['egttools', 'egttools.numerical', 'egttools.numerical.structure', 'egttools.analytical',
               'egttools.plotting', 'egttools.games',

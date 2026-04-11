@@ -5,8 +5,20 @@ requires = [
     "scikit-build>=0.13.1",
     "cmake>=3.18",
     "ninja; platform_system!='Windows'",
+    "setuptools-scm>=7",
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+# Writes the version to _version.py at build time so it's available
+# in Python without importing the C++ extension.
+write_to = "src/egttools/_version.py"
+# Drop the local version segment (e.g. +g1234abc) — conda and pip extras
+# don't support PEP 440 local identifiers well.
+local_scheme = "no-local-version"
+# Fallback used when building from an sdist without a git checkout
+# (e.g. conda-forge builds from a PyPI tarball).
+fallback_version = "0.0.0"
 
 [tool.scikit-build]
 experimental = true

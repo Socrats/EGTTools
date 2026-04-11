@@ -1,2 +1,6 @@
-$PYTHON -m build # Build sources
-$PYTHON -m pip install . # Python command to install the script.
+#!/usr/bin/env bash
+set -euxo pipefail
+
+export CMAKE_ARGS="-DSKIP_VCPKG=ON"
+
+$PYTHON -m pip install . --no-build-isolation -vvv

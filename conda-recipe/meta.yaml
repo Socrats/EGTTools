@@ -1,5 +1,5 @@
 {% set name = "egttools" %}
-  {% set version = "0.1.14" %}
+{% set version = "0.1.15" %}
 
 package:
   name: "{{ name|lower }}"
@@ -11,28 +11,43 @@ source:
 build:
   noarch: false  # C++ extension: NOT noarch
   number: 0
-  script: |
-    {{ PYTHON }} -m pip install . -vvv
+  script_env:
+    - CMAKE_ARGS=-DSKIP_VCPKG=ON
+    # Passed to CMake so it can generate version.h without a git checkout
+    # (conda-forge builds from a PyPI sdist tarball, so .git is absent).
+    - EGTTOOLS_VERSION={{ version }}
 
 requirements:
+  build:
+    - {{ compiler('cxx') }}
+    - cmake >=3.27
+    - ninja
   host:
     - python
     - pip
-    - scikit-build
+    - scikit-build >=0.13.1
+    - setuptools >=44
     - wheel
-    - setuptools
-    - cmake >=3.27
-    - ninja
-    - numpy
+    - numpy >=1.26.3
+    - eigen >=3.4.0
+    - boost-cpp >=1.82.0
+    - libblas
+    - liblapack
+    - liblapacke
+    - llvm-openmp  # [osx]
+    - libgomp      # [linux]
   run:
     - python
-    - numpy
-    - scipy
-    - matplotlib
-    - seaborn
-    - networkx
-    - blas  # OpenBLAS by default unless overridden
-    - liblapack  # system LAPACK
+    - numpy >=1.26.3
+    - scipy >=1.12.0
+    - matplotlib >=3.8.2
+    - seaborn >=0.13.2
+    - networkx >=3.2.1
+    - plotly >=5.0.0
+    - libblas
+    - liblapack
+    - llvm-openmp  # [osx]
+    - libgomp      # [linux]
 
 test:
   imports:
@@ -47,7 +62,7 @@ test:
   requires:
     - pytest
   commands:
-    - pytest --pyargs egttools
+    - pytest --pyargs egttools -x -q
 
 about:
   home: "https://github.com/Socrats/EGTTools"

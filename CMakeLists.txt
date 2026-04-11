@@ -18,32 +18,44 @@
 cmake_minimum_required(VERSION 3.20...4.2)
 
 # ------------------------------------------------------------------------------
-# Parse version from version.h
+# Version detection: git tag → EGTTOOLS_VERSION env var → fallback
 # ------------------------------------------------------------------------------
 
-file(READ "${CMAKE_SOURCE_DIR}/cpp/src/version.h" VERSION_HEADER_CONTENT)
+find_package(Git QUIET)
+set(_EGTTOOLS_VERSION "0.0.0")
 
-string(REGEX MATCH "#define EGTTOOLS_VERSION_MAJOR[ \t]+([0-9]+)" _ "${VERSION_HEADER_CONTENT}")
-set(EGTTOOLS_VERSION_MAJOR "${CMAKE_MATCH_1}")
+if (GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
+    execute_process(
+            COMMAND ${GIT_EXECUTABLE} describe --tags --match "v*" --abbrev=0
+            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+            OUTPUT_VARIABLE _GIT_TAG
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            ERROR_QUIET
+            RESULT_VARIABLE _GIT_RESULT
+    )
+    if (_GIT_RESULT EQUAL 0 AND _GIT_TAG MATCHES "^v[0-9]")
+        string(REGEX REPLACE "^v" "" _EGTTOOLS_VERSION "${_GIT_TAG}")
+        message(STATUS "[EGTtools] Version from git tag: ${_EGTTOOLS_VERSION}")
+    endif ()
+endif ()
 
-string(REGEX MATCH "#define EGTTOOLS_VERSION_MINOR[ \t]+([0-9]+)" _ "${VERSION_HEADER_CONTENT}")
-set(EGTTOOLS_VERSION_MINOR "${CMAKE_MATCH_1}")
+if (DEFINED ENV{EGTTOOLS_VERSION})
+    set(_EGTTOOLS_VERSION "$ENV{EGTTOOLS_VERSION}")
+    message(STATUS "[EGTtools] Version from EGTTOOLS_VERSION env: ${_EGTTOOLS_VERSION}")
+endif ()
 
-string(REGEX MATCH "#define EGTTOOLS_VERSION_PATCH[ \t]+([0-9]+)" _ "${VERSION_HEADER_CONTENT}")
-set(EGTTOOLS_VERSION_PATCH "${CMAKE_MATCH_1}")
-
-string(REGEX MATCH "#define EGTTOOLS_VERSION_TWEAK[ \t]+([0-9]+)" _ "${VERSION_HEADER_CONTENT}")
-set(EGTTOOLS_VERSION_TWEAK "${CMAKE_MATCH_1}")
-
-set(EGTTOOLS_VERSION
-        "${EGTTOOLS_VERSION_MAJOR}.${EGTTOOLS_VERSION_MINOR}.${EGTTOOLS_VERSION_PATCH}.${EGTTOOLS_VERSION_TWEAK}"
-)
+if (_EGTTOOLS_VERSION STREQUAL "0.0.0")
+    message(WARNING
+            "[EGTtools] Could not detect version from git tag or EGTTOOLS_VERSION env var. "
+            "Using 0.0.0 as fallback. Set EGTTOOLS_VERSION=<version> to override."
+    )
+endif ()
 
 # ------------------------------------------------------------------------------
 # Project definition
 # ------------------------------------------------------------------------------
 
-project(egttools VERSION ${EGTTOOLS_VERSION} LANGUAGES CXX)
+project(egttools VERSION ${_EGTTOOLS_VERSION} LANGUAGES CXX)
 
 # ------------------------------------------------------------------------------
 # Options

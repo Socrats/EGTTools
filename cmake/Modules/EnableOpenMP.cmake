@@ -13,7 +13,10 @@ if (USE_OPENMP)
     if (APPLE)
         # Determine the default LIBOMP_DIR depending on architecture
         if (NOT DEFINED LIBOMP_DIR)
-            if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
+            if (DEFINED ENV{CONDA_PREFIX})
+                # Conda environment: libomp is installed under the conda prefix
+                set(LIBOMP_DIR "$ENV{CONDA_PREFIX}" CACHE PATH "Path to libomp installation (conda)" FORCE)
+            elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
                 # Define a CMake cache variable so users can override it with -DLIBOMP_DIR=/path
                 set(LIBOMP_DIR "/opt/homebrew/opt/libomp" CACHE PATH "Path to libomp installation on macOS (default ARM64)" FORCE)
             else()

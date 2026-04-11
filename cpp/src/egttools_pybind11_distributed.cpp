@@ -22,9 +22,6 @@
 
 #include "version.h"
 
-#define XSTR(s) STR(s)
-#define STR(s) #s
-
 namespace py = pybind11;
 using namespace std::string_literals;
 
@@ -43,8 +40,10 @@ void init_datastructures(py::module_ &);
 void init_random(py::module_ &);
 
 PYBIND11_MODULE(numerical_, m) {
-    m.attr("__version__") = py::str(XSTR(EGTTOOLS_VERSION_STRING));
-    m.attr("VERSION") = py::str(XSTR(EGTTOOLS_VERSION_STRING));
+    // Version: EGTTOOLS_VERSION_STRING is already a string literal from the generated version.h
+    m.attr("__version__") = EGTTOOLS_VERSION_STRING;
+    m.attr("__version_info__") = py::make_tuple(
+            EGTTOOLS_VERSION_MAJOR, EGTTOOLS_VERSION_MINOR, EGTTOOLS_VERSION_PATCH);
     m.attr("__init__") = py::str(
         "The `numerical` module contains optimized "
         "functions and classes to simulate evolutionary dynamics in large populations.");
