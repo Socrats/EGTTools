@@ -11,17 +11,36 @@ if (USE_OPENMP)
 
     # Only relevant on macOS
     if (APPLE)
-        # Determine the default LIBOMP_DIR depending on architecture
+        # Determine the default LIBOMP_DIR depending on architecture.
+        # Priority:
+        #   1. Caller-supplied LIBOMP_DIR (already defined)
+        #   2. CONDA_PREFIX — only when libomp.dylib actually lives there
+        #      (developer conda env; NOT conda-build where CONDA_PREFIX is the
+        #       build-tools env and the runtime library is in CMAKE_PREFIX_PATH)
+        #   3. CMAKE_PREFIX_PATH — covers conda-build's host env, which is
+        #      passed as -DCMAKE_PREFIX_PATH=$PREFIX by build.sh
+        #   4. Homebrew fallbacks
         if (NOT DEFINED LIBOMP_DIR)
-            if (DEFINED ENV{CONDA_PREFIX})
-                # Conda environment: libomp is installed under the conda prefix
+            if (DEFINED ENV{CONDA_PREFIX} AND EXISTS "$ENV{CONDA_PREFIX}/lib/libomp.dylib")
                 set(LIBOMP_DIR "$ENV{CONDA_PREFIX}" CACHE PATH "Path to libomp installation (conda)" FORCE)
-            elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
-                # Define a CMake cache variable so users can override it with -DLIBOMP_DIR=/path
-                set(LIBOMP_DIR "/opt/homebrew/opt/libomp" CACHE PATH "Path to libomp installation on macOS (default ARM64)" FORCE)
-            else()
-                set(LIBOMP_DIR "/usr/local/opt/libomp" CACHE PATH "Path to libomp installation on macOS (default Intel)" FORCE)
-            endif()
+            else ()
+                # Search CMAKE_PREFIX_PATH for libomp (handles conda-build host env)
+                find_library(_LIBOMP_SEARCH
+                        NAMES omp libomp
+                        HINTS ${CMAKE_PREFIX_PATH}
+                        PATH_SUFFIXES lib
+                        NO_DEFAULT_PATH
+                )
+                if (_LIBOMP_SEARCH)
+                    get_filename_component(_LIBOMP_LIB_DIR "${_LIBOMP_SEARCH}" DIRECTORY)
+                    get_filename_component(LIBOMP_DIR "${_LIBOMP_LIB_DIR}/.." ABSOLUTE)
+                    set(LIBOMP_DIR "${LIBOMP_DIR}" CACHE PATH "Path to libomp installation" FORCE)
+                elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
+                    set(LIBOMP_DIR "/opt/homebrew/opt/libomp" CACHE PATH "Path to libomp installation on macOS (default ARM64)" FORCE)
+                else ()
+                    set(LIBOMP_DIR "/usr/local/opt/libomp" CACHE PATH "Path to libomp installation on macOS (default Intel)" FORCE)
+                endif ()
+            endif ()
         endif()
 
         if (NOT EXISTS "${LIBOMP_DIR}")

@@ -90,7 +90,17 @@ else ()
 endif ()
 
 if (SKIP_VCPKG AND DEFINED CMAKE_TOOLCHAIN_FILE)
-    message(FATAL_ERROR "SKIP_VCPKG=ON but CMAKE_TOOLCHAIN_FILE is defined")
+    if (CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
+        # Stale cmake cache or setup.py injected the vcpkg toolchain before
+        # SKIP_VCPKG was honoured.  Clear it so the build proceeds without vcpkg.
+        message(STATUS "SKIP_VCPKG=ON: clearing cached vcpkg CMAKE_TOOLCHAIN_FILE")
+        unset(CMAKE_TOOLCHAIN_FILE CACHE)
+    else ()
+        message(FATAL_ERROR
+                "SKIP_VCPKG=ON but a non-vcpkg CMAKE_TOOLCHAIN_FILE is already defined: "
+                "${CMAKE_TOOLCHAIN_FILE}"
+        )
+    endif ()
 endif ()
 
 # ------------------------------------------------------------------------------
@@ -160,10 +170,45 @@ endif ()
 include(EnableBLASLapack)
 include(EnableOpenMP)
 
-# Use config package directly instead of FindBoost
-find_package(boost_multiprecision CONFIG REQUIRED)
+# Boost (header-only multiprecision)
+# - vcpkg installs per-component cmake configs  → find by component name
+# - conda/system installs BoostConfig.cmake     → find parent package
+if (SKIP_VCPKG)
+    find_package(Boost CONFIG REQUIRED)
+    if (NOT TARGET Boost::multiprecision)
+        # Older conda boost or plain system install: synthesise the INTERFACE target
+        find_path(BOOST_MULTIPRECISION_INCLUDE_DIR
+                NAMES boost/multiprecision/cpp_bin_float.hpp
+                HINTS ${CMAKE_PREFIX_PATH}
+                PATH_SUFFIXES include
+        )
+        if (NOT BOOST_MULTIPRECISION_INCLUDE_DIR)
+            message(FATAL_ERROR "Could not find Boost multiprecision headers. "
+                    "Set CMAKE_PREFIX_PATH to the Boost installation root.")
+        endif ()
+        add_library(Boost::multiprecision INTERFACE IMPORTED GLOBAL)
+        set_target_properties(Boost::multiprecision PROPERTIES
+                INTERFACE_INCLUDE_DIRECTORIES "${BOOST_MULTIPRECISION_INCLUDE_DIR}"
+        )
+        message(STATUS "[Boost] Synthesised Boost::multiprecision from ${BOOST_MULTIPRECISION_INCLUDE_DIR}")
+    endif ()
+else ()
+    # vcpkg provides individual component cmake configs
+    find_package(boost_multiprecision CONFIG REQUIRED)
+endif ()
 
+# Eigen3
+# - vcpkg installs Eigen3Config.cmake (config mode)
+# - conda-forge (eigen >=3.4.0 / Eigen 5.x) also provides Eigen3Config.cmake
+#   at share/eigen3/cmake/ — use CONFIG mode for both cases so our legacy
+#   FindEigen3.cmake (which reads Macros.h, now gone in Eigen 5) is bypassed.
 find_package(Eigen3 CONFIG REQUIRED)
+
+# Eigen3Config.cmake only creates the Eigen3::Eigen target; extract the include
+# directory from the target so the legacy include_directories() call below works.
+if (NOT EIGEN3_INCLUDE_DIR AND TARGET Eigen3::Eigen)
+    get_target_property(EIGEN3_INCLUDE_DIR Eigen3::Eigen INTERFACE_INCLUDE_DIRECTORIES)
+endif ()
 message(STATUS "Eigen3 include directory: ${EIGEN3_INCLUDE_DIR}")
 
 # ------------------------------------------------------------------------------

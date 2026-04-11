@@ -23,9 +23,15 @@ import os
 import shlex
 import sys
 
-try:
-    from setuptools_scm import get_version as _get_scm_version
-    def _version():
+def _version():
+    # conda-build (and other sdist builds without a .git) set EGTTOOLS_VERSION
+    # from the recipe.  Honour it so that the installed Python metadata matches
+    # the conda package version even when git is unavailable.
+    env_version = os.environ.get("EGTTOOLS_VERSION", "").strip()
+    if env_version:
+        return env_version
+    try:
+        from setuptools_scm import get_version as _get_scm_version
         return _get_scm_version(
             root=".",
             relative_to=__file__,
@@ -33,8 +39,7 @@ try:
             fallback_version="0.0.0",
             write_to="src/egttools/_version.py",
         )
-except ImportError:
-    def _version():
+    except Exception:
         return "0.0.0"
 
 try:

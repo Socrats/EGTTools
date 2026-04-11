@@ -12,7 +12,6 @@ build:
   noarch: false  # C++ extension: NOT noarch
   number: 0
   script_env:
-    - CMAKE_ARGS=-DSKIP_VCPKG=ON
     # Passed to CMake so it can generate version.h without a git checkout
     # (conda-forge builds from a PyPI sdist tarball, so .git is absent).
     - EGTTOOLS_VERSION={{ version }}
@@ -59,10 +58,12 @@ test:
     - egttools.datastructures
     - egttools.helpers
     - egttools.plotting
+  source_files:
+    - tests
   requires:
     - pytest
   commands:
-    - pytest --pyargs egttools -x -q
+    - pytest tests/ -x -q --ignore=tests/cpp
 
 about:
   home: "https://github.com/Socrats/EGTTools"
