@@ -3,6 +3,7 @@
 # EGTTools – Evolutionary Game Theory Toolbox
 
 [![PyPI](https://img.shields.io/pypi/v/egttools)](https://pypi.org/project/egttools/)
+[![Conda](https://img.shields.io/conda/v/socrats/egttools)](https://anaconda.org/socrats/egttools)
 [![Docs](https://img.shields.io/badge/docs-ReadTheDocs-green)](https://egttools.readthedocs.io/)
 [![Live Docs](https://img.shields.io/badge/docs-latest-blue)](https://efernandez.eu/EGTTools/)
 [![Build Status](https://github.com/Socrats/EGTTools/actions/workflows/wheels.yml/badge.svg?branch=master)](https://github.com/Socrats/EGTTools/actions/workflows/wheels.yml)
@@ -47,24 +48,54 @@ Testing & Continuous Integration
 
 ## 📦 Installation
 
-EGTTools is distributed via PyPI and includes prebuilt wheels for major platforms:
+EGTTools is distributed via **PyPI** (pip wheels) and **conda** (Anaconda.org).
+Prebuilt packages are available for all major platforms:
 
-| Platform        | Architectures         | Python Versions | OpenMP Supported |
-|-----------------|-----------------------|-----------------|------------------|
-| Linux (x86_64)  | x86_64                | 3.10 – 3.12     | ✅ Yes            |
-| macOS (x86/arm) | x86_64, arm64 (M1/M2) | 3.10 – 3.12     | ✅ Yes            |
-| Windows         | x86_64, arm64         | 3.10 – 3.12     | ❌ Not available  |
+| Platform        | Architectures          | Python Versions  | OpenMP Supported |
+|-----------------|------------------------|------------------|------------------|
+| Linux (x86_64)  | x86_64                 | 3.10 – 3.13      | ✅ Yes            |
+| macOS (x86/arm) | x86_64, arm64 (M1–M4)  | 3.10 – 3.13      | ✅ Yes            |
+| Windows         | x86_64, arm64          | 3.10 – 3.13      | ❌ Not available  |
 
-### ▶️ Install with pip
+---
+
+### 🐍 Install with pip
 
 ```bash
 pip install egttools
 ```
 
-For a more reliable installation on macOS with conda-based environments:
+---
 
-conda install numpy scipy matplotlib networkx seaborn
-pip install egttools --no-deps
+### 🐍 Install with conda or mamba (recommended)
+
+The conda package bundles all native dependencies (BLAS/LAPACK, OpenMP) and
+works out of the box with **miniforge**, **mambaforge**, and **miniconda**
+(which are all free for any use, including large organisations).
+
+```bash
+conda install -c socrats egttools
+```
+
+or with **mamba** (faster solver):
+
+```bash
+mamba install -c socrats egttools
+```
+
+To avoid specifying `-c socrats` every time, add the channel once to your
+conda configuration:
+
+```bash
+conda config --add channels socrats
+conda config --set channel_priority strict
+```
+
+After that, `conda install egttools` works without a channel flag.
+
+> **Note:** The conda package is hosted on the maintainer's personal
+> [Anaconda.org channel](https://anaconda.org/socrats/egttools). It is **not**
+> in the `conda-forge` or `defaults` channels.
 
 ---
 
@@ -73,20 +104,22 @@ pip install egttools --no-deps
 ### 🐧 Linux
 
 - OpenMP is fully supported and enabled by default.
-- Wheels are built with optimized BLAS/LAPACK and Boost.
+- Packages are built with optimized BLAS/LAPACK (via conda's `libblas`/`liblapack`).
 - Recommended for high-performance simulation runs.
 
 ### 🍎 macOS (Intel or Apple Silicon)
 
-- Supported on both `x86_64` and `arm64`.
-- OpenMP is enabled by default and linked via `libomp`.
-- If using `conda`, prefer `miniforge` or `mambaforge` for ABI compatibility.
-- To skip dependency resolution and control packages manually:
+- Supported on both `x86_64` and `arm64` (M1–M4).
+- OpenMP is enabled by default via `llvm-openmp`.
+- **The conda package is the easiest install on macOS** — all native
+  dependencies are resolved automatically.
+- When using pip in a conda environment, prefer
+  [miniforge](https://github.com/conda-forge/miniforge) for ABI compatibility:
 
-```bash
-pip install egttools --no-deps
-conda install numpy scipy matplotlib networkx seaborn
-````
+  ```bash
+  conda install numpy scipy matplotlib networkx seaborn plotly
+  pip install egttools --no-deps
+  ```
 
 ### 🪟 Windows (x86_64 and ARM64)
 
