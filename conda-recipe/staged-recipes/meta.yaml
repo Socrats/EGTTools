@@ -5,15 +5,22 @@ package:
   name: "{{ name|lower }}"
   version: "{{ version }}"
 
+# ---------------------------------------------------------------------------
+# Source: GitHub release tarball (does NOT include git submodules).
+# pybind11 is therefore provided as a conda host dependency instead; the
+# CMakeLists.txt falls back to find_package(pybind11) when the submodule
+# directory is absent.
+# ---------------------------------------------------------------------------
 source:
-  path: ../.
+  url: https://github.com/Socrats/EGTTools/archive/refs/tags/v{{ version }}.tar.gz
+  sha256: d5558cd419c8d46bdc958064cb97f963d1ea793866414c025906ec15033512ed
 
 build:
   noarch: false  # C++ extension: NOT noarch
   number: 0
   script_env:
-    # Passed to CMake so it can generate version.h without a git checkout
-    # (conda-forge builds from a PyPI sdist tarball, so .git is absent).
+    # Passed to CMake so it can generate version.h without a live git checkout,
+    # and to setup.py so the wheel metadata version matches the conda package.
     - EGTTOOLS_VERSION={{ version }}
 
 requirements:
@@ -27,7 +34,8 @@ requirements:
     - scikit-build >=0.13.1
     - setuptools >=44
     - wheel
-    - pybind11 >=2.10
+    - setuptools-scm >=7
+    - pybind11 >=2.10       # submodule absent in tarball; use system pybind11
     - numpy >=1.26.3
     - eigen >=3.4.0
     - boost-cpp >=1.82.0
@@ -50,6 +58,7 @@ requirements:
     - libgomp      # [linux]
 
 test:
+  # Import tests only — the tests/ directory is not part of the installed package.
   imports:
     - egttools
     - egttools.numerical
@@ -59,12 +68,6 @@ test:
     - egttools.datastructures
     - egttools.helpers
     - egttools.plotting
-  source_files:
-    - tests
-  requires:
-    - pytest
-  commands:
-    - pytest tests/ -x -q --ignore=tests/cpp
 
 about:
   home: "https://github.com/Socrats/EGTTools"

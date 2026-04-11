@@ -219,7 +219,16 @@ set(Python_FIND_IMPLEMENTATIONS CPython PyPy)
 find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
 
 set(PYBIND11_FINDPYTHON ON)
-add_subdirectory(pybind11)
+# Use the bundled pybind11 git submodule when available (local dev, cibuildwheel).
+# Fall back to find_package() so that conda-forge builds work: GitHub release
+# tarballs do not include submodules, and pybind11 is a conda host dependency.
+if (EXISTS "${CMAKE_SOURCE_DIR}/pybind11/CMakeLists.txt")
+    add_subdirectory(pybind11)
+    message(STATUS "pybind11: using bundled submodule")
+else ()
+    find_package(pybind11 REQUIRED)
+    message(STATUS "pybind11: using system installation (${pybind11_VERSION})")
+endif ()
 
 message(STATUS "Python include dirs: ${Python_INCLUDE_DIRS}")
 
