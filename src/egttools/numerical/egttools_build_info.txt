@@ -1,0 +1,11 @@
+EGTtools Build Information
+------------------------------
+Build information   : 
+EGTtools version    : 0.1.14.0
+OpenMP support      : ON
+BLAS/LAPACK support : ON
+CMake Generator     : Ninja
+CMake Version       : 3.26.4
+System              : Darwin arm64
+macOS Deployment Target: 26.0
+Build date          : 2026-04-10
