@@ -107,12 +107,14 @@ jobs:
           if-no-files-found: error
 
       # -----------------------------------------------------------------------
-      # Upload to Anaconda.org when:
+      # Upload to anaconda.org/socrats when:
       #   • a GitHub Release is published  (release event)
       #   • OR the workflow is dispatched manually with upload=true
       # Tag-only pushes (no release) build but do NOT upload.
+      #
+      # Install with:  conda install -c socrats egttools
       # -----------------------------------------------------------------------
-      - name: Upload to Anaconda.org
+      - name: Upload to Anaconda.org (socrats channel)
         if: |
           github.event_name == 'release' ||
           (github.event_name == 'workflow_dispatch' && inputs.upload)
@@ -123,5 +125,6 @@ jobs:
             conda-bld/${{ matrix.platform }}/egttools-*.conda \
             conda-bld/${{ matrix.platform }}/egttools-*.tar.bz2; do
             [ -f "$pkg" ] || continue
-            anaconda -t "$ANACONDA_TOKEN" upload "$pkg" --force --label main
+            anaconda -t "$ANACONDA_TOKEN" upload "$pkg" \
+              --user socrats --force --label main
           done
