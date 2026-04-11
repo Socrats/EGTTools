@@ -306,7 +306,7 @@ jobs:
         run: echo "version=${GITHUB_REF##refs/tags/v}" >> $GITHUB_OUTPUT
 
       - name: Upload sdist and wheels to release
-        uses: ncipollo/release-action@v1.20.0
+        uses: ncipollo/release-action@v1.21.0
         with:
           name: ${{ steps.get_version.outputs.version }}
           draft: true
