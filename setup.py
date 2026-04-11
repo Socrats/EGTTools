@@ -19,11 +19,28 @@
 The code used in here has been adapted from https://github.com/YannickJadoul/Parselmouth/blob/master/setup.py
 """
 
-import io
 import os
-import re
 import shlex
 import sys
+
+def _version():
+    # conda-build (and other sdist builds without a .git) set EGTTOOLS_VERSION
+    # from the recipe.  Honour it so that the installed Python metadata matches
+    # the conda package version even when git is unavailable.
+    env_version = os.environ.get("EGTTOOLS_VERSION", "").strip()
+    if env_version:
+        return env_version
+    try:
+        from setuptools_scm import get_version as _get_scm_version
+        return _get_scm_version(
+            root=".",
+            relative_to=__file__,
+            local_scheme="no-local-version",
+            fallback_version="0.0.0",
+            write_to="src/egttools/_version.py",
+        )
+    except Exception:
+        return "0.0.0"
 
 try:
     from skbuild import setup
@@ -76,17 +93,8 @@ else:
     cmake_args.append(f'-DSKIP_VCPKG=ON')
 
 
-def find_version():
-    with io.open(os.path.join(os.path.dirname(__file__), "cpp/src", "version.h"), encoding='utf8') as f:
-        version_file = f.read()
-    version_match = re.search(r'#define EGTTOOLS_VERSION_STRING\s+"([\d.]+)"', version_file)
-    if version_match:
-        return version_match.group(1)
-    raise RuntimeError("Unable to find version string.")
-
-
 setup(
-    version=find_version(),
+    version=_version(),
     # packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     packages=['egttools', 'egttools.numerical', 'egttools.numerical.structure', 'egttools.analytical',
               'egttools.plotting', 'egttools.games',

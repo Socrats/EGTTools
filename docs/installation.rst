@@ -1,137 +1,181 @@
 Installation
 ============
 
-From PyPi
----------
+EGTtools is distributed via **PyPI** (pip wheels) and **conda** (Anaconda.org).
+Prebuilt packages are available for Linux (x86_64), macOS (x86_64 and arm64),
+and Windows (x86_64 and arm64), for **Python 3.10 – 3.13**.
 
-EGTtools can be installed using PyPi on Linux, macOS, and Windows::
+.. list-table::
+   :header-rows: 1
+   :widths: 25 30 20 15
+
+   * - Platform
+     - Architectures
+     - Python versions
+     - OpenMP
+   * - Linux
+     - x86_64
+     - 3.10 – 3.13
+     - ✅
+   * - macOS
+     - x86_64, arm64 (M1–M4)
+     - 3.10 – 3.13
+     - ✅
+   * - Windows
+     - x86_64, arm64
+     - 3.10 – 3.13
+     - ❌
+
+
+Install with conda or mamba (recommended)
+------------------------------------------
+
+The conda package bundles all native dependencies (BLAS/LAPACK, OpenMP) and
+works out of the box on Linux and macOS.  It is hosted on the maintainer's
+personal `Anaconda.org channel <https://anaconda.org/socrats/egttools>`_.
+
+**miniforge**, **mambaforge**, and **miniconda** are all free for any use,
+including large organisations.
+
+.. code-block:: bash
+
+    conda install -c socrats egttools
+
+Or with **mamba** (faster dependency solver):
+
+.. code-block:: bash
+
+    mamba install -c socrats egttools
+
+To avoid typing ``-c socrats`` every time, add the channel permanently to your
+conda configuration:
+
+.. code-block:: bash
+
+    conda config --add channels socrats
+    conda config --set channel_priority strict
+
+After that, ``conda install egttools`` works without a channel flag.
+
+.. note::
+
+    EGTtools is **not** in the ``conda-forge`` or ``defaults`` channels — it is
+    maintained on the author's personal Anaconda.org channel so the author
+    retains full ownership of the recipe and release schedule.
+
+
+Install with pip
+----------------
+
+.. code-block:: bash
 
     pip install egttools
 
-To update your installed version to the latest release, add ``-U`` (or ``--upgrade``) to the command::
+To upgrade to the latest release:
+
+.. code-block:: bash
 
     pip install -U egttools
 
 .. note::
 
-    Currently, only the Linux build supports OpenMP parallelization for numerical simulations. This should normally be
-    ok for most applications, since numerical simulations are heavy (computationally) and should be run on a
-    High Power Computing (HPC) clusters
-    which normally run Linux distributions. We are investigating how to provide support for OpenMP in both Windows
-    and Mac OSX. In the meantime, if you really want to run numerical simulations on either of these two platforms,
-    you should follow the compilation instructions below and try to link OpenMP for your platform yourself.
-    Please, if you manage to do so, open an issue or a pull request with your solutions.
+    On **macOS** inside a conda environment, installing via pip can trigger
+    ABI mismatches between pip-provided and conda-provided NumPy/SciPy.
+    Using the conda package above avoids this entirely.
+    If you must use pip, install the heavy dependencies via conda first:
 
-.. warning::
+    .. code-block:: bash
 
-    The arm64 and universal2::arm64 have not been tested upstream on CI, so please report any issues or bugs you
-    may encounter.
+        conda install numpy scipy matplotlib networkx seaborn plotly
+        pip install egttools --no-deps
 
-.. warning::
-
-    For Apple M1 (arm64) you should install using ``pip install egttools --no-deps`` so that pip does not
-    install the dependencies of the package. This is necessary since there is no Scipy wheel for architecture arm64
-    available on PyPi yet.
-    To install the package dependencies you should create a virtual environment
-    with `miniforge <https://github.com/conda-forge/miniforge>`_. Once you have miniforge installed you can do the
-    following (assuming that you are in the base miniforge environment)::
-
-        conda create -n egtenv python=3.9
-        conda activate egtenv
-        conda install numpy
-        conda install scipy
-        conda install matplotlib
-        conda install networkx
 
 Build from source
 -----------------
 
-To build `egttools` from source you need:
+Requirements
+^^^^^^^^^^^^
 
-* A recent version of Linux (only tested on Ubuntu), MacOSX (Mojave or above) or Windows
-* `CMake <https://cmake.org>` version 3.17 or higher
-* `C++ 17 <https://en.cppreference.com/w/cpp/17>`
-* `Eigen <https://eigen.tuxfamily.org/index.php?title=Main_Page>` 3.3.*
-* `Boost <https://www.boost.org/>` 1.80.*
-* **Python** 3.7 or higher
+* Linux, macOS (Monterey or later), or Windows
+* `CMake <https://cmake.org>`_ ≥ 3.27
+* A C++17-capable compiler (GCC ≥ 9, Clang ≥ 10, MSVC 2019+)
+* `Eigen <https://eigen.tuxfamily.org>`_ ≥ 3.4 (or 5.x)
+* `Boost <https://www.boost.org>`_ ≥ 1.82 (header-only multiprecision)
+* Python ≥ 3.10
 
-.. warning::
+The easiest way to satisfy the C++ dependencies is via **vcpkg** (bundled as a
+git submodule) or via conda.
 
-    **Boost** is required in order for EGTtools to use multiprecision integers and
-    floating point numbers with higher precision. You may still be able to compile EGTtools without Boost,
-    but we highly recommend don't.
+With vcpkg (default for local development)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. code-block:: bash
 
-Once you install these libraries, you can follow the following steps.
+    git clone --recurse-submodules https://github.com/Socrats/EGTTools.git
+    cd EGTTools
+    pip install .
 
-To **install all required packages** run::
+With conda dependencies (``SKIP_VCPKG=ON``)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    python -m venv egttools-env
-    source egttools-env/bin/activate
-    pip install -r requirements.txt
+.. code-block:: bash
 
-Or with anaconda::
+    # Create and activate an environment with all build and runtime deps
+    conda create -n egtenv python=3.11 numpy scipy matplotlib networkx \
+        seaborn plotly eigen boost-cpp libblas liblapack pybind11 \
+        scikit-build cmake ninja
+    conda activate egtenv
 
-    conda env create -f environment.yml
-    conda activate egttools-env
+    git clone --recurse-submodules https://github.com/Socrats/EGTTools.git
+    cd EGTTools
+    SKIP_VCPKG=ON pip install . --no-build-isolation
 
-Also, to make your virtual environment visible to jupyter::
+Development mode
+^^^^^^^^^^^^^^^^
 
-    conda install ipykernel # or pip install ipykernel
-    python -m ipykernel install --user --name=egttools-env
+.. code-block:: bash
 
-You can **build EGTtools** by running::
+    pip install -e .  # editable install; rebuilds the extension on demand
 
-    pip install build
-    cd <path>
-    python -m build
-
-Where ``<path>`` represents the path to the EGTtools folder. If you are running this while inside the EGTtools folder,
-then ``<path>`` is simply ``./``.
-
-Finally, you can install EGTtools in **development** mode, this will allow the installation to update with new
-modifications to the package::
-
-    python -m pip install -e <path>
-
-
-If you don't want development mode, you can skip the option ```-e```.
 
 Python distributions
 --------------------
 
-Anaconda
-    If you use the Anaconda distribution of Python, you can use the same ``pip`` command in a terminal of the appropriate Anaconda environment, either activated through the `Anaconda Navigator <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`_ or `conda tool <https://conda.io/activation>`_.
+conda / mamba
+    Use ``conda install -c socrats egttools`` as described above.
+    For Apple Silicon (arm64), the conda package is the recommended installation
+    method since it links against native arm64 BLAS/LAPACK and libomp.
 
 PyPy
-    Recent versions of PyPy are supported by the `pybind11 project <https://github.com/pybind/pybind11>`_ and should thus also be supported by EGTtools.
+    Recent versions of PyPy are supported by the
+    `pybind11 project <https://github.com/pybind/pybind11>`_ and should thus
+    also be supported by EGTtools.
 
 Other
-    For other distributions of Python, we are expecting that our package is compatible with the Python versions that are out there and that ``pip`` can handle the installation. If you are using yet another Python distribution, we are definitely interested in hearing about it, so that we can add it to this list!
-
+    For any other Python distribution, ``pip install egttools`` should work.
+    Please open a `GitHub issue <https://github.com/Socrats/EGTtools/issues>`_
+    if you encounter problems.
 
 
 Troubleshooting
 ---------------
 
-It is possible that you run into problems when trying to install or use EGTtools. This may happen because
-you are running on a different platform or configuration than what we have listed, or simply because we have
-not considered your particular scenario/environment.
+If you run into problems, please create a
+`GitHub issue <https://github.com/Socrats/EGTtools/issues>`_ or write to
+`elias.fernandez.domingos@ulb.be <mailto:elias.fernandez.domingos@ulb.be>`_.
 
-If this is the case, and you do run into problems,
-please create a `GitHub issue <https://github.com/Socrats/EGTtools/issues>`_,
-or write `me <mailto:elias.fernandez.domingos@ulb.be>`_ a quick email.
-We would be very happy to solve these problems, so that future users can avoid them and we can expand the use of our
-library.
+Outdated pip
+^^^^^^^^^^^^
 
+If installation hangs or errors immediately, update pip first:
 
-Pip version
-^^^^^^^^^^^
-
-If the standard way to install EGTtools results in an error or takes a long time,
-try updating ``pip`` to the latest version by running ::
+.. code-block:: bash
 
     pip install --upgrade pip
 
-If you do not have ``pip`` installed, you can follow these instructions to
-install pip: https://pip.pypa.io/en/stable/installing/
+ImportError after install
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If ``import egttools`` fails with an ``ImportError``, the most common cause on
+macOS is a Python/NumPy ABI mismatch between pip and conda packages.
+Use the conda package or the ``--no-deps`` + conda-deps approach above.

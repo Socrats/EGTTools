@@ -16,6 +16,16 @@
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
 # ------------------------------------------------------------------------------
+# Generate version.h from template (single source of truth: git tag / CMake project version)
+# ------------------------------------------------------------------------------
+
+configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/version.h.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/version.h"
+        @ONLY
+)
+
+# ------------------------------------------------------------------------------
 # Python extension module using pybind11
 # ------------------------------------------------------------------------------
 
@@ -40,7 +50,7 @@ add_subdirectory(egttools)
 # Includes and warnings
 # ------------------------------------------------------------------------------
 
-target_include_directories(numerical_ PRIVATE .)
+target_include_directories(numerical_ PRIVATE . "${CMAKE_CURRENT_BINARY_DIR}")
 
 if (UNIX)
     target_compile_options(numerical_ PRIVATE
