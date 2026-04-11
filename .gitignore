@@ -72,6 +72,12 @@ pip-delete-this-directory.txt
 *.o
 *.a
 
+# Generated version header (produced by CMake configure_file from version.h.in)
+cpp/src/version.h
+
+# Generated Python version file (produced by setuptools-scm at build time)
+src/egttools/_version.py
+
 # =============================================================================
 # CMake build artifacts
 # =============================================================================

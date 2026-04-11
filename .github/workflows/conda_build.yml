@@ -1,0 +1,130 @@
+name: Conda Build
+
+# Build conda packages on every version tag.
+# Upload to Anaconda.org only when a GitHub Release is published.
+on:
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: 'Upload built packages to Anaconda.org'
+        type: boolean
+        default: false
+  push:
+    tags:
+      - 'v*'
+  release:
+    types: [published]
+
+jobs:
+  build:
+    name: Build (${{ matrix.platform }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            platform: linux-64
+
+          # GitHub's macos-15 runners are arm64 (Apple Silicon).
+          - runner: macos-15
+            platform: osx-arm64
+
+    defaults:
+      run:
+        shell: bash -el {0}
+
+    steps:
+      # -----------------------------------------------------------------------
+      # Checkout — full history needed for setuptools-scm version detection;
+      # submodules needed for pybind11 (not required for conda build which uses
+      # system pybind11, but present for correctness).
+      # -----------------------------------------------------------------------
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      # -----------------------------------------------------------------------
+      # Derive the package version.  On a tag push / release the ref is
+      # refs/tags/v<version>; on workflow_dispatch we fall back to the latest tag.
+      # -----------------------------------------------------------------------
+      - name: Resolve version
+        id: version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          else
+            VERSION="$(git describe --tags --match 'v*' --abbrev=0 2>/dev/null \
+                       | sed 's/^v//' || echo '0.0.0')"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          # Passed to CMake (version.h) and setup.py (Python metadata)
+          echo "EGTTOOLS_VERSION=$VERSION" >> $GITHUB_ENV
+
+      # -----------------------------------------------------------------------
+      # Set up conda — miniforge with conda-forge as the default channel.
+      # -----------------------------------------------------------------------
+      - name: Set up Miniforge
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          use-mamba: true
+          activate-environment: ""
+          auto-activate-base: true
+          channels: conda-forge
+          channel-priority: strict
+
+      - name: Install conda-build and anaconda-client
+        run: mamba install -y conda-build anaconda-client
+
+      # -----------------------------------------------------------------------
+      # Build all Python variants in one conda-build run.
+      # conda_build_config.yaml in the recipe dir drives the python × numpy
+      # matrix (3.10 / 3.11 / 3.12 / 3.13).
+      # -----------------------------------------------------------------------
+      - name: Build conda packages
+        run: |
+          conda build conda-recipe/ \
+            --no-anaconda-upload \
+            --output-folder ./conda-bld
+
+      - name: List built packages
+        run: |
+          find conda-bld/${{ matrix.platform }}/ \
+            \( -name "*.conda" -o -name "*.tar.bz2" \) | sort
+
+      # -----------------------------------------------------------------------
+      # Save packages as workflow artifacts (always, even without upload).
+      # -----------------------------------------------------------------------
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: conda-packages-${{ matrix.platform }}
+          path: |
+            conda-bld/${{ matrix.platform }}/egttools-*.conda
+            conda-bld/${{ matrix.platform }}/egttools-*.tar.bz2
+          if-no-files-found: error
+
+      # -----------------------------------------------------------------------
+      # Upload to anaconda.org/socrats when:
+      #   • a GitHub Release is published  (release event)
+      #   • OR the workflow is dispatched manually with upload=true
+      # Tag-only pushes (no release) build but do NOT upload.
+      #
+      # Install with:  conda install -c socrats egttools
+      # -----------------------------------------------------------------------
+      - name: Upload to Anaconda.org (socrats channel)
+        if: |
+          github.event_name == 'release' ||
+          (github.event_name == 'workflow_dispatch' && inputs.upload)
+        env:
+          ANACONDA_TOKEN: ${{ secrets.ANACONDA_TOKEN }}
+        run: |
+          for pkg in \
+            conda-bld/${{ matrix.platform }}/egttools-*.conda \
+            conda-bld/${{ matrix.platform }}/egttools-*.tar.bz2; do
+            [ -f "$pkg" ] || continue
+            anaconda -t "$ANACONDA_TOKEN" upload "$pkg" \
+              --user socrats --force --label main
+          done

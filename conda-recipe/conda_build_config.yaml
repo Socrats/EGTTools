@@ -1,19 +1,11 @@
-numpy:
-  - 1.26.*
-
-scipy:
-  - 1.12.*
-
-matplotlib:
-  - 3.8.*
-
-seaborn:
-  - 0.13.*
-
-networkx:
-  - 3.2.*
-
 python:
-  - 3.10
-  - 3.11
-  - 3.12
+  - "3.10"
+  - "3.11"
+  - "3.12"
+  - "3.13"
+
+# Minimum numpy that satisfies the run requirement; conda-build uses this to
+# determine the ABI tag.  We pin loosely so the package works with any numpy
+# >=1.26.3 at runtime (as declared in meta.yaml run requirements).
+numpy:
+  - "2.0"
