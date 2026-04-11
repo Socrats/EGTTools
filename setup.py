@@ -24,6 +24,20 @@ import shlex
 import sys
 
 try:
+    from setuptools_scm import get_version as _get_scm_version
+    def _version():
+        return _get_scm_version(
+            root=".",
+            relative_to=__file__,
+            local_scheme="no-local-version",
+            fallback_version="0.0.0",
+            write_to="src/egttools/_version.py",
+        )
+except ImportError:
+    def _version():
+        return "0.0.0"
+
+try:
     from skbuild import setup
 except ImportError:
     print("Please update pip to pip 10 or greater, or a manually install the PEP 518 requirements in pyproject.toml",
@@ -75,7 +89,7 @@ else:
 
 
 setup(
-    use_scm_version=True,
+    version=_version(),
     # packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     packages=['egttools', 'egttools.numerical', 'egttools.numerical.structure', 'egttools.analytical',
               'egttools.plotting', 'egttools.games',
