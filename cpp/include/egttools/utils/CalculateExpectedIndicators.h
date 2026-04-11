@@ -105,10 +105,10 @@ namespace egttools::utils {
 
             double state_contrib = 0.0;
 
-#if defined(_OPENMP)
-#pragma omp parallel for reduction(+:state_contrib) schedule(static) \
-    firstprivate(nb_strategies_sz, pop_size_sz, group_size_sz)
-#endif
+// #if defined(_OPENMP)
+// #pragma omp parallel for reduction(+:state_contrib) schedule(static) \
+//     firstprivate(nb_strategies_sz, pop_size_sz, group_size_sz)
+// #endif
             for (int64_t i = 0; i < nb_group_configs; ++i) {
                 // Each thread needs its own group_config buffer.
                 std::vector<size_t> group_config(nb_strategies_sz, 0);
@@ -124,6 +124,115 @@ namespace egttools::utils {
         }
         return result;
     }
+
+    /**
+     * @brief Calculates E[f_k] for multiple indicator functions in a single pass.
+     *
+     * Equivalent to calling calculate_expected_indicator once per indicator, but the
+     * multivariate hypergeometric PDF is computed only once per (state, group_config) pair
+     * and shared across all indicators.  This makes the cost O(states × groups + K) rather
+     * than O(K × states × groups).
+     *
+     * The k-th element of the returned vector is:
+     *   result[k] = sum_s sd(s) * sum_g P(g|s) * indicators[k](g)
+     *
+     * @tparam IndicatorContainer  any type supporting .size() and operator[](k) returning a callable
+     *                             double(const std::vector<size_t>&).
+     * @param pop_size               size of the population.
+     * @param group_size             number of individuals sampled per group interaction.
+     * @param nb_strategies          number of strategies.
+     * @param stationary_distribution sparse row-matrix of stationary probabilities.
+     * @param indicators             collection of indicator functions.
+     * @return Vector of length indicators.size() with the expected value of each indicator.
+     */
+    template<typename IndicatorContainer>
+    Vector calculate_expected_indicators(int64_t pop_size, int64_t group_size, int64_t nb_strategies,
+                                         SparseMatrix2D &stationary_distribution,
+                                         const IndicatorContainer &indicators) {
+        const auto nb_indicators = static_cast<int64_t>(indicators.size());
+        Vector result = Vector::Zero(nb_indicators);
+
+        const auto nb_group_configs = egttools::starsBars<int64_t>(group_size, nb_strategies);
+        const auto nb_strategies_sz = static_cast<size_t>(nb_strategies);
+        const auto pop_size_sz = static_cast<size_t>(pop_size);
+        const auto group_size_sz = static_cast<size_t>(group_size);
+
+        egttools::VectorXui state = egttools::VectorXui::Zero(static_cast<signed long>(nb_strategies));
+        std::vector<size_t> group_config(nb_strategies_sz, 0);
+
+        for (SparseMatIt it(stationary_distribution, 0); it; ++it) {
+            egttools::FinitePopulations::sample_simplex(
+                static_cast<size_t>(it.index()), pop_size_sz, nb_strategies_sz, state);
+
+            Vector state_contrib = Vector::Zero(nb_indicators);
+
+            for (int64_t i = 0; i < nb_group_configs; ++i) {
+                egttools::FinitePopulations::sample_simplex(
+                    static_cast<size_t>(i), group_size_sz, nb_strategies_sz, group_config);
+
+                const double prob = egttools::multivariateHypergeometricPDF(
+                    pop_size_sz, nb_strategies_sz, group_size_sz, group_config, state);
+
+                // Skip zero-probability groups (common near monomorphic states).
+                // This avoids calling all K indicator functions needlessly.
+                if (prob == 0.0) continue;
+
+                for (int64_t k = 0; k < nb_indicators; ++k) {
+                    state_contrib(k) += prob * indicators[k](group_config);
+                }
+            }
+            result += state_contrib * it.value();
+        }
+        return result;
+    }
+
+    /**
+     * @brief Computes expected indicators from a precomputed indicator matrix (pure C++, no callbacks).
+     *
+     * This is the fast path.  The caller evaluates every indicator on every group configuration
+     * upfront and stores the results in @p indicator_matrix.  The inner computation then reduces
+     * to a BLAS matrix-vector multiply per population state, with no Python callbacks inside the
+     * hot loop.  The GIL can therefore be released for the entire duration of this call.
+     *
+     * indicator_matrix(g, k) = value of indicator k for group configuration g.
+     * For boolean indicators the matrix contains 0.0 / 1.0.
+     *
+     * result[k] = sum_s sd(s) * (indicator_matrix.col(k)).dot(probs_for_state_s)
+     *           = sum_s sd(s) * sum_g P(g|s) * indicator_matrix(g, k)
+     *
+     * @param pop_size               size of the population.
+     * @param group_size             number of individuals sampled per group interaction.
+     * @param nb_strategies          number of strategies.
+     * @param stationary_distribution sparse row-matrix of stationary probabilities.
+     * @param indicator_matrix       (nb_group_configs × nb_indicators) dense matrix.
+     * @return Vector of length nb_indicators.
+     */
+    Vector calculate_expected_indicators_precomputed(int64_t pop_size, int64_t group_size,
+                                                     int64_t nb_strategies,
+                                                     SparseMatrix2D &stationary_distribution,
+                                                     const Matrix2D &indicator_matrix);
+
+    /**
+     * @brief Type-erased (std::function) overload of calculate_expected_indicators for pybind11.
+     *
+     * Internally precomputes indicator_matrix by evaluating each callable once per group
+     * configuration (O(nb_group_configs × K) Python calls total), then delegates to
+     * calculate_expected_indicators_precomputed for the GIL-free inner loop.
+     *
+     * Prefer calculate_expected_indicators_precomputed directly when the indicator matrix
+     * can be computed in Python upfront (e.g. via numpy).
+     *
+     * @param pop_size               size of the population.
+     * @param group_size             number of individuals sampled per group interaction.
+     * @param nb_strategies          number of strategies.
+     * @param stationary_distribution sparse row-matrix of stationary probabilities.
+     * @param indicators             list of callables, each double(const std::vector<size_t>&).
+     * @return Vector of length indicators.size() with the expected value of each indicator.
+     */
+    Vector calculate_expected_indicators(
+        int64_t pop_size, int64_t group_size, int64_t nb_strategies,
+        SparseMatrix2D &stationary_distribution,
+        const std::vector<std::function<double(const std::vector<size_t> &)>> &indicators);
 
     /**
      * @brief Type-erased (std::function) overload of calculate_expected_indicator for pybind11.

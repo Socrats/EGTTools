@@ -54,6 +54,76 @@ double egttools::utils::calculate_expected_payoff(int64_t pop_size, int64_t grou
         });
 }
 
+egttools::Vector egttools::utils::calculate_expected_indicators_precomputed(
+    int64_t pop_size, int64_t group_size, int64_t nb_strategies,
+    SparseMatrix2D &stationary_distribution,
+    const Matrix2D &indicator_matrix) {
+    // indicator_matrix: shape (nb_group_configs, nb_indicators), values 0.0/1.0 for boolean indicators.
+    //
+    // For each nonzero population state s:
+    //   1. Compute probs[g] = P(g | s) for all group configurations g.
+    //   2. result += sd(s) * indicator_matrix.T @ probs   (BLAS dgemv)
+    //
+    // Python callables are not involved here at all, so the GIL is not needed.
+    // The hot loop is pure Eigen/BLAS.
+
+    const int64_t nb_group_configs = indicator_matrix.rows();
+    const int64_t nb_indicators = indicator_matrix.cols();
+    const auto nb_strategies_sz = static_cast<size_t>(nb_strategies);
+    const auto pop_size_sz = static_cast<size_t>(pop_size);
+    const auto group_size_sz = static_cast<size_t>(group_size);
+
+    egttools::Vector result = egttools::Vector::Zero(nb_indicators);
+    egttools::VectorXui state = egttools::VectorXui::Zero(static_cast<signed long>(nb_strategies));
+    egttools::Vector probs = egttools::Vector::Zero(nb_group_configs);
+    std::vector<size_t> group_config(nb_strategies_sz, 0);
+
+    for (SparseMatIt it(stationary_distribution, 0); it; ++it) {
+        egttools::FinitePopulations::sample_simplex(
+            static_cast<size_t>(it.index()), pop_size_sz, nb_strategies_sz, state);
+
+        // Fill the probability vector for this state.
+        for (int64_t i = 0; i < nb_group_configs; ++i) {
+            egttools::FinitePopulations::sample_simplex(
+                static_cast<size_t>(i), group_size_sz, nb_strategies_sz, group_config);
+            probs(i) = egttools::multivariateHypergeometricPDF(
+                pop_size_sz, nb_strategies_sz, group_size_sz, group_config, state);
+        }
+
+        // BLAS dgemv: result += sd(s) * indicator_matrix.T @ probs
+        result.noalias() += it.value() * (indicator_matrix.transpose() * probs);
+    }
+    return result;
+}
+
+egttools::Vector egttools::utils::calculate_expected_indicators(
+    int64_t pop_size, int64_t group_size, int64_t nb_strategies,
+    SparseMatrix2D &stationary_distribution,
+    const std::vector<std::function<double(const std::vector<size_t> &)>> &indicators) {
+    // Phase 1 (GIL held): evaluate every indicator on every group configuration once.
+    // This replaces O(nb_states x nb_group_configs x K) Python calls with O(nb_group_configs x K).
+    const int64_t nb_indicators = static_cast<int64_t>(indicators.size());
+    const int64_t nb_group_configs = egttools::starsBars<int64_t>(group_size, nb_strategies);
+    const auto nb_strategies_sz = static_cast<size_t>(nb_strategies);
+    const auto group_size_sz = static_cast<size_t>(group_size);
+
+    Matrix2D indicator_matrix = Matrix2D::Zero(nb_group_configs, nb_indicators);
+    std::vector<size_t> group_config(nb_strategies_sz, 0);
+
+    for (int64_t i = 0; i < nb_group_configs; ++i) {
+        egttools::FinitePopulations::sample_simplex(
+            static_cast<size_t>(i), group_size_sz, nb_strategies_sz, group_config);
+        for (int64_t k = 0; k < nb_indicators; ++k) {
+            indicator_matrix(i, k) = indicators[static_cast<size_t>(k)](group_config);
+        }
+    }
+
+    // Phase 2 (pure C++): the GIL could be released here, but since we are already
+    // inside a pybind11 call we leave that to the binding layer.
+    return calculate_expected_indicators_precomputed(
+        pop_size, group_size, nb_strategies, stationary_distribution, indicator_matrix);
+}
+
 double egttools::utils::calculate_expected_indicator(
     int64_t pop_size, int64_t group_size, int64_t nb_strategies,
     SparseMatrix2D &stationary_distribution,

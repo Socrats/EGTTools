@@ -36,6 +36,8 @@ from egttools import (
     calculate_strategies_distribution,
     calculate_expected_payoff,
     calculate_expected_indicator,
+    calculate_expected_indicators,
+    calculate_expected_indicators_precomputed,
     calculate_expected_group_success,
 )
 
@@ -476,3 +478,230 @@ class TestCalculateExpectedPayoff:
         result_indicator = calculate_expected_indicator(pop_size, group_size, nb_strategies, sd2, indicator)
 
         assert np.isclose(result_payoff, result_indicator, atol=1e-10)
+
+
+# ---------------------------------------------------------------------------
+# Tests: calculate_expected_indicators (vectorized multi-indicator)
+# ---------------------------------------------------------------------------
+
+class TestCalculateExpectedIndicators:
+
+    def test_single_indicator_matches_scalar_version(self):
+        """One-element list must give the same result as calculate_expected_indicator."""
+        pop_size, group_size, nb_strategies = 10, 4, 2
+        nb_states = calculate_nb_states(pop_size, nb_strategies)
+        rng = np.random.default_rng(20)
+        probs = rng.dirichlet(np.ones(nb_states))
+        sd_dict = {i: float(probs[i]) for i in range(nb_states)}
+        sd1 = _make_sd_sparse(nb_states, sd_dict)
+        sd2 = _make_sd_sparse(nb_states, sd_dict)
+
+        fn = lambda g: g[0] / group_size
+
+        scalar = calculate_expected_indicator(pop_size, group_size, nb_strategies, sd1, fn)
+        vec = calculate_expected_indicators(pop_size, group_size, nb_strategies, sd2, [fn])
+
+        assert vec.shape == (1,)
+        assert np.isclose(vec[0], scalar, atol=1e-12)
+
+    def test_each_element_matches_independent_scalar_call(self):
+        """Every element of the result must equal the corresponding scalar call."""
+        pop_size, group_size, nb_strategies = 8, 3, 2
+        threshold = 2
+        nb_states = calculate_nb_states(pop_size, nb_strategies)
+        rng = np.random.default_rng(21)
+        probs = rng.dirichlet(np.ones(nb_states))
+        sd_dict = {i: float(probs[i]) for i in range(nb_states)}
+
+        fns = [
+            lambda g: g[0] / group_size,
+            lambda g: float(int(g[0]) >= threshold),
+            lambda _: 1.0,
+            lambda _: 0.0,
+        ]
+
+        # build four independent sparse matrices (each call consumes its own)
+        sds = [_make_sd_sparse(nb_states, sd_dict) for _ in range(len(fns) + 1)]
+
+        vec = calculate_expected_indicators(pop_size, group_size, nb_strategies, sds[0], fns)
+
+        assert vec.shape == (len(fns),)
+        for k, fn in enumerate(fns):
+            expected = calculate_expected_indicator(pop_size, group_size, nb_strategies, sds[k + 1], fn)
+            assert np.isclose(vec[k], expected, atol=1e-12), \
+                f"indicator {k}: vectorized={vec[k]:.15f}, scalar={expected:.15f}"
+
+    def test_three_strategies_multiple_indicators(self):
+        """Three strategies, three indicators including a multi-contributing-strategy one."""
+        pop_size, group_size, nb_strategies = 8, 3, 3
+        threshold = 2
+        nb_states = calculate_nb_states(pop_size, nb_strategies)
+        rng = np.random.default_rng(22)
+        probs = rng.dirichlet(np.ones(nb_states))
+        sd_dict = {i: float(probs[i]) for i in range(nb_states)}
+
+        fns = [
+            lambda g: g[0] / group_size,                           # cooperation level (strategy 0)
+            lambda g: float(int(g[0]) + int(g[2]) >= threshold),   # success: strategies 0 and 2
+            lambda g: (g[1]) / group_size,                         # frequency strategy 1
+        ]
+
+        sds = [_make_sd_sparse(nb_states, sd_dict) for _ in range(len(fns) + 1)]
+        vec = calculate_expected_indicators(pop_size, group_size, nb_strategies, sds[0], fns)
+
+        assert vec.shape == (len(fns),)
+        for k, fn in enumerate(fns):
+            expected = calculate_expected_indicator(
+                pop_size, group_size, nb_strategies, sds[k + 1], fn)
+            assert np.isclose(vec[k], expected, atol=1e-12), \
+                f"indicator {k}: vectorized={vec[k]:.15f}, scalar={expected:.15f}"
+
+    def test_constant_indicators(self):
+        """f_0=1, f_1=0 → results must be [1, 0] regardless of SD."""
+        pop_size, group_size, nb_strategies = 10, 3, 2
+        nb_states = calculate_nb_states(pop_size, nb_strategies)
+        rng = np.random.default_rng(23)
+        probs = rng.dirichlet(np.ones(nb_states))
+        sd_dict = {i: float(probs[i]) for i in range(nb_states)}
+        sd = _make_sd_sparse(nb_states, sd_dict)
+
+        vec = calculate_expected_indicators(
+            pop_size, group_size, nb_strategies, sd,
+            [lambda _: 1.0, lambda _: 0.0])
+
+        assert np.isclose(vec[0], 1.0, atol=1e-10)
+        assert np.isclose(vec[1], 0.0, atol=1e-15)
+
+    def test_empty_indicator_list_returns_empty_array(self):
+        """Passing an empty list should return a zero-length array without error."""
+        pop_size, group_size, nb_strategies = 6, 2, 2
+        nb_states = calculate_nb_states(pop_size, nb_strategies)
+        sd = _make_sd_sparse(nb_states, {0: 1.0})
+
+        vec = calculate_expected_indicators(pop_size, group_size, nb_strategies, sd, [])
+        assert vec.shape == (0,)
+
+
+# ---------------------------------------------------------------------------
+# Helpers shared by precomputed tests
+# ---------------------------------------------------------------------------
+
+def _build_indicator_matrix(group_size, nb_strategies, fns):
+    """Build the (nb_group_configs, K) indicator matrix from a list of callables."""
+    nb_group_configs = calculate_nb_states(group_size, nb_strategies)
+    mat = np.zeros((nb_group_configs, len(fns)), dtype=float)
+    for g_idx in range(nb_group_configs):
+        group = sample_simplex(g_idx, group_size, nb_strategies)
+        for k, fn in enumerate(fns):
+            mat[g_idx, k] = fn(group)
+    return mat
+
+
+# ---------------------------------------------------------------------------
+# Tests: calculate_expected_indicators_precomputed
+# ---------------------------------------------------------------------------
+
+class TestCalculateExpectedIndicatorsPrecomputed:
+
+    def test_matches_callable_version_single_indicator(self):
+        """Precomputed path must agree with the callable version for one indicator."""
+        pop_size, group_size, nb_strategies = 10, 4, 2
+        nb_states = calculate_nb_states(pop_size, nb_strategies)
+        rng = np.random.default_rng(30)
+        probs = rng.dirichlet(np.ones(nb_states))
+        sd_dict = {i: float(probs[i]) for i in range(nb_states)}
+        sd1 = _make_sd_sparse(nb_states, sd_dict)
+        sd2 = _make_sd_sparse(nb_states, sd_dict)
+
+        fns = [lambda g: float(g[0] >= 2)]
+        mat = _build_indicator_matrix(group_size, nb_strategies, fns)
+
+        result_pre = calculate_expected_indicators_precomputed(
+            pop_size, group_size, nb_strategies, sd1, mat)
+        result_call = calculate_expected_indicators(
+            pop_size, group_size, nb_strategies, sd2, fns)
+
+        assert result_pre.shape == (1,)
+        assert np.isclose(result_pre[0], result_call[0], atol=1e-12)
+
+    def test_matches_callable_version_multiple_indicators(self):
+        """All K elements must agree with the callable version."""
+        pop_size, group_size, nb_strategies = 8, 3, 3
+        threshold = 2
+        nb_states = calculate_nb_states(pop_size, nb_strategies)
+        rng = np.random.default_rng(31)
+        probs = rng.dirichlet(np.ones(nb_states))
+        sd_dict = {i: float(probs[i]) for i in range(nb_states)}
+        sd1 = _make_sd_sparse(nb_states, sd_dict)
+        sd2 = _make_sd_sparse(nb_states, sd_dict)
+
+        fns = [
+            lambda g: g[0] / group_size,
+            lambda g: float(int(g[0]) + int(g[2]) >= threshold),
+            lambda _: 1.0,
+        ]
+        mat = _build_indicator_matrix(group_size, nb_strategies, fns)
+
+        result_pre = calculate_expected_indicators_precomputed(
+            pop_size, group_size, nb_strategies, sd1, mat)
+        result_call = calculate_expected_indicators(
+            pop_size, group_size, nb_strategies, sd2, fns)
+
+        assert result_pre.shape == result_call.shape
+        assert np.allclose(result_pre, result_call, atol=1e-12)
+
+    def test_matches_reference_implementation(self):
+        """Precomputed path must agree with the pure-Python reference."""
+        pop_size, group_size, nb_strategies = 10, 4, 2
+        threshold = 2
+        nb_states = calculate_nb_states(pop_size, nb_strategies)
+        rng = np.random.default_rng(32)
+        probs = rng.dirichlet(np.ones(nb_states))
+        sd_dict = {i: float(probs[i]) for i in range(nb_states)}
+        sd = _make_sd_sparse(nb_states, sd_dict)
+
+        fns = [
+            lambda g: float(int(g[0]) >= threshold),
+            lambda g: g[0] / group_size,
+        ]
+        mat = _build_indicator_matrix(group_size, nb_strategies, fns)
+
+        result = calculate_expected_indicators_precomputed(
+            pop_size, group_size, nb_strategies, sd, mat)
+
+        for k, fn in enumerate(fns):
+            ref = _ref_expected_indicator(pop_size, group_size, nb_strategies, sd_dict, fn)
+            assert np.isclose(result[k], ref, atol=1e-10), \
+                f"indicator {k}: precomputed={result[k]:.15f}, ref={ref:.15f}"
+
+    def test_constant_columns(self):
+        """Column of all-ones → result 1.0; column of all-zeros → result 0.0."""
+        pop_size, group_size, nb_strategies = 10, 3, 2
+        nb_states = calculate_nb_states(pop_size, nb_strategies)
+        nb_group_configs = calculate_nb_states(group_size, nb_strategies)
+        rng = np.random.default_rng(33)
+        probs = rng.dirichlet(np.ones(nb_states))
+        sd_dict = {i: float(probs[i]) for i in range(nb_states)}
+        sd = _make_sd_sparse(nb_states, sd_dict)
+
+        mat = np.column_stack([
+            np.ones(nb_group_configs),
+            np.zeros(nb_group_configs),
+        ])
+        result = calculate_expected_indicators_precomputed(
+            pop_size, group_size, nb_strategies, sd, mat)
+
+        assert np.isclose(result[0], 1.0, atol=1e-10)
+        assert np.isclose(result[1], 0.0, atol=1e-15)
+
+    def test_empty_matrix_returns_empty_array(self):
+        """Zero-column matrix should return a zero-length array."""
+        pop_size, group_size, nb_strategies = 6, 2, 2
+        nb_states = calculate_nb_states(pop_size, nb_strategies)
+        nb_group_configs = calculate_nb_states(group_size, nb_strategies)
+        sd = _make_sd_sparse(nb_states, {0: 1.0})
+
+        mat = np.zeros((nb_group_configs, 0))
+        result = calculate_expected_indicators_precomputed(
+            pop_size, group_size, nb_strategies, sd, mat)
+        assert result.shape == (0,)

@@ -65,6 +65,8 @@ else:
                                        calculate_strategies_distribution,
                                        calculate_expected_payoff,
                                        calculate_expected_indicator,
+                                       calculate_expected_indicators,
+                                       calculate_expected_indicators_precomputed,
                                        calculate_expected_group_success, )
 
     import egttools.games as games
@@ -82,4 +84,6 @@ __all__ = ['utils', 'plotting', 'analytical',
            'calculate_strategies_distribution',
            'calculate_expected_payoff',
            'calculate_expected_indicator',
+           'calculate_expected_indicators',
+           'calculate_expected_indicators_precomputed',
            'calculate_expected_group_success']

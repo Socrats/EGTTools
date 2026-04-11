@@ -440,6 +440,116 @@ Examples
         );
 
         m.def(
+            "calculate_expected_indicators",
+            static_cast<egttools::Vector (*)(
+                int64_t, int64_t, int64_t,
+                egttools::SparseMatrix2D &,
+                const std::vector<std::function<double(const std::vector<size_t> &)>> &)>(
+                &utils::calculate_expected_indicators),
+            R"pbdoc(
+Calculate E[f_k] for multiple indicator functions in a single pass.
+
+Equivalent to calling calculate_expected_indicator once per indicator, but the
+multivariate hypergeometric PDF is computed only once per (state, group_config) pair
+and shared across all indicators.  Cost is O(states × groups + K) rather than
+O(K × states × groups).
+
+Parameters
+----------
+pop_size : int
+    Total number of individuals in the population.
+group_size : int
+    Number of individuals sampled per group interaction.
+nb_strategies : int
+    Number of strategies available in the population.
+stationary_distribution : scipy.sparse.csr_matrix
+    Sparse matrix representing the stationary distribution over population states.
+indicators : list[callable]
+    List of functions, each with signature ``f(group_config: list[int]) -> float``.
+
+Returns
+-------
+numpy.ndarray
+    One-dimensional array of length ``len(indicators)``; element k is the expected
+    value of ``indicators[k]``.
+
+Examples
+--------
+>>> # Compute cooperation level and group success simultaneously
+>>> results = calculate_expected_indicators(
+...     pop_size, group_size, nb_strategies, sd,
+...     [
+...         lambda g: g[0] / group_size,       # cooperation level
+...         lambda g: float(g[0] >= threshold), # group success
+...     ]
+... )
+>>> cooperation_level, eta_G = results
+)pbdoc",
+            py::arg("pop_size"),
+            py::arg("group_size"),
+            py::arg("nb_strategies"),
+            py::arg("stationary_distribution"),
+            py::arg("indicators"),
+            py::return_value_policy::move
+            // No gil_scoped_release: Python callables are invoked in phase 1.
+        );
+
+        m.def(
+            "calculate_expected_indicators_precomputed",
+            &utils::calculate_expected_indicators_precomputed,
+            R"pbdoc(
+Compute expected indicators from a precomputed indicator matrix (pure C++, GIL released).
+
+This is the fast path when the indicator values per group configuration are already known.
+Precomputing the indicator matrix in Python (e.g. via numpy) and then calling this function
+avoids all Python callbacks inside the hot loop and enables full GIL release.
+
+The matrix ``indicator_matrix[g, k]`` must contain the value of indicator ``k`` for group
+configuration ``g``.  For boolean indicators use 0.0 / 1.0.  The row order must match
+the group configuration enumeration of ``sample_simplex``, i.e. row ``g`` corresponds to
+``sample_simplex(g, group_size, nb_strategies)``.
+
+result[k] = sum_s sd(s) * indicator_matrix[:, k] @ prob_vector_for_state_s
+
+Parameters
+----------
+pop_size : int
+    Total number of individuals in the population.
+group_size : int
+    Number of individuals sampled per group interaction.
+nb_strategies : int
+    Number of strategies available in the population.
+stationary_distribution : scipy.sparse.csr_matrix
+    Sparse matrix representing the stationary distribution over population states.
+indicator_matrix : numpy.ndarray
+    Dense matrix of shape (nb_group_configs, nb_indicators).
+
+Returns
+-------
+numpy.ndarray
+    Array of length ``nb_indicators``.
+
+Examples
+--------
+>>> nb_group_configs = calculate_nb_states(group_size, nb_strategies)
+>>> indicator_matrix = np.array([
+...     [float(sample_simplex(g, group_size, nb_strategies)[0] >= threshold)]
+...     for g in range(nb_group_configs)
+... ])
+>>> eta_G = calculate_expected_indicators_precomputed(
+...     pop_size, group_size, nb_strategies, sd, indicator_matrix
+... )[0]
+)pbdoc",
+            py::arg("pop_size"),
+            py::arg("group_size"),
+            py::arg("nb_strategies"),
+            py::arg("stationary_distribution"),
+            py::arg("indicator_matrix"),
+            py::return_value_policy::move,
+            py::call_guard<py::gil_scoped_release>()
+        );
+
+        m.def(
             "calculate_expected_group_success",
             &utils::calculate_expected_group_success,
             R"pbdoc(
