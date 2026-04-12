@@ -11,6 +11,7 @@
 #include <egttools/infinite_populations/AbstractReplicatorGame.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <egttools/finite_populations/games/AbstractNPlayerGame.hpp>
+#include <egttools/finite_populations/games/AbstractNPlayerStateGame.hpp>
 #include <egttools/finite_populations/games/AbstractSpatialGame.hpp>
 #include <egttools/finite_populations/games/CRDGame.hpp>
 #include <egttools/finite_populations/games/CRDGameTU.hpp>

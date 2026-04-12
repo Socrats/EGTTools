@@ -27,6 +27,7 @@
 #include <egttools/infinite_populations/AbstractReplicatorGame.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <egttools/finite_populations/games/AbstractNPlayerGame.hpp>
+#include <egttools/finite_populations/games/AbstractNPlayerStateGame.hpp>
 #include <egttools/finite_populations/games/AbstractSpatialGame.hpp>
 #include <egttools/finite_populations/structure/AbstractNetworkStructure.hpp>
 #include <egttools/finite_populations/structure/AbstractStructure.hpp>
@@ -400,6 +401,121 @@ namespace stubs {
                 egttools::FinitePopulations::AbstractNPlayerGame, /* Parent class */
                 save_payoffs, /* Name of function in C++ (must match Python name) */
                 file_name /* Argument(s) */
+            );
+        }
+    };
+
+    class PyAbstractNPlayerStateGame : public egttools::FinitePopulations::AbstractNPlayerStateGame {
+    public:
+        /* Inherit the constructors */
+        using egttools::FinitePopulations::AbstractNPlayerStateGame::AbstractNPlayerStateGame;
+
+        /* Trampoline for the key virtual — called once per calculate_fitness */
+        egttools::Vector get_payoffs_for_player(
+            int player_type,
+            int64_t state_index,
+            const Eigen::Ref<const egttools::VectorXui> &state) override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
+            PYBIND11_OVERRIDE_PURE(
+                egttools::Vector,                                          /* Return type */
+                egttools::FinitePopulations::AbstractNPlayerStateGame,    /* Parent class */
+                get_payoffs_for_player,                                    /* Name of function */
+                player_type, state_index, state                            /* Arguments */
+            );
+        }
+
+        /* Trampoline (need one for each virtual function) */
+        void play(const egttools::FinitePopulations::StrategyCounts &group_composition,
+                  PayoffVector &game_payoffs) override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
+            PYBIND11_OVERRIDE_PURE(
+                void,
+                egttools::FinitePopulations::AbstractNPlayerStateGame,
+                play,
+                group_composition, game_payoffs
+            );
+        }
+
+        /* Trampoline (need one for each virtual function) */
+        const GroupPayoffs &calculate_payoffs() override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
+            PYBIND11_OVERRIDE_PURE(
+                GroupPayoffs &,
+                egttools::FinitePopulations::AbstractNPlayerStateGame,
+                calculate_payoffs
+            );
+        }
+
+        /* calculate_fitness is final in AbstractNPlayerStateGame — no trampoline needed */
+
+        /* Trampoline (need one for each virtual function) */
+        [[nodiscard]] std::string toString() const override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
+            PYBIND11_OVERRIDE_NAME(
+                std::string,
+                egttools::FinitePopulations::AbstractNPlayerStateGame,
+                "__str__",
+                toString
+            );
+        }
+
+        /* Trampoline (need one for each virtual function) */
+        [[nodiscard]] std::string type() const override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
+            PYBIND11_OVERRIDE(
+                std::string,
+                egttools::FinitePopulations::AbstractNPlayerStateGame,
+                type
+            );
+        }
+
+        /* Trampoline (need one for each virtual function) */
+        [[nodiscard]] const GroupPayoffs &payoffs() const override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
+            PYBIND11_OVERRIDE(
+                GroupPayoffs &,
+                egttools::FinitePopulations::AbstractNPlayerStateGame,
+                payoffs
+            );
+        }
+
+        /* Trampoline (need one for each virtual function) */
+        [[nodiscard]] double payoff(int strategy,
+                                    const egttools::FinitePopulations::StrategyCounts &group_composition)
+        const override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
+            PYBIND11_OVERRIDE(
+                double,
+                egttools::FinitePopulations::AbstractNPlayerStateGame,
+                payoff,
+                strategy, group_composition
+            );
+        }
+
+        /* Trampoline (need one for each virtual function) */
+        void save_payoffs(std::string file_name) const override {
+            /* Acquire GIL before calling Python code */
+            py::gil_scoped_acquire acquire;
+
+            PYBIND11_OVERRIDE(
+                void,
+                egttools::FinitePopulations::AbstractNPlayerStateGame,
+                save_payoffs,
+                file_name
             );
         }
     };

@@ -3,6 +3,7 @@
 //
 
 #include <egttools/finite_populations/games/CRDGameTU.hpp>
+#include <egttools/utils/CalculateExpectedIndicators.h>
 
 egttools::FinitePopulations::games::CRDGameTU::CRDGameTU(const int endowment, const int threshold,
                                                          const int min_rounds, const int group_size,
@@ -121,31 +122,12 @@ double egttools::FinitePopulations::games::CRDGameTU::calculate_fitness(const in
     // This function assumes that the strategy counts given in @param strategies does not include
     // the player with @param player_type strategy.
 
-    double fitness = 0.0;
-    std::vector<size_t> sample_counts(nb_strategies_, 0);
-
-    // If it isn't, then we must calculate the fitness for every possible group combination
-    for (int64_t i = 0; i < nb_states_; ++i) {
-        // Update sample counts based on the current state
-        egttools::FinitePopulations::sample_simplex(i, group_size_, nb_strategies_, sample_counts);
-
-        // If the focal player is not in the group, then the payoff should be zero
-        if (sample_counts[player_type] > 0) {
-            // First update sample_counts with new group composition
-            double payoff = expected_payoffs_(static_cast<int>(player_type), i);
-            sample_counts[player_type] -= 1;
-
-            // Calculate probability of encountering the current group
-            auto prob = egttools::multivariateHypergeometricPDF(pop_size - 1, nb_strategies_, group_size_ - 1,
-                                                                sample_counts,
-                                                                strategies);
-            sample_counts[player_type] += 1;
-
-            fitness += payoff * prob;
-        }
-    }
-
-    return fitness;
+    const egttools::Vector payoffs_row = expected_payoffs_.row(player_type);
+    return egttools::utils::calculate_hypergeometric_fitness(
+        player_type, pop_size,
+        static_cast<size_t>(group_size_),
+        static_cast<size_t>(nb_strategies_),
+        strategies, payoffs_row);
 }
 
 void egttools::FinitePopulations::games::CRDGameTU::save_payoffs(std::string file_name) const {
@@ -268,28 +250,12 @@ const egttools::Vector &egttools::FinitePopulations::games::CRDGameTU::calculate
 
 double egttools::FinitePopulations::games::CRDGameTU::calculate_population_group_achievement(size_t pop_size,
     const Eigen::Ref<const egttools::VectorXui> &population_state) {
-    // This function assumes that the strategy counts given in @param strategies does not include
-    // the player with @param player_type strategy.
-
-    double group_achievement = 0.0;
-    std::vector<size_t> sample_counts(nb_strategies_, 0);
-
-    // If it isn't, then we must calculate the fitness for every possible group combination
-    for (int64_t i = 0; i < nb_states_; ++i) {
-        // Update sample counts based on the current state
-        egttools::FinitePopulations::sample_simplex(i, group_size_, nb_strategies_, sample_counts);
-
-        // First update sample_counts with new group composition
-        double success = group_achievement_(i);
-
-        // Calculate probability of encountering the current group
-        auto prob = egttools::multivariateHypergeometricPDF(pop_size, nb_strategies_, group_size_, sample_counts,
-                                                            population_state);
-
-        group_achievement += success * prob;
-    }
-
-    return group_achievement;
+    return egttools::utils::calculate_hypergeometric_expected_value(
+        pop_size,
+        static_cast<size_t>(group_size_),
+        static_cast<size_t>(nb_strategies_),
+        population_state,
+        group_achievement_);
 }
 
 double egttools::FinitePopulations::games::CRDGameTU::calculate_group_achievement(size_t pop_size,
@@ -312,15 +278,12 @@ void egttools::FinitePopulations::games::CRDGameTU::calculate_population_polariz
     egttools::Vector3d &polarization) {
     polarization.setZero();
     std::vector<size_t> sample_counts(nb_strategies_, 0);
+    const double log_denom = egttools::log_binomial_coefficient<double>(pop_size, static_cast<size_t>(group_size_));
 
-    // If it isn't, then we must calculate the fitness for every possible group combination
     for (int64_t i = 0; i < nb_states_; ++i) {
-        // Update sample counts based on the current state
         egttools::FinitePopulations::sample_simplex(i, group_size_, nb_strategies_, sample_counts);
 
-        // Calculate probability of encountering the current group
-        auto prob = egttools::multivariateHypergeometricPDF(pop_size, nb_strategies_, group_size_, sample_counts,
-                                                            population_state);
+        auto prob = egttools::multivariateHypergeometricPDF(log_denom, nb_strategies_, sample_counts, population_state);
 
         polarization += prob * c_behaviors_.row(i);
     }
@@ -331,15 +294,12 @@ void egttools::FinitePopulations::games::CRDGameTU::calculate_population_polariz
     egttools::Vector3d &polarization) {
     polarization.setZero();
     std::vector<size_t> sample_counts(nb_strategies_, 0);
+    const double log_denom = egttools::log_binomial_coefficient<double>(pop_size, static_cast<size_t>(group_size_));
 
-    // If it isn't, then we must calculate the fitness for every possible group combination
     for (int64_t i = 0; i < nb_states_; ++i) {
-        // Update sample counts based on the current state
         egttools::FinitePopulations::sample_simplex(i, group_size_, nb_strategies_, sample_counts);
 
-        // Calculate probability of encountering the current group
-        auto prob = egttools::multivariateHypergeometricPDF(pop_size, nb_strategies_, group_size_, sample_counts,
-                                                            population_state);
+        auto prob = egttools::multivariateHypergeometricPDF(log_denom, nb_strategies_, sample_counts, population_state);
 
         polarization += prob * c_behaviors_.row(i) * group_achievement_(i);
     }

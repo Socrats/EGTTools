@@ -99,6 +99,21 @@ egttools::multivariateHypergeometricPDF(size_t m, size_t k, size_t n, const Eige
     return res;
 }
 
+double
+egttools::multivariateHypergeometricPDF(const double log_denominator, const size_t k,
+                                        const std::vector<size_t> &sample_counts,
+                                        const Eigen::Ref<const VectorXui> &population_counts) {
+    // Fast-path: caller has precomputed log_binomial_coefficient(m, n) outside the hot loop,
+    // saving 3 ln_factorial lookups per call relative to the standard overloads.
+    double res = -log_denominator;
+    for (size_t i = 0; i < k; ++i) {
+        if (sample_counts[i] > static_cast<size_t>(population_counts(static_cast<signed long>(i))))
+            return 0.0;
+        res += log_binomial_coefficient(population_counts(static_cast<signed long>(i)), sample_counts[i]);
+    }
+    return exp(res);
+}
+
 #if (HAS_BOOST)
 double egttools::multinomialPMF(const Eigen::Ref<const VectorXui> &group_configuration, size_t n,
                                 const Eigen::Ref<const Vector> &p) {
