@@ -74,7 +74,13 @@ else:
                                        calculate_expected_indicator,
                                        calculate_expected_indicators,
                                        calculate_expected_indicators_precomputed,
-                                       calculate_expected_group_success, )
+                                       calculate_expected_group_success,
+                                       calculate_expected_state_indicator,
+                                       calculate_expected_state_indicators,
+                                       calculate_expected_state_indicators_precomputed,
+                                       precompute_group_to_state_indicator_matrix,
+                                       calculate_hypergeometric_expected_value,
+                                       calculate_hypergeometric_fitness, )
 
     import egttools.games as games
     import egttools.behaviors as behaviors
@@ -93,4 +99,10 @@ __all__ = ['utils', 'plotting', 'analytical',
            'calculate_expected_indicator',
            'calculate_expected_indicators',
            'calculate_expected_indicators_precomputed',
-           'calculate_expected_group_success']
+           'calculate_expected_group_success',
+           'calculate_expected_state_indicator',
+           'calculate_expected_state_indicators',
+           'calculate_expected_state_indicators_precomputed',
+           'precompute_group_to_state_indicator_matrix',
+           'calculate_hypergeometric_expected_value',
+           'calculate_hypergeometric_fitness']

@@ -22,6 +22,7 @@
 #include <egttools/Distributions.h>
 #include <egttools/Types.h>
 #include <egttools/Utils.h>
+#include <egttools/utils/CalculateExpectedIndicators.h>
 
 #include <cassert>
 #include <egttools/finite_populations/Utils.hpp>

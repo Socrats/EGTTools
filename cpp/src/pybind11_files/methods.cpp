@@ -600,7 +600,315 @@ Examples
             py::arg("stationary_distribution"),
             py::arg("threshold"),
             py::arg("contributing_strategies"),
-            // Pure C++: lambdas capture only C++ data, GIL not needed.
+            py::call_guard<py::gil_scoped_release>()
+        );
+
+        // -----------------------------------------------------------------------
+        // State-level expected indicators  E[f] = Σ_s  sd(s) · f(s)
+        // -----------------------------------------------------------------------
+
+        m.def(
+            "calculate_expected_state_indicator",
+            &utils::calculate_expected_state_indicator,
+            R"pbdoc(
+Calculate E[f] = sum_s sd(s) * f(s) for a single state-level indicator.
+
+Unlike ``calculate_expected_indicator``, no group sampling is performed.
+The callable ``indicator`` receives the full population state vector
+(integer counts, sums to pop_size) and returns a scalar.
+
+Parameters
+----------
+pop_size : int
+    Total number of individuals in the population.
+nb_strategies : int
+    Number of strategies available in the population.
+stationary_distribution : scipy.sparse.csr_matrix
+    Sparse stationary distribution over population states.
+indicator : callable
+    Function mapping a population state (list[int]) to a float.
+
+Returns
+-------
+float
+    Expected value of the indicator.
+
+See Also
+--------
+egttools.calculate_expected_state_indicators
+egttools.calculate_expected_state_indicators_precomputed
+egttools.calculate_expected_indicator
+)pbdoc",
+            py::arg("pop_size"),
+            py::arg("nb_strategies"),
+            py::arg("stationary_distribution"),
+            py::arg("indicator")
+            // GIL must be held: indicator is a Python callable.
+        );
+
+        m.def(
+            "calculate_expected_state_indicators",
+            &utils::calculate_expected_state_indicators,
+            R"pbdoc(
+Calculate E[f_k] = sum_s sd(s) * f_k(s) for multiple state-level indicators in one pass.
+
+Iterates over non-zero states in the stationary distribution exactly once,
+evaluating all indicators at each state.  Cost: O(nb_nonzero_states * K) where K
+is the number of indicators.
+
+Parameters
+----------
+pop_size : int
+    Total number of individuals in the population.
+nb_strategies : int
+    Number of strategies available in the population.
+stationary_distribution : scipy.sparse.csr_matrix
+    Sparse stationary distribution over population states.
+indicators : list[callable]
+    List of functions, each mapping a population state (list[int]) to a float.
+
+Returns
+-------
+numpy.ndarray
+    Vector of length len(indicators) with the expected value of each indicator.
+
+See Also
+--------
+egttools.calculate_expected_state_indicator
+egttools.calculate_expected_state_indicators_precomputed
+)pbdoc",
+            py::arg("pop_size"),
+            py::arg("nb_strategies"),
+            py::arg("stationary_distribution"),
+            py::arg("indicators")
+            // GIL must be held: indicators are Python callables.
+        );
+
+        m.def(
+            "calculate_expected_state_indicators_precomputed",
+            &utils::calculate_expected_state_indicators_precomputed,
+            R"pbdoc(
+Fast path: E[f_k] = sum_s sd(s) * indicator_values(s, k) using a precomputed matrix.
+
+The caller evaluates all indicators on all population states upfront and
+stores the results in ``indicator_values`` (shape: nb_states × nb_indicators).
+The computation reduces to a sparse-dense dot product per column — no Python
+callbacks, GIL fully released.
+
+Parameters
+----------
+stationary_distribution : scipy.sparse.csr_matrix
+    Sparse stationary distribution over population states.
+indicator_values : numpy.ndarray
+    Dense matrix of shape (nb_states, nb_indicators).  Row s must contain the
+    values of all indicators evaluated on the population state for index s.
+
+Returns
+-------
+numpy.ndarray
+    Vector of length nb_indicators.
+
+See Also
+--------
+egttools.calculate_expected_state_indicator
+egttools.calculate_expected_indicators_precomputed
+egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_indicators
+)pbdoc",
+            py::arg("stationary_distribution"),
+            py::arg("indicator_values"),
+            py::return_value_policy::move,
+            py::call_guard<py::gil_scoped_release>()
+        );
+
+        m.def(
+            "precompute_group_to_state_indicator_matrix",
+            [](const int64_t pop_size, const int64_t group_size, const int64_t nb_strategies,
+               const std::vector<std::function<double(const std::vector<size_t> &)>> &indicators) {
+                // Phase 1 (GIL held): evaluate indicators on all group configs.
+                // Phase 2 (pure C++): hypergeometric-weighted sum over states.
+                // Release GIL for phase 2 only via manual scope.
+                Matrix2D result = utils::precompute_group_to_state_indicator_matrix(
+                    pop_size, group_size, nb_strategies, indicators);
+                return result;
+            },
+            R"pbdoc(
+Build a state-level indicator matrix from group-level callables.
+
+Converts group-level indicators ``f_k(group_config)`` to a state-level matrix by
+marginalising over group configurations using the multivariate hypergeometric
+distribution:
+
+    indicator_values(s, k) = sum_g  P(g | s) * f_k(g)
+
+where P(g | s) is the multivariate hypergeometric probability.  The returned
+matrix can be passed directly to
+``calculate_expected_state_indicators_precomputed`` or to
+``PairwiseComparisonNumerical.estimate_stationary_indicators``.
+
+For group_size == 2, pairwise probabilities are computed with simple
+combinatorics instead of the full hypergeometric formula.
+
+Parameters
+----------
+pop_size : int
+    Total number of individuals in the population.
+group_size : int
+    Number of individuals sampled per group interaction.
+nb_strategies : int
+    Number of strategies available in the population.
+indicators : list[callable]
+    Group-level indicator functions, each mapping a group configuration
+    (list[int], sums to group_size) to a float.
+
+Returns
+-------
+numpy.ndarray
+    Dense matrix of shape (nb_states, len(indicators)).
+
+See Also
+--------
+egttools.calculate_expected_state_indicators_precomputed
+egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_indicators
+)pbdoc",
+            py::arg("pop_size"),
+            py::arg("group_size"),
+            py::arg("nb_strategies"),
+            py::arg("indicators"),
+            py::return_value_policy::move
+            // GIL held for phase 1 (Python callbacks); phase 2 is pure C++
+            // but handled inside the function — acceptable for typical nb_states.
+        );
+
+        m.def(
+            "calculate_hypergeometric_expected_value",
+            [](const size_t pop_size, const size_t group_size, const size_t nb_strategies,
+               const Eigen::Ref<const VectorXui> &state,
+               const Eigen::Ref<const egttools::Vector> &f_values) -> double {
+                return egttools::utils::calculate_hypergeometric_expected_value(
+                    pop_size, group_size, nb_strategies, state, f_values);
+            },
+            R"pbdoc(
+Compute E[f | state] = sum_g P(g | state) * f(g) for a single population state.
+
+Calculates the expected value of a function f over all group configurations g,
+weighted by the multivariate hypergeometric probability P(g | state) that a
+randomly sampled group of ``group_size`` individuals from a population in
+``state`` has composition g.
+
+This is the inner loop used by fitness calculations in N-player games.  Exposing
+it here lets users write custom game fitness functions in Python without
+reimplementing the hypergeometric weighting.
+
+Parameters
+----------
+pop_size : int
+    Total number of individuals in the population.
+group_size : int
+    Number of individuals sampled per group interaction.
+nb_strategies : int
+    Number of distinct strategies.
+state : numpy.ndarray
+    Integer array of length ``nb_strategies`` with counts of each strategy in
+    the population.  Must sum to ``pop_size``.
+f_values : numpy.ndarray
+    Float array of length ``calculate_nb_states(group_size, nb_strategies)``
+    where ``f_values[g]`` is the value of f for the group configuration
+    ``sample_simplex(g, group_size, nb_strategies)``.
+
+Returns
+-------
+float
+    Expected value of f given the population state.
+
+Examples
+--------
+>>> import numpy as np
+>>> import egttools as egt
+>>> pop_size, group_size, nb_strategies = 10, 3, 2
+>>> state = np.array([6, 4], dtype=np.uint64)
+>>> nb_configs = egt.calculate_nb_states(group_size, nb_strategies)
+>>> # Cooperation level: fraction of cooperators (strategy 0) in the group
+>>> f_values = np.array([
+...     egt.sample_simplex(g, group_size, nb_strategies)[0] / group_size
+...     for g in range(nb_configs)
+... ])
+>>> egt.calculate_hypergeometric_expected_value(pop_size, group_size, nb_strategies, state, f_values)
+)pbdoc",
+            py::arg("pop_size"),
+            py::arg("group_size"),
+            py::arg("nb_strategies"),
+            py::arg("state"),
+            py::arg("f_values"),
+            py::call_guard<py::gil_scoped_release>()
+        );
+
+        m.def(
+            "calculate_hypergeometric_fitness",
+            [](const int player_type, const size_t pop_size,
+               const size_t group_size, const size_t nb_strategies,
+               const Eigen::Ref<const VectorXui> &strategies,
+               const Eigen::Ref<const egttools::Vector> &payoffs_row) -> double {
+                return egttools::utils::calculate_hypergeometric_fitness(
+                    player_type, pop_size, group_size, nb_strategies,
+                    strategies, payoffs_row);
+            },
+            R"pbdoc(
+Compute the fitness of a focal player (not included in ``strategies``) via hypergeometric sampling.
+
+This is the standard EGT fitness calculation for finite populations:
+
+    fitness = sum_g  P(g | strategies, pop_size-1, group_size-1)  *  payoff(player_type, g)
+
+where g ranges over all group configurations that include the focal player (i.e.
+``g[player_type] >= 1``), and P is the multivariate hypergeometric probability
+that the *remaining* group_size-1 slots are filled from the background population
+(which has ``strategies`` individuals, not including the focal player).
+
+Parameters
+----------
+player_type : int
+    Index of the focal player's strategy (0-based).
+pop_size : int
+    Total population size *including* the focal player.
+group_size : int
+    Number of individuals in the interaction group *including* the focal player.
+nb_strategies : int
+    Number of distinct strategies.
+strategies : numpy.ndarray
+    Integer array of length ``nb_strategies`` with counts of each strategy
+    in the population *excluding* the focal player.  Must sum to
+    ``pop_size - 1``.
+payoffs_row : numpy.ndarray
+    Float array of length ``calculate_nb_states(group_size, nb_strategies)``
+    where ``payoffs_row[g]`` is the payoff of ``player_type`` in group
+    configuration ``sample_simplex(g, group_size, nb_strategies)``.
+
+Returns
+-------
+float
+    Expected fitness of the focal player.
+
+Examples
+--------
+>>> import numpy as np
+>>> import egttools as egt
+>>> pop_size, group_size, nb_strategies = 10, 3, 2
+>>> # Focal player is a cooperator (strategy 1), population has 5 C, 4 D (excluding focal)
+>>> strategies = np.array([4, 5], dtype=np.uint64)
+>>> # payoffs_row[g] = payoff of cooperator in group config g
+>>> nb_configs = egt.calculate_nb_states(group_size, nb_strategies)
+>>> payoffs_row = np.zeros(nb_configs)
+>>> for g in range(nb_configs):
+...     gc = egt.sample_simplex(g, group_size, nb_strategies)
+...     payoffs_row[g] = gc[1] - 1.0  # cooperators pay cost 1
+>>> egt.calculate_hypergeometric_fitness(1, pop_size, group_size, nb_strategies, strategies, payoffs_row)
+)pbdoc",
+            py::arg("player_type"),
+            py::arg("pop_size"),
+            py::arg("group_size"),
+            py::arg("nb_strategies"),
+            py::arg("strategies"),
+            py::arg("payoffs_row"),
             py::call_guard<py::gil_scoped_release>()
         );
 
@@ -1512,6 +1820,314 @@ Parameters
 ----------
 game : egttools.games.AbstractGame
     New game object. Must have the same number of strategies as the current game.
+)pbdoc"
+                )
+                .def(
+                    "estimate_stationary_indicators_precomputed",
+                    [](PairwiseComparison &self,
+                       size_t nb_runs, size_t nb_generations, size_t transitory,
+                       double beta, double mu,
+                       const Eigen::Ref<const Matrix2D> &indicator_values,
+                       double tolerance, size_t check_every) {
+                        const double expected_mutations =
+                            mu * static_cast<double>(nb_generations - transitory);
+                        if (expected_mutations < 10.0) {
+                            PyErr_WarnEx(
+                                PyExc_UserWarning,
+                                "mu is very small relative to (nb_generations - transitory): "
+                                "the geometric-skip approximation may produce inaccurate results "
+                                "(fewer than 10 expected mutations in the counting window). "
+                                "Consider increasing mu, nb_generations, or decreasing transitory.",
+                                1);
+                        }
+                        py::gil_scoped_release release;
+                        return self.estimate_stationary_indicators(
+                            nb_runs, nb_generations, transitory, beta, mu,
+                            indicator_values, tolerance, check_every);
+                    },
+                    py::arg("nb_runs"),
+                    py::arg("nb_generations"),
+                    py::arg("transitory"),
+                    py::arg("beta"),
+                    py::arg("mu"),
+                    py::arg("indicator_values"),
+                    py::arg("tolerance") = 0.0,
+                    py::arg("check_every") = 0,
+                    py::return_value_policy::move,
+                    R"pbdoc(
+Estimate expected indicator values under the stationary distribution without
+computing the full distribution first.
+
+At each post-transitory simulation step the method looks up the precomputed
+indicator values for the current population state and accumulates them.  The
+per-run time-average converges to ``E[f_k] = sum_s sd(s) * indicator_values(s, k)``
+by the ergodic theorem.
+
+``indicator_values`` must be a dense matrix of shape
+``(nb_states, nb_indicators)`` where row ``s`` contains the values of all
+indicators for the population state at index ``s``.
+
+- For **state-level indicators** ``f(state)``: build ``indicator_values``
+  by evaluating ``f`` on ``egttools.sample_simplex(s, pop_size, nb_strategies)``
+  for each state index ``s``.
+- For **group-level indicators** ``f(group_config)``: use
+  ``egttools.precompute_group_to_state_indicator_matrix`` to marginalise over
+  group configurations first, then pass the resulting matrix here.
+
+Returns a matrix of shape ``(nb_runs_used, nb_indicators)`` — one row per
+completed run.  Prefer the high-level method
+``estimate_stationary_indicators`` (same class) which accepts Python callables,
+builds the indicator matrix automatically, and returns a
+``StationaryIndicatorResult`` with mean and bootstrap CI.
+
+.. warning::
+   If ``mu * (nb_generations - transitory)`` is much less than 10 a
+   ``UserWarning`` is raised.  See ``estimate_stationary_distribution`` for
+   details.
+
+Parameters
+----------
+nb_runs : int
+    Maximum number of independent simulation runs.
+nb_generations : int
+    Number of generations per run.
+transitory : int
+    Transitory period (not counted toward indicator accumulation).
+beta : float
+    Intensity of selection.
+mu : float
+    Mutation probability (must be > 0).
+indicator_values : numpy.ndarray
+    Precomputed matrix of shape (nb_states, nb_indicators).
+tolerance : float, optional
+    L1 convergence threshold on column-means between batches.
+    0.0 (default) disables early stopping.
+check_every : int, optional
+    Batch size for convergence checks; 0 uses max(1, nb_runs // 10).
+
+Returns
+-------
+numpy.ndarray
+    Per-run means of shape (nb_runs_used, nb_indicators).
+)pbdoc"
+                )
+                .def(
+                    "estimate_stationary_indicators",
+                    [](PairwiseComparison &self,
+                       py::object indicators,
+                       size_t nb_runs, size_t nb_generations, size_t transitory,
+                       double beta, double mu,
+                       const std::string &indicator_type,
+                       py::object group_size_obj,
+                       double tolerance, size_t check_every,
+                       double confidence, bool verbose, int n_bootstrap) -> py::object {
+
+                        // --- normalise to list ----------------------------------------
+                        py::list indicator_list;
+                        if (py::isinstance<py::list>(indicators) || py::isinstance<py::tuple>(indicators)) {
+                            for (auto item : indicators)
+                                indicator_list.append(item);
+                        } else if (py::hasattr(indicators, "__call__")) {
+                            indicator_list.append(indicators);
+                        } else {
+                            throw py::type_error("indicators must be a callable or a list/tuple of callables");
+                        }
+                        const auto nb_indicator_count = static_cast<int64_t>(py::len(indicator_list));
+
+                        // --- build precomputed indicator matrix (GIL held) ------------
+                        auto egt = py::module_::import("egttools");
+                        const int64_t nb_states     = static_cast<int64_t>(self.nb_states());
+                        const int64_t nb_strategies = static_cast<int64_t>(self.nb_strategies());
+                        const int64_t pop_size      = static_cast<int64_t>(self.population_size());
+
+                        Matrix2D indicator_matrix;
+
+                        if (indicator_type == "state") {
+                            indicator_matrix.resize(nb_states, nb_indicator_count);
+                            for (int64_t s = 0; s < nb_states; ++s) {
+                                py::object state = egt.attr("sample_simplex")(s, pop_size, nb_strategies);
+                                for (int64_t k = 0; k < nb_indicator_count; ++k) {
+                                    indicator_matrix(s, k) =
+                                        indicator_list[k](state).template cast<double>();
+                                }
+                            }
+                        } else if (indicator_type == "group") {
+                            if (group_size_obj.is_none())
+                                throw std::invalid_argument(
+                                    "group_size must be specified when indicator_type='group'.");
+                            const int64_t group_size = group_size_obj.cast<int64_t>();
+
+                            // Validate that the game's payoff matrix is consistent with the
+                            // requested group_size.  An N-player game must have exactly
+                            // stars_bars(group_size, nb_strategies) group configurations as
+                            // columns.  A 2-player (matrix) game has nb_strategies columns,
+                            // which will not match for group_size > 2.
+                            const int64_t expected_cols =
+                                egttools::starsBars<int64_t>(group_size, nb_strategies);
+                            const int64_t actual_cols =
+                                static_cast<int64_t>(self.payoffs().cols());
+                            if (actual_cols != expected_cols) {
+                                throw std::invalid_argument(
+                                    "Payoff matrix has " + std::to_string(actual_cols) +
+                                    " column(s) but group_size=" + std::to_string(group_size) +
+                                    " with nb_strategies=" + std::to_string(nb_strategies) +
+                                    " requires " + std::to_string(expected_cols) +
+                                    " group configurations (stars-and-bars). "
+                                    "For group-level indicators the game must be an N-player "
+                                    "game whose payoff matrix follows the sample_simplex "
+                                    "enumeration — use MatrixNPlayerGameHolder (or a subclass) "
+                                    "rather than a 2-player game.");
+                            }
+
+                            // Wrap callables: C++ passes std::vector<size_t> which pybind11
+                            // converts to a Python list; the wrapper turns it into np.ndarray
+                            // so users can write ``lambda g: g[0] >= threshold``.
+                            auto np = py::module_::import("numpy");
+                            py::list wrapped_list;
+                            for (int64_t k = 0; k < nb_indicator_count; ++k) {
+                                py::object f = indicator_list[k];
+                                wrapped_list.append(
+                                    py::cpp_function([f, np](py::object group) -> double {
+                                        py::object arr = np.attr("asarray")(
+                                            group, py::arg("dtype") = np.attr("intp"));
+                                        return f(arr).template cast<double>();
+                                    }));
+                            }
+                            indicator_matrix =
+                                egt.attr("precompute_group_to_state_indicator_matrix")(
+                                    pop_size, group_size, nb_strategies, wrapped_list)
+                                    .template cast<Matrix2D>();
+                        } else {
+                            throw std::invalid_argument(
+                                "indicator_type must be 'state' or 'group', got '" +
+                                indicator_type + "'.");
+                        }
+
+                        // --- mu sanity warning ----------------------------------------
+                        const double expected_mutations =
+                            mu * static_cast<double>(nb_generations - transitory);
+                        if (expected_mutations < 10.0) {
+                            PyErr_WarnEx(
+                                PyExc_UserWarning,
+                                "mu is very small relative to (nb_generations - transitory): "
+                                "the geometric-skip approximation may produce inaccurate results "
+                                "(fewer than 10 expected mutations in the counting window). "
+                                "Consider increasing mu, nb_generations, or decreasing transitory.",
+                                1);
+                        }
+
+                        // --- run C++ simulation (GIL released) -----------------------
+                        Matrix2D per_run;
+                        {
+                            py::gil_scoped_release release;
+                            per_run = self.estimate_stationary_indicators(
+                                nb_runs, nb_generations, transitory, beta, mu,
+                                indicator_matrix, tolerance, check_every);
+                        }
+
+                        const int64_t nb_runs_used = per_run.rows();
+                        const bool converged =
+                            (tolerance > 0.0) && (static_cast<size_t>(nb_runs_used) < nb_runs);
+
+                        // --- statistics ----------------------------------------------
+                        py::object per_run_np = py::cast(per_run);
+                        py::object grand_mean_np =
+                            py::module_::import("numpy").attr("mean")(per_run_np, py::arg("axis") = 0);
+
+                        auto indicators_mod =
+                            py::module_::import("egttools.numerical.indicators");
+                        auto ci_tuple = indicators_mod
+                            .attr("_bootstrap_ci")(per_run_np, confidence, n_bootstrap)
+                            .cast<py::tuple>();
+
+                        // --- build result --------------------------------------------
+                        auto StationaryIndicatorResult =
+                            indicators_mod.attr("StationaryIndicatorResult");
+                        return StationaryIndicatorResult(
+                            grand_mean_np,
+                            py::make_tuple(ci_tuple[0], ci_tuple[1]),
+                            nb_runs_used,
+                            converged,
+                            verbose ? per_run_np : py::none());
+                    },
+                    py::arg("indicators"),
+                    py::arg("nb_runs"),
+                    py::arg("nb_generations"),
+                    py::arg("transitory"),
+                    py::arg("beta"),
+                    py::arg("mu"),
+                    py::arg("indicator_type") = "state",
+                    py::arg("group_size")     = py::none(),
+                    py::arg("tolerance")      = 0.0,
+                    py::arg("check_every")    = 0,
+                    py::arg("confidence")     = 0.95,
+                    py::arg("verbose")        = false,
+                    py::arg("n_bootstrap")    = 9999,
+                    R"pbdoc(
+Estimate expected indicator values under the stationary distribution.
+
+Runs stochastic simulations and accumulates precomputed indicator values at
+each post-transitory step.  The time-average converges to the true expectation
+by the ergodic theorem without storing the full stationary distribution.
+
+Parameters
+----------
+indicators : callable or list[callable]
+    One or more indicator functions.
+
+    - ``indicator_type='state'``: receives a population state as
+      ``np.ndarray`` of shape ``(nb_strategies,)`` with integer counts summing
+      to ``pop_size``, returns a ``float``.  Use for quantities like the
+      fraction of cooperators.
+
+    - ``indicator_type='group'``: receives a group configuration as
+      ``np.ndarray`` of shape ``(nb_strategies,)`` summing to ``group_size``,
+      returns a ``float``.  The expectation is marginalised over group configs
+      using the multivariate hypergeometric distribution.  Requires
+      ``group_size``.
+
+nb_runs : int
+    Maximum number of independent simulation runs.
+nb_generations : int
+    Number of generations per run.
+transitory : int
+    Transitory period (generations excluded from accumulation).
+beta : float
+    Intensity of selection.
+mu : float
+    Mutation probability (must be > 0).
+indicator_type : {'state', 'group'}, default 'state'
+    Whether indicators operate on population states or group configurations.
+group_size : int, optional
+    Required when ``indicator_type='group'``.
+tolerance : float, default 0.0
+    L1 convergence threshold on column-means between batches.  0.0 disables
+    early stopping.
+check_every : int, default 0
+    Batch size for convergence checks.  0 → ``max(1, nb_runs // 10)``.
+confidence : float, default 0.95
+    Confidence level for the bootstrap CI.
+verbose : bool, default False
+    If ``True``, attach per-run values to the result.
+n_bootstrap : int, default 9999
+    Number of bootstrap resamples.
+
+Returns
+-------
+StationaryIndicatorResult
+    ``.mean`` — grand mean, shape ``(nb_indicators,)``.
+    ``.confidence_interval`` — ``(low, high)`` non-parametric bootstrap CI.
+    ``.nb_runs_used`` — runs actually completed.
+    ``.converged`` — ``True`` if tolerance-based early stopping triggered.
+    ``.per_run_values`` — per-run means ``(nb_runs_used, nb_indicators)``
+    when ``verbose=True``, else ``None``.
+
+See Also
+--------
+estimate_stationary_indicators_precomputed : low-level fast path accepting a
+    precomputed indicator matrix directly.
+egttools.precompute_group_to_state_indicator_matrix : build the indicator
+    matrix manually for repeated reuse.
 )pbdoc"
                 );
 
