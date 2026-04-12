@@ -163,24 +163,20 @@ namespace egttools::FinitePopulations {
                         const Eigen::Ref<const VectorXui> &init_state);
 
         /**
-         * @brieff Estimates the gradient of selection between 2 strategies.
+         * @brief Numerically estimates the gradient of selection between 2 strategies.
          *
-         * This estimation does not take into account mutation. In fact we are simply
-         * estimaitng T+ - T-, where T+ is the probability that the number of individuals
-         * with a particular strategy at a given state will increase, and T- it is the probability
-         * that it will decrease. The difference between both gives you the gradient of selection,
-         * i.e., the direction and intensity of the change in the population at a given state.
-         * For example, if T+ > T- then the frequency of the strategy is more likely to increase
-         * than decrease. If T+ = T- we have a critical point, where the population is not changing
-         * (and change can only happen with mutation).
+         * Estimates T+(k) - T-(k) for each interior state k = 1, …, Z-1, where T+(k) is the
+         * probability that the number of invaders increases and T-(k) is the probability that
+         * it decreases. Mutation is not included; only the imitation step is considered.
          *
+         * @param runs : number of independent one-step trials per interior state
          * @param invader : index of the invading strategy
          * @param resident : index of the resident strategy
-         * @param runs : number of independent runs to average
-         * @return a vector that contains the gradient of selection for each state of the population
-         * @throws invalid_argument exception
+         * @param beta : intensity of selection (Fermi parameter)
+         * @return a vector of length pop_size + 1 with the gradient at each state (0 at boundaries)
+         * @throws std::invalid_argument if invader or resident are out of range or equal
          */
-        Vector estimate_gradient_of_selection(size_t runs, int invader, int resident);
+        Vector estimate_gradient_of_selection(size_t runs, int invader, int resident, double beta);
 
         /**
          * @brief Estimates the fixation probability of the invading strategy over the resident strategy.
@@ -268,11 +264,11 @@ namespace egttools::FinitePopulations {
 
         void set_cache_size(size_t cache_size);
 
-        void change_game(egttools::FinitePopulations::AbstractGame &game) const;
+        void change_game(egttools::FinitePopulations::AbstractGame &game);
 
     private:
         size_t _nb_strategies, _pop_size, _cache_size, _nb_states;
-        egttools::FinitePopulations::AbstractGame &_game;
+        egttools::FinitePopulations::AbstractGame *_game;
 
         // Random distributions
         std::uniform_int_distribution<size_t> _pop_sampler;
@@ -328,23 +324,10 @@ namespace egttools::FinitePopulations {
                            Cache &cache, std::geometric_distribution<size_t> &geometric,
                            std::mt19937_64 &generator);
 
-        inline std::pair<size_t, size_t> _sample_players();
-
-        inline std::pair<size_t, size_t> _sample_players(std::mt19937_64 &generator);
-
         /**
          * @brief samples 2 players from the population of strategies and updates references @param s1 and s2.
-         *
-         * @param s1 : reference container for strategy 1
-         * @param s2 : reference container for strategy 2
-         * @param generator
-         */
-        inline void _sample_players(size_t &s1, size_t &s2, std::mt19937_64 &generator);
-
-        /**
-         * @brief samples 2 players from the population of strategies and updates references @param s1 and s2.
-         * @param s1 : reference container for strategy 1
-         * @param s2 : reference container for strategy 2
+         * @param s1 : reference container for strategy 1 (index into strategies)
+         * @param s2 : reference container for strategy 2 (index into strategies)
          * @param strategies : vector of strategy counts
          * @param generator : random generator
          * @return true if the sampled strategies are equal, otherwise false
@@ -354,11 +337,22 @@ namespace egttools::FinitePopulations {
         inline double
         _calculate_fitness(const int &player_type, VectorXui &strategies, Cache &cache);
 
-        inline void _initialise_population(const VectorXui &strategies, std::vector<size_t> &population);
-
         inline std::pair<bool, int> _is_homogeneous(VectorXui &strategies) const;
 
         inline void mutate_(std::mt19937_64 &generator, int &birth, const int &idx_homo);
+
+        /**
+         * @brief Validates common run/evolve arguments.
+         * Throws std::invalid_argument if nb_generations <= 0, init_state size doesn't match
+         * nb_strategies, or init_state sum doesn't equal pop_size.
+         */
+        void _validate_args(int64_t nb_generations, const Eigen::Ref<const VectorXui> &init_state) const;
+
+        /**
+         * @brief Validates transient period for run methods with transient.
+         * Throws std::invalid_argument if transient < 0 or transient >= nb_generations.
+         */
+        void _validate_transient(int64_t nb_generations, int64_t transient) const;
     };
 
     template<class Cache>
@@ -366,7 +360,7 @@ namespace egttools::FinitePopulations {
                                                                     egttools::FinitePopulations::AbstractGame &game,
                                                                     size_t cache_size) : _pop_size(pop_size),
         _cache_size(cache_size),
-        _game(game) {
+        _game(&game) {
         // Initialize random uniform distribution
         _nb_strategies = game.nb_strategies();
         _pop_sampler = std::uniform_int_distribution<size_t>(0, _pop_size - 1);
@@ -377,45 +371,14 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    void
-    PairwiseComparisonNumerical<Cache>::_initialise_population(const VectorXui &strategies,
-                                                               std::vector<size_t> &population) {
-        size_t z = 0;
-        for (unsigned int i = 0; i < _nb_strategies; ++i) {
-            for (size_t j = 0; j < strategies(i); ++j) {
-                population[z++] = i;
-            }
-        }
-
-        // Then we shuffle it randomly
-        std::shuffle(population.begin(), population.end(), _mt);
-    }
-
-    template<class Cache>
     VectorXui
     PairwiseComparisonNumerical<Cache>::evolve(const size_t nb_generations, const double beta, const double mu,
                                                const Eigen::Ref<const VectorXui> &init_state) {
-        if (nb_generations <= 0) {
-            throw std::invalid_argument(
-                "nb_generations must be > 0");
-        }
-        if (mu <= 0) {
+        _validate_args(static_cast<int64_t>(nb_generations), init_state);
+        if (mu <= 0)
             throw std::invalid_argument(
                 "mu must be > 0. If you want to run a simulation without mutation, "
                 "please use the method signature without the mu parameter");
-        }
-        // Check that there is the length of init_state is the same as the number of strategies
-        if (init_state.size() != static_cast<int>(_nb_strategies)) {
-            throw std::invalid_argument(
-                "The length of the initial state array must be the number of strategies " + std::to_string(
-                    _nb_strategies));
-        }
-        // Check that the initial state is valid
-        if (init_state.sum() != _pop_size) {
-            throw std::invalid_argument(
-                "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(
-                    _pop_size));
-        }
 
         VectorXui strategies(_nb_strategies);
         // Initialise strategies from init_state
@@ -428,7 +391,7 @@ namespace egttools::FinitePopulations {
         // Creates a cache for the fitness data
         Cache cache(_cache_size);
         // Initialize helper parameters
-        int die = 0, birth = 0, strategy_p1 = 0, strategy_p2 = 0, k;
+        int die = 0, birth = 0, strategy_p1 = 0, strategy_p2 = 0;
 
         // Imitation process
         for (size_t j = 0; j < nb_generations; ++j) {
@@ -436,12 +399,13 @@ namespace egttools::FinitePopulations {
 
             // Update with mutation and return how many steps should be added to the current
             // generation if the only change in the population could have been a mutation
-            k = _update_multi_step(strategy_p1, strategy_p2, beta, mu,
-                                   birth, die, homogeneous, idx_homo,
-                                   strategies, cache,
-                                   geometric, _mt);
+            size_t k = _update_multi_step(strategy_p1, strategy_p2, beta, mu,
+                                          birth, die, homogeneous, idx_homo,
+                                          strategies, cache,
+                                          geometric, _mt);
 
-            // Update state count by k steps
+            // Saturating add: avoid size_t wrap-around when k is very large
+            if (k >= nb_generations - j) break;
             j += k;
         }
 
@@ -454,23 +418,7 @@ namespace egttools::FinitePopulations {
                                                std::mt19937_64 &generator) {
         // This method runs a Moran process with pairwise comparison
         // using the fermi rule and no mutation
-        if (nb_generations <= 0) {
-            throw std::invalid_argument(
-                "nb_generations must be > 0");
-        }
-
-        // Check that there is the length of init_state is the same as the number of strategies
-        if (strategies.size() != static_cast<int>(_nb_strategies)) {
-            throw std::invalid_argument(
-                "The length of the initial state array must be the number of strategies " + std::to_string(
-                    _nb_strategies));
-        }
-        // Check that the initial state is valid
-        if (strategies.sum() != _pop_size) {
-            throw std::invalid_argument(
-                "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(
-                    _pop_size));
-        }
+        _validate_args(static_cast<int64_t>(nb_generations), strategies);
 
         int die, birth, strategy_p1 = 0, strategy_p2 = 0;
 
@@ -495,27 +443,11 @@ namespace egttools::FinitePopulations {
     auto PairwiseComparisonNumerical<Cache>::evolve(const size_t nb_generations, double beta, double mu,
                                                     const Eigen::Ref<const VectorXui> &init_state,
                                                     std::mt19937_64 &generator) -> VectorXui {
-        if (nb_generations <= 0) {
-            throw std::invalid_argument(
-                "nb_generations must be > 0");
-        }
-        if (mu <= 0) {
+        _validate_args(static_cast<int64_t>(nb_generations), init_state);
+        if (mu <= 0)
             throw std::invalid_argument(
                 "mu must be > 0. If you want to run a simulation without mutation, "
                 "please use the method signature without the mu parameter");
-        }
-        // Check that there is the length of init_state is the same as the number of strategies
-        if (init_state.size() != static_cast<int>(_nb_strategies)) {
-            throw std::invalid_argument(
-                "The length of the initial state array must be the number of strategies " + std::to_string(
-                    _nb_strategies));
-        }
-        // Check that the initial state is valid
-        if (init_state.sum() != _pop_size) {
-            throw std::invalid_argument(
-                "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(
-                    _pop_size));
-        }
 
         VectorXui strategies(_nb_strategies);
         // Initialise strategies from init_state
@@ -530,11 +462,8 @@ namespace egttools::FinitePopulations {
         // Initialize helper parameters
 
         // Imitation process
+        int strategy_p1 = 0, strategy_p2 = 0, birth = 0, die = 0;
         for (size_t j = 0; j < nb_generations; ++j) {
-            size_t strategy_p2 = 0;
-            size_t strategy_p1 = 0;
-            size_t birth = 0;
-            size_t die = 0;
             _sample_players(strategy_p1, strategy_p2, strategies, generator);
 
             // Update with mutation and return how many steps should be added to the current
@@ -544,7 +473,8 @@ namespace egttools::FinitePopulations {
                                           strategies, cache,
                                           geometric, generator);
 
-            // Update state count by k steps
+            // Saturating add: avoid size_t wrap-around when k is very large
+            if (k >= nb_generations - j) break;
             j += k;
         }
 
@@ -555,29 +485,11 @@ namespace egttools::FinitePopulations {
     MatrixXui2D PairwiseComparisonNumerical<Cache>::run(const int64_t nb_generations, const double beta,
                                                         const double mu,
                                                         const Eigen::Ref<const VectorXui> &init_state) {
-        if (mu <= 0) {
+        _validate_args(nb_generations, init_state);
+        if (mu <= 0)
             throw std::invalid_argument(
                 "mu must be > 0. If you want to run a simulation without mutation, "
                 "please use the method signature without the mu parameter");
-        }
-
-        if (nb_generations <= 0) {
-            throw std::invalid_argument(
-                "nb_generations must be > 0");
-        }
-
-        // Check that there is the length of init_state is the same as the number of strategies
-        if (init_state.size() != static_cast<int>(_nb_strategies)) {
-            throw std::invalid_argument(
-                "The length of the initial state array must be the number of strategies " + std::to_string(
-                    _nb_strategies));
-        }
-        // Check that the initial state is valid
-        if (init_state.sum() != _pop_size) {
-            throw std::invalid_argument(
-                "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(
-                    _pop_size));
-        }
 
         int die, birth, strategy_p1 = 0, strategy_p2 = 0;
         MatrixXui2D states = MatrixXui2D::Zero(nb_generations + 1, _nb_strategies);
@@ -643,34 +555,12 @@ namespace egttools::FinitePopulations {
                                                         const double beta,
                                                         const double mu,
                                                         const Eigen::Ref<const VectorXui> &init_state) {
-        if (mu <= 0) {
+        _validate_args(nb_generations, init_state);
+        _validate_transient(nb_generations, transient);
+        if (mu <= 0)
             throw std::invalid_argument(
                 "mu must be > 0. If you want to run a simulation without mutation, "
                 "please use the method signature without the mu parameter");
-        }
-
-        if (nb_generations <= 0 || transient < 0) {
-            throw std::invalid_argument(
-                "nb_generations must be > 0 and transient must be >= 0");
-        }
-
-        // Check if transient > nb_generations
-        if (transient >= nb_generations) {
-            throw std::invalid_argument(
-                "transient must be < than nb_generations!");
-        }
-        // Check that there is the length of init_state is the same as the number of strategies
-        if (init_state.size() != static_cast<int>(_nb_strategies)) {
-            throw std::invalid_argument(
-                "The length of the initial state array must be the number of strategies " + std::to_string(
-                    _nb_strategies));
-        }
-        // Check that the initial state is valid
-        if (init_state.sum() != _pop_size) {
-            throw std::invalid_argument(
-                "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(
-                    _pop_size));
-        }
 
         int die, birth, strategy_p1 = 0, strategy_p2 = 0;
         const auto total_counting_generations = nb_generations - transient;
@@ -763,27 +653,8 @@ namespace egttools::FinitePopulations {
     MatrixXui2D PairwiseComparisonNumerical<Cache>::run(const int64_t nb_generations, const int64_t transient,
                                                         const double beta,
                                                         const Eigen::Ref<const VectorXui> &init_state) {
-        // Check that there is the length of init_state is the same as the number of strategies
-        if (init_state.size() != static_cast<int>(_nb_strategies)) {
-            throw std::invalid_argument(
-                "The length of the initial state array must be the number of strategies " + std::to_string(
-                    _nb_strategies));
-        }
-        // Check that the initial state is valid
-        if (init_state.sum() != _pop_size) {
-            throw std::invalid_argument(
-                "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(
-                    _pop_size));
-        }
-        if (nb_generations <= 0 || transient < 0) {
-            throw std::invalid_argument(
-                "nb_generations must be > 0 and transient must be >= 0");
-        }
-        // Check if transient > nb_generations
-        if (transient >= nb_generations) {
-            throw std::invalid_argument(
-                "transient must be < than nb_generations!");
-        }
+        _validate_args(nb_generations, init_state);
+        _validate_transient(nb_generations, transient);
 
         int die, birth, strategy_p1 = 0, strategy_p2 = 0;
         auto total_counting_generations = nb_generations - transient;
@@ -796,7 +667,7 @@ namespace egttools::FinitePopulations {
 
         // If homogeneous we return a matrix where the population never changes
         if (auto [homogeneous, idx_homo] = _is_homogeneous(strategies); homogeneous) {
-            for (int j = 0; j <= total_counting_generations; ++j)
+            for (int64_t j = 0; j < total_counting_generations; ++j)
                 states.row(j).array() = strategies;
             return states;
         }
@@ -811,7 +682,7 @@ namespace egttools::FinitePopulations {
             if (_update_step(strategy_p1, strategy_p2, beta,
                              birth, die, strategies, cache, _mt)) {
                 for (int64_t z = 0; z < total_counting_generations; ++z)
-                    states(z, birth) = strategies(birth);
+                    states.row(z).array() = strategies;
                 return states;
             }
         }
@@ -823,7 +694,7 @@ namespace egttools::FinitePopulations {
             if (_update_step(strategy_p1, strategy_p2, beta,
                              birth, die, strategies, cache, _mt)) {
                 for (int64_t z = j; z < total_counting_generations; ++z)
-                    states(z, birth) = strategies(birth);
+                    states.row(z).array() = strategies;
                 break;
             }
 
@@ -836,22 +707,7 @@ namespace egttools::FinitePopulations {
     template<class Cache>
     MatrixXui2D PairwiseComparisonNumerical<Cache>::run(const int64_t nb_generations, const double beta,
                                                         const Eigen::Ref<const VectorXui> &init_state) {
-        if (nb_generations <= 0) {
-            throw std::invalid_argument(
-                "nb_generations must be > 0");
-        }
-        // Check that there is the length of init_state is the same as the number of strategies
-        if (init_state.size() != static_cast<int>(_nb_strategies)) {
-            throw std::invalid_argument(
-                "The length of the initial state array must be the number of strategies " + std::to_string(
-                    _nb_strategies));
-        }
-        // Check that the initial state is valid
-        if (init_state.sum() != _pop_size) {
-            throw std::invalid_argument(
-                "The sum of the entries of the initial state must be equal to the population size Z=" + std::to_string(
-                    _pop_size));
-        }
+        _validate_args(nb_generations, init_state);
 
         int die, birth, strategy_p1 = 0, strategy_p2 = 0, current_generation = 1;
         MatrixXui2D states = MatrixXui2D::Zero(nb_generations + 1, _nb_strategies);
@@ -880,7 +736,7 @@ namespace egttools::FinitePopulations {
             if (_update_step(strategy_p1, strategy_p2, beta,
                              birth, die, strategies, cache, _mt)) {
                 for (int64_t z = j; z <= nb_generations; ++z)
-                    states(z, birth) = strategies(birth);
+                    states.row(z).array() = strategies;
                 break;
             }
 
@@ -934,35 +790,49 @@ namespace egttools::FinitePopulations {
 
     template<class Cache>
     Vector PairwiseComparisonNumerical<Cache>::estimate_gradient_of_selection(const size_t runs, const int invader,
-                                                                              const int resident) {
-        if (invader > _nb_strategies || resident > _nb_strategies)
+                                                                              const int resident,
+                                                                              const double beta) {
+        if (invader >= static_cast<int>(_nb_strategies) || resident >= static_cast<int>(_nb_strategies) ||
+            invader < 0 || resident < 0)
             throw std::invalid_argument(
-                "you must specify a valid index for invader and resident [0, " + std::to_string(_nb_strategies) +
-                ")");
-        // 1-D gradient between the two strategies
-        VectorXi t_plus = VectorXi::Zero(_pop_size + 1);
-        VectorXi t_minus = VectorXi::Zero(_pop_size + 1);
+                "invader and resident must be valid strategy indices in [0, " + std::to_string(_nb_strategies) + ")");
+        if (invader == resident)
+            throw std::invalid_argument("invader and resident must be different strategies");
 
-        // This loop can be done in parallel
+        // T+[k] = number of trials (out of runs) where the invader count increased at state k
+        // T-[k] = number of trials where it decreased
+        VectorXi t_plus = VectorXi::Zero(static_cast<Eigen::Index>(_pop_size + 1));
+        VectorXi t_minus = VectorXi::Zero(static_cast<Eigen::Index>(_pop_size + 1));
+
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for reduction(+ : t_plus, t_minus) default(none) shared(invader, resident, runs, \
-                                                                                     _pop_size, _nb_strategies)
+#pragma omp parallel for reduction(+ : t_plus, t_minus) default(none) shared(invader, resident, runs, beta)
 #endif
         for (size_t run = 0; run < runs; ++run) {
+            std::mt19937_64 generator(egttools::Random::SeedGenerator::getInstance().getSeed());
+            Cache cache(_cache_size);
+
             for (size_t k = 1; k < _pop_size; ++k) {
-                // Set up the population state
-                VectorXui strategies = VectorXui::Zero(_nb_strategies);
-                strategies(resident) = _pop_size - k;
-                strategies(invader) = k;
+                VectorXui strategies = VectorXui::Zero(static_cast<Eigen::Index>(_nb_strategies));
+                strategies(resident) = static_cast<size_t>(_pop_size - k);
+                strategies(invader) = static_cast<size_t>(k);
 
-                // Creates a cache for the fitness data
-                Cache cache(_cache_size);
+                int s1 = 0, s2 = 0;
+                // If both sampled players have the same strategy no imitation occurs
+                if (_sample_players(s1, s2, strategies, generator)) continue;
 
-                _update_step();
+                int birth = 0, die = 0;
+                _update_step(s1, s2, beta, birth, die, strategies, cache, generator);
+
+                // Record whether invader count moved up or down
+                const size_t new_k = strategies(invader);
+                if (new_k > k)
+                    ++t_plus(static_cast<Eigen::Index>(k));
+                else if (new_k < k)
+                    ++t_minus(static_cast<Eigen::Index>(k));
             }
         }
-        // calculate gradient
-        return (t_plus - t_minus).cast<double>() / runs;
+
+        return (t_plus - t_minus).cast<double>() / static_cast<double>(runs);
     }
 
     template<class Cache>
@@ -999,15 +869,13 @@ namespace egttools::FinitePopulations {
         // Distribution number of generations for a mutation to happen
         std::geometric_distribution<size_t> geometric(mu);
 
-        // Creates a cache for the fitness data
-        Cache cache(_cache_size);
-
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for reduction(+ : sdist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu, cache)
+#pragma omp parallel for reduction(+ : sdist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu)
 #endif
         for (size_t i = 0; i < nb_runs; ++i) {
-            // Random generators - each thread should have its own generator
+            // Random generators and cache are per-thread to avoid contention
             std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
+            Cache cache(_cache_size);
 
             // Then we sample a random population state
             VectorXui strategies = VectorXui::Zero(_nb_strategies);
@@ -1113,19 +981,16 @@ namespace egttools::FinitePopulations {
 
         // First we initialise the container for the stationary distribution
         auto sdist = SparseMatrix2DXui(1, _nb_states);
-        //        sdist.reserve(VectorXi::Constant(_nb_states, std::min(10000, static_cast<int>(_nb_states))));
         // Distribution number of generations for a mutation to happen
         std::geometric_distribution<size_t> geometric(mu);
 
-        // Creates a cache for the fitness data
-        Cache cache(_cache_size);
-
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for reduction(+ : sdist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu, cache)
+#pragma omp parallel for reduction(+ : sdist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu)
 #endif
         for (size_t i = 0; i < nb_runs; ++i) {
-            // Random generators - each thread should have its own generator
+            // Random generators and cache are per-thread to avoid contention
             std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
+            Cache cache(_cache_size);
 
             // Then we sample a random population state
             VectorXui strategies = VectorXui::Zero(_nb_strategies);
@@ -1475,29 +1340,6 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    std::pair<size_t, size_t> PairwiseComparisonNumerical<Cache>::_sample_players() {
-        auto player1 = _pop_sampler(_mt);
-        auto player2 = _pop_sampler(_mt);
-        while (player2 == player1) player2 = _pop_sampler(_mt);
-        return std::make_pair(player1, player2);
-    }
-
-    template<class Cache>
-    std::pair<size_t, size_t> PairwiseComparisonNumerical<Cache>::_sample_players(std::mt19937_64 &generator) {
-        auto player1 = _pop_sampler(generator);
-        auto player2 = _pop_sampler(generator);
-        while (player2 == player1) player2 = _pop_sampler(generator);
-        return std::make_pair(player1, player2);
-    }
-
-    template<class Cache>
-    void PairwiseComparisonNumerical<Cache>::_sample_players(size_t &s1, size_t &s2, std::mt19937_64 &generator) {
-        s1 = _pop_sampler(generator);
-        s2 = _pop_sampler(generator);
-        while (s1 == s2) s2 = _pop_sampler(generator);
-    }
-
-    template<class Cache>
     bool
     PairwiseComparisonNumerical<Cache>::_sample_players(int &s1, int &s2, VectorXui &strategies,
                                                         std::mt19937_64 &generator) {
@@ -1542,7 +1384,7 @@ namespace egttools::FinitePopulations {
             fitness = *value;
         } else {
             strategies(player_type) -= 1;
-            fitness = _game.calculate_fitness(player_type, _pop_size, strategies);
+            fitness = _game->calculate_fitness(player_type, _pop_size, strategies);
             strategies(player_type) += 1;
 
             // Finally we store the new fitness in the Cache. We also keep a Cache for the payoff given each group combination
@@ -1582,12 +1424,12 @@ namespace egttools::FinitePopulations {
 
     template<class Cache>
     std::string PairwiseComparisonNumerical<Cache>::game_type() const {
-        return _game.type();
+        return _game->type();
     }
 
     template<class Cache>
     const GroupPayoffs &PairwiseComparisonNumerical<Cache>::payoffs() const {
-        return _game.payoffs();
+        return _game->payoffs();
     }
 
     template<class Cache>
@@ -1604,9 +1446,32 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
-    void PairwiseComparisonNumerical<Cache>::change_game(egttools::FinitePopulations::AbstractGame &game) const {
-        _game = game;
+    void PairwiseComparisonNumerical<Cache>::change_game(egttools::FinitePopulations::AbstractGame &game) {
+        _game = &game;
     }
+
+    template<class Cache>
+    void PairwiseComparisonNumerical<Cache>::_validate_args(const int64_t nb_generations,
+                                                            const Eigen::Ref<const VectorXui> &init_state) const {
+        if (nb_generations <= 0)
+            throw std::invalid_argument("nb_generations must be > 0");
+        if (init_state.size() != static_cast<int64_t>(_nb_strategies))
+            throw std::invalid_argument(
+                "init_state length must equal nb_strategies (" + std::to_string(_nb_strategies) + ")");
+        if (static_cast<size_t>(init_state.sum()) != _pop_size)
+            throw std::invalid_argument(
+                "init_state entries must sum to pop_size Z=" + std::to_string(_pop_size));
+    }
+
+    template<class Cache>
+    void PairwiseComparisonNumerical<Cache>::_validate_transient(const int64_t nb_generations,
+                                                                 const int64_t transient) const {
+        if (transient < 0)
+            throw std::invalid_argument("transient must be >= 0");
+        if (transient >= nb_generations)
+            throw std::invalid_argument("transient must be < nb_generations");
+    }
+
 } // namespace egttools::FinitePopulations
 
 #endif//EGTTOOLS_FINITEPOPULATIONS_PAIRWISECOMPARISONNUMERICAL_HPP

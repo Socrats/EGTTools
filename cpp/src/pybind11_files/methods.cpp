@@ -1234,7 +1234,7 @@ Numerical solver for evolutionary dynamics under the pairwise comparison rule.
                     py::arg("pop_size"),
                     py::arg("game"),
                     py::arg("cache_size"),
-                    py::keep_alive<0, 2>(),
+                    py::keep_alive<1, 3>(),
                     R"pbdoc(
 Construct a numerical solver for a finite-population game.
 
