@@ -21,6 +21,7 @@ The code used in here has been adapted from https://github.com/YannickJadoul/Par
 
 import os
 import shlex
+import shutil
 import sys
 
 def _version():
@@ -44,10 +45,55 @@ def _version():
 
 try:
     from skbuild import setup
+    from skbuild.constants import CMAKE_INSTALL_DIR as _CMAKE_INSTALL_DIR
 except ImportError:
     print("Please update pip to pip 10 or greater, or a manually install the PEP 518 requirements in pyproject.toml",
           file=sys.stderr)
     raise
+
+
+def _sync_python_sources_to_staging() -> None:
+    """
+    Propagate hand-edited Python source files into the scikit-build staging tree
+    before scikit-build's developer-mode copy runs.
+
+    Background
+    ----------
+    When ``setup.py build_ext --inplace`` is invoked, scikit-build detects
+    developer mode (``build_ext_inplace=True``) and copies every Python file
+    listed in ``package_data`` FROM ``_skbuild/<plat>/cmake-install/`` BACK TO
+    ``src/``.  This copy happens inside ``setup()`` — *before* CMake runs —
+    so any edits made to ``src/*.py`` after the last build are silently
+    overwritten by the stale staging-tree versions.
+
+    Fix: scan ``src/egttools/`` for ``.py`` files that are *newer* than their
+    counterpart in the cmake-install staging tree and copy them there first.
+    scikit-build then propagates the fresh versions back to ``src/``, keeping
+    everything consistent.
+
+    This function is intentionally a no-op when the staging tree does not
+    exist yet (clean first-time builds).
+    """
+    project_root = os.path.dirname(os.path.abspath(__file__))
+    src_root = os.path.join(project_root, "src", "egttools")
+    staging_root = os.path.join(_CMAKE_INSTALL_DIR(), "src", "egttools")
+
+    if not os.path.isdir(staging_root):
+        return  # Clean build — staging tree doesn't exist yet; nothing to sync.
+
+    for dirpath, _dirnames, filenames in os.walk(src_root):
+        rel_dir = os.path.relpath(dirpath, src_root)
+        for fname in filenames:
+            if not fname.endswith(".py"):
+                continue
+            src_file = os.path.join(dirpath, fname)
+            dst_file = os.path.join(staging_root, rel_dir, fname)
+            if os.path.exists(dst_file) and os.path.getmtime(src_file) > os.path.getmtime(dst_file):
+                os.makedirs(os.path.dirname(dst_file), exist_ok=True)
+                shutil.copy2(src_file, dst_file)
+
+
+_sync_python_sources_to_staging()
 
 
 def transform_to_valid_windows_path(input_path):
