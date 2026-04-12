@@ -17,6 +17,7 @@
 */
 
 #include <egttools/finite_populations/analytical/PairwiseComparison.hpp>
+#include <atomic>
 
 namespace {
     inline std::uint64_t make_fitness_cache_key(const int64_t state_index,
@@ -121,7 +122,7 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transitio
     }
 
     using Triplet = Eigen::Triplet<double>;
-    constexpr double row_tol = 1e-10;
+    const double row_tol = 1e-10;
 
     const int64_t S = nb_states_;
     const int k = nb_strategies_;
@@ -138,18 +139,44 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transitio
     const double inv_N = 1.0 / static_cast<double>(N);
     const double inv_Nm1 = 1.0 / static_cast<double>(N - 1);
 
-    std::vector<Triplet> trips;
-    trips.reserve(static_cast<size_t>(S) * static_cast<size_t>(k * (k - 1) + 1));
+    // Allocate one Triplet bucket per OpenMP thread so that each thread writes
+    // to its own vector without any synchronisation during the hot loop.
+#if defined(_OPENMP) && !defined(_MSC_VER)
+    const int max_threads = omp_get_max_threads();
+#else
+    const int max_threads = 1;
+#endif
+    const size_t trips_per_thread =
+            static_cast<size_t>((S + max_threads - 1) / max_threads) *
+            static_cast<size_t>(k * (k - 1) + 1);
 
-    VectorXui current(k);
-    std::vector<int> present;
-    present.reserve(k);
-    std::vector<double> fitness(k, 0.0);
+    std::vector<std::vector<Triplet>> thread_trips(max_threads);
+    for (auto &v: thread_trips) v.reserve(trips_per_thread);
 
+    // Throwing C++ exceptions from inside an OpenMP parallel region is undefined
+    // behaviour. Instead we record the first offending row and throw after the loop.
+    std::atomic<int64_t> row_sum_error_row{-1};
+
+#if defined(_OPENMP) && !defined(_MSC_VER)
+#pragma omp parallel for schedule(dynamic, 32) default(none) \
+    shared(thread_trips, row_sum_error_row, S, k, N, beta, one_minus_mu, mutation_probability, inv_N, inv_Nm1, row_tol)
+#endif
     for (int64_t row = 0; row < S; ++row) {
+#if defined(_OPENMP) && !defined(_MSC_VER)
+        auto &local_trips = thread_trips[omp_get_thread_num()];
+#else
+        auto &local_trips = thread_trips[0];
+#endif
+
+        // All per-row working variables are declared here so they are thread-private
+        // both in the OpenMP and the serial code paths.
+        VectorXui current(k);
+        std::vector<int> present;
+        present.reserve(k);
+        std::vector<double> fitness(k, 0.0);
+
         sample_simplex(row, N, k, current);
 
-        present.clear();
         for (int i = 0; i < k; ++i) {
             if (current(i) > 0) {
                 present.push_back(i);
@@ -180,7 +207,7 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transitio
                 current(i) -= 1;
                 current(mono_idx) += 1;
 
-                trips.emplace_back(row, col, mutation_probability);
+                local_trips.emplace_back(row, col, mutation_probability);
                 total_offdiag += mutation_probability;
             }
         } else {
@@ -229,7 +256,7 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transitio
 #endif
 
                         if (prob > 0.0) {
-                            trips.emplace_back(row, col, prob);
+                            local_trips.emplace_back(row, col, prob);
                             total_offdiag += prob;
                         }
                     }
@@ -276,7 +303,7 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transitio
 #endif
 
                         if (prob > 0.0) {
-                            trips.emplace_back(row, col, prob);
+                            local_trips.emplace_back(row, col, prob);
                             total_offdiag += prob;
                         }
                     }
@@ -287,13 +314,31 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transitio
         }
 
         if (total_offdiag > 1.0 + row_tol) {
-            throw std::runtime_error(
-                "Transition matrix row sum exceeded 1 at row " + std::to_string(row) +
-                ", total_offdiag=" + std::to_string(total_offdiag));
+            // Record the first offending row; we will throw after the parallel region.
+            int64_t expected = -1;
+            row_sum_error_row.compare_exchange_strong(expected, row);
         }
 
         const double diag = std::max(0.0, 1.0 - total_offdiag);
-        trips.emplace_back(row, row, diag);
+        local_trips.emplace_back(row, row, diag);
+    }
+
+    if (row_sum_error_row.load() >= 0) {
+        throw std::runtime_error(
+            "Transition matrix row sum exceeded 1 at row " +
+            std::to_string(row_sum_error_row.load()));
+    }
+
+    // Merge per-thread buckets into a single flat vector.
+    std::vector<Triplet> trips;
+    {
+        size_t total = 0;
+        for (const auto &v: thread_trips) total += v.size();
+        trips.reserve(total);
+        for (auto &v: thread_trips)
+            trips.insert(trips.end(),
+                         std::make_move_iterator(v.begin()),
+                         std::make_move_iterator(v.end()));
     }
 
     SparseMatrix2D transition_matrix(S, S);
