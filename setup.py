@@ -171,6 +171,7 @@ setup(
     package_data={
         "egttools": ["*.pyi", "py.typed"],
         "egttools.numerical": ["*.so", "*.dylib", "*.pyd", "*.pyi", "lib/*.dylib", "lib/*.so",
-                               "numerical_/*.pyi", "numerical_/**/*.pyi"],
+                               "numerical_/*.pyi", "numerical_/**/*.pyi",
+                               "egttools_build_info.txt"],
     },
 )
