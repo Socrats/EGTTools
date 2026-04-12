@@ -395,3 +395,105 @@ class TestValidation:
         init = np.array([40, 10, 50], dtype=np.uint64)
         with pytest.raises(Exception):
             pc3.run_with_mutation(100, 1.0, -1e-3, init)
+
+
+# ---------------------------------------------------------------------------
+# Tolerance-based early stopping tests
+# ---------------------------------------------------------------------------
+
+class TestToleranceEarlyStopping:
+    """Tests for the tolerance / check_every early-stopping feature added to
+    estimate_stationary_distribution, estimate_stationary_distribution_sparse,
+    and estimate_strategy_distribution."""
+
+    @staticmethod
+    def _make_pc():
+        """Small 2-strategy game for fast tolerance tests."""
+        payoffs = np.array([[1.0, 0.0], [0.0, 1.0]])
+        game = Matrix2PlayerGameHolder(2, payoffs)
+        pc = PairwiseComparisonNumerical(20, game, 1000)
+        return pc, game
+
+    # --- estimate_stationary_distribution ---
+
+    def test_stationary_no_tolerance_returns_full_run(self):
+        """tolerance=0 (default) must always run all nb_runs."""
+        pc, game = self._make_pc()
+        result = pc.estimate_stationary_distribution(10, 500, 50, 1.0, 0.05)
+        assert result.shape[0] == pc.nb_states
+        assert abs(result.sum() - 1.0) < 0.1  # unnormalised; just sanity
+
+    def test_stationary_tolerance_stops_before_max_runs(self):
+        """With a generous tolerance the simulation should stop before nb_runs=1000."""
+        pc, game = self._make_pc()
+        # tolerance=0.5 is deliberately large so it converges early
+        result = pc.estimate_stationary_distribution(
+            1000, 500, 50, 1.0, 0.05, tolerance=0.5
+        )
+        assert result.shape[0] == pc.nb_states
+        assert result.sum() > 0
+
+    def test_stationary_tolerance_result_is_distribution(self):
+        """With a modest tolerance the result should still be a valid distribution."""
+        pc, game = self._make_pc()
+        result = pc.estimate_stationary_distribution(
+            100, 1000, 100, 1.0, 0.05, tolerance=0.05
+        )
+        assert result.shape[0] == pc.nb_states
+        assert np.all(result >= 0.0)
+        assert abs(result.sum() - 1.0) < 0.15
+
+    def test_stationary_check_every_respected(self):
+        """check_every > 0 should not crash and should return a valid result."""
+        pc, game = self._make_pc()
+        result = pc.estimate_stationary_distribution(
+            50, 500, 50, 1.0, 0.05, tolerance=0.1, check_every=5
+        )
+        assert result.shape[0] == pc.nb_states
+        assert result.sum() > 0
+
+    # --- estimate_stationary_distribution_sparse ---
+
+    def test_sparse_stationary_tolerance_result_is_valid(self):
+        pc, game = self._make_pc()
+        result = pc.estimate_stationary_distribution_sparse(
+            100, 1000, 100, 1.0, 0.05, tolerance=0.05
+        )
+        dense = np.asarray(result.todense()).flatten()
+        assert dense.shape[0] == pc.nb_states
+        assert np.all(dense >= 0.0)
+        assert abs(dense.sum() - 1.0) < 0.15
+
+    def test_sparse_stationary_no_tolerance_matches_dense(self):
+        """Without tolerance both dense and sparse should give similarly shaped outputs."""
+        pc, game = self._make_pc()
+        dense = pc.estimate_stationary_distribution(20, 500, 50, 1.0, 0.05)
+        sparse = pc.estimate_stationary_distribution_sparse(20, 500, 50, 1.0, 0.05)
+        sparse_dense = np.asarray(sparse.todense()).flatten()
+        assert dense.shape == sparse_dense.shape
+
+    # --- estimate_strategy_distribution ---
+
+    def test_strategy_dist_no_tolerance_valid(self):
+        pc, game = self._make_pc()
+        result = pc.estimate_strategy_distribution(10, 500, 50, 1.0, 0.05)
+        assert result.shape[0] == pc.nb_strategies
+        assert np.all(result >= 0.0)
+        assert abs(result.sum() - 1.0) < 0.15
+
+    def test_strategy_dist_tolerance_stops_early(self):
+        pc, game = self._make_pc()
+        result = pc.estimate_strategy_distribution(
+            1000, 500, 50, 1.0, 0.05, tolerance=0.5
+        )
+        assert result.shape[0] == pc.nb_strategies
+        assert result.sum() > 0
+
+    def test_strategy_dist_tolerance_result_is_distribution(self):
+        pc, game = self._make_pc()
+        result = pc.estimate_strategy_distribution(
+            100, 1000, 100, 1.0, 0.05, tolerance=0.05
+        )
+        assert result.shape[0] == pc.nb_strategies
+        assert np.all(result >= 0.0)
+        assert abs(result.sum() - 1.0) < 0.15

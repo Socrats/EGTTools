@@ -200,15 +200,23 @@ namespace egttools::FinitePopulations {
          * The estimation of the stationary distribution is done by averaging the fraction of
          * the population of each strategy at the end of each trial over all trials.
          *
-         * @param nb_runs : number of trials used to estimate the stationary distribution
+         * When @param tolerance > 0, runs are processed in batches of @param check_every and the
+         * simulation stops as soon as the L∞ change in the normalised estimate between consecutive
+         * batches falls below @param tolerance, without waiting for all @param nb_runs to complete.
+         *
+         * @param nb_runs : maximum number of trials used to estimate the stationary distribution
          * @param nb_generations : number of generations per trial
          * @param transitory : transitory period not taken into account for the estimation
          * @param beta : intensity of selection
          * @param mu : mutation probability
+         * @param tolerance : convergence threshold (L∞ norm between consecutive batch estimates);
+         *                    0.0 (default) disables early stopping and always runs all nb_runs
+         * @param check_every : number of runs per convergence-check batch; 0 (default) uses
+         *                      max(1, nb_runs / 10)
          * @return the stationary distribution
          */
         Vector estimate_stationary_distribution(size_t nb_runs, size_t nb_generations, size_t transitory, double beta,
-                                                double mu);
+                                                double mu, double tolerance = 0.0, size_t check_every = 0);
 
         /**
          * @brief Estimates the stationary distribution of the population of strategies in the game.
@@ -217,15 +225,21 @@ namespace egttools::FinitePopulations {
          * dense one. You should use this method one the system has a very large number of states, since
          * most of the entries of the stationary distribution will be 0, making it sparse.
          *
-         * @param nb_runs : number of trials used to estimate the stationary distribution
+         * When @param tolerance > 0, runs are processed in batches and stopped early when converged.
+         * See estimate_stationary_distribution for full description of the tolerance/check_every params.
+         *
+         * @param nb_runs : maximum number of trials used to estimate the stationary distribution
          * @param nb_generations : number of generations per trial
          * @param transitory : transitory period not taken into account for the estimation
          * @param beta : intensity of selection
          * @param mu : mutation probability
+         * @param tolerance : convergence threshold (L∞ norm); 0.0 disables early stopping
+         * @param check_every : runs per convergence-check batch; 0 uses max(1, nb_runs / 10)
          * @return the stationary distribution
          */
         SparseMatrix2D estimate_stationary_distribution_sparse(size_t nb_runs, size_t nb_generations, size_t transitory,
-                                                               double beta, double mu);
+                                                               double beta, double mu, double tolerance = 0.0,
+                                                               size_t check_every = 0);
 
         /**
          * @brief Estimates the distribution of strategies in the population given the current game.
@@ -236,15 +250,20 @@ namespace egttools::FinitePopulations {
          * in this case, and estimate_stationary_distribution and estimate_stationary_distribution_sparse would run into an
          * overflow error.
          *
-         * @param nb_runs : number of trials used to estimate the stationary distribution
+         * When @param tolerance > 0, runs are processed in batches and stopped early when converged.
+         * See estimate_stationary_distribution for full description of the tolerance/check_every params.
+         *
+         * @param nb_runs : maximum number of trials used to estimate the strategy distribution
          * @param nb_generations : number of generations per trial
          * @param transitory : transitory period not taken into account for the estimation
          * @param beta : intensity of selection
          * @param mu : mutation probability
-         * @return the stationary distribution
+         * @param tolerance : convergence threshold (L∞ norm); 0.0 disables early stopping
+         * @param check_every : runs per convergence-check batch; 0 uses max(1, nb_runs / 10)
+         * @return the strategy distribution
          */
         Vector estimate_strategy_distribution(size_t nb_runs, size_t nb_generations, size_t transitory, double beta,
-                                              double mu);
+                                              double mu, double tolerance = 0.0, size_t check_every = 0);
 
         // Getters
         [[nodiscard]] size_t nb_strategies() const;
@@ -840,7 +859,9 @@ namespace egttools::FinitePopulations {
         const size_t nb_runs, const size_t nb_generations,
         const size_t transitory,
         const double beta,
-        double mu) -> Vector {
+        double mu,
+        const double tolerance,
+        const size_t check_every) -> Vector {
         if (mu <= 0) {
             throw std::invalid_argument(
                 "mu must be > 0. If you want to run a simulation without mutation, "
@@ -864,97 +885,124 @@ namespace egttools::FinitePopulations {
                 "nb_generations must be >= 1!");
         }
 
-        // First we initialise the container for the stationary distribution
-        VectorXui sdist = VectorXui::Zero(_nb_states);
-        // Distribution number of generations for a mutation to happen
-        std::geometric_distribution<size_t> geometric(mu);
+        const size_t counting_gens = nb_generations - transitory;
+
+        // Helper lambda that runs a batch of `batch_size` runs and accumulates into `sdist`.
+        auto run_batch = [&](VectorXui &sdist, const size_t batch_size) {
+            // Distribution number of generations for a mutation to happen (shared, read-only)
+            std::geometric_distribution<size_t> geometric(mu);
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for reduction(+ : sdist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu)
+#pragma omp parallel for reduction(+ : sdist) default(none) shared(geometric, batch_size, nb_generations, transitory, beta, mu)
 #endif
-        for (size_t i = 0; i < nb_runs; ++i) {
-            // Random generators and cache are per-thread to avoid contention
-            std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
-            Cache cache(_cache_size);
+            for (size_t i = 0; i < batch_size; ++i) {
+                // Random generators and cache are per-thread to avoid contention
+                std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
+                Cache cache(_cache_size);
 
-            // Then we sample a random population state
-            VectorXui strategies = VectorXui::Zero(_nb_strategies);
-            auto current_state = _state_sampler(generator);
-            egttools::FinitePopulations::sample_simplex(current_state, _pop_size, _nb_strategies, strategies);
+                // Then we sample a random population state
+                VectorXui strategies = VectorXui::Zero(_nb_strategies);
+                auto current_state = _state_sampler(generator);
+                egttools::FinitePopulations::sample_simplex(current_state, _pop_size, _nb_strategies, strategies);
 
-            int die = 0, birth = 0, strategy_p1 = 0, strategy_p2 = 0;
-            // Check if state is homogeneous
-            auto [homogeneous, idx_homo] = _is_homogeneous(strategies);
+                int die = 0, birth = 0, strategy_p1 = 0, strategy_p2 = 0;
+                // Check if state is homogeneous
+                auto [homogeneous, idx_homo] = _is_homogeneous(strategies);
 
-            // If it is we add a random mutant
-            if (homogeneous) {
-                mutate_(generator, birth, idx_homo);
-                strategies(static_cast<int>(birth)) += 1;
-                strategies(idx_homo) -= 1;
-                homogeneous = false;
-            }
-
-            size_t k, j;
-
-            // First we run the simulations for a @param transitory number of generations
-            for (j = 0; j < transitory; ++j) {
-                _sample_players(strategy_p1, strategy_p2, strategies, generator);
-
-                // Update with mutation and return how many steps should be added to the current
-                // generation if the only change in the population could have been a mutation
-                k = _update_multi_step(strategy_p1, strategy_p2, beta, mu,
-                                       birth, die, homogeneous, idx_homo,
-                                       strategies, cache,
-                                       geometric, generator);
-
-                // Update state count by k steps
-                j += k;
-            }
-
-            // Update current state
-            current_state = egttools::FinitePopulations::calculate_state(_pop_size, strategies);
-
-            // Then we start counting
-            for (; j < nb_generations; ++j) {
-                // If the strategies are the same, there will be no change in the population
+                // If it is we add a random mutant
                 if (homogeneous) {
-                    k = geometric(generator);
-                    // Update state count by k steps
-                    sdist(static_cast<int64_t>(current_state)) += k + 1;
                     mutate_(generator, birth, idx_homo);
-
-                    strategies(static_cast<int64_t>(birth)) += 1;
+                    strategies(static_cast<int>(birth)) += 1;
                     strategies(idx_homo) -= 1;
-
-                    // Update state count by 1 step
-                    current_state = egttools::FinitePopulations::calculate_state(_pop_size, strategies);
-                    // and now update distribution after mutation
-                    ++sdist(static_cast<int64_t>(current_state));
                     homogeneous = false;
+                }
 
-                    // Update state count by k steps
-                    j += k;
-                } else {
-                    // First we pick 2 players randomly
+                size_t k, j;
+
+                // First we run the simulations for a @param transitory number of generations
+                for (j = 0; j < transitory; ++j) {
                     _sample_players(strategy_p1, strategy_p2, strategies, generator);
 
-                    _update_step(strategy_p1, strategy_p2, beta, mu,
-                                 birth, die, homogeneous, idx_homo,
-                                 strategies, cache, generator);
-                    // Update state count by k steps
-                    current_state = egttools::FinitePopulations::calculate_state(_pop_size, strategies);
-                    ++sdist(static_cast<int64_t>(current_state));
+                    k = _update_multi_step(strategy_p1, strategy_p2, beta, mu,
+                                           birth, die, homogeneous, idx_homo,
+                                           strategies, cache,
+                                           geometric, generator);
+                    j += k;
+                }
+
+                // Update current state
+                current_state = egttools::FinitePopulations::calculate_state(_pop_size, strategies);
+
+                // Then we start counting
+                for (; j < nb_generations; ++j) {
+                    if (homogeneous) {
+                        k = geometric(generator);
+                        sdist(static_cast<int64_t>(current_state)) += k + 1;
+                        mutate_(generator, birth, idx_homo);
+
+                        strategies(static_cast<int64_t>(birth)) += 1;
+                        strategies(idx_homo) -= 1;
+
+                        current_state = egttools::FinitePopulations::calculate_state(_pop_size, strategies);
+                        ++sdist(static_cast<int64_t>(current_state));
+                        homogeneous = false;
+
+                        j += k;
+                    } else {
+                        _sample_players(strategy_p1, strategy_p2, strategies, generator);
+
+                        _update_step(strategy_p1, strategy_p2, beta, mu,
+                                     birth, die, homogeneous, idx_homo,
+                                     strategies, cache, generator);
+                        current_state = egttools::FinitePopulations::calculate_state(_pop_size, strategies);
+                        ++sdist(static_cast<int64_t>(current_state));
+                    }
                 }
             }
+        };
+
+        // First we initialise the container for the stationary distribution
+        VectorXui sdist = VectorXui::Zero(_nb_states);
+
+        if (tolerance <= 0.0) {
+            // Original behavior: run all nb_runs without convergence checks
+            run_batch(sdist, nb_runs);
+            return sdist.cast<double>() / (nb_runs * counting_gens);
         }
-        return sdist.cast<double>() / (nb_runs * (nb_generations - transitory));
+
+        // Tolerance-based early stopping: process runs in batches, check L∞ convergence after each
+        const size_t batch_size = (check_every > 0) ? check_every : std::max<size_t>(1, nb_runs / 10);
+        Vector prev_estimate = Vector::Zero(_nb_states);
+        size_t runs_done = 0;
+
+        while (runs_done < nb_runs) {
+            const size_t this_batch = std::min(batch_size, nb_runs - runs_done);
+            run_batch(sdist, this_batch);
+            runs_done += this_batch;
+
+            Vector current_estimate = sdist.cast<double>() / (static_cast<double>(runs_done) * counting_gens);
+            // Total variation distance (L1 norm of difference, unnormalised by factor 2)
+            // is the standard convergence metric for Markov chains: bounded, symmetric,
+            // handles zero entries, and has the direct interpretation "total probability
+            // mass that shifted between consecutive estimates".
+            const double l1_change = (current_estimate - prev_estimate).lpNorm<1>();
+            prev_estimate = current_estimate;
+
+            if (l1_change < tolerance) {
+                return current_estimate;
+            }
+        }
+
+        return sdist.cast<double>() / (static_cast<double>(runs_done) * counting_gens);
     }
 
     template<class Cache>
     auto PairwiseComparisonNumerical<Cache>::estimate_stationary_distribution_sparse(const size_t nb_runs,
         const size_t nb_generations,
         const size_t transitory, const double beta,
-        double mu) -> SparseMatrix2D {
+        double mu,
+        const double tolerance,
+        const size_t check_every) -> SparseMatrix2D {
         if (mu <= 0) {
             throw std::invalid_argument(
                 "mu must be > 0. If you want to run a simulation without mutation, "
@@ -978,102 +1026,122 @@ namespace egttools::FinitePopulations {
                 "nb_generations must be >= 1!");
         }
 
+        const size_t counting_gens = nb_generations - transitory;
+
+        // Helper lambda that runs a batch of `batch_size` runs and accumulates into `sdist`.
+        auto run_batch = [&](SparseMatrix2DXui &sdist, const size_t batch_size) {
+            std::geometric_distribution<size_t> geometric(mu);
+
+#if defined(_OPENMP) && !defined(_MSC_VER)
+#pragma omp parallel for reduction(+ : sdist) default(none) shared(geometric, batch_size, nb_generations, transitory, beta, mu)
+#endif
+            for (size_t i = 0; i < batch_size; ++i) {
+                // Random generators and cache are per-thread to avoid contention
+                std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
+                Cache cache(_cache_size);
+
+                // Then we sample a random population state
+                VectorXui strategies = VectorXui::Zero(_nb_strategies);
+                auto current_state = _state_sampler(generator);
+                egttools::FinitePopulations::sample_simplex(current_state, _pop_size, _nb_strategies, strategies);
+
+                int die = 0, birth = 0, strategy_p1 = 0, strategy_p2 = 0;
+                // Check if state is homogeneous
+                auto [homogeneous, idx_homo] = _is_homogeneous(strategies);
+
+                // If it is we add a random mutant
+                if (homogeneous) {
+                    mutate_(generator, birth, idx_homo);
+                    strategies(static_cast<int>(birth)) += 1;
+                    strategies(idx_homo) -= 1;
+                    homogeneous = false;
+                }
+
+                size_t k, j;
+
+                // Transient phase
+                for (j = 0; j < transitory; ++j) {
+                    _sample_players(strategy_p1, strategy_p2, strategies, generator);
+
+                    k = _update_multi_step(strategy_p1, strategy_p2, beta, mu,
+                                           birth, die, homogeneous, idx_homo,
+                                           strategies, cache,
+                                           geometric, generator);
+                    j += k;
+                }
+
+                // Update current state
+                current_state = egttools::FinitePopulations::calculate_state(_pop_size, strategies);
+
+                // Counting phase
+                for (; j < nb_generations; ++j) {
+                    if (homogeneous) {
+                        k = geometric(generator);
+                        sdist.coeffRef(0, static_cast<signed long>(current_state)) += k + 1;
+                        mutate_(generator, birth, idx_homo);
+
+                        strategies(static_cast<int>(birth)) += 1;
+                        strategies(idx_homo) -= 1;
+
+                        current_state = egttools::FinitePopulations::calculate_state(_pop_size, strategies);
+                        sdist.coeffRef(0, static_cast<signed long>(current_state)) += 1;
+                        homogeneous = false;
+
+                        j += k;
+                    } else {
+                        _sample_players(strategy_p1, strategy_p2, strategies, generator);
+
+                        _update_step(strategy_p1, strategy_p2, beta, mu,
+                                     birth, die, homogeneous, idx_homo,
+                                     strategies, cache, generator);
+                        current_state = egttools::FinitePopulations::calculate_state(_pop_size, strategies);
+                        sdist.coeffRef(0, static_cast<signed long>(current_state)) += 1;
+                    }
+                }
+            }
+        };
 
         // First we initialise the container for the stationary distribution
         auto sdist = SparseMatrix2DXui(1, _nb_states);
-        // Distribution number of generations for a mutation to happen
-        std::geometric_distribution<size_t> geometric(mu);
 
-#if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for reduction(+ : sdist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu)
-#endif
-        for (size_t i = 0; i < nb_runs; ++i) {
-            // Random generators and cache are per-thread to avoid contention
-            std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
-            Cache cache(_cache_size);
+        if (tolerance <= 0.0) {
+            // Original behavior: run all nb_runs without convergence checks
+            run_batch(sdist, nb_runs);
+            return sdist.cast<double>() / (nb_runs * counting_gens);
+        }
 
-            // Then we sample a random population state
-            VectorXui strategies = VectorXui::Zero(_nb_strategies);
-            auto current_state = _state_sampler(generator);
-            egttools::FinitePopulations::sample_simplex(current_state, _pop_size, _nb_strategies, strategies);
+        // Tolerance-based early stopping
+        const size_t batch_size = (check_every > 0) ? check_every : std::max<size_t>(1, nb_runs / 10);
+        Vector prev_estimate = Vector::Zero(_nb_states);
+        size_t runs_done = 0;
 
-            int die = 0, birth = 0, strategy_p1 = 0, strategy_p2 = 0;
-            // Check if state is homogeneous
-            auto [homogeneous, idx_homo] = _is_homogeneous(strategies);
+        while (runs_done < nb_runs) {
+            const size_t this_batch = std::min(batch_size, nb_runs - runs_done);
+            run_batch(sdist, this_batch);
+            runs_done += this_batch;
 
-            // If it is we add a random mutant
-            if (homogeneous) {
-                mutate_(generator, birth, idx_homo);
-                strategies(static_cast<int>(birth)) += 1;
-                strategies(idx_homo) -= 1;
-                homogeneous = false;
-            }
+            // Convert sparse to dense for convergence check (dense L1 comparison)
+            Vector current_estimate = Vector(sdist.cast<double>() / (static_cast<double>(runs_done) * counting_gens));
+            const double l1_change = (current_estimate - prev_estimate).lpNorm<1>();
+            prev_estimate = current_estimate;
 
-            size_t k, j;
-
-            // First we run the simulations for a @param transitory number of generations
-            for (j = 0; j < transitory; ++j) {
-                _sample_players(strategy_p1, strategy_p2, strategies, generator);
-
-                // Update with mutation and return how many steps should be added to the current
-                // generation if the only change in the population could have been a mutation
-                k = _update_multi_step(strategy_p1, strategy_p2, beta, mu,
-                                       birth, die, homogeneous, idx_homo,
-                                       strategies, cache,
-                                       geometric, generator);
-
-                // Update state count by k steps
-                j += k;
-            }
-
-            // Update current state
-            current_state = egttools::FinitePopulations::calculate_state(_pop_size, strategies);
-
-            // Then we start counting
-            for (; j < nb_generations; ++j) {
-                // If the strategies are the same, there will be no change in the population
-                if (homogeneous) {
-                    k = geometric(generator);
-                    // Update state count by k steps
-                    sdist.coeffRef(0, static_cast<signed long>(current_state)) += k + 1;
-                    mutate_(generator, birth, idx_homo);
-
-                    strategies(static_cast<int>(birth)) += 1;
-                    strategies(idx_homo) -= 1;
-
-                    // Update state count by 1 step
-                    current_state = egttools::FinitePopulations::calculate_state(_pop_size, strategies);
-                    // and now update distribution after mutation
-                    sdist.coeffRef(0, static_cast<signed long>(current_state)) += 1;
-                    homogeneous = false;
-
-                    // Update state count by k steps
-                    j += k;
-                } else {
-                    // First we pick 2 players randomly
-                    _sample_players(strategy_p1, strategy_p2, strategies, generator);
-
-                    _update_step(strategy_p1, strategy_p2, beta, mu,
-                                 birth, die, homogeneous, idx_homo,
-                                 strategies, cache, generator);
-                    // Update state count by k steps
-                    current_state = egttools::FinitePopulations::calculate_state(_pop_size, strategies);
-                    sdist.coeffRef(0, static_cast<signed long>(current_state)) += 1;
-                }
+            if (l1_change < tolerance) {
+                return sdist.cast<double>() / (static_cast<double>(runs_done) * counting_gens);
             }
         }
-        return sdist.cast<double>() / (nb_runs * (nb_generations - transitory));
+
+        return sdist.cast<double>() / (static_cast<double>(runs_done) * counting_gens);
     }
 
     template<class Cache>
     auto PairwiseComparisonNumerical<Cache>::estimate_strategy_distribution(
         const size_t nb_runs, const size_t nb_generations,
         const size_t transitory, const double beta,
-        double mu) -> Vector {
+        double mu,
+        const double tolerance,
+        const size_t check_every) -> Vector {
         // Here we are going to estimate the strategy distribution directly, without the stationary distribution.
         // To do that, we need to keep count of the average frequency of each strategy in the population during the simulation.
-        // Thus, we will keep a matrix of size nb_strategies x min(1000, nb_generations - transitory). We will use this vector
-        // to store the game states. After the vector has been filled, we will calculate the average frequency of each strategy
 
         if (mu <= 0) {
             throw std::invalid_argument(
@@ -1098,84 +1166,101 @@ namespace egttools::FinitePopulations {
                 "nb_generations must be >= 1!");
         }
 
-        VectorXui strategy_dist = VectorXui::Zero(_nb_strategies);
+        const size_t counting_gens = nb_generations - transitory;
 
-        // Distribution number of generations for a mutation to happen
-        std::geometric_distribution<size_t> geometric(mu);
+        // Helper lambda that runs a batch of `batch_size` runs and accumulates into `strategy_dist`.
+        auto run_batch = [&](VectorXui &strategy_dist, const size_t batch_size) {
+            std::geometric_distribution<size_t> geometric(mu);
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for reduction(+ : strategy_dist) default(none) shared(geometric, nb_runs, nb_generations, transitory, beta, mu)
+#pragma omp parallel for reduction(+ : strategy_dist) default(none) shared(geometric, batch_size, nb_generations, transitory, beta, mu)
 #endif
-        for (size_t i = 0; i < nb_runs; ++i) {
-            // Random generators - each thread should have its own generator
-            std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
+            for (size_t i = 0; i < batch_size; ++i) {
+                // Random generators — each thread gets its own generator
+                std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
 
-            // Then we sample a random population state
-            VectorXui strategies = VectorXui::Zero(_nb_strategies);
-            auto current_state = _state_sampler(generator);
-            egttools::FinitePopulations::sample_simplex(current_state, _pop_size, _nb_strategies, strategies);
+                // Sample a random population state
+                VectorXui strategies = VectorXui::Zero(_nb_strategies);
+                auto current_state = _state_sampler(generator);
+                egttools::FinitePopulations::sample_simplex(current_state, _pop_size, _nb_strategies, strategies);
 
-            int die = 0, birth = 0, strategy_p1 = 0, strategy_p2 = 0;
-            // Check if state is homogeneous
-            auto [homogeneous, idx_homo] = _is_homogeneous(strategies);
+                int die = 0, birth = 0, strategy_p1 = 0, strategy_p2 = 0;
+                auto [homogeneous, idx_homo] = _is_homogeneous(strategies);
 
-            // If it is we add a random mutant
-            if (homogeneous) {
-                mutate_(generator, birth, idx_homo);
-                strategies(static_cast<int>(birth)) += 1;
-                strategies(idx_homo) -= 1;
-                homogeneous = false;
-            }
-
-            // Creates a cache for the fitness data
-            Cache cache(_cache_size);
-            size_t k, j;
-
-            // First we run the simulations for a @param transitory number of generations
-            for (j = 0; j < transitory; ++j) {
-                _sample_players(strategy_p1, strategy_p2, strategies, generator);
-
-                // Update with mutation and return how many steps should be added to the current
-                // generation if the only change in the population could have been a mutation
-                k = _update_multi_step(strategy_p1, strategy_p2, beta, mu,
-                                       birth, die, homogeneous, idx_homo,
-                                       strategies, cache,
-                                       geometric, generator);
-
-                // Update state count by k steps
-                j += k;
-            }
-
-            // Then we start counting
-            for (; j < nb_generations; ++j) {
-                // If the strategies are the same, there will be no change in the population
                 if (homogeneous) {
-                    k = geometric(generator);
-                    // Update the current strategy average
-                    strategy_dist += strategies * k;
                     mutate_(generator, birth, idx_homo);
-
                     strategies(static_cast<int>(birth)) += 1;
                     strategies(idx_homo) -= 1;
-
                     homogeneous = false;
+                }
 
-                    // Update the generation by k steps
-                    j += k;
-                } else {
-                    // First we pick 2 players randomly
+                Cache cache(_cache_size);
+                size_t k, j;
+
+                // Transient phase
+                for (j = 0; j < transitory; ++j) {
                     _sample_players(strategy_p1, strategy_p2, strategies, generator);
 
-                    _update_step(strategy_p1, strategy_p2, beta, mu,
-                                 birth, die, homogeneous, idx_homo,
-                                 strategies, cache, generator);
-                    // Update the current strategy average
-                    strategy_dist += strategies;
+                    k = _update_multi_step(strategy_p1, strategy_p2, beta, mu,
+                                           birth, die, homogeneous, idx_homo,
+                                           strategies, cache,
+                                           geometric, generator);
+                    j += k;
                 }
+
+                // Counting phase
+                for (; j < nb_generations; ++j) {
+                    if (homogeneous) {
+                        k = geometric(generator);
+                        strategy_dist += strategies * k;
+                        mutate_(generator, birth, idx_homo);
+
+                        strategies(static_cast<int>(birth)) += 1;
+                        strategies(idx_homo) -= 1;
+
+                        homogeneous = false;
+                        j += k;
+                    } else {
+                        _sample_players(strategy_p1, strategy_p2, strategies, generator);
+
+                        _update_step(strategy_p1, strategy_p2, beta, mu,
+                                     birth, die, homogeneous, idx_homo,
+                                     strategies, cache, generator);
+                        strategy_dist += strategies;
+                    }
+                }
+            }
+        };
+
+        VectorXui strategy_dist = VectorXui::Zero(_nb_strategies);
+
+        if (tolerance <= 0.0) {
+            // Original behavior: run all nb_runs without convergence checks
+            run_batch(strategy_dist, nb_runs);
+            return strategy_dist.cast<double>() / (static_cast<double>(_pop_size) * nb_runs * counting_gens);
+        }
+
+        // Tolerance-based early stopping
+        const size_t batch_size = (check_every > 0) ? check_every : std::max<size_t>(1, nb_runs / 10);
+        Vector prev_estimate = Vector::Zero(_nb_strategies);
+        size_t runs_done = 0;
+
+        while (runs_done < nb_runs) {
+            const size_t this_batch = std::min(batch_size, nb_runs - runs_done);
+            run_batch(strategy_dist, this_batch);
+            runs_done += this_batch;
+
+            Vector current_estimate = strategy_dist.cast<double>() /
+                                      (static_cast<double>(_pop_size) * runs_done * counting_gens);
+            const double l1_change = (current_estimate - prev_estimate).lpNorm<1>();
+            prev_estimate = current_estimate;
+
+            if (l1_change < tolerance) {
+                return current_estimate;
             }
         }
 
-        return strategy_dist.cast<double>() / (_pop_size * nb_runs * (nb_generations - transitory));
+        return strategy_dist.cast<double>() / (static_cast<double>(_pop_size) * runs_done * counting_gens);
     }
 
     template<class Cache>

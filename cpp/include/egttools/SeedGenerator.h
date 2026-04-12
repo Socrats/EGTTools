@@ -21,6 +21,7 @@
 #define EGTTOOLS_SEEDGENERATOR_H
 
 #include <algorithm>
+#include <mutex>
 #include <random>
 #include <thread>
 
@@ -105,6 +106,10 @@ namespace egttools::Random {
 
         // seed
         unsigned long int _rng_seed = 0;
+
+        // Mutex protecting _rng_engine and _rng_seed against concurrent access
+        // (getSeed() is called from multiple OpenMP threads simultaneously).
+        mutable std::mutex _mutex;
 
         // Private constructor to prevent instancing
         SeedGenerator();

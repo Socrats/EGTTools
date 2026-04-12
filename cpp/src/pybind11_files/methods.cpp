@@ -1295,7 +1295,8 @@ Estimate the fixation probability of an invading strategy in a resident populati
                     "estimate_stationary_distribution",
                     [](PairwiseComparison &self,
                        size_t nb_runs, size_t nb_generations, size_t transitory,
-                       double beta, double mu) {
+                       double beta, double mu,
+                       double tolerance, size_t check_every) {
                         const double expected_mutations =
                             mu * static_cast<double>(nb_generations - transitory);
                         if (expected_mutations < 10.0) {
@@ -1309,21 +1310,48 @@ Estimate the fixation probability of an invading strategy in a resident populati
                         }
                         py::gil_scoped_release release;
                         return self.estimate_stationary_distribution(
-                            nb_runs, nb_generations, transitory, beta, mu);
+                            nb_runs, nb_generations, transitory, beta, mu, tolerance, check_every);
                     },
                     py::arg("nb_runs"),
                     py::arg("nb_generations"),
                     py::arg("transitory"),
                     py::arg("beta"),
                     py::arg("mu"),
+                    py::arg("tolerance") = 0.0,
+                    py::arg("check_every") = 0,
                     R"pbdoc(
 Estimate the stationary distribution of population states.
+
+When ``tolerance > 0``, runs are processed in batches of ``check_every``
+(default: ``max(1, nb_runs // 10)``). After each batch the L1 norm of the
+change in the normalised estimate is computed; if it falls below ``tolerance``
+the simulation stops early. This can save significant computation when the
+distribution converges before all ``nb_runs`` are exhausted.
 
 .. warning::
    If ``mu * (nb_generations - transitory)`` is much less than 10 (i.e. fewer
    than ~10 mutations are expected in the counting window) a ``UserWarning`` is
    raised. The geometric-skip approximation becomes inaccurate in this regime.
    Increase ``nb_generations``, decrease ``transitory``, or raise ``mu``.
+
+Parameters
+----------
+nb_runs : int
+    Maximum number of independent simulation runs.
+nb_generations : int
+    Number of generations per run.
+transitory : int
+    Transient period (generations not counted toward the distribution).
+beta : float
+    Intensity of selection.
+mu : float
+    Mutation probability (must be > 0).
+tolerance : float, optional
+    Convergence threshold on the L1 norm of the change between consecutive
+    batch estimates. 0.0 (default) disables early stopping.
+check_every : int, optional
+    Number of runs per convergence-check batch. 0 (default) uses
+    ``max(1, nb_runs // 10)``.
 
 Returns
 -------
@@ -1335,7 +1363,8 @@ numpy.ndarray
                     "estimate_stationary_distribution_sparse",
                     [](PairwiseComparison &self,
                        size_t nb_runs, size_t nb_generations, size_t transitory,
-                       double beta, double mu) {
+                       double beta, double mu,
+                       double tolerance, size_t check_every) {
                         const double expected_mutations =
                             mu * static_cast<double>(nb_generations - transitory);
                         if (expected_mutations < 10.0) {
@@ -1349,19 +1378,42 @@ numpy.ndarray
                         }
                         py::gil_scoped_release release;
                         return self.estimate_stationary_distribution_sparse(
-                            nb_runs, nb_generations, transitory, beta, mu);
+                            nb_runs, nb_generations, transitory, beta, mu, tolerance, check_every);
                     },
                     py::arg("nb_runs"),
                     py::arg("nb_generations"),
                     py::arg("transitory"),
                     py::arg("beta"),
                     py::arg("mu"),
+                    py::arg("tolerance") = 0.0,
+                    py::arg("check_every") = 0,
                     R"pbdoc(
 Estimate the stationary distribution in sparse format.
+
+Identical to ``estimate_stationary_distribution`` but returns a sparse matrix.
+Use this method when the number of population states is very large, since most
+entries of the stationary distribution will be zero.
 
 .. warning::
    If ``mu * (nb_generations - transitory)`` is much less than 10 a
    ``UserWarning`` is raised. See ``estimate_stationary_distribution`` for details.
+
+Parameters
+----------
+nb_runs : int
+    Maximum number of independent simulation runs.
+nb_generations : int
+    Number of generations per run.
+transitory : int
+    Transient period (generations not counted toward the distribution).
+beta : float
+    Intensity of selection.
+mu : float
+    Mutation probability (must be > 0).
+tolerance : float, optional
+    Convergence threshold on the L1 norm; 0.0 disables early stopping.
+check_every : int, optional
+    Runs per convergence-check batch; 0 uses ``max(1, nb_runs // 10)``.
 
 Returns
 -------
@@ -1373,7 +1425,8 @@ scipy.sparse.csr_matrix
                     "estimate_strategy_distribution",
                     [](PairwiseComparison &self,
                        size_t nb_runs, size_t nb_generations, size_t transitory,
-                       double beta, double mu) {
+                       double beta, double mu,
+                       double tolerance, size_t check_every) {
                         const double expected_mutations =
                             mu * static_cast<double>(nb_generations - transitory);
                         if (expected_mutations < 10.0) {
@@ -1387,19 +1440,41 @@ scipy.sparse.csr_matrix
                         }
                         py::gil_scoped_release release;
                         return self.estimate_strategy_distribution(
-                            nb_runs, nb_generations, transitory, beta, mu);
+                            nb_runs, nb_generations, transitory, beta, mu, tolerance, check_every);
                     },
                     py::arg("nb_runs"),
                     py::arg("nb_generations"),
                     py::arg("transitory"),
                     py::arg("beta"),
                     py::arg("mu"),
+                    py::arg("tolerance") = 0.0,
+                    py::arg("check_every") = 0,
                     R"pbdoc(
 Estimate the average frequency of each strategy over time.
+
+This method bypasses state indexing and is safe when the total number of
+population states exceeds ``MAX_LONG_INT``.
 
 .. warning::
    If ``mu * (nb_generations - transitory)`` is much less than 10 a
    ``UserWarning`` is raised. See ``estimate_stationary_distribution`` for details.
+
+Parameters
+----------
+nb_runs : int
+    Maximum number of independent simulation runs.
+nb_generations : int
+    Number of generations per run.
+transitory : int
+    Transient period (generations not counted toward the distribution).
+beta : float
+    Intensity of selection.
+mu : float
+    Mutation probability (must be > 0).
+tolerance : float, optional
+    Convergence threshold on the L1 norm; 0.0 disables early stopping.
+check_every : int, optional
+    Runs per convergence-check batch; 0 uses ``max(1, nb_runs // 10)``.
 
 Returns
 -------
