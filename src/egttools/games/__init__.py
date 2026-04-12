@@ -8,6 +8,7 @@ try:
         AbstractGame,
         AbstractSpatialGame,
         AbstractNPlayerGame,
+        AbstractNPlayerStateGame,
         NormalFormGame,
         NormalFormNetworkGame,
         CRDGame,
@@ -25,7 +26,8 @@ else:
     from .abstract_games import AbstractTwoPLayerGame
     from .nonlinear_games import NPlayerStagHunt, CommonPoolResourceDilemma, CommonPoolResourceDilemmaCommitment
 
-__all__ = ['AbstractReplicatorGame', 'AbstractGame', 'AbstractSpatialGame', 'AbstractNPlayerGame', 'NormalFormGame',
+__all__ = ['AbstractReplicatorGame', 'AbstractGame', 'AbstractSpatialGame', 'AbstractNPlayerGame',
+           'AbstractNPlayerStateGame', 'NormalFormGame',
            'NormalFormNetworkGame',
            'CRDGame', 'CRDGameTU',
            'OneShotCRD', 'OneShotCRDNetworkGame', 'PGG',

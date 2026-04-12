@@ -37,13 +37,18 @@ SeedGenerator &SeedGenerator::getInstance() {
 }
 
 unsigned long int SeedGenerator::getSeed() {
-  // wrapping up the generator with uniform distribution helps guarantee a good quality for the seed
-  std::uniform_int_distribution<unsigned long int> distribution(0, std::numeric_limits<unsigned>::max());
-  return distribution(_rng_engine);
+    // mt19937_64::operator()() returns a full 64-bit value — no need for a
+    // separate distribution. The mutex is required because getSeed() is called
+    // from multiple OpenMP threads simultaneously, and _rng_engine is not
+    // thread-safe.
+    std::lock_guard<std::mutex> lock(_mutex);
+    return static_cast<unsigned long int>(_rng_engine());
 }
+
 void SeedGenerator::setMainSeed(unsigned long seed) {
-  _rng_seed = seed;
-  _rng_engine.seed(_rng_seed);
+    std::lock_guard<std::mutex> lock(_mutex);
+    _rng_seed = seed;
+    _rng_engine.seed(_rng_seed);
 }
 
 std::mt19937_64 * egttools::Random::thread_local_generator() {

@@ -274,6 +274,171 @@ namespace egttools::utils {
                                             int64_t threshold,
                                             const std::vector<int64_t> &contributing_strategies);
 
+    // -----------------------------------------------------------------------
+    // State-level expected indicators  E[f] = Σ_s  sd(s) · f(s)
+    //
+    // These complement the group-level functions above.  The indicator
+    // receives the full population state vector (counts, sums to pop_size)
+    // rather than a group configuration, so no hypergeometric sampling is
+    // needed.  Use these when the quantity of interest depends directly on
+    // the composition of the whole population (e.g. fraction of cooperators,
+    // average strategy frequency, population-level payoff).
+    // -----------------------------------------------------------------------
+
+    /**
+     * @brief Computes E[f] = Σ_s sd(s) · f(s) for a single callable indicator.
+     *
+     * The callable @p indicator receives the population state as a
+     * std::vector<size_t> of length nb_strategies, whose entries sum to
+     * pop_size.
+     *
+     * @param pop_size               size of the population.
+     * @param nb_strategies          number of strategies.
+     * @param stationary_distribution sparse row-matrix of stationary probabilities.
+     * @param indicator              callable: state → double.
+     * @return expected value of the indicator.
+     */
+    double calculate_expected_state_indicator(
+        size_t pop_size, size_t nb_strategies,
+        SparseMatrix2D &stationary_distribution,
+        const std::function<double(const std::vector<size_t> &)> &indicator);
+
+    /**
+     * @brief Computes E[f_k] = Σ_s sd(s) · f_k(s) for multiple callables in one pass.
+     *
+     * Equivalent to calling calculate_expected_state_indicator once per indicator
+     * but iterates over non-zero states only once.
+     *
+     * @param pop_size               size of the population.
+     * @param nb_strategies          number of strategies.
+     * @param stationary_distribution sparse row-matrix of stationary probabilities.
+     * @param indicators             list of callables, each double(const std::vector<size_t>&).
+     * @return Vector of length indicators.size().
+     */
+    Vector calculate_expected_state_indicators(
+        size_t pop_size, size_t nb_strategies,
+        SparseMatrix2D &stationary_distribution,
+        const std::vector<std::function<double(const std::vector<size_t> &)>> &indicators);
+
+    /**
+     * @brief Fast precomputed path: E[f_k] = Σ_s sd(s) · indicator_values(s, k).
+     *
+     * The caller supplies a dense matrix @p indicator_values of shape
+     * (nb_states × nb_indicators), where row s contains the values of all
+     * indicators evaluated on the population state corresponding to index s.
+     * The computation reduces to a sparse–dense dot product for each column,
+     * with no Python callbacks inside the hot loop.
+     *
+     * @param stationary_distribution sparse row-matrix of stationary probabilities.
+     * @param indicator_values        (nb_states × nb_indicators) dense matrix.
+     * @return Vector of length nb_indicators.
+     */
+    Vector calculate_expected_state_indicators_precomputed(
+        SparseMatrix2D &stationary_distribution,
+        const Matrix2D &indicator_values);
+
+    /**
+     * @brief Precomputes a state-level indicator matrix from group-level callables.
+     *
+     * Converts group-level indicators f_k(group_config) into a state-level
+     * matrix by marginalising over group configurations using the multivariate
+     * hypergeometric distribution:
+     *
+     *   indicator_values(s, k) = Σ_g  P(g | s) · f_k(g)
+     *
+     * where P(g | s) is the multivariate hypergeometric probability of
+     * sampling group configuration g from population state s.
+     *
+     * The returned matrix can be passed directly to
+     * calculate_expected_state_indicators_precomputed or to
+     * PairwiseComparisonNumerical::estimate_stationary_indicators.
+     *
+     * For group_size == 2 (pairwise games) the pairwise probabilities are
+     * computed with simple combinatorics instead of the general hypergeometric
+     * formula, which is faster and avoids calling Distributions.h for trivial
+     * counts.
+     *
+     * @param pop_size      size of the population.
+     * @param group_size    number of individuals sampled per group.
+     * @param nb_strategies number of strategies.
+     * @param indicators    list of callables, each double(const std::vector<size_t>&)
+     *                      mapping a group configuration to a value.
+     * @return Matrix2D of shape (nb_states × nb_indicators).
+     */
+    Matrix2D precompute_group_to_state_indicator_matrix(
+        int64_t pop_size, int64_t group_size, int64_t nb_strategies,
+        const std::vector<std::function<double(const std::vector<size_t> &)>> &indicators);
+
+    // -----------------------------------------------------------------------
+    // Low-level hypergeometric expectation helpers
+    //
+    // These functions encapsulate the two recurring inner-loop patterns that
+    // appear in every game's calculate_fitness and in the group-achievement /
+    // polarization helpers.  By hoisting the log-denominator once and
+    // iterating over group configurations internally, they replace the
+    // open-coded loops throughout the codebase and are also exposed to
+    // Python so that users can implement custom games without re-deriving
+    // the sampling logic.
+    // -----------------------------------------------------------------------
+
+    /**
+     * @brief Compute E[f | state] under the multivariate hypergeometric distribution.
+     *
+     * Returns  sum_{g=0}^{nb_group_configs-1} P(g | state) * f_values[g]
+     *
+     * where P(g | state) is the probability of drawing group configuration g
+     * (of size @p group_size) from a population @p state (of size @p pop_size)
+     * without replacement.  The log-denominator log C(pop_size, group_size) is
+     * computed once and reused across all group configurations.
+     *
+     * @param pop_size      Total population size (m in the hypergeometric formula).
+     * @param group_size    Group / sample size (n).
+     * @param nb_strategies Number of strategy types (k).
+     * @param state         Population counts of length nb_strategies, summing to pop_size.
+     * @param f_values      Precomputed scalar values per group configuration,
+     *                      length = C(group_size + nb_strategies - 1, nb_strategies - 1).
+     * @return Expected value of f given the current population state.
+     */
+    double calculate_hypergeometric_expected_value(
+        size_t pop_size,
+        size_t group_size,
+        size_t nb_strategies,
+        const Eigen::Ref<const VectorXui> &state,
+        const Eigen::Ref<const Vector> &f_values);
+
+    /**
+     * @brief Compute the fitness of a focal player under the multivariate hypergeometric.
+     *
+     * This implements the standard N-player game fitness formula:
+     *
+     *   fitness = sum_{g : g[player_type] > 0}
+     *                 payoffs_row[g] * P(g_reduced | strategies)
+     *
+     * where @p strategies is the population of @p pop_size - 1 individuals
+     * (the focal player is absent) and @p g_reduced is the group configuration @p g
+     * with the focal player's count decremented by one.  Sampling uses group_size - 1
+     * remaining co-players from that reduced population, so the hypergeometric
+     * parameters are (pop_size - 1, group_size - 1).
+     *
+     * @param player_type   Strategy index of the focal player.
+     * @param pop_size      Full population size including the focal player.
+     * @param group_size    Full group size including the focal player.
+     * @param nb_strategies Number of strategy types.
+     * @param strategies    Population counts WITHOUT the focal player
+     *                      (length nb_strategies, sum = pop_size - 1).
+     * @param payoffs_row   Precomputed payoffs for the focal player's strategy in every
+     *                      group configuration (length = nb_group_configs for groups of
+     *                      @p group_size).  Entry is 0 when the focal player is absent.
+     * @return Expected fitness of the focal player.
+     */
+    double calculate_hypergeometric_fitness(
+        int player_type,
+        size_t pop_size,
+        size_t group_size,
+        size_t nb_strategies,
+        const Eigen::Ref<const VectorXui> &strategies,
+        const Eigen::Ref<const Vector> &payoffs_row);
+
 }// namespace egttools::utils
 
 #endif//EGTTOOLS_UTILS_CALCULATEEXPECTEDINDICATORS_H

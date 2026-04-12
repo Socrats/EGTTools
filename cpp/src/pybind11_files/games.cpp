@@ -490,6 +490,158 @@ file_name : str
 )pbdoc",
                  py::arg("file_name"));
 
+    py::class_<egttools::FinitePopulations::AbstractNPlayerStateGame,
+                stubs::PyAbstractNPlayerStateGame,
+                egttools::FinitePopulations::AbstractNPlayerGame>(mGames, "AbstractNPlayerStateGame",
+        R"pbdoc(
+Abstract base class for N-player games with state-dependent payoffs.
+
+Use this class when payoffs cannot be precomputed at initialization because they
+depend on the current population state (e.g., games with variable risk functions
+whose value changes with population composition).
+
+Subclasses must implement `get_payoffs_for_player`, which is called *once* per
+`calculate_fitness` invocation. The C++ base class then runs the full
+hypergeometric sampling loop in C++, reducing the number of Python call-throughs
+from O(nb_group_configurations) to exactly 1 per fitness evaluation.
+
+Parameters
+----------
+nb_strategies : int
+    Number of strategies in the game.
+group_size : int
+    Number of players per interacting group.
+
+Abstract Methods
+----------------
+get_payoffs_for_player(player_type, state_index, state) -> np.ndarray
+    Returns a 1-D array of length `nb_group_configurations` with the expected
+    payoff for `player_type` under each possible group configuration, given that
+    the full population state (including the focal player) has linear index
+    `state_index`.
+
+play(group_composition, game_payoffs)
+    Fills `game_payoffs` in-place for a concrete group sample.
+
+calculate_payoffs() -> np.ndarray
+    Optionally pre-computes and stores the payoff matrix for inspection.
+    Not used by `calculate_fitness`.
+
+Notes
+-----
+The `state_index` passed to `get_payoffs_for_player` is computed by
+`egttools.calculate_state(group_size, full_state)`, where `full_state` is
+`state` with `state[player_type] + 1`.
+
+Example
+-------
+>>> import numpy as np
+>>> import egttools as egt
+>>>
+>>> class MyGame(egt.games.AbstractNPlayerStateGame):
+...     def __init__(self, nb_strategies, group_size, risk_func, payoff_func):
+...         super().__init__(nb_strategies, group_size)
+...         self._configs = [egt.sample_simplex(i, group_size, nb_strategies)
+...                          for i in range(self.nb_group_configurations)]
+...         self.risk_func = risk_func
+...         self.payoff_func = payoff_func
+...
+...     def get_payoffs_for_player(self, player_type, state_index, state):
+...         risk = self.risk_func(state_index)
+...         return np.array([self.payoff_func(risk, gc)[player_type]
+...                          for gc in self._configs])
+...
+...     def play(self, group_composition, game_payoffs): ...
+...     def calculate_payoffs(self): return self.payoffs()
+...     def payoffs(self): return np.zeros((self.nb_strategies, self.nb_group_configurations))
+...     def payoff(self, strategy, group_composition): return 0.0
+...     def save_payoffs(self, file_name): pass
+...     def __str__(self): return "MyGame"
+...     def type(self): return "MyGame"
+)pbdoc")
+            .def(py::init_alias<int, int>(),
+                 py::arg("nb_strategies"),
+                 py::arg("group_size"))
+
+            .def("get_payoffs_for_player",
+                 &egttools::FinitePopulations::AbstractNPlayerStateGame::get_payoffs_for_player,
+                 R"pbdoc(
+Returns the payoff row for `player_type` across all group configurations.
+
+This method is called once per `calculate_fitness` invocation. Implement it
+in your Python subclass to return the payoffs that depend on the current
+population state.
+
+Parameters
+----------
+player_type : int
+    Index of the focal player's strategy.
+state_index : int
+    Linear index of the full population state (including the focal player),
+    as returned by `egttools.calculate_state(group_size, full_state)`.
+state : np.ndarray
+    Population state vector *excluding* the focal player (same as the
+    `strategies` argument passed to `calculate_fitness`).
+
+Returns
+-------
+np.ndarray
+    1-D array of length `nb_group_configurations` with the payoff for
+    `player_type` in each possible group composition drawn from `state`.
+)pbdoc",
+                 py::arg("player_type"),
+                 py::arg("state_index"),
+                 py::arg("state"))
+
+            .def("calculate_fitness",
+                 &egttools::FinitePopulations::AbstractNPlayerStateGame::calculate_fitness,
+                 R"pbdoc(
+Computes the fitness of `player_type` in a population with state `strategies`.
+
+Calls `get_payoffs_for_player` once to obtain the full payoff row, then
+evaluates the hypergeometric expectation in C++.
+
+Parameters
+----------
+player_type : int
+    Index of the focal player's strategy.
+pop_size : int
+    Total population size (excluding the focal player).
+strategies : np.ndarray
+    Strategy counts in the population, excluding the focal player.
+
+Returns
+-------
+float
+    Expected fitness of `player_type`.
+)pbdoc",
+                 py::arg("player_type"),
+                 py::arg("pop_size"),
+                 py::arg("strategies"))
+
+            .def("play",
+                 &egttools::FinitePopulations::AbstractNPlayerStateGame::play,
+                 py::arg("group_composition"),
+                 py::arg("game_payoffs"))
+            .def("calculate_payoffs",
+                 &egttools::FinitePopulations::AbstractNPlayerStateGame::calculate_payoffs,
+                 py::return_value_policy::reference_internal)
+            .def("__str__", &egttools::FinitePopulations::AbstractNPlayerStateGame::toString)
+            .def("type", &egttools::FinitePopulations::AbstractNPlayerStateGame::type)
+            .def("payoffs",
+                 &egttools::FinitePopulations::AbstractNPlayerStateGame::payoffs,
+                 py::return_value_policy::reference_internal)
+            .def("payoff",
+                 &egttools::FinitePopulations::AbstractNPlayerStateGame::payoff,
+                 py::arg("strategy"),
+                 py::arg("group_composition"))
+            .def("nb_strategies", &egttools::FinitePopulations::AbstractNPlayerStateGame::nb_strategies)
+            .def("group_size", &egttools::FinitePopulations::AbstractNPlayerStateGame::group_size)
+            .def("nb_group_configurations", &egttools::FinitePopulations::AbstractNPlayerStateGame::nb_group_configurations)
+            .def("save_payoffs",
+                 &egttools::FinitePopulations::AbstractNPlayerStateGame::save_payoffs,
+                 py::arg("file_name"));
+
     py::class_<egttools::FinitePopulations::NormalFormGame,
                 egttools::FinitePopulations::AbstractGame>(mGames, "NormalFormGame")
             .def(py::init<size_t, const Eigen::Ref<const egttools::Matrix2D> &>(),

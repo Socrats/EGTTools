@@ -3,6 +3,7 @@
 //
 
 #include <egttools/finite_populations/games/NPlayerStagHunt.hpp>
+#include <egttools/utils/CalculateExpectedIndicators.h>
 
 egttools::FinitePopulations::NPlayerStagHunt::NPlayerStagHunt(int group_size, int cooperation_threshold,
                                                               double enhancement_factor, double cost)
@@ -75,31 +76,12 @@ double egttools::FinitePopulations::NPlayerStagHunt::calculate_fitness(const int
     // This function assumes that the strategy counts given in @param strategies does not include
     // the player with @param player_type strategy.
 
-    double fitness = 0.0, payoff;
-    std::vector<size_t> sample_counts(nb_strategies_, 0);
-
-    // If it isn't, then we must calculate the fitness for every possible group combination
-    for (int64_t i = 0; i < nb_group_configurations_; ++i) {
-        // Update sample counts based on the current state
-        egttools::FinitePopulations::sample_simplex(i, group_size_, nb_strategies_, sample_counts);
-
-        // If the focal player is not in the group, then the payoff should be zero
-        if (sample_counts[player_type] > 0) {
-            // First update sample_counts with new group composition
-            payoff = expected_payoffs_(static_cast<int>(player_type), i);
-            sample_counts[player_type] -= 1;
-
-            // Calculate probability of encountering the current group
-            auto prob = egttools::multivariateHypergeometricPDF(pop_size - 1, nb_strategies_, group_size_ - 1,
-                                                                sample_counts,
-                                                                strategies);
-            sample_counts[player_type] += 1;
-
-            fitness += payoff * prob;
-        }
-    }
-
-    return fitness;
+    const egttools::Vector payoffs_row = expected_payoffs_.row(player_type);
+    return egttools::utils::calculate_hypergeometric_fitness(
+        player_type, pop_size,
+        static_cast<size_t>(group_size_),
+        static_cast<size_t>(nb_strategies_),
+        strategies, payoffs_row);
 }
 
 void egttools::FinitePopulations::NPlayerStagHunt::save_payoffs(std::string file_name) const {
@@ -157,22 +139,13 @@ const egttools::VectorXi &egttools::FinitePopulations::NPlayerStagHunt::calculat
 
 double egttools::FinitePopulations::NPlayerStagHunt::calculate_population_group_achievement(size_t pop_size,
     const Eigen::Ref<const egttools::VectorXui> &population_state) {
-    double group_achievement = 0.0;
-    std::vector<size_t> sample_counts(nb_strategies_, 0);
-
-    // If it isn't, then we must calculate the fitness for every possible group combination
-    for (int64_t i = 0; i < nb_group_configurations_; ++i) {
-        // Update sample counts based on the current state
-        egttools::FinitePopulations::sample_simplex(i, group_size_, nb_strategies_, sample_counts);
-
-        if (group_achievement_(i) == 1) {
-            group_achievement += egttools::multivariateHypergeometricPDF(
-                pop_size, nb_strategies_, group_size_, sample_counts,
-                population_state);
-        }
-    }
-
-    return group_achievement;
+    const egttools::Vector achievement_d = group_achievement_.cast<double>();
+    return egttools::utils::calculate_hypergeometric_expected_value(
+        pop_size,
+        static_cast<size_t>(group_size_),
+        static_cast<size_t>(nb_strategies_),
+        population_state,
+        achievement_d);
 }
 
 double egttools::FinitePopulations::NPlayerStagHunt::calculate_group_achievement(size_t pop_size,
