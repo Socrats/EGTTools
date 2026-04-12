@@ -265,6 +265,46 @@ namespace egttools::FinitePopulations {
         Vector estimate_strategy_distribution(size_t nb_runs, size_t nb_generations, size_t transitory, double beta,
                                               double mu, double tolerance = 0.0, size_t check_every = 0);
 
+        /**
+         * @brief Estimates the expected value of one or more indicator functions under
+         *        the stationary distribution, without first computing the full distribution.
+         *
+         * At each post-transitory simulation step the method looks up the pre-computed
+         * indicator values for the current population state and accumulates them.  The
+         * per-run time-average converges to E[f_k] = Σ_s sd(s)·indicator_values(s,k) by
+         * the ergodic theorem.  No explicit stationary distribution is stored.
+         *
+         * @p indicator_values must be a dense matrix of shape (nb_states × nb_indicators)
+         * where row s contains the values of all indicators for the population state
+         * corresponding to index s.  For group-level indicators f(group_config), build
+         * this matrix with egttools::utils::precompute_group_to_state_indicator_matrix
+         * before calling this method.
+         *
+         * Returns a matrix of shape (nb_runs_used × nb_indicators): one row per completed
+         * run, containing that run's time-averaged indicator values.  The caller can
+         * aggregate (mean, bootstrap CI, etc.) in Python without re-running the simulation.
+         *
+         * When @p tolerance > 0, runs are processed in batches of @p check_every
+         * (default max(1, nb_runs/10)) and the simulation stops early when the L1 norm
+         * of the change in the column-means between consecutive batches falls below
+         * @p tolerance.  tolerance=0 (default) always runs all nb_runs.
+         *
+         * @param nb_runs            maximum number of independent simulation runs.
+         * @param nb_generations     number of generations per run.
+         * @param transitory         transitory period excluded from accumulation.
+         * @param beta               intensity of selection.
+         * @param mu                 mutation probability (must be > 0).
+         * @param indicator_values   (nb_states × nb_indicators) precomputed matrix.
+         * @param tolerance          L1 convergence threshold; 0.0 disables early stopping.
+         * @param check_every        batch size for convergence checks; 0 → auto.
+         * @return Matrix2D of shape (nb_runs_used × nb_indicators).
+         */
+        Matrix2D estimate_stationary_indicators(
+            size_t nb_runs, size_t nb_generations, size_t transitory,
+            double beta, double mu,
+            const Eigen::Ref<const Matrix2D> &indicator_values,
+            double tolerance = 0.0, size_t check_every = 0);
+
         // Getters
         [[nodiscard]] size_t nb_strategies() const;
 
@@ -1261,6 +1301,138 @@ namespace egttools::FinitePopulations {
         }
 
         return strategy_dist.cast<double>() / (static_cast<double>(_pop_size) * runs_done * counting_gens);
+    }
+
+    template<class Cache>
+    auto PairwiseComparisonNumerical<Cache>::estimate_stationary_indicators(
+        const size_t nb_runs, const size_t nb_generations,
+        const size_t transitory, const double beta, double mu,
+        const Eigen::Ref<const Matrix2D> &indicator_values,
+        const double tolerance,
+        const size_t check_every) -> Matrix2D {
+        if (mu <= 0) {
+            throw std::invalid_argument(
+                "mu must be > 0. If you want to run a simulation without mutation, "
+                "please use the method signature without the mu parameter");
+        }
+        if (beta < 0) throw std::invalid_argument("beta must be >= 0!");
+        if (transitory > nb_generations)
+            throw std::invalid_argument("transitory must be < nb_generations!");
+        if (nb_runs < 1) throw std::invalid_argument("nb_runs must be >= 1!");
+        if (nb_generations < 1) throw std::invalid_argument("nb_generations must be >= 1!");
+
+        const int64_t nb_indicators = indicator_values.cols();
+        if (static_cast<size_t>(indicator_values.rows()) != _nb_states)
+            throw std::invalid_argument(
+                "indicator_values must have nb_states rows (one per population state).");
+
+        // Pre-allocate output: one row per run (up to nb_runs).
+        // Rows beyond runs_done are unused when early stopping triggers.
+        Matrix2D per_run_results = Matrix2D::Zero(static_cast<int64_t>(nb_runs), nb_indicators);
+
+        // Lambda that fills rows [start, start+batch_size) of per_run_results.
+        auto run_batch = [&](const size_t start, const size_t batch_size) {
+            std::geometric_distribution<size_t> geometric(mu);
+
+#if defined(_OPENMP) && !defined(_MSC_VER)
+#pragma omp parallel for default(none) \
+    shared(per_run_results, start, batch_size, nb_generations, transitory, beta, mu, \
+           geometric, indicator_values, nb_indicators)
+#endif
+            for (size_t i = 0; i < batch_size; ++i) {
+                std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
+                Cache cache(_cache_size);
+
+                VectorXui strategies = VectorXui::Zero(_nb_strategies);
+                auto current_state = _state_sampler(generator);
+                egttools::FinitePopulations::sample_simplex(current_state, _pop_size, _nb_strategies, strategies);
+
+                int die = 0, birth = 0, strategy_p1 = 0, strategy_p2 = 0;
+                auto [homogeneous, idx_homo] = _is_homogeneous(strategies);
+                if (homogeneous) {
+                    mutate_(generator, birth, idx_homo);
+                    strategies(static_cast<int>(birth)) += 1;
+                    strategies(idx_homo) -= 1;
+                    homogeneous = false;
+                }
+
+                // Accumulator for this run: row vector matching indicator_values columns.
+                // Using a row vector avoids transposing on every access.
+                Eigen::RowVectorXd run_sum = Eigen::RowVectorXd::Zero(nb_indicators);
+                size_t run_count = 0;
+                size_t k, j;
+
+                // Transitory phase (no accumulation).
+                for (j = 0; j < transitory; ++j) {
+                    _sample_players(strategy_p1, strategy_p2, strategies, generator);
+                    k = _update_multi_step(strategy_p1, strategy_p2, beta, mu,
+                                           birth, die, homogeneous, idx_homo,
+                                           strategies, cache, geometric, generator);
+                    j += k;
+                }
+
+                current_state = egttools::FinitePopulations::calculate_state(_pop_size, strategies);
+
+                // Counting phase.
+                for (; j < nb_generations; ++j) {
+                    if (homogeneous) {
+                        k = geometric(generator);
+                        // k+1 steps spent in current_state before mutation.
+                        run_sum += indicator_values.row(static_cast<int64_t>(current_state)) * static_cast<double>(k + 1);
+                        run_count += k + 1;
+                        mutate_(generator, birth, idx_homo);
+                        strategies(static_cast<int>(birth)) += 1;
+                        strategies(idx_homo) -= 1;
+                        current_state = egttools::FinitePopulations::calculate_state(_pop_size, strategies);
+                        // 1 step in the post-mutation state.
+                        run_sum += indicator_values.row(static_cast<int64_t>(current_state));
+                        ++run_count;
+                        homogeneous = false;
+                        j += k;
+                    } else {
+                        _sample_players(strategy_p1, strategy_p2, strategies, generator);
+                        _update_step(strategy_p1, strategy_p2, beta, mu,
+                                     birth, die, homogeneous, idx_homo,
+                                     strategies, cache, generator);
+                        current_state = egttools::FinitePopulations::calculate_state(_pop_size, strategies);
+                        run_sum += indicator_values.row(static_cast<int64_t>(current_state));
+                        ++run_count;
+                    }
+                }
+
+                // Store time-average for this run.
+                const auto row_idx = static_cast<int64_t>(start + i);
+                if (run_count > 0)
+                    per_run_results.row(row_idx) = run_sum / static_cast<double>(run_count);
+                else
+                    per_run_results.row(row_idx) = run_sum;  // edge case: 0 counting steps
+            }
+        };
+
+        if (tolerance <= 0.0) {
+            run_batch(0, nb_runs);
+            return per_run_results;
+        }
+
+        // Tolerance-based early stopping: process in batches, check L1 on column means.
+        const size_t batch_size = (check_every > 0) ? check_every : std::max<size_t>(1, nb_runs / 10);
+        Eigen::RowVectorXd prev_mean = Eigen::RowVectorXd::Zero(nb_indicators);
+        size_t runs_done = 0;
+
+        while (runs_done < nb_runs) {
+            const size_t this_batch = std::min(batch_size, nb_runs - runs_done);
+            run_batch(runs_done, this_batch);
+            runs_done += this_batch;
+
+            // Column-wise mean over completed rows.
+            Eigen::RowVectorXd current_mean =
+                per_run_results.topRows(static_cast<int64_t>(runs_done)).colwise().mean();
+            const double l1 = (current_mean - prev_mean).lpNorm<1>();
+            prev_mean = current_mean;
+            if (l1 < tolerance) break;
+        }
+
+        return per_run_results.topRows(static_cast<int64_t>(runs_done)).eval();
     }
 
     template<class Cache>
