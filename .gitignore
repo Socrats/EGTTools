@@ -82,6 +82,8 @@ src/egttools/_version.py
 # CMake build artifacts
 # =============================================================================
 _skbuild/
+# Auto-generated at build time — content depends on the local build environment
+src/egttools/numerical/egttools_build_info.txt
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
