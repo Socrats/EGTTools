@@ -303,6 +303,7 @@ if (SKBUILD)
         include(InstallOpenMP)
         include(InstallBLASLAPACK)
     endif ()
+
 endif ()
 
 # ------------------------------------------------------------------------------
