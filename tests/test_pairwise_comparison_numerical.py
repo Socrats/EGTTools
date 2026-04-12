@@ -1,3 +1,4 @@
+import warnings
 import pytest
 import numpy as np
 
@@ -141,19 +142,27 @@ class TestRunWithoutMutation:
         assert result.shape == (150, 3)
         assert np.all(result.sum(axis=1) == 100)
 
-    def test_fixation_fills_all_columns(self, pc2):
-        """After fixation every subsequent row must be the fixated state."""
-        init = np.array([1, 49], dtype=np.uint64)
-        result = pc2.run_without_mutation(500, 1.0, init)
+    def test_fixation_fills_all_columns(self):
+        """After fixation every subsequent row must be the fixated state (both columns)."""
+        # Use a strong selection game where one strategy dominates to guarantee fixation.
+        # Strategy 0 strictly dominates: payoff always 10 vs 0.
+        dom_payoffs = np.array([[10., 10.], [0., 0.]])
+        game = Matrix2PlayerGameHolder(2, dom_payoffs)
+        pc = PairwiseComparisonNumerical(20, game, 200)
+        init = np.array([1, 19], dtype=np.uint64)
+        # With beta=10 (strong selection) and a dominant strategy, fixation is nearly certain
+        # within 500 generations
+        result = pc.run_without_mutation(500, 10.0, init)
         assert result.shape == (501, 2)
-        assert np.all(result.sum(axis=1) == 50)
-        # Find fixation row
-        fix_rows = np.where((result == 50).any(axis=1))[0]
-        if fix_rows.size > 0:
-            fix_row = fix_rows[0]
-            fixed_state = result[fix_row]
-            # All subsequent rows must equal the fixed state (both columns)
-            np.testing.assert_array_equal(result[fix_row:], fixed_state)
+        assert np.all(result.sum(axis=1) == 20)
+        fix_rows = np.where((result == 20).any(axis=1))[0]
+        assert fix_rows.size > 0, "Dominant strategy should have fixated within 500 generations"
+        fix_row = fix_rows[0]
+        fixed_state = result[fix_row]  # shape (2,)
+        # Every subsequent row must equal the fixed state (broadcasting: (N,2) vs (2,))
+        assert np.all(result[fix_row:] == fixed_state), (
+            f"Rows after fixation at row {fix_row} are not constant:\n{result[fix_row:]}"
+        )
 
     def test_homogeneous_init_returns_constant(self, pc3):
         """Starting from a homogeneous state without mutation stays constant."""
@@ -270,6 +279,86 @@ class TestStrategyDistribution:
     def test_values_non_negative(self, pc3):
         sd = pc3.estimate_strategy_distribution(10, 5000, 500, 1.0, 0.05)
         assert np.all(sd >= 0)
+
+
+# ---------------------------------------------------------------------------
+# Small-mu UserWarning tests
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# change_game() tests
+# ---------------------------------------------------------------------------
+
+class TestChangeGame:
+    def test_change_game_updates_payoffs(self, payoffs):
+        game_a = Matrix2PlayerGameHolder(3, payoffs)
+        new_payoffs = np.eye(3)
+        new_game = Matrix2PlayerGameHolder(3, new_payoffs)
+        pc = PairwiseComparisonNumerical(50, game_a, 500)
+        pc.change_game(new_game)
+        np.testing.assert_array_almost_equal(pc.payoffs, new_payoffs)
+
+    def test_change_game_new_game_used_in_run(self):
+        """After change_game the simulation uses the new game's payoffs."""
+        # All-cooperation game: cooperate always wins
+        coop_payoffs = np.array([[2., 2.], [0., 0.]])
+        defect_payoffs = np.array([[0., 0.], [2., 2.]])
+
+        coop_game = Matrix2PlayerGameHolder(2, coop_payoffs)
+        defect_game = Matrix2PlayerGameHolder(2, defect_payoffs)
+
+        pc = PairwiseComparisonNumerical(20, coop_game, 200)
+        # Simulate with coop game: strategy 0 should tend to fixate
+        init = np.array([1, 19], dtype=np.uint64)
+        fp_coop = pc.estimate_fixation_probability(0, 1, 500, 5000, 5.0)
+
+        # Switch to defect game: now strategy 1 should have higher fixation
+        pc.change_game(defect_game)
+        fp_defect_inv = pc.estimate_fixation_probability(1, 0, 500, 5000, 5.0)
+
+        # Both games are symmetric mirror images, so their fixation probs should be similar
+        assert abs(fp_coop - fp_defect_inv) < 0.1
+
+
+# ---------------------------------------------------------------------------
+# Small-mu UserWarning tests
+# ---------------------------------------------------------------------------
+
+class TestSmallMuWarning:
+    """Estimation methods should warn when mu*(nb_gen-transitory) < 10."""
+
+    def _make_pc(self):
+        game = Matrix2PlayerGameHolder(2, np.array([[1., 0.], [0., 1.]]))
+        return PairwiseComparisonNumerical(10, game, 100), game
+
+    def test_estimate_strategy_distribution_warns(self):
+        pc, game = self._make_pc()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            pc.estimate_strategy_distribution(2, 50, 5, 1.0, 1e-3)
+        assert any(issubclass(x.category, UserWarning) for x in w)
+
+    def test_estimate_stationary_distribution_warns(self):
+        pc, game = self._make_pc()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            pc.estimate_stationary_distribution(2, 50, 5, 1.0, 1e-3)
+        assert any(issubclass(x.category, UserWarning) for x in w)
+
+    def test_estimate_stationary_distribution_sparse_warns(self):
+        pc, game = self._make_pc()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            pc.estimate_stationary_distribution_sparse(2, 50, 5, 1.0, 1e-3)
+        assert any(issubclass(x.category, UserWarning) for x in w)
+
+    def test_no_warning_when_mu_large_enough(self):
+        pc, game = self._make_pc()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            pc.estimate_strategy_distribution(2, 1000, 0, 1.0, 0.05)
+        mu_warnings = [x for x in w if issubclass(x.category, UserWarning)]
+        assert len(mu_warnings) == 0
 
 
 # ---------------------------------------------------------------------------
