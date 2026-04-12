@@ -1293,15 +1293,37 @@ Estimate the fixation probability of an invading strategy in a resident populati
                 )
                 .def(
                     "estimate_stationary_distribution",
-                    &PairwiseComparison::estimate_stationary_distribution,
+                    [](PairwiseComparison &self,
+                       size_t nb_runs, size_t nb_generations, size_t transitory,
+                       double beta, double mu) {
+                        const double expected_mutations =
+                            mu * static_cast<double>(nb_generations - transitory);
+                        if (expected_mutations < 10.0) {
+                            PyErr_WarnEx(
+                                PyExc_UserWarning,
+                                "mu is very small relative to (nb_generations - transitory): "
+                                "the geometric-skip approximation may produce inaccurate results "
+                                "(fewer than 10 expected mutations in the counting window). "
+                                "Consider increasing mu, nb_generations, or decreasing transitory.",
+                                1);
+                        }
+                        py::gil_scoped_release release;
+                        return self.estimate_stationary_distribution(
+                            nb_runs, nb_generations, transitory, beta, mu);
+                    },
                     py::arg("nb_runs"),
                     py::arg("nb_generations"),
                     py::arg("transitory"),
                     py::arg("beta"),
                     py::arg("mu"),
-                    py::call_guard<py::gil_scoped_release>(),
                     R"pbdoc(
 Estimate the stationary distribution of population states.
+
+.. warning::
+   If ``mu * (nb_generations - transitory)`` is much less than 10 (i.e. fewer
+   than ~10 mutations are expected in the counting window) a ``UserWarning`` is
+   raised. The geometric-skip approximation becomes inaccurate in this regime.
+   Increase ``nb_generations``, decrease ``transitory``, or raise ``mu``.
 
 Returns
 -------
@@ -1311,15 +1333,35 @@ numpy.ndarray
                 )
                 .def(
                     "estimate_stationary_distribution_sparse",
-                    &PairwiseComparison::estimate_stationary_distribution_sparse,
+                    [](PairwiseComparison &self,
+                       size_t nb_runs, size_t nb_generations, size_t transitory,
+                       double beta, double mu) {
+                        const double expected_mutations =
+                            mu * static_cast<double>(nb_generations - transitory);
+                        if (expected_mutations < 10.0) {
+                            PyErr_WarnEx(
+                                PyExc_UserWarning,
+                                "mu is very small relative to (nb_generations - transitory): "
+                                "the geometric-skip approximation may produce inaccurate results "
+                                "(fewer than 10 expected mutations in the counting window). "
+                                "Consider increasing mu, nb_generations, or decreasing transitory.",
+                                1);
+                        }
+                        py::gil_scoped_release release;
+                        return self.estimate_stationary_distribution_sparse(
+                            nb_runs, nb_generations, transitory, beta, mu);
+                    },
                     py::arg("nb_runs"),
                     py::arg("nb_generations"),
                     py::arg("transitory"),
                     py::arg("beta"),
                     py::arg("mu"),
-                    py::call_guard<py::gil_scoped_release>(),
                     R"pbdoc(
 Estimate the stationary distribution in sparse format.
+
+.. warning::
+   If ``mu * (nb_generations - transitory)`` is much less than 10 a
+   ``UserWarning`` is raised. See ``estimate_stationary_distribution`` for details.
 
 Returns
 -------
@@ -1329,15 +1371,35 @@ scipy.sparse.csr_matrix
                 )
                 .def(
                     "estimate_strategy_distribution",
-                    &PairwiseComparison::estimate_strategy_distribution,
+                    [](PairwiseComparison &self,
+                       size_t nb_runs, size_t nb_generations, size_t transitory,
+                       double beta, double mu) {
+                        const double expected_mutations =
+                            mu * static_cast<double>(nb_generations - transitory);
+                        if (expected_mutations < 10.0) {
+                            PyErr_WarnEx(
+                                PyExc_UserWarning,
+                                "mu is very small relative to (nb_generations - transitory): "
+                                "the geometric-skip approximation may produce inaccurate results "
+                                "(fewer than 10 expected mutations in the counting window). "
+                                "Consider increasing mu, nb_generations, or decreasing transitory.",
+                                1);
+                        }
+                        py::gil_scoped_release release;
+                        return self.estimate_strategy_distribution(
+                            nb_runs, nb_generations, transitory, beta, mu);
+                    },
                     py::arg("nb_runs"),
                     py::arg("nb_generations"),
                     py::arg("transitory"),
                     py::arg("beta"),
                     py::arg("mu"),
-                    py::call_guard<py::gil_scoped_release>(),
                     R"pbdoc(
 Estimate the average frequency of each strategy over time.
+
+.. warning::
+   If ``mu * (nb_generations - transitory)`` is much less than 10 a
+   ``UserWarning`` is raised. See ``estimate_stationary_distribution`` for details.
 
 Returns
 -------
@@ -1358,7 +1420,25 @@ numpy.ndarray
                 .def_property("cache_size",
                               &PairwiseComparison::cache_size,
                               &PairwiseComparison::set_cache_size,
-                              "Maximum number of cached fitness values.");
+                              "Maximum number of cached fitness values.")
+                .def(
+                    "change_game",
+                    &PairwiseComparison::change_game,
+                    py::arg("game"),
+                    py::keep_alive<1, 2>(),
+                    R"pbdoc(
+Replace the game used for fitness computation.
+
+The solver retains a pointer to the new game object; the caller must ensure
+the game stays alive for the lifetime of this solver (enforced automatically
+when called from Python via the keep-alive policy).
+
+Parameters
+----------
+game : egttools.games.AbstractGame
+    New game object. Must have the same number of strategies as the current game.
+)pbdoc"
+                );
 
         pair_comp.def(
             "run_without_mutation",
