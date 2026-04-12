@@ -641,6 +641,25 @@ namespace egttools {
                                   const Eigen::Ref<const VectorXui> &population_counts);
 
     /**
+    * @brief Fast-path multivariate hypergeometric PDF with a precomputed log-denominator.
+    *
+    * Identical to the three-parameter overloads above except that the caller supplies
+    * ``log_denominator = log_binomial_coefficient(m, n)`` which is loop-invariant in
+    * every hot call site.  Hoisting this computation outside a loop that calls the
+    * function N times saves 3 * N ``ln_factorial`` lookups.
+    *
+    * @param log_denominator  Precomputed value of ``log_binomial_coefficient<double>(m, n)``.
+    * @param k                Number of object types / strategies.
+    * @param sample_counts    Counts of each type in the sample (size k).
+    * @param population_counts Counts of each type in the population (size k).
+    * @return  P(sample | population), or 0 if any sample count exceeds its population count.
+    */
+    double
+    multivariateHypergeometricPDF(double log_denominator, size_t k,
+                                  const std::vector<size_t> &sample_counts,
+                                  const Eigen::Ref<const VectorXui> &population_counts);
+
+    /**
      * Calculates the Probability Mass Function of a multinomial distribution
      *
      * @param group_configuration

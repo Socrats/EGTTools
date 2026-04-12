@@ -23,30 +23,12 @@ double egttools::FinitePopulations::AbstractNPlayerGame::calculate_fitness(const
     // This function assumes that the strategy counts given in @param strategies does not include
     // the player with @param player_type strategy.
 
-    double fitness = 0.0;
-    std::vector<size_t> sample_counts(nb_strategies_, 0);
-
-    // If it isn't, then we must calculate the fitness for every possible group combination
-    for (int64_t i = 0; i < nb_group_configurations_; ++i) {
-        // Update sample counts based on the current state - get new group composition
-        egttools::FinitePopulations::sample_simplex(i, group_size_, nb_strategies_, sample_counts);
-
-        // If the focal player is not in the group, then the payoff should be zero
-        if (sample_counts[player_type] > 0) {
-            double payoff = expected_payoffs_(player_type, i);
-            sample_counts[player_type] -= 1;
-
-            // Calculate probability of encountering the current group
-            auto prob = egttools::multivariateHypergeometricPDF(pop_size - 1, nb_strategies_, group_size_ - 1,
-                                                                sample_counts,
-                                                                strategies);
-            sample_counts[player_type] += 1;
-
-            fitness += payoff * prob;
-        }
-    }
-
-    return fitness;
+    const egttools::Vector payoffs_row = expected_payoffs_.row(player_type);
+    return egttools::utils::calculate_hypergeometric_fitness(
+        player_type, pop_size,
+        static_cast<size_t>(group_size_),
+        static_cast<size_t>(nb_strategies_),
+        strategies, payoffs_row);
 }
 
 std::string egttools::FinitePopulations::AbstractNPlayerGame::toString() const {
