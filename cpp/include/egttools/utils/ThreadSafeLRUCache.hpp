@@ -20,14 +20,18 @@ namespace egttools::Utils {
         explicit ThreadSafeLRUCache(size_t max_size) : max_size_(max_size) {}
 
         // Retrieves a value from the cache. Returns std::nullopt if the key does not exist.
+        //
+        // Uses a shared (read) lock so that multiple threads can query the cache
+        // concurrently without blocking each other. The LRU splice is intentionally
+        // skipped here: upgrading from shared to exclusive lock is not supported by
+        // std::shared_mutex, and fitness values are immutable once computed, so the
+        // approximate eviction policy has no correctness impact.
         std::optional<Value> get(const Key& key) {
-            std::unique_lock lock(mutex_);// Exclusive lock to modify usage order
+            std::shared_lock lock(mutex_);
             auto it = cache_items_map_.find(key);
             if (it == cache_items_map_.end()) {
                 return std::nullopt;// Key not found
             }
-            // Move accessed item to the front of the list (most recently used)
-            cache_items_list_.splice(cache_items_list_.begin(), cache_items_list_, it->second.first);
             return it->second.second;// Return the found value
         }
 

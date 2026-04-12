@@ -1248,6 +1248,7 @@ fixation probabilities only depend on states involving two strategies at a time.
                     py::arg("beta"),
                     py::arg("mu"),
                     py::return_value_policy::move,
+                    py::call_guard<py::gil_scoped_release>(),
                     R"pbdoc(
 Compute the full transition matrix of the finite-population Markov chain.
 
