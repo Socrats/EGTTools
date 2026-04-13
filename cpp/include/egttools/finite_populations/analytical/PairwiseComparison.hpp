@@ -140,6 +140,37 @@ namespace egttools::FinitePopulations::analytical {
         SparseMatrix2D calculate_transition_matrix(double beta, double mu);
 
         /**
+         * @brief Pre-computes fitness values for every (strategy, state) pair.
+         *
+         * Returns a (nb_strategies × nb_states) matrix where entry (i, s) is the fitness of
+         * strategy i in population state s, or 0 if strategy i is absent in state s.
+         *
+         * This method calls game_.calculate_fitness() for every required (i, s) pair and
+         * caches the results in the internal LRU cache. It is intentionally serial and
+         * Python-safe (the GIL may be held throughout), making it the correct pre-computation
+         * step before calling assemble_transition_matrix_from_fitness() with the GIL released.
+         */
+        Matrix2D compute_fitness_matrix();
+
+        /**
+         * @brief Assembles the transition matrix from a pre-computed fitness matrix.
+         *
+         * This method performs the same OpenMP-parallel triplet assembly as
+         * calculate_transition_matrix() but reads fitness values from the supplied matrix
+         * instead of calling game_.calculate_fitness(). No Python callbacks are made, so
+         * this method is safe to run with the GIL released.
+         *
+         * @param beta           Intensity of selection.
+         * @param mu             Mutation probability.
+         * @param fitness_matrix (nb_strategies × nb_states) matrix of pre-computed fitness values,
+         *                       as returned by compute_fitness_matrix().
+         * @return Sparse row-stochastic transition matrix of shape (nb_states × nb_states).
+         */
+        SparseMatrix2D assemble_transition_matrix_from_fitness(
+            double beta, double mu,
+            const Eigen::Ref<const Matrix2D> &fitness_matrix);
+
+        /**
          * @brief Computes the gradient of selection without mutation for a given population state.
          *
          * Let @f$x = (x_1,\dots,x_n)@f$ denote the current state. This method returns the expected
