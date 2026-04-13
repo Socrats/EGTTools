@@ -60,7 +60,7 @@ void egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_
     const int nb_elements = population_size_ - 1;
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for default(none) shared(fitnesses, nb_strategies_, population_size_, game_, nb_elements)
+#pragma omp parallel for default(shared) shared(fitnesses, nb_strategies_, population_size_, game_, nb_elements)
 #endif
     for (int i = 0; i < nb_strategies_; ++i) {
         VectorXui population_state = VectorXui::Zero(nb_strategies_);
@@ -165,7 +165,7 @@ egttools::FinitePopulations::analytical::PairwiseComparison::assemble_transition
     std::atomic<int64_t> row_sum_error_row{-1};
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for schedule(dynamic, 32) default(none) \
+#pragma omp parallel for schedule(dynamic, 32) default(shared) \
     shared(thread_trips, row_sum_error_row, fitness_matrix, S, k, N, beta, \
            one_minus_mu, mutation_probability, inv_N, inv_Nm1, row_tol)
 #endif
@@ -564,7 +564,7 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transitio
     Matrix2D fixation_probabilities = Matrix2D::Zero(nb_strategies_, nb_strategies_);
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for default(none) shared(beta, nb_strategies_, population_size_, transitions, fixation_probabilities)
+#pragma omp parallel for default(shared) shared(beta, nb_strategies_, population_size_, transitions, fixation_probabilities)
 #endif
     for (int i = 0; i < nb_strategies_; ++i) {
         double transition_stay = 1;
