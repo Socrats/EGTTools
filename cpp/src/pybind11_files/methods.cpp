@@ -1244,11 +1244,24 @@ fixation probabilities only depend on states involving two strategies at a time.
                 )
                 .def(
                     "calculate_transition_matrix",
-                    &FinitePopulations::analytical::PairwiseComparison::calculate_transition_matrix,
+                    [](FinitePopulations::analytical::PairwiseComparison &self,
+                       const double beta,
+                       const double mu) -> SparseMatrix2D {
+                        // Phase 1: pre-compute fitness values serially.
+                        // game_.calculate_fitness() may call back into Python, so the GIL
+                        // must be held here.  compute_fitness_matrix() makes no attempt to
+                        // release the GIL internally.
+                        egttools::Matrix2D fitness = self.compute_fitness_matrix();
+
+                        // Phase 2: assemble the sparse matrix in parallel.
+                        // No Python callbacks are made after this point, so it is safe to
+                        // release the GIL and let OpenMP threads run freely.
+                        py::gil_scoped_release release;
+                        return self.assemble_transition_matrix_from_fitness(beta, mu, fitness);
+                    },
                     py::arg("beta"),
                     py::arg("mu"),
                     py::return_value_policy::move,
-                    py::call_guard<py::gil_scoped_release>(),
                     R"pbdoc(
 Compute the full transition matrix of the finite-population Markov chain.
 
@@ -1279,6 +1292,10 @@ Notes
 -----
 For large state spaces, explicitly constructing this matrix may require a large
 amount of memory.
+
+Implementation note: fitness values are pre-computed in a serial pass (with the
+GIL held, so Python-subclassed games work correctly), then the sparse matrix is
+assembled in a parallel OpenMP pass (with the GIL released).
 )pbdoc"
                 )
                 .def(
