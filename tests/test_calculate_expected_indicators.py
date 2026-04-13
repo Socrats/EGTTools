@@ -39,6 +39,9 @@ from egttools import (
     calculate_expected_indicators,
     calculate_expected_indicators_precomputed,
     calculate_expected_group_success,
+    calculate_expected_state_indicator,
+    calculate_expected_state_indicators,
+    calculate_expected_state_indicators_precomputed,
 )
 
 
@@ -705,3 +708,149 @@ class TestCalculateExpectedIndicatorsPrecomputed:
         result = calculate_expected_indicators_precomputed(
             pop_size, group_size, nb_strategies, sd, mat)
         assert result.shape == (0,)
+
+
+# ---------------------------------------------------------------------------
+# Tests: stationary distribution input shape
+#
+# All indicator functions use SparseMatrix2D::InnerIterator(sd, 0), which
+# iterates over row 0 of a RowMajor Eigen sparse matrix.  A (1 × nb_states)
+# row vector is therefore the canonical format.  The bindings auto-transpose
+# a (nb_states × 1) column vector so both orientations give correct results.
+# ---------------------------------------------------------------------------
+
+def _make_sd_col(nb_states, sd_dict):
+    """Build a nb_states×1 scipy sparse column matrix from {index: prob}."""
+    data = list(sd_dict.values())
+    row = list(sd_dict.keys())
+    col = [0] * len(row)
+    return csr_matrix((data, (row, col)), shape=(nb_states, 1))
+
+
+class TestSDInputShape:
+    """Column-vector SD (nb_states×1) must give the same result as row-vector (1×nb_states)."""
+
+    def _sd_dicts(self, nb_states, seed):
+        rng = np.random.default_rng(seed)
+        probs = rng.dirichlet(np.ones(nb_states))
+        return {i: float(probs[i]) for i in range(nb_states)}
+
+    def test_calculate_expected_indicator_col_equals_row(self):
+        pop_size, group_size, nb_strategies = 10, 4, 3
+        nb_states = calculate_nb_states(pop_size, nb_strategies)
+        sd_dict = self._sd_dicts(nb_states, 60)
+
+        sd_row = _make_sd_sparse(nb_states, sd_dict)
+        sd_col = _make_sd_col(nb_states, sd_dict)
+
+        fn = lambda g: float(int(g[0]) >= 2)
+        r_row = calculate_expected_indicator(pop_size, group_size, nb_strategies, sd_row, fn)
+        r_col = calculate_expected_indicator(pop_size, group_size, nb_strategies, sd_col, fn)
+        assert np.isclose(r_row, r_col, atol=1e-12), f"row={r_row}, col={r_col}"
+
+    def test_calculate_expected_indicator_col_constant_one(self):
+        pop_size, group_size, nb_strategies = 10, 4, 3
+        nb_states = calculate_nb_states(pop_size, nb_strategies)
+        sd_dict = self._sd_dicts(nb_states, 61)
+        sd_col = _make_sd_col(nb_states, sd_dict)
+
+        result = calculate_expected_indicator(pop_size, group_size, nb_strategies, sd_col, lambda g: 1.0)
+        assert np.isclose(result, 1.0, atol=1e-10), f"expected 1.0, got {result}"
+
+    def test_calculate_expected_indicators_col_equals_row(self):
+        pop_size, group_size, nb_strategies = 10, 4, 3
+        nb_states = calculate_nb_states(pop_size, nb_strategies)
+        sd_dict = self._sd_dicts(nb_states, 62)
+
+        sd_row = _make_sd_sparse(nb_states, sd_dict)
+        sd_col = _make_sd_col(nb_states, sd_dict)
+
+        fns = [lambda g: float(int(g[0]) >= 2), lambda _: 1.0]
+        v_row = calculate_expected_indicators(pop_size, group_size, nb_strategies, sd_row, fns)
+        v_col = calculate_expected_indicators(pop_size, group_size, nb_strategies, sd_col, fns)
+        assert np.allclose(v_row, v_col, atol=1e-12)
+        assert np.isclose(v_col[1], 1.0, atol=1e-10)
+
+    def test_calculate_expected_indicators_precomputed_col_equals_row(self):
+        pop_size, group_size, nb_strategies = 10, 4, 3
+        nb_states = calculate_nb_states(pop_size, nb_strategies)
+        nb_group_configs = calculate_nb_states(group_size, nb_strategies)
+        sd_dict = self._sd_dicts(nb_states, 63)
+
+        sd_row = _make_sd_sparse(nb_states, sd_dict)
+        sd_col = _make_sd_col(nb_states, sd_dict)
+
+        mat = np.ones((nb_group_configs, 2))
+        mat[:, 1] = 0.0
+        v_row = calculate_expected_indicators_precomputed(pop_size, group_size, nb_strategies, sd_row, mat)
+        v_col = calculate_expected_indicators_precomputed(pop_size, group_size, nb_strategies, sd_col, mat)
+        assert np.allclose(v_row, v_col, atol=1e-12)
+        assert np.isclose(v_col[0], 1.0, atol=1e-10)
+
+    def test_calculate_strategies_distribution_col_equals_row(self):
+        pop_size, nb_strategies = 10, 3
+        nb_states = calculate_nb_states(pop_size, nb_strategies)
+        sd_dict = self._sd_dicts(nb_states, 64)
+
+        sd_row = _make_sd_sparse(nb_states, sd_dict)
+        sd_col = _make_sd_col(nb_states, sd_dict)
+
+        freq_row = calculate_strategies_distribution(pop_size, nb_strategies, sd_row)
+        freq_col = calculate_strategies_distribution(pop_size, nb_strategies, sd_col)
+        assert np.allclose(freq_row, freq_col, atol=1e-12)
+        assert np.isclose(freq_col.sum(), 1.0, atol=1e-10)
+
+    def test_calculate_expected_group_success_col_equals_row(self):
+        pop_size, group_size, nb_strategies = 10, 4, 3
+        nb_states = calculate_nb_states(pop_size, nb_strategies)
+        sd_dict = self._sd_dicts(nb_states, 65)
+
+        sd_row = _make_sd_sparse(nb_states, sd_dict)
+        sd_col = _make_sd_col(nb_states, sd_dict)
+
+        r_row = calculate_expected_group_success(pop_size, group_size, nb_strategies, sd_row,
+                                                  threshold=2, contributing_strategies=[0])
+        r_col = calculate_expected_group_success(pop_size, group_size, nb_strategies, sd_col,
+                                                  threshold=2, contributing_strategies=[0])
+        assert np.isclose(r_row, r_col, atol=1e-12)
+
+    def test_calculate_expected_state_indicator_col_equals_row(self):
+        pop_size, nb_strategies = 10, 3
+        nb_states = calculate_nb_states(pop_size, nb_strategies)
+        sd_dict = self._sd_dicts(nb_states, 66)
+
+        sd_row = _make_sd_sparse(nb_states, sd_dict)
+        sd_col = _make_sd_col(nb_states, sd_dict)
+
+        fn = lambda s: float(s[0] > pop_size // 2)
+        r_row = calculate_expected_state_indicator(pop_size, nb_strategies, sd_row, fn)
+        r_col = calculate_expected_state_indicator(pop_size, nb_strategies, sd_col, fn)
+        assert np.isclose(r_row, r_col, atol=1e-12)
+
+    def test_calculate_expected_state_indicators_col_equals_row(self):
+        pop_size, nb_strategies = 10, 3
+        nb_states = calculate_nb_states(pop_size, nb_strategies)
+        sd_dict = self._sd_dicts(nb_states, 67)
+
+        sd_row = _make_sd_sparse(nb_states, sd_dict)
+        sd_col = _make_sd_col(nb_states, sd_dict)
+
+        fns = [lambda s: float(s[0] > pop_size // 2), lambda _: 1.0]
+        v_row = calculate_expected_state_indicators(pop_size, nb_strategies, sd_row, fns)
+        v_col = calculate_expected_state_indicators(pop_size, nb_strategies, sd_col, fns)
+        assert np.allclose(v_row, v_col, atol=1e-12)
+        assert np.isclose(v_col[1], 1.0, atol=1e-10)
+
+    def test_calculate_expected_state_indicators_precomputed_col_equals_row(self):
+        pop_size, nb_strategies = 8, 3
+        nb_states = calculate_nb_states(pop_size, nb_strategies)
+        sd_dict = self._sd_dicts(nb_states, 68)
+
+        sd_row = _make_sd_sparse(nb_states, sd_dict)
+        sd_col = _make_sd_col(nb_states, sd_dict)
+
+        rng = np.random.default_rng(69)
+        indicator_values = rng.random((nb_states, 3))
+        v_row = calculate_expected_state_indicators_precomputed(sd_row, indicator_values)
+        v_col = calculate_expected_state_indicators_precomputed(sd_col, indicator_values)
+        assert np.allclose(v_row, v_col, atol=1e-12)

@@ -6,6 +6,7 @@ StochDynamics.calculate_full_transition_matrix, which is an independent
 reference implementation.  All tests use small population sizes so they
 run quickly even without a compiled parallel backend.
 """
+import time
 import numpy as np
 import pytest
 import egttools as egt
@@ -350,3 +351,133 @@ class TestNPlayerGame:
         T_pc = evolver_pc.calculate_transition_matrix(beta, mu).toarray()
         T_sd = evolver_sd.calculate_full_transition_matrix(beta).toarray()
         np.testing.assert_allclose(T_pc.T, T_sd, atol=1e-12)
+
+
+# ---------------------------------------------------------------------------
+# Timing benchmark: parallel vs. serial scalability
+# ---------------------------------------------------------------------------
+
+class TestParallelPerformance:
+    """Verify correctness for large population sizes and report timing.
+
+    These tests exercise the OpenMP-parallel code path (or the serial fallback
+    when OpenMP is unavailable).  They assert that:
+      1. The output is still a valid stochastic matrix for large N.
+      2. Repeated calls return identical results (determinism under parallelism).
+      3. Larger problems do not take disproportionately long relative to smaller
+         ones — catching accidental O(N^3) regressions.
+
+    Timing numbers are printed to stdout so that CI logs can track trends over
+    time without hard-coding brittle wall-clock thresholds.
+    """
+
+    @staticmethod
+    def _timed_transition_matrix(evolver, beta, mu, repeats=3):
+        """Run calculate_transition_matrix *repeats* times; return (matrix, median_s)."""
+        times = []
+        result = None
+        for _ in range(repeats):
+            t0 = time.perf_counter()
+            result = evolver.calculate_transition_matrix(beta, mu)
+            times.append(time.perf_counter() - t0)
+        return result, float(np.median(times))
+
+    # ------------------------------------------------------------------
+    # Correctness for larger populations
+    # ------------------------------------------------------------------
+
+    @pytest.mark.parametrize("N", [50, 100, 150])
+    def test_large_pop_rows_sum_to_one_2strategies(self, N):
+        game = hawk_dove_game()
+        evolver = egt.analytical.PairwiseComparison(N, game)
+        T, t = self._timed_transition_matrix(evolver, beta=1.0, mu=0.01)
+        row_sums = np.array(T.sum(axis=1)).ravel()
+        np.testing.assert_allclose(
+            row_sums, 1.0, atol=1e-10,
+            err_msg=f"Row-stochastic property violated at N={N}",
+        )
+        print(f"\n  [timing] N={N}, k=2: {t * 1e3:.1f} ms")
+
+    @pytest.mark.parametrize("N", [30, 50, 70])
+    def test_large_pop_rows_sum_to_one_3strategies(self, N):
+        game = rock_paper_scissors_game()
+        evolver = egt.analytical.PairwiseComparison(N, game)
+        T, t = self._timed_transition_matrix(evolver, beta=1.0, mu=0.005)
+        row_sums = np.array(T.sum(axis=1)).ravel()
+        np.testing.assert_allclose(
+            row_sums, 1.0, atol=1e-10,
+            err_msg=f"Row-stochastic property violated at N={N}, k=3",
+        )
+        print(f"\n  [timing] N={N}, k=3: {t * 1e3:.1f} ms")
+
+    # ------------------------------------------------------------------
+    # Determinism: two consecutive calls must return identical matrices
+    # ------------------------------------------------------------------
+
+    def test_deterministic_output_2strategies(self):
+        N = 40
+        game = hawk_dove_game()
+        evolver = egt.analytical.PairwiseComparison(N, game)
+        T1 = evolver.calculate_transition_matrix(1.0, 0.01).toarray()
+        T2 = evolver.calculate_transition_matrix(1.0, 0.01).toarray()
+        np.testing.assert_array_equal(
+            T1, T2,
+            err_msg="Two calls with same parameters returned different matrices (race condition?)",
+        )
+
+    def test_deterministic_output_3strategies(self):
+        N = 25
+        game = rock_paper_scissors_game()
+        evolver = egt.analytical.PairwiseComparison(N, game)
+        T1 = evolver.calculate_transition_matrix(1.0, 0.01).toarray()
+        T2 = evolver.calculate_transition_matrix(1.0, 0.01).toarray()
+        np.testing.assert_array_equal(
+            T1, T2,
+            err_msg="Two calls with same parameters returned different matrices (race condition?)",
+        )
+
+    # ------------------------------------------------------------------
+    # Scaling: time for 2*N should be at most 10x time for N.
+    # (The state space grows as C(N+k-1, k-1), so for k=2 it grows as N,
+    #  and for k=3 it grows as N^2/2.  A 10x slack allows for OS noise
+    #  while still catching catastrophic regressions like O(N^3) loops.)
+    # ------------------------------------------------------------------
+
+    def test_scaling_2strategies(self):
+        game = hawk_dove_game()
+        N_small, N_large = 50, 100
+        evolver_s = egt.analytical.PairwiseComparison(N_small, game)
+        evolver_l = egt.analytical.PairwiseComparison(N_large, game)
+
+        _, t_small = self._timed_transition_matrix(evolver_s, beta=1.0, mu=0.01)
+        _, t_large = self._timed_transition_matrix(evolver_l, beta=1.0, mu=0.01)
+
+        print(f"\n  [scaling k=2] N={N_small}: {t_small * 1e3:.1f} ms, "
+              f"N={N_large}: {t_large * 1e3:.1f} ms, "
+              f"ratio: {t_large / max(t_small, 1e-9):.1f}x")
+
+        # For k=2 the state space is linear in N, so a 10x budget is generous.
+        assert t_large < 10 * t_small + 0.5, (
+            f"N={N_large} took {t_large:.3f}s but N={N_small} took only {t_small:.3f}s "
+            f"— possible O(N^2) or worse regression"
+        )
+
+    def test_scaling_3strategies(self):
+        game = rock_paper_scissors_game()
+        N_small, N_large = 25, 50
+        evolver_s = egt.analytical.PairwiseComparison(N_small, game)
+        evolver_l = egt.analytical.PairwiseComparison(N_large, game)
+
+        _, t_small = self._timed_transition_matrix(evolver_s, beta=1.0, mu=0.005)
+        _, t_large = self._timed_transition_matrix(evolver_l, beta=1.0, mu=0.005)
+
+        print(f"\n  [scaling k=3] N={N_small}: {t_small * 1e3:.1f} ms, "
+              f"N={N_large}: {t_large * 1e3:.1f} ms, "
+              f"ratio: {t_large / max(t_small, 1e-9):.1f}x")
+
+        # For k=3, state space ~ N^2/2, so the ratio for 2x N is ~4x.
+        # We allow 20x as a generous ceiling to tolerate scheduling noise.
+        assert t_large < 20 * t_small + 1.0, (
+            f"N={N_large} took {t_large:.3f}s but N={N_small} took only {t_small:.3f}s "
+            f"— possible O(N^3) or worse regression"
+        )

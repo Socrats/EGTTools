@@ -310,7 +310,13 @@ Examples
 
         m.def(
             "calculate_strategies_distribution",
-            &utils::calculate_strategies_distribution,
+            [](size_t pop_size, size_t nb_strategies, egttools::SparseMatrix2D &sd) {
+                if (sd.rows() > 1 && sd.cols() == 1) {
+                    egttools::SparseMatrix2D sd_row = sd.transpose();
+                    return utils::calculate_strategies_distribution(pop_size, nb_strategies, sd_row);
+                }
+                return utils::calculate_strategies_distribution(pop_size, nb_strategies, sd);
+            },
             R"pbdoc(
 Calculate the average frequency of each strategy given a stationary distribution.
 
@@ -352,7 +358,14 @@ Examples
 
         m.def(
             "calculate_expected_payoff",
-            &utils::calculate_expected_payoff,
+            [](int64_t pop_size, int64_t group_size, int64_t nb_strategies,
+               egttools::SparseMatrix2D &sd, egttools::Matrix2D &payoff_matrix) {
+                if (sd.rows() > 1 && sd.cols() == 1) {
+                    egttools::SparseMatrix2D sd_row = sd.transpose();
+                    return utils::calculate_expected_payoff(pop_size, group_size, nb_strategies, sd_row, payoff_matrix);
+                }
+                return utils::calculate_expected_payoff(pop_size, group_size, nb_strategies, sd, payoff_matrix);
+            },
             R"pbdoc(
 Calculate the expected payoff averaged over the stationary distribution.
 
@@ -392,10 +405,15 @@ float
 
         m.def(
             "calculate_expected_indicator",
-            static_cast<double (*)(int64_t, int64_t, int64_t,
-                                   egttools::SparseMatrix2D &,
-                                   const std::function<double(const std::vector<size_t> &)> &)>(
-                &utils::calculate_expected_indicator),
+            [](int64_t pop_size, int64_t group_size, int64_t nb_strategies,
+               egttools::SparseMatrix2D &sd,
+               const std::function<double(const std::vector<size_t> &)> &indicator) {
+                if (sd.rows() > 1 && sd.cols() == 1) {
+                    egttools::SparseMatrix2D sd_row = sd.transpose();
+                    return utils::calculate_expected_indicator(pop_size, group_size, nb_strategies, sd_row, indicator);
+                }
+                return utils::calculate_expected_indicator(pop_size, group_size, nb_strategies, sd, indicator);
+            },
             R"pbdoc(
 Calculate E[f] = sum_s sd(s) * sum_g P(g|s) * f(g) for an arbitrary indicator f.
 
@@ -441,11 +459,15 @@ Examples
 
         m.def(
             "calculate_expected_indicators",
-            static_cast<egttools::Vector (*)(
-                int64_t, int64_t, int64_t,
-                egttools::SparseMatrix2D &,
-                const std::vector<std::function<double(const std::vector<size_t> &)>> &)>(
-                &utils::calculate_expected_indicators),
+            [](int64_t pop_size, int64_t group_size, int64_t nb_strategies,
+               egttools::SparseMatrix2D &sd,
+               const std::vector<std::function<double(const std::vector<size_t> &)>> &indicators) {
+                if (sd.rows() > 1 && sd.cols() == 1) {
+                    egttools::SparseMatrix2D sd_row = sd.transpose();
+                    return utils::calculate_expected_indicators(pop_size, group_size, nb_strategies, sd_row, indicators);
+                }
+                return utils::calculate_expected_indicators(pop_size, group_size, nb_strategies, sd, indicators);
+            },
             R"pbdoc(
 Calculate E[f_k] for multiple indicator functions in a single pass.
 
@@ -496,7 +518,14 @@ Examples
 
         m.def(
             "calculate_expected_indicators_precomputed",
-            &utils::calculate_expected_indicators_precomputed,
+            [](int64_t pop_size, int64_t group_size, int64_t nb_strategies,
+               egttools::SparseMatrix2D &sd, const egttools::Matrix2D &indicator_matrix) {
+                if (sd.rows() > 1 && sd.cols() == 1) {
+                    egttools::SparseMatrix2D sd_row = sd.transpose();
+                    return utils::calculate_expected_indicators_precomputed(pop_size, group_size, nb_strategies, sd_row, indicator_matrix);
+                }
+                return utils::calculate_expected_indicators_precomputed(pop_size, group_size, nb_strategies, sd, indicator_matrix);
+            },
             R"pbdoc(
 Compute expected indicators from a precomputed indicator matrix (pure C++, GIL released).
 
@@ -551,7 +580,15 @@ Examples
 
         m.def(
             "calculate_expected_group_success",
-            &utils::calculate_expected_group_success,
+            [](int64_t pop_size, int64_t group_size, int64_t nb_strategies,
+               egttools::SparseMatrix2D &sd, int64_t threshold,
+               const std::vector<int64_t> &contributing_strategies) {
+                if (sd.rows() > 1 && sd.cols() == 1) {
+                    egttools::SparseMatrix2D sd_row = sd.transpose();
+                    return utils::calculate_expected_group_success(pop_size, group_size, nb_strategies, sd_row, threshold, contributing_strategies);
+                }
+                return utils::calculate_expected_group_success(pop_size, group_size, nb_strategies, sd, threshold, contributing_strategies);
+            },
             R"pbdoc(
 Calculate the expected group success eta_G under the stationary distribution.
 
@@ -609,7 +646,14 @@ Examples
 
         m.def(
             "calculate_expected_state_indicator",
-            &utils::calculate_expected_state_indicator,
+            [](size_t pop_size, size_t nb_strategies, egttools::SparseMatrix2D &sd,
+               const std::function<double(const std::vector<size_t> &)> &indicator) {
+                if (sd.rows() > 1 && sd.cols() == 1) {
+                    egttools::SparseMatrix2D sd_row = sd.transpose();
+                    return utils::calculate_expected_state_indicator(pop_size, nb_strategies, sd_row, indicator);
+                }
+                return utils::calculate_expected_state_indicator(pop_size, nb_strategies, sd, indicator);
+            },
             R"pbdoc(
 Calculate E[f] = sum_s sd(s) * f(s) for a single state-level indicator.
 
@@ -648,7 +692,14 @@ egttools.calculate_expected_indicator
 
         m.def(
             "calculate_expected_state_indicators",
-            &utils::calculate_expected_state_indicators,
+            [](size_t pop_size, size_t nb_strategies, egttools::SparseMatrix2D &sd,
+               const std::vector<std::function<double(const std::vector<size_t> &)>> &indicators) {
+                if (sd.rows() > 1 && sd.cols() == 1) {
+                    egttools::SparseMatrix2D sd_row = sd.transpose();
+                    return utils::calculate_expected_state_indicators(pop_size, nb_strategies, sd_row, indicators);
+                }
+                return utils::calculate_expected_state_indicators(pop_size, nb_strategies, sd, indicators);
+            },
             R"pbdoc(
 Calculate E[f_k] = sum_s sd(s) * f_k(s) for multiple state-level indicators in one pass.
 
@@ -686,7 +737,13 @@ egttools.calculate_expected_state_indicators_precomputed
 
         m.def(
             "calculate_expected_state_indicators_precomputed",
-            &utils::calculate_expected_state_indicators_precomputed,
+            [](egttools::SparseMatrix2D &sd, const egttools::Matrix2D &indicator_values) {
+                if (sd.rows() > 1 && sd.cols() == 1) {
+                    egttools::SparseMatrix2D sd_row = sd.transpose();
+                    return utils::calculate_expected_state_indicators_precomputed(sd_row, indicator_values);
+                }
+                return utils::calculate_expected_state_indicators_precomputed(sd, indicator_values);
+            },
             R"pbdoc(
 Fast path: E[f_k] = sum_s sd(s) * indicator_values(s, k) using a precomputed matrix.
 
@@ -1244,7 +1301,21 @@ fixation probabilities only depend on states involving two strategies at a time.
                 )
                 .def(
                     "calculate_transition_matrix",
-                    &FinitePopulations::analytical::PairwiseComparison::calculate_transition_matrix,
+                    [](FinitePopulations::analytical::PairwiseComparison &self,
+                       const double beta,
+                       const double mu) -> SparseMatrix2D {
+                        // Phase 1: pre-compute fitness values serially.
+                        // game_.calculate_fitness() may call back into Python, so the GIL
+                        // must be held here.  compute_fitness_matrix() makes no attempt to
+                        // release the GIL internally.
+                        egttools::Matrix2D fitness = self.compute_fitness_matrix();
+
+                        // Phase 2: assemble the sparse matrix in parallel.
+                        // No Python callbacks are made after this point, so it is safe to
+                        // release the GIL and let OpenMP threads run freely.
+                        py::gil_scoped_release release;
+                        return self.assemble_transition_matrix_from_fitness(beta, mu, fitness);
+                    },
                     py::arg("beta"),
                     py::arg("mu"),
                     py::return_value_policy::move,
@@ -1278,6 +1349,10 @@ Notes
 -----
 For large state spaces, explicitly constructing this matrix may require a large
 amount of memory.
+
+Implementation note: fitness values are pre-computed in a serial pass (with the
+GIL held, so Python-subclassed games work correctly), then the sparse matrix is
+assembled in a parallel OpenMP pass (with the GIL released).
 )pbdoc"
                 )
                 .def(
