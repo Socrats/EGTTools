@@ -107,19 +107,30 @@ void egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_
     }
 }
 
+egttools::Matrix2D
+egttools::FinitePopulations::analytical::PairwiseComparison::compute_fitness_matrix() {
+    // Pre-compute fitness for every (strategy, state) pair in a serial loop.
+    // This method calls game_.calculate_fitness() — which may call into Python —
+    // and is therefore intentionally serial: the caller must hold the Python GIL
+    // if the game has Python callbacks.
+    Matrix2D fitness = Matrix2D::Zero(nb_strategies_, nb_states_);
+    VectorXui state(nb_strategies_);
+    for (int64_t s = 0; s < nb_states_; ++s) {
+        sample_simplex(s, population_size_, nb_strategies_, state);
+        for (int i = 0; i < nb_strategies_; ++i) {
+            if (state(i) > 0) {
+                fitness(i, s) = calculate_fitness_(i, state, s);
+            }
+        }
+    }
+    return fitness;
+}
+
 egttools::SparseMatrix2D
-egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_matrix(
+egttools::FinitePopulations::analytical::PairwiseComparison::assemble_transition_matrix_from_fitness(
     const double beta,
-    const double mu) {
-    if (beta < 0.0) {
-        throw std::invalid_argument("beta must be >= 0");
-    }
-    if (mu < 0.0 || mu > 1.0) {
-        throw std::invalid_argument("mu must be in [0,1]");
-    }
-    if (nb_strategies_ < 2) {
-        throw std::invalid_argument("At least 2 strategies are required");
-    }
+    const double mu,
+    const Eigen::Ref<const Matrix2D> &fitness_matrix) {
 
     using Triplet = Eigen::Triplet<double>;
     const double row_tol = 1e-10;
@@ -127,10 +138,6 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transitio
     const int64_t S = nb_states_;
     const int k = nb_strategies_;
     const int N = population_size_;
-
-    if (N < 2) {
-        throw std::invalid_argument("Population size must be >= 2");
-    }
 
     const double one_minus_mu = 1.0 - mu;
     const double mutation_probability =
@@ -159,7 +166,8 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transitio
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
 #pragma omp parallel for schedule(dynamic, 32) default(none) \
-    shared(thread_trips, row_sum_error_row, S, k, N, beta, one_minus_mu, mutation_probability, inv_N, inv_Nm1, row_tol)
+    shared(thread_trips, row_sum_error_row, fitness_matrix, S, k, N, beta, \
+           one_minus_mu, mutation_probability, inv_N, inv_Nm1, row_tol)
 #endif
     for (int64_t row = 0; row < S; ++row) {
 #if defined(_OPENMP) && !defined(_MSC_VER)
@@ -168,8 +176,7 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transitio
         auto &local_trips = thread_trips[0];
 #endif
 
-        // All per-row working variables are declared here so they are thread-private
-        // both in the OpenMP and the serial code paths.
+        // All per-row working variables are declared here so they are thread-private.
         VectorXui current(k);
         std::vector<int> present;
         present.reserve(k);
@@ -211,8 +218,9 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transitio
                 total_offdiag += mutation_probability;
             }
         } else {
+            // Read pre-computed fitness values (no Python calls here).
             for (const int i: present) {
-                fitness[i] = calculate_fitness_(i, current, row);
+                fitness[i] = fitness_matrix(i, row);
 #ifndef NDEBUG
                 if (!std::isfinite(fitness[i])) {
                     throw std::runtime_error(
@@ -346,6 +354,27 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transitio
     transition_matrix.makeCompressed();
 
     return transition_matrix;
+}
+
+egttools::SparseMatrix2D
+egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_matrix(
+    const double beta,
+    const double mu) {
+    if (beta < 0.0) {
+        throw std::invalid_argument("beta must be >= 0");
+    }
+    if (mu < 0.0 || mu > 1.0) {
+        throw std::invalid_argument("mu must be in [0,1]");
+    }
+    if (nb_strategies_ < 2) {
+        throw std::invalid_argument("At least 2 strategies are required");
+    }
+    if (population_size_ < 2) {
+        throw std::invalid_argument("Population size must be >= 2");
+    }
+
+    // Pre-compute all fitness values serially, then assemble the matrix in parallel.
+    return assemble_transition_matrix_from_fitness(beta, mu, compute_fitness_matrix());
 }
 
 egttools::Vector egttools::FinitePopulations::analytical::PairwiseComparison::calculate_gradient_of_selection(

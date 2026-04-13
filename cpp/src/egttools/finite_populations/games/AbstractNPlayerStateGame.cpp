@@ -33,10 +33,14 @@ double egttools::FinitePopulations::AbstractNPlayerStateGame::calculate_fitness(
     VectorXui full_state = strategies;
     full_state(player_type) += 1;
 
-    // Map the full state to its linear index.
+    // Map the full population state to its linear index in the population
+    // simplex.  The first argument to calculate_state is the total sum of
+    // the state vector — here that is pop_size (not group_size_).  Using
+    // group_size_ here would collapse almost all states to index 0 for any
+    // population larger than the group, silently corrupting payoff lookups.
     const auto state_index = static_cast<int64_t>(
         egttools::FinitePopulations::calculate_state(
-            static_cast<size_t>(group_size_), full_state));
+            pop_size, full_state));
 
     // Ask the (Python) subclass for the payoff row — exactly 1 Python call.
     const egttools::Vector payoffs_row = get_payoffs_for_player(player_type, state_index, strategies);

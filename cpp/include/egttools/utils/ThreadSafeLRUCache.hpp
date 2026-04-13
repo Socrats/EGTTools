@@ -36,7 +36,9 @@ namespace egttools::Utils {
         }
 
         // Inserts or updates a value in the cache.
+        // When max_size_ == 0 the cache is effectively disabled and this is a no-op.
         void put(const Key& key, const Value& value) {
+            if (max_size_ == 0) return;
             std::unique_lock lock(mutex_);// Exclusive lock for writing
             auto it = cache_items_map_.find(key);
 
