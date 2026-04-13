@@ -91,7 +91,7 @@ const egttools::FinitePopulations::GroupPayoffs &egttools::FinitePopulations::ga
     expected_payoffs_.setZero();
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for default(none) shared(nb_strategies_, group_size_, expected_payoffs_, Eigen::Dynamic)
+#pragma omp parallel for default(shared) shared(nb_strategies_, group_size_, expected_payoffs_, Eigen::Dynamic)
 #endif
     // For every possible group composition run the game and store the payoff of each strategy
     for (int64_t i = 0; i < nb_states_; ++i) {
@@ -225,7 +225,7 @@ const egttools::Vector &egttools::FinitePopulations::games::CRDGameTU::calculate
     group_achievement_.setZero();
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for default(none) shared(nb_strategies_, group_size_, group_achievement_, c_behaviors_counts_, c_behaviors_, Eigen::Dynamic)
+#pragma omp parallel for default(shared) shared(nb_strategies_, group_size_, group_achievement_, c_behaviors_counts_, c_behaviors_, Eigen::Dynamic)
 #endif
     // For every possible group composition run the game and store the payoff of each strategy
     for (int64_t i = 0; i < nb_states_; ++i) {
@@ -263,7 +263,7 @@ double egttools::FinitePopulations::games::CRDGameTU::calculate_group_achievemen
     double group_achievement = 0;
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_, nb_states_, group_size_, group_achievement_, Eigen::Dynamic) reduction(+ : group_achievement)
+#pragma omp parallel for default(shared) shared(pop_size, stationary_distribution, nb_strategies_, nb_states_, group_size_, group_achievement_, Eigen::Dynamic) reduction(+ : group_achievement)
 #endif
     for (long int i = 0; i < stationary_distribution.size(); ++i) {
         VectorXui strategies = VectorXui::Zero(nb_strategies_);
@@ -313,7 +313,7 @@ egttools::Vector3d egttools::FinitePopulations::games::CRDGameTU::calculate_pola
     egttools::Vector3d polarization = egttools::Vector3d::Zero();
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_, Eigen::Dynamic) reduction(+ : polarization)
+#pragma omp parallel for default(shared) shared(pop_size, stationary_distribution, nb_strategies_, Eigen::Dynamic) reduction(+ : polarization)
 #endif
     for (long int i = 0; i < stationary_distribution.size(); ++i) {
         egttools::Vector3d container = egttools::Vector3d::Zero();
@@ -331,7 +331,7 @@ egttools::Vector3d egttools::FinitePopulations::games::CRDGameTU::calculate_pola
     egttools::Vector3d polarization = egttools::Vector3d::Zero();
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_) reduction(+ : polarization)
+#pragma omp parallel for default(shared) shared(pop_size, stationary_distribution, nb_strategies_) reduction(+ : polarization)
 #endif
     for (long int i = 0; i < stationary_distribution.size(); ++i) {
         egttools::Vector3d container = egttools::Vector3d::Zero();

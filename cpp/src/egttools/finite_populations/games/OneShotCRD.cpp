@@ -152,7 +152,7 @@ double egttools::FinitePopulations::OneShotCRD::calculate_group_achievement(size
     double group_achievement = 0;
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for default(none) shared(pop_size, stationary_distribution, nb_strategies_, nb_group_compositions_, group_size_, group_achievement_, Eigen::Dynamic) reduction(+ : group_achievement)
+#pragma omp parallel for default(shared) shared(pop_size, stationary_distribution, nb_strategies_, nb_group_compositions_, group_size_, group_achievement_, Eigen::Dynamic) reduction(+ : group_achievement)
 #endif
     for (int64_t i = 0; i < stationary_distribution.size(); ++i) {
         VectorXui strategies = VectorXui::Zero(nb_strategies_);

@@ -141,7 +141,7 @@ egttools::infinite_populations::vectorized_replicator_equation(
     egttools::Matrix2D result3 = egttools::Matrix2D::Zero(x3.rows(), x3.cols());
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for default(none) shared(x1, x2, x3, game, result1, result2, result3)
+#pragma omp parallel for default(shared) shared(x1, x2, x3, game, result1, result2, result3)
 #endif
     for (int i = 0; i < x1.rows(); ++i) {
         for (int j = 0; j < x1.cols(); ++j) {
@@ -187,7 +187,7 @@ egttools::infinite_populations::vectorized_replicator_equation_n_player(
     egttools::Matrix2D result3 = egttools::Matrix2D::Zero(x3.rows(), x3.cols());
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for default(none) shared(x1, x2, x3, game, result1, result2, result3)
+#pragma omp parallel for default(shared) shared(x1, x2, x3, game, result1, result2, result3)
 #endif
     for (int i = 0; i < x1.rows(); ++i) {
         for (int j = 0; j < x1.cols(); ++j) {
@@ -228,7 +228,7 @@ egttools::infinite_populations::vectorized_replicator_equation_n_player(
     egttools::Matrix2D result3 = egttools::Matrix2D::Zero(x3.rows(), x3.cols());
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for default(none) shared(x1, x2, x3, payoff_matrix, group_size, result1, result2, result3)
+#pragma omp parallel for default(shared) shared(x1, x2, x3, payoff_matrix, group_size, result1, result2, result3)
 #endif
     for (int i = 0; i < x1.rows(); ++i) {
         for (int j = 0; j < x1.cols(); ++j) {

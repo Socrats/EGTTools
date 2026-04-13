@@ -177,7 +177,7 @@ egttools::FinitePopulations::evolvers::NetworkEvolver::estimate_time_dependent_a
 
     for (auto state_index: state_iterator) {
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for reduction(+ : average_gradients_of_selection) default(none) shared(initial_states, networks, nb_simulations, generation_start, generation_stop, state_index)
+#pragma omp parallel for reduction(+ : average_gradients_of_selection) default(shared) shared(initial_states, networks, nb_simulations, generation_start, generation_stop, state_index)
 #endif
         for (auto &network: networks) {
             for (int64_t i = 0; i < nb_simulations; ++i) {
@@ -284,7 +284,7 @@ egttools::FinitePopulations::evolvers::NetworkEvolver::estimate_time_independent
 
     for (const auto state_index: state_iterator) {
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for reduction(+ : average_gradients_of_selection) default(none) shared(initial_states, networks, nb_simulations, nb_generations, state_index)
+#pragma omp parallel for reduction(+ : average_gradients_of_selection) default(shared) shared(initial_states, networks, nb_simulations, nb_generations, state_index)
 #endif
         for (const auto &network: networks) {
             for (int64_t i = 0; i < nb_simulations; ++i) {
