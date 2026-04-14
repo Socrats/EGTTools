@@ -22,6 +22,4 @@ sphinx:
 submodules:
   include:
     - pybind11
-  exclude:
-    - vcpkg
   recursive: true
