@@ -80,6 +80,28 @@ exclude build_tools
 recursive-exclude build_tools *
 exclude src/egttools/plotting/barplots.py
 
+# cmake build artefacts that leak into cpp/ and pybind11/ via graft
+global-exclude CMakeFiles CMakeDirectoryInformation.cmake progress.marks
+prune cpp/src/egttools/CMakeFiles
+prune cpp/src/egttools/finite_populations/CMakeFiles
+prune cpp/src/egttools/infinite_populations/CMakeFiles
+prune cpp/src/egttools/utils/CMakeFiles
+prune pybind11/CMakeFiles
+exclude cpp/src/egttools/Makefile
+exclude cpp/src/egttools/cmake_install.cmake
+exclude cpp/src/egttools/infinite_populations/Makefile
+exclude cpp/src/egttools/infinite_populations/cmake_install.cmake
+exclude cpp/src/egttools/utils/Makefile
+exclude cpp/src/egttools/utils/cmake_install.cmake
+exclude pybind11/Makefile
+exclude pybind11/cmake_install.cmake
+
+# generated files that must not be in the sdist (created at build/install time)
+exclude src/egttools/_version.py
+exclude src/egttools/numerical/egttools_build_info.txt
+exclude src/egttools/numerical/lib/libomp.dylib
+recursive-exclude src/egttools/numerical/lib *
+
 # added by check-manifest
 include *.json
 include *.yaml

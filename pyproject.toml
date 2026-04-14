@@ -145,6 +145,8 @@ ignore = [
     ".travis.yml",
     "enkinsfile",
     "*.mo",
+    ".vscode/*",
+    "memory/*",
 ]
 
 [tool.cibuildwheel]
