@@ -106,7 +106,7 @@ namespace egttools::utils {
             double state_contrib = 0.0;
 
 // #if defined(_OPENMP)
-// #pragma omp parallel for reduction(+:state_contrib) schedule(static) \
+// #pragma omp parallel for reduction(+:state_contrib) schedule(static)
 //     firstprivate(nb_strategies_sz, pop_size_sz, group_size_sz)
 // #endif
             for (int64_t i = 0; i < nb_group_configs; ++i) {
