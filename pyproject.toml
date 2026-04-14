@@ -126,6 +126,7 @@ egttools = [
     "lib/*.so",
     "numerical_/*.pyi",
     "numerical_/**/*.pyi",
+    "egttools_build_info.txt",
 ]
 
 [tool.check-manifest]
