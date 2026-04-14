@@ -934,7 +934,7 @@ namespace egttools::FinitePopulations {
             std::geometric_distribution<size_t> geometric(mu);
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for reduction(+ : sdist) default(none) \
+#pragma omp parallel for reduction(+ : sdist) default(shared) \
     shared(geometric, batch_size, nb_generations, transitory, beta, mu, _pop_size, _nb_strategies, _cache_size)
 #endif
             for (size_t i = 0; i < batch_size; ++i) {
@@ -1075,7 +1075,7 @@ namespace egttools::FinitePopulations {
             std::geometric_distribution<size_t> geometric(mu);
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for reduction(+ : sdist) default(none) \
+#pragma omp parallel for reduction(+ : sdist) default(shared) \
     shared(geometric, batch_size, nb_generations, transitory, beta, mu, _pop_size, _nb_strategies, _cache_size)
 #endif
             for (size_t i = 0; i < batch_size; ++i) {
@@ -1216,7 +1216,7 @@ namespace egttools::FinitePopulations {
             std::geometric_distribution<size_t> geometric(mu);
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for reduction(+ : strategy_dist) default(none) \
+#pragma omp parallel for reduction(+ : strategy_dist) default(shared) \
     shared(geometric, batch_size, nb_generations, transitory, beta, mu, _pop_size, _nb_strategies, _cache_size)
 #endif
             for (size_t i = 0; i < batch_size; ++i) {
@@ -1339,7 +1339,7 @@ namespace egttools::FinitePopulations {
             std::geometric_distribution<size_t> geometric(mu);
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for default(none) \
+#pragma omp parallel for default(shared) \
     shared(per_run_results, start, batch_size, nb_generations, transitory, beta, mu, \
            geometric, indicator_values, nb_indicators, _pop_size, _nb_strategies, _cache_size)
 #endif
