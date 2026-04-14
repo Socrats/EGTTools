@@ -864,7 +864,8 @@ namespace egttools::FinitePopulations {
         VectorXi t_minus = VectorXi::Zero(static_cast<Eigen::Index>(_pop_size + 1));
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for reduction(+ : t_plus, t_minus) default(none) shared(invader, resident, runs, beta)
+#pragma omp parallel for reduction(+ : t_plus, t_minus) default(none) \
+    shared(invader, resident, runs, beta, _pop_size, _nb_strategies, _cache_size)
 #endif
         for (size_t run = 0; run < runs; ++run) {
             std::mt19937_64 generator(egttools::Random::SeedGenerator::getInstance().getSeed());
@@ -933,7 +934,8 @@ namespace egttools::FinitePopulations {
             std::geometric_distribution<size_t> geometric(mu);
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for reduction(+ : sdist) default(none) shared(geometric, batch_size, nb_generations, transitory, beta, mu)
+#pragma omp parallel for reduction(+ : sdist) default(none) \
+    shared(geometric, batch_size, nb_generations, transitory, beta, mu, _pop_size, _nb_strategies, _cache_size)
 #endif
             for (size_t i = 0; i < batch_size; ++i) {
                 // Random generators and cache are per-thread to avoid contention
@@ -1073,7 +1075,8 @@ namespace egttools::FinitePopulations {
             std::geometric_distribution<size_t> geometric(mu);
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for reduction(+ : sdist) default(none) shared(geometric, batch_size, nb_generations, transitory, beta, mu)
+#pragma omp parallel for reduction(+ : sdist) default(none) \
+    shared(geometric, batch_size, nb_generations, transitory, beta, mu, _pop_size, _nb_strategies, _cache_size)
 #endif
             for (size_t i = 0; i < batch_size; ++i) {
                 // Random generators and cache are per-thread to avoid contention
@@ -1213,7 +1216,8 @@ namespace egttools::FinitePopulations {
             std::geometric_distribution<size_t> geometric(mu);
 
 #if defined(_OPENMP) && !defined(_MSC_VER)
-#pragma omp parallel for reduction(+ : strategy_dist) default(none) shared(geometric, batch_size, nb_generations, transitory, beta, mu)
+#pragma omp parallel for reduction(+ : strategy_dist) default(none) \
+    shared(geometric, batch_size, nb_generations, transitory, beta, mu, _pop_size, _nb_strategies, _cache_size)
 #endif
             for (size_t i = 0; i < batch_size; ++i) {
                 // Random generators — each thread gets its own generator
@@ -1337,7 +1341,7 @@ namespace egttools::FinitePopulations {
 #if defined(_OPENMP) && !defined(_MSC_VER)
 #pragma omp parallel for default(none) \
     shared(per_run_results, start, batch_size, nb_generations, transitory, beta, mu, \
-           geometric, indicator_values, nb_indicators)
+           geometric, indicator_values, nb_indicators, _pop_size, _nb_strategies, _cache_size)
 #endif
             for (size_t i = 0; i < batch_size; ++i) {
                 std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
