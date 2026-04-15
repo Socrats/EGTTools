@@ -409,9 +409,11 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex(
     result = np.zeros(shape=(v_int.shape[1], v_int.shape[2], 3), dtype=np.float64)
 
     if mu is None:
-      gradient_fn = lambda u: evolver.calculate_gradient_of_selection(state=u, beta=beta)
+        gradient_fn = lambda u: evolver.calculate_gradient_of_selection(state=u, beta=beta)
+        gradient_fn2 = lambda u: population_size * evolver.calculate_gradient_of_selection(state=u, beta=beta)
     else:
-      gradient_fn = lambda u: evolver.calculate_gradient_of_selection_with_mutation(state=u, beta=beta, mu=mu)
+        gradient_fn = lambda u: evolver.calculate_gradient_of_selection_with_mutation(state=u, beta=beta, mu=mu)
+        gradient_fn2 = lambda u: population_size * evolver.calculate_gradient_of_selection_with_mutation(state=u, beta=beta, mu=mu)
 
     for i in range(v_int.shape[1]):
         for j in range(v_int.shape[2]):
@@ -426,19 +428,17 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex(
 
     simplex.apply_simplex_boundaries_to_gradients(ux, uy)
 
-    gradient_fn = lambda u: population_size * evolver.calculate_gradient_of_selection(beta, u)
-
     roots = find_roots_in_discrete_barycentric_coordinates(
-        gradient_fn,
+        gradient_fn2,
         population_size,
         nb_interior_points=calculate_nb_states(population_size, 3),
         atol=1e-1,
     )
     roots_xy = [barycentric_to_xy_coordinates(x, simplex.corners) for x in roots]
 
-    stability = calculate_stability(roots, gradient_fn, return_mode=stability_mode)
+    stability = calculate_stability(roots, gradient_fn2, return_mode=stability_mode)
 
-    return simplex, lambda u, t: gradient_fn(u), roots, roots_xy, stability, game, evolver
+    return simplex, lambda u, t: gradient_fn2(u), roots, roots_xy, stability, game, evolver
 
 
 def plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots(
@@ -489,9 +489,11 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots(
     result = np.zeros(shape=(v_int.shape[1], v_int.shape[2], 3), dtype=np.float64)
 
     if mu is None:
-      gradient_fn = lambda u: evolver.calculate_gradient_of_selection(state=u, beta=beta)
+        gradient_fn = lambda u: evolver.calculate_gradient_of_selection(state=u, beta=beta)
+        gradient_fn2 = lambda u: population_size * evolver.calculate_gradient_of_selection(state=u, beta=beta)
     else:
-      gradient_fn = lambda u: evolver.calculate_gradient_of_selection_with_mutation(state=u, beta=beta, mu=mu)
+        gradient_fn = lambda u: evolver.calculate_gradient_of_selection_with_mutation(state=u, beta=beta, mu=mu)
+        gradient_fn2 = lambda u: population_size * evolver.calculate_gradient_of_selection_with_mutation(state=u, beta=beta, mu=mu)
 
     for i in range(v_int.shape[1]):
         for j in range(v_int.shape[2]):
@@ -506,4 +508,4 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots(
 
     simplex.apply_simplex_boundaries_to_gradients(ux, uy)
 
-    return simplex, lambda u, t: population_size * evolver.calculate_gradient_of_selection(beta, u), game, evolver
+    return simplex, lambda u, t: gradient_fn2(u), game, evolver
