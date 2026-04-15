@@ -407,10 +407,15 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex(
     evolver = PairwiseComparison(population_size=population_size, game=game)
     result = np.zeros(shape=(v_int.shape[1], v_int.shape[2], 3), dtype=np.float64)
 
+    if mu is None:
+      gradient_fn = lambda u: evolver.calculate_gradient_of_selection(state=u, beta=beta)
+    else:
+      gradient_fn = lambda u: evolver.calculate_gradient_of_selection_with_mutation(state=u, beta=beta, mu=mu)
+
     for i in range(v_int.shape[1]):
         for j in range(v_int.shape[2]):
             if not (v_int[:, i, j] < 0).any() and v_int[:, i, j].sum() <= population_size:
-                result[i, j, :] = evolver.calculate_gradient_of_selection(beta, v_int[:, i, j])
+                result[i, j, :] = gradient_fn(v_int[:, i, j])
 
     result = result.swapaxes(0, 1).swapaxes(0, 2)
     xy_results = vectorized_barycentric_to_xy_coordinates(result, simplex.corners)
@@ -438,6 +443,7 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex(
 def plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots(
         population_size: int,
         beta: float,
+        mu: Optional[float] = None,
         payoff_matrix: Optional[NDArray[np.float64]] = None,
         game: Optional[AbstractGame] = None,
         group_size: Optional[int] = 2,
@@ -481,10 +487,15 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots(
     evolver = PairwiseComparison(population_size=population_size, game=game)
     result = np.zeros(shape=(v_int.shape[1], v_int.shape[2], 3), dtype=np.float64)
 
+    if mu is None:
+      gradient_fn = lambda u: evolver.calculate_gradient_of_selection(state=u, beta=beta)
+    else:
+      gradient_fn = lambda u: evolver.calculate_gradient_of_selection_with_mutation(state=u, beta=beta, mu=mu)
+
     for i in range(v_int.shape[1]):
         for j in range(v_int.shape[2]):
             if not (v_int[:, i, j] < 0).any() and v_int[:, i, j].sum() <= population_size:
-                result[i, j, :] = evolver.calculate_gradient_of_selection(beta, v_int[:, i, j])
+                result[i, j, :] = gradient_fn(v_int[:, i, j])
 
     result = result.swapaxes(0, 1).swapaxes(0, 2)
     xy_results = vectorized_barycentric_to_xy_coordinates(result, simplex.corners)
