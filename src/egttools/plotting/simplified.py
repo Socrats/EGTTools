@@ -348,6 +348,7 @@ def plot_replicator_dynamics_in_simplex(
 def plot_pairwise_comparison_rule_dynamics_in_simplex(
         population_size: int,
         beta: float,
+        mu: Optional[float] = None,
         payoff_matrix: Optional[NDArray[np.float64]] = None,
         game: Optional[AbstractGame] = None,
         group_size: Optional[int] = 2,

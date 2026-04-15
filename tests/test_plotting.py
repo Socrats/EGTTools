@@ -305,6 +305,31 @@ def test_plot_pairwise_comparison_rule_dynamics_in_simplex_with_payoff_matrix():
     assert isinstance(game, egt.games.AbstractGame)
     assert isinstance(evolver, egt.analytical.PairwiseComparison)
 
+def test_plot_pairwise_comparison_rule_dynamics_in_simplex_with_payoff_matrix_and_mu():
+    payoff_matrix = np.array([
+        [3.0, 0.0, 1.0],
+        [2.0, 1.0, 0.0],
+        [0.0, 2.0, 2.5],
+    ], dtype=np.float64)
+
+    simplex, grad_fn, roots, roots_xy, stability, game, evolver = (
+        egt.plotting.plot_pairwise_comparison_rule_dynamics_in_simplex(
+            population_size=8,
+            beta=1.0,
+            mu=1.0/8,
+            payoff_matrix=payoff_matrix,
+            group_size=2,
+        )
+    )
+
+    assert isinstance(simplex, egt.plotting.Simplex2D)
+    assert callable(grad_fn)
+    assert isinstance(roots, list)
+    assert isinstance(roots_xy, list)
+    assert isinstance(stability, list)
+    assert isinstance(game, egt.games.AbstractGame)
+    assert isinstance(evolver, egt.analytical.PairwiseComparison)
+
 
 def test_plot_pairwise_comparison_rule_dynamics_in_simplex_with_game():
     payoff_matrix = np.array([
@@ -319,6 +344,32 @@ def test_plot_pairwise_comparison_rule_dynamics_in_simplex_with_game():
             population_size=8,
             beta=1.0,
             game=game,
+        )
+    )
+
+    assert isinstance(simplex, egt.plotting.Simplex2D)
+    assert callable(grad_fn)
+    assert isinstance(roots, list)
+    assert isinstance(roots_xy, list)
+    assert isinstance(stability, list)
+    assert returned_game is game
+    assert isinstance(evolver, egt.analytical.PairwiseComparison)
+
+
+def test_plot_pairwise_comparison_rule_dynamics_in_simplex_with_game_and_mu():
+    payoff_matrix = np.array([
+        [3.0, 0.0, 1.0],
+        [2.0, 1.0, 0.0],
+        [0.0, 2.0, 2.5],
+    ], dtype=np.float64)
+    game = egt.games.Matrix2PlayerGameHolder(3, payoff_matrix)
+
+    simplex, grad_fn, roots, roots_xy, stability, returned_game, evolver = (
+        egt.plotting.plot_pairwise_comparison_rule_dynamics_in_simplex(
+            population_size=8,
+            beta=1.0,
+            game=game,
+            mu=1.0/8,
         )
     )
 
@@ -353,6 +404,29 @@ def test_plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots_with_pa
     assert isinstance(evolver, egt.analytical.PairwiseComparison)
 
 
+def test_plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots_with_payoff_matrix_and_mu():
+    payoff_matrix = np.array([
+        [3.0, 0.0, 1.0],
+        [2.0, 1.0, 0.0],
+        [0.0, 2.0, 2.5],
+    ], dtype=np.float64)
+
+    simplex, grad_fn, game, evolver = (
+        egt.plotting.plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots(
+            population_size=8,
+            beta=1.0,
+            mu=1.0/8,
+            payoff_matrix=payoff_matrix,
+            group_size=2,
+        )
+    )
+
+    assert isinstance(simplex, egt.plotting.Simplex2D)
+    assert callable(grad_fn)
+    assert isinstance(game, egt.games.AbstractGame)
+    assert isinstance(evolver, egt.analytical.PairwiseComparison)
+
+
 def test_plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots_with_game():
     payoff_matrix = np.array([
         [3.0, 0.0, 1.0],
@@ -366,6 +440,29 @@ def test_plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots_with_ga
             population_size=8,
             beta=1.0,
             game=game,
+        )
+    )
+
+    assert isinstance(simplex, egt.plotting.Simplex2D)
+    assert callable(grad_fn)
+    assert returned_game is game
+    assert isinstance(evolver, egt.analytical.PairwiseComparison)
+
+
+def test_plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots_with_game_and_mu():
+    payoff_matrix = np.array([
+        [3.0, 0.0, 1.0],
+        [2.0, 1.0, 0.0],
+        [0.0, 2.0, 2.5],
+    ], dtype=np.float64)
+    game = egt.games.Matrix2PlayerGameHolder(3, payoff_matrix)
+
+    simplex, grad_fn, returned_game, evolver = (
+        egt.plotting.plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots(
+            population_size=8,
+            beta=1.0,
+            game=game,
+            mu=1.0/8,
         )
     )
 
