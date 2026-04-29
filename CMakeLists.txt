@@ -17,6 +17,16 @@
 
 cmake_minimum_required(VERSION 3.20...4.2)
 
+# SKIP_VCPKG guard — must come before project() because CMAKE_TOOLCHAIN_FILE
+# is loaded by CMakeDetermineSystem.cmake *during* project(), before any code
+# below project() can run. A stale cmake cache from a prior vcpkg build injects
+# the vcpkg toolchain even when -DSKIP_VCPKG=ON is passed on the command line.
+# Unsetting the cache variable here prevents project() from loading it.
+if (SKIP_VCPKG AND DEFINED CMAKE_TOOLCHAIN_FILE AND CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
+    message(STATUS "[EGTtools] SKIP_VCPKG=ON: clearing stale vcpkg CMAKE_TOOLCHAIN_FILE before project()")
+    unset(CMAKE_TOOLCHAIN_FILE CACHE)
+endif ()
+
 # ------------------------------------------------------------------------------
 # Version detection: git tag → EGTTOOLS_VERSION env var → fallback
 # ------------------------------------------------------------------------------

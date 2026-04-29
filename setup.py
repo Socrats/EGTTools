@@ -19,6 +19,7 @@
 The code used in here has been adapted from https://github.com/YannickJadoul/Parselmouth/blob/master/setup.py
 """
 
+import glob
 import os
 import shlex
 import shutil
@@ -113,6 +114,21 @@ def transform_to_valid_windows_path(input_path):
 cmake_args = shlex.split(os.environ.get('EGTTOOLS_EXTRA_CMAKE_ARGS', ''))
 
 SKIP_VCPKG = os.environ.get('SKIP_VCPKG', 'OFF')
+
+if SKIP_VCPKG != 'OFF':
+    # A stale _skbuild cmake cache from a prior vcpkg build stores
+    # CMAKE_TOOLCHAIN_FILE pointing at vcpkg. CMake reads that cache before
+    # CMakeLists.txt can intervene (toolchain is loaded during project()).
+    # Delete any such cache file so the fresh SKIP_VCPKG build starts clean.
+    project_root = os.path.dirname(os.path.abspath(__file__))
+    for cache_file in glob.glob(os.path.join(project_root, '_skbuild', '*', 'cmake-build', 'CMakeCache.txt')):
+        try:
+            with open(cache_file) as _f:
+                if 'vcpkg' in _f.read():
+                    os.remove(cache_file)
+                    print(f"[SKIP_VCPKG] Removed stale vcpkg cmake cache: {cache_file}", file=sys.stderr)
+        except OSError:
+            pass
 
 if SKIP_VCPKG == 'OFF':
     # Try to find the vcpkg path
