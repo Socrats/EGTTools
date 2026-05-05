@@ -23,6 +23,18 @@ build:
   noarch: false  # C++ extension: NOT noarch
   number: 0
   string: "{{ variant_prefix }}py{{ PY_VER | replace('.','') }}_{{ PKG_BUILDNUM }}"
+{% if use_arpack or use_mpi %}
+  # Non-base variants are deprioritised so that a plain `conda install egttools`
+  # always resolves to the base build.  Users opt in to a variant by pinning the
+  # build string (see README / recipe comments below).
+  track_features:
+{% if use_arpack %}
+    - egttools_arpack
+{% endif %}
+{% if use_mpi %}
+    - egttools_mpi
+{% endif %}
+{% endif %}
   script_env:
     # Passed to CMake so it can generate version.h without a git checkout
     # (conda-forge builds from a PyPI sdist tarball, so .git is absent).
@@ -121,11 +133,14 @@ about:
 
     Build variants
     --------------
-    egttools (base)         — power iteration stationary solver; no extra deps.
-    egttools (arpack)       — adds ARPACK native C++ eigensolver; requires arpack.
-    egttools (mpi)          — adds PETSc/SLEPc MPI-distributed solver;
-                              requires petsc, slepc, mpi4py.
-    egttools (arpack + mpi) — both solvers enabled.
+    conda install egttools                      # base (default)
+    conda install "egttools=*=arpack_*"        # ARPACK native eigensolver
+    conda install "egttools=*=mpi_*"           # PETSc/SLEPc MPI-distributed solver
+    conda install "egttools=*=arpack_mpi_*"    # both
+
+    Non-base variants are deprioritised via track_features, so a plain
+    `conda install egttools` always resolves to the base build.  Pin the
+    build string as shown above to select a specific variant.
   doc_url: "https://egttools.readthedocs.io"
 
 extra:
