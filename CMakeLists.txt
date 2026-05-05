@@ -74,6 +74,7 @@ project(egttools VERSION ${_EGTTOOLS_VERSION} LANGUAGES CXX)
 option(USE_OPENMP "Enable OpenMP multithreading" ON)
 option(BUILD_NUMERICAL_TESTS "Build C++ tests in tests/" ON)
 option(SKIP_VCPKG "Skip vcpkg toolchain setup" OFF)
+option(EGTTOOLS_ENABLE_ARPACK "Build native ARPACK eigensolver (requires arpack-ng)" OFF)
 
 # Silence third-party CMake noise if desired
 option(EGTTOOLS_SUPPRESS_THIRD_PARTY_CMAKE_WARNINGS "Suppress third-party CMake dev/deprecation warnings" ON)
@@ -220,6 +221,25 @@ if (NOT EIGEN3_INCLUDE_DIR AND TARGET Eigen3::Eigen)
     get_target_property(EIGEN3_INCLUDE_DIR Eigen3::Eigen INTERFACE_INCLUDE_DIRECTORIES)
 endif ()
 message(STATUS "Eigen3 include directory: ${EIGEN3_INCLUDE_DIR}")
+
+# arpack-ng (optional — enabled by EGTTOOLS_ENABLE_ARPACK=ON)
+# conda-forge package name: arpackng  →  target: ARPACK::ARPACK
+# vcpkg / system installs may use:    arpack-ng  →  target: arpack-ng::arpack-ng
+if (EGTTOOLS_ENABLE_ARPACK)
+    find_package(arpackng QUIET)
+    if (arpackng_FOUND AND TARGET ARPACK::ARPACK)
+        set(EGTTOOLS_ARPACK_TARGET ARPACK::ARPACK)
+        message(STATUS "[EGTtools] ARPACK: found via arpackng (ARPACK::ARPACK)")
+    else ()
+        find_package(arpack-ng QUIET)
+        if (arpack-ng_FOUND AND TARGET arpack-ng::arpack-ng)
+            set(EGTTOOLS_ARPACK_TARGET arpack-ng::arpack-ng)
+            message(STATUS "[EGTtools] ARPACK: found via arpack-ng (arpack-ng::arpack-ng)")
+        else ()
+            message(WARNING "[EGTtools] EGTTOOLS_ENABLE_ARPACK=ON but arpack-ng not found — disabling")
+        endif ()
+    endif ()
+endif ()
 
 # ------------------------------------------------------------------------------
 # Python & pybind11 setup

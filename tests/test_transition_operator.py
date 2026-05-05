@@ -32,6 +32,7 @@ Matrix2PlayerGameHolder = egt.games.Matrix2PlayerGameHolder
 from egttools.numerical.linear_operator import (
     make_transition_operator,
     make_residual_operator,
+    stationary_distribution_from_sparse,
 )
 
 
@@ -311,6 +312,173 @@ class TestAgainstAnalytical:
 # ---------------------------------------------------------------------------
 # LinearOperator wrapper tests
 # ---------------------------------------------------------------------------
+
+class TestPowerIteration:
+    """Tests for compute_stationary_distribution (C++ power iteration)."""
+
+    def _reference_stationary(self, analytical, p):
+        sparse_P = analytical.calculate_transition_matrix(p["beta"], p["mu"])
+        PT = sparse_P.T.tocsr()
+        vals, vecs = eigs(PT, k=1, which="LM", tol=1e-14)
+        pi = vecs[:, 0].real
+        pi = np.abs(pi)
+        pi /= pi.sum()
+        return pi
+
+    def test_power_iteration_2strategy(self, hawk_dove_op, hawk_dove_analytical, hawk_dove_params):
+        """Power iteration result matches sparse eigenvector (2-strategy)."""
+        pi_ref = self._reference_stationary(hawk_dove_analytical, hawk_dove_params)
+        pi = hawk_dove_op.compute_stationary_distribution(tol=1e-12, max_iter=50000)
+        np.testing.assert_allclose(pi, pi_ref, atol=1e-6)
+
+    def test_power_iteration_3strategy(self, rps_op, rps_analytical, rps_params):
+        """Power iteration result matches sparse eigenvector (3-strategy RPS)."""
+        pi_ref = self._reference_stationary(rps_analytical, rps_params)
+        pi = rps_op.compute_stationary_distribution(tol=1e-12, max_iter=50000)
+        np.testing.assert_allclose(pi, pi_ref, atol=1e-6)
+
+    def test_residual_zero_at_power_iteration_result(self, hawk_dove_op, hawk_dove_params):
+        """(I - P^T) pi ≈ 0 for the power-iteration stationary distribution."""
+        pi = hawk_dove_op.compute_stationary_distribution()
+        y = np.zeros(hawk_dove_op.size)
+        hawk_dove_op.apply_residual(pi, y)
+        np.testing.assert_allclose(y, 0.0, atol=1e-9)
+
+    def test_power_iteration_is_normalized(self, hawk_dove_op):
+        """Returned distribution sums to 1."""
+        pi = hawk_dove_op.compute_stationary_distribution()
+        assert pi.sum() == pytest.approx(1.0, rel=1e-12)
+
+    def test_power_iteration_is_nonnegative(self, hawk_dove_op):
+        """Returned distribution is non-negative."""
+        pi = hawk_dove_op.compute_stationary_distribution()
+        assert np.all(pi >= 0.0)
+
+    def test_power_iteration_not_converged_raises(self, hawk_dove_op):
+        """RuntimeError raised when max_iter=1 (cannot converge)."""
+        with pytest.raises(RuntimeError, match="not converged"):
+            hawk_dove_op.compute_stationary_distribution(tol=1e-15, max_iter=1)
+
+
+class TestARPACK:
+    """Tests for compute_stationary_arpack (native C++ ARPACK eigensolver)."""
+
+    _arpack_available = hasattr(PairwiseComparisonTransitionOperator, "compute_stationary_arpack")
+
+    def _reference_stationary(self, analytical, p):
+        sparse_P = analytical.calculate_transition_matrix(p["beta"], p["mu"])
+        PT = sparse_P.T.tocsr()
+        vals, vecs = eigs(PT, k=1, which="LM", tol=1e-14)
+        pi = vecs[:, 0].real
+        pi = np.abs(pi)
+        pi /= pi.sum()
+        return pi
+
+    @pytest.mark.skipif(
+        not hasattr(PairwiseComparisonTransitionOperator, "compute_stationary_arpack"),
+        reason="ARPACK not compiled in (build without EGTTOOLS_ENABLE_ARPACK=ON)"
+    )
+    def test_arpack_2strategy(self, hawk_dove_op, hawk_dove_analytical, hawk_dove_params):
+        """ARPACK result matches sparse eigenvector (2-strategy)."""
+        pi_ref = self._reference_stationary(hawk_dove_analytical, hawk_dove_params)
+        pi = hawk_dove_op.compute_stationary_arpack()
+        np.testing.assert_allclose(pi, pi_ref, atol=1e-8)
+
+    @pytest.mark.skipif(
+        not hasattr(PairwiseComparisonTransitionOperator, "compute_stationary_arpack"),
+        reason="ARPACK not compiled in (build without EGTTOOLS_ENABLE_ARPACK=ON)"
+    )
+    def test_arpack_3strategy(self, rps_op, rps_analytical, rps_params):
+        """ARPACK result matches sparse eigenvector (3-strategy RPS)."""
+        pi_ref = self._reference_stationary(rps_analytical, rps_params)
+        pi = rps_op.compute_stationary_arpack()
+        np.testing.assert_allclose(pi, pi_ref, atol=1e-8)
+
+    @pytest.mark.skipif(
+        not hasattr(PairwiseComparisonTransitionOperator, "compute_stationary_arpack"),
+        reason="ARPACK not compiled in"
+    )
+    def test_arpack_matches_power_iteration(self, hawk_dove_op):
+        """ARPACK result agrees with power iteration to high precision."""
+        pi_pow = hawk_dove_op.compute_stationary_distribution(tol=1e-12, max_iter=50000)
+        pi_arp = hawk_dove_op.compute_stationary_arpack()
+        np.testing.assert_allclose(pi_arp, pi_pow, atol=1e-8)
+
+    @pytest.mark.skipif(
+        not hasattr(PairwiseComparisonTransitionOperator, "compute_stationary_arpack"),
+        reason="ARPACK not compiled in"
+    )
+    def test_arpack_result_is_normalized(self, hawk_dove_op):
+        """ARPACK distribution sums to 1."""
+        pi = hawk_dove_op.compute_stationary_arpack()
+        assert pi.sum() == pytest.approx(1.0, rel=1e-12)
+
+    @pytest.mark.skipif(
+        not hasattr(PairwiseComparisonTransitionOperator, "compute_stationary_arpack"),
+        reason="ARPACK not compiled in"
+    )
+    def test_arpack_residual_near_zero(self, hawk_dove_op):
+        """(I - P^T) pi ≈ 0 for ARPACK stationary distribution."""
+        pi = hawk_dove_op.compute_stationary_arpack()
+        y = np.zeros(hawk_dove_op.size)
+        hawk_dove_op.apply_residual(pi, y)
+        np.testing.assert_allclose(y, 0.0, atol=1e-8)
+
+    def test_arpack_absent_when_not_compiled(self):
+        """When ARPACK is not compiled in, the method is absent (not just None)."""
+        if self._arpack_available:
+            pytest.skip("ARPACK is compiled in — absence test not applicable")
+        assert not hasattr(PairwiseComparisonTransitionOperator, "compute_stationary_arpack")
+
+
+class TestStationaryDistributionFromSparse:
+    """Tests for stationary_distribution_from_sparse helper."""
+
+    def test_2strategy_matches_power_iteration(
+        self, hawk_dove_op, hawk_dove_analytical, hawk_dove_params
+    ):
+        """Result agrees with C++ power iteration (2-strategy)."""
+        p = hawk_dove_params
+        P = hawk_dove_analytical.calculate_transition_matrix(p["beta"], p["mu"])
+        pi_sparse = stationary_distribution_from_sparse(P)
+        pi_power = hawk_dove_op.compute_stationary_distribution(tol=1e-12, max_iter=50000)
+        np.testing.assert_allclose(pi_sparse, pi_power, atol=1e-6)
+
+    def test_3strategy_matches_power_iteration(
+        self, rps_op, rps_analytical, rps_params
+    ):
+        """Result agrees with C++ power iteration (3-strategy RPS)."""
+        p = rps_params
+        P = rps_analytical.calculate_transition_matrix(p["beta"], p["mu"])
+        pi_sparse = stationary_distribution_from_sparse(P)
+        pi_power = rps_op.compute_stationary_distribution(tol=1e-12, max_iter=50000)
+        np.testing.assert_allclose(pi_sparse, pi_power, atol=1e-6)
+
+    def test_result_is_normalized(self, hawk_dove_analytical, hawk_dove_params):
+        """Returned distribution sums to 1."""
+        p = hawk_dove_params
+        P = hawk_dove_analytical.calculate_transition_matrix(p["beta"], p["mu"])
+        pi = stationary_distribution_from_sparse(P)
+        assert pi.sum() == pytest.approx(1.0, rel=1e-12)
+
+    def test_result_is_nonnegative(self, hawk_dove_analytical, hawk_dove_params):
+        """Returned distribution is non-negative."""
+        p = hawk_dove_params
+        P = hawk_dove_analytical.calculate_transition_matrix(p["beta"], p["mu"])
+        pi = stationary_distribution_from_sparse(P)
+        assert np.all(pi >= 0.0)
+
+    def test_residual_near_zero(
+        self, hawk_dove_op, hawk_dove_analytical, hawk_dove_params
+    ):
+        """(I - P^T) pi ≈ 0 for the result."""
+        p = hawk_dove_params
+        P = hawk_dove_analytical.calculate_transition_matrix(p["beta"], p["mu"])
+        pi = stationary_distribution_from_sparse(P)
+        y = np.zeros(hawk_dove_op.size)
+        hawk_dove_op.apply_residual(pi, y)
+        np.testing.assert_allclose(y, 0.0, atol=1e-10)
+
 
 class TestLinearOperatorWrappers:
     def test_make_transition_operator_shape(self, hawk_dove_op):

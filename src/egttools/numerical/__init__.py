@@ -11,7 +11,8 @@ else:
     from .numerical_ import NetworkEvolver
     from .indicators import StationaryIndicatorResult
     from . import linear_operator
+    from .linear_operator import stationary_distribution_from_sparse
 
 __all__ = ['numerical', 'PairwiseComparisonNumerical', 'PairwiseComparisonTransitionOperator',
            'GeneralPopulationEvolver', 'NetworkEvolver', 'StationaryIndicatorResult',
-           'linear_operator']
+           'linear_operator', 'stationary_distribution_from_sparse']
