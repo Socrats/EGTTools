@@ -433,8 +433,64 @@ class PairwiseComparisonNumerical:
     @staticmethod
     def estimate_fixation_probability(*args, **kwargs):
         """
-        
+
         Estimate the fixation probability of an invading strategy in a resident population.
+        """
+    def estimate_mean_absorption_time(
+        self,
+        beta: float,
+        init_state: numpy.ndarray,
+        nb_runs: int,
+    ) -> dict:
+        """
+        Estimate the mean absorption time (fixation time) from a given initial state.
+
+        Runs independent trajectories of the mutation-free Moran process from
+        ``init_state`` and counts generations until any strategy reaches ``pop_size``.
+
+        Parameters
+        ----------
+        beta : float
+            Intensity of selection.
+        init_state : numpy.ndarray
+            Initial population state — integer array of strategy counts summing to
+            ``pop_size``.
+        nb_runs : int
+            Number of independent trajectories.
+
+        Returns
+        -------
+        dict
+            ``{"mean": float, "stderr": float, "nb_runs": int}``.
+        """
+    def estimate_absorption_probabilities(
+        self,
+        beta: float,
+        init_state: numpy.ndarray,
+        nb_runs: int,
+    ) -> numpy.ndarray:
+        """
+        Estimate the absorption probability for each strategy from a given initial state.
+
+        Runs independent trajectories of the mutation-free Moran process from
+        ``init_state`` and records which strategy fixed. Generalises
+        ``estimate_fixation_probability`` to k > 2 strategies.
+
+        Parameters
+        ----------
+        beta : float
+            Intensity of selection.
+        init_state : numpy.ndarray
+            Initial population state — integer array of strategy counts summing to
+            ``pop_size``.
+        nb_runs : int
+            Number of independent trajectories.
+
+        Returns
+        -------
+        numpy.ndarray
+            Array of shape ``(nb_strategies,)`` with the empirical fixation
+            probability for each strategy.
         """
     @staticmethod
     def estimate_stationary_distribution(*args, **kwargs):
