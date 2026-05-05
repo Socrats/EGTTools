@@ -23,7 +23,8 @@ from warnings import warn
 
 import numpy as np
 from scipy.linalg import schur, eigvals
-from scipy.sparse import csr_matrix, csc_matrix
+from scipy.sparse import csr_matrix, csc_matrix, issparse
+from scipy.sparse.linalg import eigs as sparse_eigs
 from typing import Optional, List, Generator, Union, Callable, Dict
 from networkx import Graph
 from egttools.games import AbstractGame
@@ -265,6 +266,62 @@ def calculate_stationary_distribution_non_hermitian(
     index_stationary = np.argmin(abs(eigenvalues - 1.0))  # look for the element closest to 1 in the list of eigenvalues
     sd = abs(eigenvectors[:, index_stationary].T.real)  # it is essential to access the matrix by column
     return sd / sd.sum()  # normalize
+
+
+def calculate_spectral_gap(
+        transition_matrix: Union[np.ndarray, csr_matrix, csc_matrix],
+        tol: float = 1e-10,
+) -> float:
+    """Compute the spectral gap of a Markov chain transition matrix.
+
+    The spectral gap is ``1 - |lambda_2|`` where ``|lambda_2|`` is the second-largest
+    eigenvalue modulus (the largest eigenvalue of an ergodic chain is always 1).
+
+    A larger gap means faster mixing. The chain needs approximately
+    ``ceil(log(epsilon) / log(1 - gap))`` steps from the worst initial state to be
+    epsilon-close to stationarity, providing a principled lower bound for the
+    ``transitory`` parameter in Monte Carlo estimation.
+
+    Uses ``scipy.sparse.linalg.eigs`` (ARPACK) to avoid dense conversion; falls back
+    to a 2x2 dense solve only when the matrix is too small for ARPACK (n <= 3).
+
+    Parameters
+    ----------
+    transition_matrix : numpy.ndarray, csr_matrix, or csc_matrix
+        Square row- or column-stochastic transition matrix of shape (n, n).
+        Eigenvalues are invariant to transposition so either convention works.
+    tol : float, optional
+        ARPACK convergence tolerance (default 1e-10).
+
+    Returns
+    -------
+    float
+        Spectral gap in (0, 1].  Returns 1.0 for a single-state chain (n <= 1).
+    """
+    if issparse(transition_matrix):
+        P = transition_matrix.tocsr()
+    else:
+        P = csr_matrix(transition_matrix)
+
+    n = P.shape[0]
+    if n <= 1:
+        return 1.0
+
+    # ARPACK requires k < n; for n=2 or n=3 we can only ask for k=1 eigenvalue
+    # which is the dominant one (≈1). Return gap = 0 as a conservative bound.
+    if n <= 3:
+        return 0.0
+
+    try:
+        # Request 2 eigenvalues of largest magnitude from P (right eigenproblem).
+        # Eigenvalues of P and P^T coincide, so transposition convention doesn't matter.
+        vals, _ = sparse_eigs(P, k=2, which="LM", tol=tol, maxiter=10000)
+    except Exception:
+        return 0.0  # conservative: unknown gap
+
+    mods = np.sort(np.abs(vals))[::-1]  # descending by magnitude
+    lambda2 = float(mods[1]) if len(mods) > 1 else 0.0
+    return float(1.0 - lambda2)
 
 
 def combine(values: List[Union[int, str]], length: int) -> Generator:

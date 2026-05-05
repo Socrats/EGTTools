@@ -1675,6 +1675,80 @@ Estimate the fixation probability of an invading strategy in a resident populati
 )pbdoc"
                 )
                 .def(
+                    "estimate_mean_absorption_time",
+                    [](PairwiseComparison &self,
+                       double beta,
+                       const Eigen::Ref<const VectorXui> &init_state,
+                       size_t nb_runs) -> py::dict {
+                        py::gil_scoped_release release;
+                        auto [mean, se] = self.estimate_mean_absorption_time(beta, init_state, nb_runs);
+                        py::gil_scoped_acquire acquire;
+                        py::dict result;
+                        result["mean"] = mean;
+                        result["stderr"] = se;
+                        result["nb_runs"] = nb_runs;
+                        return result;
+                    },
+                    py::arg("beta"),
+                    py::arg("init_state"),
+                    py::arg("nb_runs"),
+                    R"pbdoc(
+Estimate the mean absorption time (fixation time) from a given initial state.
+
+Runs independent trajectories of the mutation-free Moran process from ``init_state``
+and counts generations until any strategy reaches ``pop_size``.
+
+Parameters
+----------
+beta : float
+    Intensity of selection.
+init_state : numpy.ndarray
+    Initial population state — array of strategy counts summing to ``pop_size``.
+nb_runs : int
+    Number of independent trajectories.
+
+Returns
+-------
+dict with keys ``"mean"`` (float), ``"stderr"`` (float), ``"nb_runs"`` (int).
+)pbdoc"
+                )
+                .def(
+                    "estimate_absorption_probabilities",
+                    [](PairwiseComparison &self,
+                       double beta,
+                       const Eigen::Ref<const VectorXui> &init_state,
+                       size_t nb_runs) {
+                        py::gil_scoped_release release;
+                        return self.estimate_absorption_probabilities(beta, init_state, nb_runs);
+                    },
+                    py::arg("beta"),
+                    py::arg("init_state"),
+                    py::arg("nb_runs"),
+                    py::return_value_policy::move,
+                    R"pbdoc(
+Estimate the absorption probability for each strategy from a given initial state.
+
+Runs independent trajectories of the mutation-free Moran process from ``init_state``
+and records which strategy fixed in each run. Generalises
+``estimate_fixation_probability`` to k > 2 strategies.
+
+Parameters
+----------
+beta : float
+    Intensity of selection.
+init_state : numpy.ndarray
+    Initial population state — array of strategy counts summing to ``pop_size``.
+nb_runs : int
+    Number of independent trajectories.
+
+Returns
+-------
+numpy.ndarray
+    Array of shape ``(nb_strategies,)`` with the empirical fixation probability
+    for each strategy.
+)pbdoc"
+                )
+                .def(
                     "estimate_stationary_distribution",
                     [](PairwiseComparison &self,
                        size_t nb_runs, size_t nb_generations, size_t transitory,

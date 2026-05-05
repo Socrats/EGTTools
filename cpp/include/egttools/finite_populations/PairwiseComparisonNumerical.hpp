@@ -195,6 +195,42 @@ namespace egttools::FinitePopulations {
                                              double beta);
 
         /**
+         * @brief Estimates the mean absorption time (fixation time) from a given initial state.
+         *
+         * Runs nb_runs independent trajectories of the mutation-free Moran process from
+         * init_state. Each trajectory counts generations until any strategy reaches pop_size.
+         * Returns the mean absorption time and its standard error across runs.
+         *
+         * @param beta       : intensity of selection
+         * @param init_state : initial population state (strategy counts summing to pop_size)
+         * @param nb_runs    : number of independent trajectories
+         * @return pair (mean_absorption_time, standard_error)
+         * @throws std::invalid_argument if beta < 0, nb_runs < 1, or init_state is inconsistent
+         */
+        std::pair<double, double> estimate_mean_absorption_time(
+            double beta,
+            const Eigen::Ref<const VectorXui> &init_state,
+            size_t nb_runs);
+
+        /**
+         * @brief Estimates absorption probabilities for each strategy from a given initial state.
+         *
+         * Runs nb_runs independent trajectories of the mutation-free Moran process from
+         * init_state and records which strategy fixed. Returns the fraction of runs in which
+         * each strategy absorbed. Generalises estimate_fixation_probability to k > 2 strategies.
+         *
+         * @param beta       : intensity of selection
+         * @param init_state : initial population state (strategy counts summing to pop_size)
+         * @param nb_runs    : number of independent trajectories
+         * @return vector of length nb_strategies with absorption probability for each strategy
+         * @throws std::invalid_argument if beta < 0, nb_runs < 1, or init_state is inconsistent
+         */
+        Vector estimate_absorption_probabilities(
+            double beta,
+            const Eigen::Ref<const VectorXui> &init_state,
+            size_t nb_runs);
+
+        /**
          * @brief Estimates the stationary distribution of the population of strategies in the game.
          *
          * The estimation of the stationary distribution is done by averaging the fraction of
@@ -893,6 +929,108 @@ namespace egttools::FinitePopulations {
         }
 
         return (t_plus - t_minus).cast<double>() / static_cast<double>(runs);
+    }
+
+    template<class Cache>
+    std::pair<double, double>
+    PairwiseComparisonNumerical<Cache>::estimate_mean_absorption_time(
+        const double beta,
+        const Eigen::Ref<const VectorXui> &init_state,
+        const size_t nb_runs) {
+        if (beta < 0) throw std::invalid_argument("beta must be >= 0!");
+        if (nb_runs < 1) throw std::invalid_argument("nb_runs must be >= 1!");
+        if (static_cast<size_t>(init_state.size()) != _nb_strategies)
+            throw std::invalid_argument("init_state must have nb_strategies elements");
+        if (static_cast<size_t>(init_state.sum()) != _pop_size)
+            throw std::invalid_argument("init_state elements must sum to pop_size");
+
+        // If already absorbed, return 0 immediately
+        for (int j = 0; j < static_cast<int>(_nb_strategies); ++j)
+            if (init_state(j) == _pop_size) return {0.0, 0.0};
+
+        double sum_t = 0.0;
+        double sum_t2 = 0.0;
+
+#if defined(_OPENMP) && !defined(_MSC_VER)
+#pragma omp parallel for reduction(+ : sum_t, sum_t2) default(none) \
+    shared(beta, init_state, nb_runs, _pop_size, _nb_strategies, _cache_size)
+#endif
+        for (size_t i = 0; i < nb_runs; ++i) {
+            std::mt19937_64 generator(egttools::Random::SeedGenerator::getInstance().getSeed());
+            Cache cache(_cache_size);
+
+            VectorXui strategies = init_state;
+            int birth = 0, die = 0, s1 = 0, s2 = 0;
+            size_t steps = 0;
+
+            while (true) {
+                _sample_players(s1, s2, strategies, generator);
+                ++steps;
+                if (_update_step(s1, s2, beta, birth, die, strategies, cache, generator))
+                    break;
+            }
+
+            const double t = static_cast<double>(steps);
+            sum_t += t;
+            sum_t2 += t * t;
+        }
+
+        const double n = static_cast<double>(nb_runs);
+        const double mean = sum_t / n;
+        double se = 0.0;
+        if (nb_runs > 1) {
+            const double var = (sum_t2 - sum_t * sum_t / n) / (n - 1.0);
+            if (var > 0.0) se = std::sqrt(var / n);
+        }
+        return {mean, se};
+    }
+
+    template<class Cache>
+    Vector
+    PairwiseComparisonNumerical<Cache>::estimate_absorption_probabilities(
+        const double beta,
+        const Eigen::Ref<const VectorXui> &init_state,
+        const size_t nb_runs) {
+        if (beta < 0) throw std::invalid_argument("beta must be >= 0!");
+        if (nb_runs < 1) throw std::invalid_argument("nb_runs must be >= 1!");
+        if (static_cast<size_t>(init_state.size()) != _nb_strategies)
+            throw std::invalid_argument("init_state must have nb_strategies elements");
+        if (static_cast<size_t>(init_state.sum()) != _pop_size)
+            throw std::invalid_argument("init_state elements must sum to pop_size");
+
+        // If already absorbed, return a one-hot vector for the fixed strategy
+        for (int j = 0; j < static_cast<int>(_nb_strategies); ++j) {
+            if (init_state(j) == _pop_size) {
+                Vector result = Vector::Zero(static_cast<Eigen::Index>(_nb_strategies));
+                result(j) = 1.0;
+                return result;
+            }
+        }
+
+        VectorXi counts = VectorXi::Zero(static_cast<Eigen::Index>(_nb_strategies));
+
+#if defined(_OPENMP) && !defined(_MSC_VER)
+#pragma omp parallel for reduction(+ : counts) default(none) \
+    shared(beta, init_state, nb_runs, _pop_size, _nb_strategies, _cache_size)
+#endif
+        for (size_t i = 0; i < nb_runs; ++i) {
+            std::mt19937_64 generator(egttools::Random::SeedGenerator::getInstance().getSeed());
+            Cache cache(_cache_size);
+
+            VectorXui strategies = init_state;
+            int birth = 0, die = 0, s1 = 0, s2 = 0;
+
+            while (true) {
+                _sample_players(s1, s2, strategies, generator);
+                if (_update_step(s1, s2, beta, birth, die, strategies, cache, generator))
+                    break;
+            }
+
+            // birth holds the strategy that last gained a member; if it fixed, record it
+            counts(birth) += 1;
+        }
+
+        return counts.cast<double>() / static_cast<double>(nb_runs);
     }
 
     template<class Cache>
