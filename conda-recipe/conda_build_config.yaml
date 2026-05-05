@@ -9,3 +9,23 @@ python:
 # >=1.26.3 at runtime (as declared in meta.yaml run requirements).
 numpy:
   - "2.0"
+
+# Optional C-library build variants.  Each combination produces a separate
+# conda package with a distinct build string.
+#
+# arpack_variant:
+#   ""       → base wheel  (power iteration only, zero extra deps)
+#   "arpack" → ARPACK wheel (compile with EGTTOOLS_ENABLE_ARPACK=ON;
+#               runtime dep: arpack)
+#
+# mpi_variant:
+#   ""       → base wheel  (no MPI distributed solver)
+#   "petsc"  → PETSc/SLEPc MPI wheel (compile with EGTTOOLS_ENABLE_PETSC=ON;
+#               runtime deps: petsc, slepc, mpi4py)
+arpack_variant:
+  - ""
+  - "arpack"
+
+mpi_variant:
+  - ""
+  - "petsc"
