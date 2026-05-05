@@ -8,7 +8,7 @@ from . import distributions
 from . import games
 from . import random
 from . import structure
-__all__: list[str] = ['DataStructures', 'GeneralPopulationEvolver', 'NetworkEvolver', 'PairwiseComparison', 'PairwiseComparisonNumerical', 'USES_BOOST', 'VERSION', 'behaviors', 'calculate_nb_states', 'calculate_state', 'calculate_strategies_distribution', 'distributions', 'games', 'is_blas_lapack_enabled', 'is_openmp_enabled', 'random', 'replicator_equation', 'replicator_equation_n_player', 'sample_simplex', 'sample_simplex_directly', 'sample_unit_simplex', 'structure', 'vectorized_replicator_equation', 'vectorized_replicator_equation_n_player']
+__all__: list[str] = ['DataStructures', 'GeneralPopulationEvolver', 'NetworkEvolver', 'PairwiseComparison', 'PairwiseComparisonNumerical', 'PairwiseComparisonTransitionOperator', 'USES_BOOST', 'VERSION', 'behaviors', 'calculate_nb_states', 'calculate_state', 'calculate_strategies_distribution', 'distributions', 'games', 'is_blas_lapack_enabled', 'is_openmp_enabled', 'random', 'replicator_equation', 'replicator_equation_n_player', 'sample_simplex', 'sample_simplex_directly', 'sample_unit_simplex', 'structure', 'vectorized_replicator_equation', 'vectorized_replicator_equation_n_player']
 class GeneralPopulationEvolver:
     """
     
@@ -619,6 +619,88 @@ class PairwiseComparisonNumerical:
     @pop_size.setter
     def pop_size(*args, **kwargs):
         ...
+class PairwiseComparisonTransitionOperator:
+    """
+    Matrix-free transition operator for the pairwise comparison process.
+
+    Computes matrix-vector products y = P x, y = P^T x, and y = (I - P^T) x
+    without assembling the transition matrix P. Intended for iterative
+    eigensolvers (scipy.sparse.linalg, petsc4py) and as the basis for future
+    MPI-distributed computation.
+
+    The stationary distribution π satisfies P^T π = π. Use apply_transpose
+    or wrap with egttools.numerical.linear_operator.make_transition_operator
+    to obtain a scipy.sparse.linalg.LinearOperator.
+    """
+    def __init__(
+        self,
+        population_size: int,
+        game: games.AbstractGame,
+        beta: float,
+        mu: float,
+    ) -> None:
+        """
+        Construct the matrix-free transition operator.
+
+        Parameters
+        ----------
+        population_size : int
+            Number of individuals Z (must be >= 2).
+        game : egttools.games.AbstractGame
+            Game object defining strategy fitnesses.
+        beta : float
+            Intensity of selection (Fermi parameter, >= 0).
+        mu : float
+            Mutation probability per step (in [0, 1]).
+        """
+    def apply_transpose(self, x: numpy.ndarray, y: numpy.ndarray) -> None:
+        """
+        Compute y = P^T x in-place.
+
+        Parameters
+        ----------
+        x : numpy.ndarray
+            Input vector of length size.
+        y : numpy.ndarray
+            Output vector of length size; zeroed and overwritten.
+        """
+    def apply(self, x: numpy.ndarray, y: numpy.ndarray) -> None:
+        """
+        Compute y = P x in-place.
+
+        Parameters
+        ----------
+        x : numpy.ndarray
+            Input vector of length size.
+        y : numpy.ndarray
+            Output vector of length size; zeroed and overwritten.
+        """
+    def apply_residual(self, x: numpy.ndarray, y: numpy.ndarray) -> None:
+        """
+        Compute y = (I - P^T) x in-place.
+
+        Parameters
+        ----------
+        x : numpy.ndarray
+            Input vector of length size.
+        y : numpy.ndarray
+            Output vector of length size; overwritten.
+        """
+    @property
+    def size(self) -> int:
+        """Total number of simplex states C(Z+k-1, k-1)."""
+    @property
+    def population_size(self) -> int:
+        """Population size Z."""
+    @property
+    def nb_strategies(self) -> int:
+        """Number of strategies k."""
+    @property
+    def beta(self) -> float:
+        """Intensity of selection β."""
+    @property
+    def mu(self) -> float:
+        """Mutation probability μ."""
 def calculate_nb_states(*args, **kwargs):
     """
     

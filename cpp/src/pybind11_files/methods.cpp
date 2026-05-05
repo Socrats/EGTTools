@@ -2576,4 +2576,144 @@ Estimate time-independent average gradients of selection across multiple network
 
         options.enable_function_signatures();
     }
+
+    // -------------------------------------------------------------------------
+    // PairwiseComparisonTransitionOperator
+    // -------------------------------------------------------------------------
+    {
+        using TransitionOperator = FinitePopulations::PairwiseComparisonTransitionOperator;
+
+        py::options options;
+        options.disable_function_signatures();
+
+        py::class_<TransitionOperator>(
+            m,
+            "PairwiseComparisonTransitionOperator",
+            R"pbdoc(
+Matrix-free transition operator for the pairwise comparison process.
+
+Computes matrix-vector products ``y = P x``, ``y = P^T x``, and
+``y = (I - P^T) x`` without ever assembling the transition matrix P.
+Designed for iterative eigensolvers (``scipy.sparse.linalg``, petsc4py)
+and as the basis for future MPI-distributed computation.
+
+The stationary distribution π satisfies ``P^T π = π``. Use
+``apply_transpose`` or wrap this object with
+``egttools.numerical.linear_operator.make_transition_operator`` to
+obtain a ``scipy.sparse.linalg.LinearOperator``.
+)pbdoc"
+        )
+        .def(
+            py::init<size_t, FinitePopulations::AbstractGame &, double, double>(),
+            py::arg("population_size"),
+            py::arg("game"),
+            py::arg("beta"),
+            py::arg("mu"),
+            py::keep_alive<1, 3>(),
+            R"pbdoc(
+Construct the matrix-free transition operator.
+
+Parameters
+----------
+population_size : int
+    Number of individuals Z (must be >= 2).
+game : egttools.games.AbstractGame
+    Game object defining strategy fitnesses.
+beta : float
+    Intensity of selection (Fermi parameter, >= 0).
+mu : float
+    Mutation probability per step (in [0, 1]).
+)pbdoc"
+        )
+        .def(
+            "apply_transpose",
+            [](TransitionOperator &self,
+               const Eigen::Ref<const egttools::Vector> &x,
+               Eigen::Ref<egttools::Vector> y) {
+                self.apply_transpose(x, y);
+            },
+            py::arg("x"),
+            py::arg("y"),
+            R"pbdoc(
+Compute y = P^T x in-place.
+
+The stationary distribution π satisfies P^T π = π, so this is the
+primary operation for iterative eigensolver use.
+
+Parameters
+----------
+x : numpy.ndarray
+    Input vector of length ``size``.
+y : numpy.ndarray
+    Output vector of length ``size``; zeroed and overwritten.
+)pbdoc"
+        )
+        .def(
+            "apply",
+            [](TransitionOperator &self,
+               const Eigen::Ref<const egttools::Vector> &x,
+               Eigen::Ref<egttools::Vector> y) {
+                self.apply(x, y);
+            },
+            py::arg("x"),
+            py::arg("y"),
+            R"pbdoc(
+Compute y = P x in-place.
+
+Parameters
+----------
+x : numpy.ndarray
+    Input vector of length ``size``.
+y : numpy.ndarray
+    Output vector of length ``size``; zeroed and overwritten.
+)pbdoc"
+        )
+        .def(
+            "apply_residual",
+            [](TransitionOperator &self,
+               const Eigen::Ref<const egttools::Vector> &x,
+               Eigen::Ref<egttools::Vector> y) {
+                self.apply_residual(x, y);
+            },
+            py::arg("x"),
+            py::arg("y"),
+            R"pbdoc(
+Compute y = (I - P^T) x in-place.
+
+Useful for iterative linear solvers: find π such that (I - P^T) π = 0.
+
+Parameters
+----------
+x : numpy.ndarray
+    Input vector of length ``size``.
+y : numpy.ndarray
+    Output vector of length ``size``; overwritten.
+)pbdoc"
+        )
+        .def_property_readonly(
+            "size",
+            &TransitionOperator::size,
+            "Total number of simplex states C(Z+k-1, k-1)."
+        )
+        .def_property_readonly(
+            "population_size",
+            &TransitionOperator::population_size,
+            "Population size Z."
+        )
+        .def_property_readonly(
+            "nb_strategies",
+            &TransitionOperator::nb_strategies,
+            "Number of strategies k."
+        )
+        .def_property_readonly(
+            "beta",
+            &TransitionOperator::beta,
+            "Intensity of selection β."
+        )
+        .def_property_readonly(
+            "mu",
+            &TransitionOperator::mu,
+            "Mutation probability μ."
+        );
+    }
 }
