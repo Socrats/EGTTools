@@ -20,6 +20,11 @@
 
 #include <stdexcept>
 #include <string>
+#include <vector>
+
+#if HAS_ARPACK
+#include <arpack/arpack.hpp>
+#endif
 
 namespace egttools::FinitePopulations {
 
@@ -121,5 +126,106 @@ namespace egttools::FinitePopulations {
         apply_transpose(x, y);
         y = x - y;
     }
+
+    Vector PairwiseComparisonTransitionOperator::compute_stationary_distribution(
+        double tol, size_t max_iter) const {
+
+        Vector pi     = Vector::Constant(nb_states_, 1.0 / static_cast<double>(nb_states_));
+        Vector pi_new(nb_states_);
+
+        for (size_t iter = 0; iter < max_iter; ++iter) {
+            apply_transpose(pi, pi_new);
+            pi_new /= pi_new.sum();
+            if ((pi_new - pi).cwiseAbs().sum() < tol)
+                return pi_new;
+            pi.swap(pi_new);
+        }
+
+        throw std::runtime_error(
+            "compute_stationary_distribution: not converged after " +
+            std::to_string(max_iter) + " iterations");
+    }
+
+#if HAS_ARPACK
+    Vector PairwiseComparisonTransitionOperator::compute_stationary_arpack(
+        double tol, int ncv, int max_iter) const {
+
+        const int n   = static_cast<int>(nb_states_);
+        const int nev = 1;
+
+        // Krylov subspace size: at least 2*nev+1; rule of thumb max(2*nev+1, 20).
+        if (ncv <= 0)
+            ncv = std::min(std::max(2 * nev + 1, 20), n);
+        else
+            ncv = std::min(ncv, n);
+
+        if (ncv <= nev)
+            throw std::invalid_argument(
+                "compute_stationary_arpack: ncv must be > nev");
+
+        // Workspace sizes for non-symmetric real (dnaupd/dneupd).
+        const int lworkl = 3 * ncv * ncv + 6 * ncv;
+
+        std::vector<double> resid(n, 1.0 / n);
+        std::vector<double> v(n * ncv, 0.0);
+        std::vector<double> workd(3 * n, 0.0);
+        std::vector<double> workl(lworkl, 0.0);
+        std::vector<int>    iparam(11, 0);
+        std::vector<int>    ipntr(14, 0);  // 14 for non-symmetric
+
+        iparam[0] = 1;         // ishift: exact shifts
+        iparam[2] = max_iter;  // maxitr
+        iparam[6] = 1;         // mode 1: standard eigenproblem A*x = λ*x
+
+        int ido = 0, info = 0;
+
+        do {
+            arpack::naupd(ido, arpack::bmat::identity, n,
+                          arpack::which::largest_magnitude, nev,
+                          tol, resid.data(), ncv, v.data(), n,
+                          iparam.data(), ipntr.data(),
+                          workd.data(), workl.data(), lworkl, info);
+
+            if (ido == -1 || ido == 1) {
+                // Apply P^T: y = P^T * x (entirely in C++, no Python roundtrip)
+                Eigen::Map<const Vector> x(workd.data() + ipntr[0] - 1, n);
+                Eigen::Map<Vector>       y(workd.data() + ipntr[1] - 1, n);
+                apply_transpose(x, y);
+            }
+        } while (ido != 99);
+
+        if (info < 0)
+            throw std::runtime_error(
+                "compute_stationary_arpack: dnaupd error code " +
+                std::to_string(info));
+
+        // Extract eigenvector: dneupd returns real + imaginary parts.
+        std::vector<double> dr(nev + 1, 0.0), di(nev + 1, 0.0);
+        std::vector<double> z(n * (nev + 1), 0.0);
+        std::vector<double> workev(3 * ncv, 0.0);
+        std::vector<int>    select(ncv, 0);
+
+        int rvec = 1;
+        arpack::neupd(rvec, arpack::howmny::ritz_vectors,
+                      select.data(), dr.data(), di.data(),
+                      z.data(), n, 0.0, 0.0, workev.data(),
+                      arpack::bmat::identity, n,
+                      arpack::which::largest_magnitude, nev,
+                      tol, resid.data(), ncv, v.data(), n,
+                      iparam.data(), ipntr.data(),
+                      workd.data(), workl.data(), lworkl, info);
+
+        if (info != 0)
+            throw std::runtime_error(
+                "compute_stationary_arpack: dneupd error code " +
+                std::to_string(info));
+
+        // The leading eigenvector (real part) is in z[0..n-1].
+        Eigen::Map<Vector> pi(z.data(), n);
+        pi = pi.cwiseAbs();
+        pi /= pi.sum();
+        return pi;
+    }
+#endif // HAS_ARPACK
 
 } // namespace egttools::FinitePopulations

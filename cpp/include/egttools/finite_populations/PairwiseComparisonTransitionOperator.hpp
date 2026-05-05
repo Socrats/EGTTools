@@ -119,6 +119,43 @@ namespace egttools::FinitePopulations {
         void apply_residual(const Eigen::Ref<const Vector> &x,
                             Eigen::Ref<Vector> y) const;
 
+        /**
+         * @brief Compute the stationary distribution via power iteration (pure C++).
+         *
+         * Iterates π ← P^T π / ‖P^T π‖₁ until L1 convergence or max_iter is reached.
+         * Runs entirely in C++ with no Python callbacks.
+         *
+         * @param tol       L1 convergence threshold (default 1e-10).
+         * @param max_iter  Maximum number of iterations (default 10000).
+         * @return          Normalised stationary distribution vector of length size().
+         * @throws std::runtime_error if convergence is not reached within max_iter.
+         */
+        [[nodiscard]] Vector compute_stationary_distribution(
+            double tol      = 1e-10,
+            size_t max_iter = 10000) const;
+
+#if HAS_ARPACK
+        /**
+         * @brief Compute the stationary distribution via ARPACK IRAM (pure C++).
+         *
+         * Uses ARPACK's implicitly restarted Arnoldi method to find the leading
+         * eigenvector of P^T without Python callbacks.  Converges much faster than
+         * power iteration when the spectral gap is small (small μ or large Z).
+         *
+         * Only available when EGTtools is compiled with EGTTOOLS_ENABLE_ARPACK=ON.
+         *
+         * @param tol       ARPACK convergence tolerance (default 0 → machine precision).
+         * @param ncv       Krylov subspace size; 0 → auto (max(2*nev+1, 20)).
+         * @param max_iter  Maximum Arnoldi iterations (default 300).
+         * @return          Normalised stationary distribution vector of length size().
+         * @throws std::runtime_error on ARPACK error or non-convergence.
+         */
+        [[nodiscard]] Vector compute_stationary_arpack(
+            double tol      = 0.0,
+            int    ncv      = 0,
+            int    max_iter = 300) const;
+#endif
+
         // --- Accessors ---
         [[nodiscard]] size_t population_size() const { return pop_size_; }
         [[nodiscard]] size_t nb_strategies() const { return nb_strategies_; }

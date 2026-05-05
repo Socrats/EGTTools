@@ -115,6 +115,16 @@ endif ()
 egttools_enable_blas_lapack(numerical_)
 
 # ------------------------------------------------------------------------------
+# ARPACK (optional)
+# ------------------------------------------------------------------------------
+
+if (DEFINED EGTTOOLS_ARPACK_TARGET)
+    target_link_libraries(numerical_ PRIVATE ${EGTTOOLS_ARPACK_TARGET})
+    target_compile_definitions(numerical_ PRIVATE HAS_ARPACK=1)
+    message(STATUS "[EGTtools] numerical_: linking ${EGTTOOLS_ARPACK_TARGET} (HAS_ARPACK=1)")
+endif ()
+
+# ------------------------------------------------------------------------------
 # Create EGTToolsTargets export
 # ------------------------------------------------------------------------------
 

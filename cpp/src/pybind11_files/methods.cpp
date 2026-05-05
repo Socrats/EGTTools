@@ -2714,6 +2714,80 @@ y : numpy.ndarray
             "mu",
             &TransitionOperator::mu,
             "Mutation probability μ."
-        );
+        )
+        .def(
+            "compute_stationary_distribution",
+            [](TransitionOperator &self, double tol, size_t max_iter) {
+                return self.compute_stationary_distribution(tol, max_iter);
+            },
+            py::arg("tol")      = 1e-10,
+            py::arg("max_iter") = size_t(10000),
+            R"pbdoc(
+Compute the stationary distribution via power iteration (pure C++).
+
+Iterates π ← P^T π / ‖P^T π‖₁ until L1 convergence or *max_iter* is
+reached.  Runs entirely in C++ with no Python callbacks — much faster
+than wrapping the operator in a ``scipy.sparse.linalg.LinearOperator``
+for large state spaces.
+
+Parameters
+----------
+tol : float
+    L1 convergence threshold (default 1e-10).
+max_iter : int
+    Maximum number of power-iteration steps (default 10000).
+
+Returns
+-------
+numpy.ndarray
+    Normalised stationary distribution of length ``size``.
+
+Raises
+------
+RuntimeError
+    If convergence is not reached within *max_iter* iterations.
+)pbdoc"
+        )
+#if HAS_ARPACK
+        .def(
+            "compute_stationary_arpack",
+            [](TransitionOperator &self, double tol, int ncv, int max_iter) {
+                return self.compute_stationary_arpack(tol, ncv, max_iter);
+            },
+            py::arg("tol")      = 0.0,
+            py::arg("ncv")      = 0,
+            py::arg("max_iter") = 300,
+            R"pbdoc(
+Compute the stationary distribution via ARPACK IRAM (pure C++).
+
+Uses ARPACK's implicitly restarted Arnoldi method to find the leading
+eigenvector of P^T.  Converges much faster than power iteration when
+the spectral gap is small (small μ or large Z), and eliminates Python
+callbacks entirely.
+
+Only available when EGTtools is compiled with ``EGTTOOLS_ENABLE_ARPACK=ON``.
+
+Parameters
+----------
+tol : float
+    ARPACK convergence tolerance (default 0.0 → machine precision).
+ncv : int
+    Krylov subspace size (default 0 → auto: max(2*nev+1, 20)).
+max_iter : int
+    Maximum Arnoldi iterations (default 300).
+
+Returns
+-------
+numpy.ndarray
+    Normalised stationary distribution of length ``size``.
+
+Raises
+------
+RuntimeError
+    On ARPACK error or non-convergence.
+)pbdoc"
+        )
+#endif // HAS_ARPACK
+        ;
     }
 }
