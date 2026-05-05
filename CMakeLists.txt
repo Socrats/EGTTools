@@ -75,6 +75,7 @@ option(USE_OPENMP "Enable OpenMP multithreading" ON)
 option(BUILD_NUMERICAL_TESTS "Build C++ tests in tests/" ON)
 option(SKIP_VCPKG "Skip vcpkg toolchain setup" OFF)
 option(EGTTOOLS_ENABLE_ARPACK "Build native ARPACK eigensolver (requires arpack-ng)" OFF)
+option(EGTTOOLS_ENABLE_PETSC "Build MPI-distributed PETSc/SLEPc eigensolver (numerical_mpi_ module)" OFF)
 
 # Silence third-party CMake noise if desired
 option(EGTTOOLS_SUPPRESS_THIRD_PARTY_CMAKE_WARNINGS "Suppress third-party CMake dev/deprecation warnings" ON)
@@ -239,6 +240,23 @@ if (EGTTOOLS_ENABLE_ARPACK)
             message(WARNING "[EGTtools] EGTTOOLS_ENABLE_ARPACK=ON but arpack-ng not found — disabling")
         endif ()
     endif ()
+endif ()
+
+# PETSc + SLEPc + MPI (optional — enabled by EGTTOOLS_ENABLE_PETSC=ON)
+# conda-forge installation:
+#   conda install -c conda-forge petsc slepc petsc4py mpi4py openmpi
+# Build with:
+#   python setup.py build_ext --inplace -- -DEGTTOOLS_ENABLE_PETSC=ON
+#     -DCMAKE_PREFIX_PATH=/path/to/egtenv
+if (EGTTOOLS_ENABLE_PETSC)
+    find_package(PkgConfig REQUIRED)
+    # PETSc.pc and SLEPc.pc land in $PREFIX/lib/pkgconfig (conda-forge).
+    pkg_check_modules(PETSC REQUIRED IMPORTED_TARGET PETSc>=3.20)
+    pkg_check_modules(SLEPC REQUIRED IMPORTED_TARGET SLEPc>=3.20)
+    find_package(MPI REQUIRED)
+    set(EGTTOOLS_PETSC_TARGET PkgConfig::PETSC)
+    set(EGTTOOLS_SLEPC_TARGET PkgConfig::SLEPC)
+    message(STATUS "[EGTtools] PETSc ${PETSC_VERSION}, SLEPc ${SLEPC_VERSION}")
 endif ()
 
 # ------------------------------------------------------------------------------
