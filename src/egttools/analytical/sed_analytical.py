@@ -593,20 +593,27 @@ class StochDynamics:
         --------
         egttools.numerical.PairwiseComparisonNumerical
         """
-        phi = 0.
-        prod = 1.
-        for i in range(1, self.pop_size):
-            p_plus, p_minus = self.prob_increase_decrease(i, invader, resident, beta, *args)
-            # this is necessary to avoid divisions by zero
-            if np.isclose(p_plus, 0., atol=1e-12) and not np.isclose(p_plus, p_minus):
-                return 0.
-            prod *= p_minus / p_plus
-            phi += prod
-            # We can approximate by zero if phi is too big
-            if phi > 1e7:
-                return 0.0
+        # Log-space streaming logsumexp: log(p-/p+) = -beta*(f_inv - f_res)
+        # Avoids underflow/overflow and removes early-exit that breaks
+        # non-monotone fitness landscapes (e.g. coordination games).
+        log_prod = 0.0
+        max_log = -np.inf
+        sum_exp = 0.0
 
-        return 1.0 / (1.0 + phi)
+        for i in range(1, self.pop_size):
+            fitness_diff = self.fitness(i, invader, resident, *args)  # f_inv - f_res
+            log_prod += -beta * fitness_diff  # = beta * (f_res - f_inv)
+
+            if log_prod > max_log:
+                sum_exp = sum_exp * np.exp(max_log - log_prod) + 1.0
+                max_log = log_prod
+            else:
+                sum_exp += np.exp(log_prod - max_log)
+
+        if sum_exp == 0.0:
+            return 1.0
+        log_phi = max_log + np.log(sum_exp)
+        return 1.0 / (1.0 + np.exp(log_phi))
 
     def calculate_full_transition_matrix(self, beta: float, *args: Optional[list]) -> csr_matrix:
         """
