@@ -18,6 +18,8 @@
 
 #include <egttools/finite_populations/analytical/PairwiseComparison.hpp>
 #include <atomic>
+#include <cmath>
+#include <limits>
 
 namespace {
     inline std::uint64_t make_fitness_cache_key(const int64_t state_index,
@@ -473,55 +475,16 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_gradient_
     return gradients;
 }
 
-#if (HAS_BOOST)
-double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability(
-    int index_invading_strategy, int index_resident_strategy, const double beta) {
-    cpp_dec_float_100 phi = 0;
-    cpp_dec_float_100 prod = 1;
-
-    VectorXui population_state = VectorXui::Zero(nb_strategies_);
-
-    for (int i = 1; i < population_size_; ++i) {
-        population_state(index_invading_strategy) = i;
-        population_state(index_resident_strategy) = population_size_ - i;
-
-        const int64_t state_index =
-                static_cast<int64_t>(egttools::FinitePopulations::calculate_state(
-                    population_size_, population_state));
-
-        // calculate fitness of invading strategy
-        const auto fitness_invading_strategy = calculate_fitness_(index_invading_strategy, population_state,
-                                                                  state_index);
-        const auto fitness_resident_strategy = calculate_fitness_(index_resident_strategy, population_state,
-                                                                  state_index);
-
-        // Calculate the probability that the invading strategy will increase
-        cpp_dec_float_100 probability_increase = (static_cast<double>(population_size_ - i) / population_size_) * (
-                                                     static_cast<double>(i) / (population_size_ - 1));
-        probability_increase *= fermi(beta, fitness_resident_strategy,
-                                      fitness_invading_strategy);
-        cpp_dec_float_100 probability_decrease = (static_cast<double>(i) / population_size_) * (
-                                                     static_cast<double>(population_size_ - i) / (
-                                                         population_size_ - 1));
-        probability_decrease *= fermi(beta, fitness_invading_strategy,
-                                      fitness_resident_strategy);
-
-        prod *= probability_decrease / probability_increase;
-        phi += prod;
-
-        if (phi > 1e7) return 0.0;
-    }
-
-    const cpp_dec_float_100 fixation_probability = 1 / (1. + phi);
-
-    return fixation_probability.convert_to<double>();
-}
-#else
 double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability(
     int index_invading_strategy, int index_resident_strategy, double beta) {
-    double phi = 0;
-    double prod = 1;
-    double probability_increase, probability_decrease;
+    // Compute fixation probability in log-space via streaming logsumexp.
+    // The geometric prefactors in p+/p- cancel exactly, leaving:
+    //   log(p- / p+) = beta * (f_resident - f_invading)
+    // Accumulating in log-space avoids underflow/overflow and eliminates the
+    // need for early-exit heuristics that break non-monotone fitness landscapes.
+    double log_prod = 0.0;
+    double max_log = -std::numeric_limits<double>::infinity();
+    double sum_exp = 0.0;
 
     VectorXui population_state = VectorXui::Zero(nb_strategies_);
 
@@ -533,29 +496,23 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fi
                 static_cast<int64_t>(egttools::FinitePopulations::calculate_state(
                     population_size_, population_state));
 
-        // calculate fitness of invading strategy
-        auto fitness_invading_strategy = calculate_fitness_(index_invading_strategy, population_state, state_index);
-        auto fitness_resident_strategy = calculate_fitness_(index_resident_strategy, population_state, state_index);
+        const auto f_inv = calculate_fitness_(index_invading_strategy, population_state, state_index);
+        const auto f_res = calculate_fitness_(index_resident_strategy, population_state, state_index);
 
-        // Calculate the probability that the invading strategy will increase
-        probability_increase = (static_cast<double>(population_state(index_resident_strategy)) / population_size_) * (
-                                   static_cast<double>(i) / (population_size_ - 1));
-        probability_increase *= egttools::FinitePopulations::fermi(beta, fitness_resident_strategy,
-                                                                   fitness_invading_strategy);
-        probability_decrease = (static_cast<double>(i) / population_size_) * (
-                                   static_cast<double>(population_state(index_resident_strategy)) / (
-                                       population_size_ - 1));
-        probability_decrease *= egttools::FinitePopulations::fermi(beta, fitness_invading_strategy,
-                                                                   fitness_resident_strategy);
+        log_prod += beta * (f_res - f_inv);
 
-        prod *= probability_decrease / probability_increase;
-        phi += prod;
-
-        if (phi > 1e7) return 0.0;
+        if (log_prod > max_log) {
+            sum_exp = sum_exp * std::exp(max_log - log_prod) + 1.0;
+            max_log = log_prod;
+        } else {
+            sum_exp += std::exp(log_prod - max_log);
+        }
     }
-    return 1 / (1. + phi);
+
+    if (sum_exp == 0.0) return 1.0;
+    const double log_phi = max_log + std::log(sum_exp);
+    return 1.0 / (1.0 + std::exp(log_phi));
 }
-#endif
 
 std::tuple<egttools::Matrix2D, egttools::Matrix2D>
 egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_and_fixation_matrix_sml(
