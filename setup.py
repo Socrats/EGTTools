@@ -158,7 +158,8 @@ else:
 setup(
     version=_version(),
     # packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-    packages=['egttools', 'egttools.numerical', 'egttools.numerical.structure', 'egttools.analytical',
+    packages=['egttools', 'egttools.numerical', 'egttools.numerical.structure', 'egttools.numerical.mpi',
+              'egttools.analytical',
               'egttools.plotting', 'egttools.games',
               'egttools.behaviors',
               'egttools.behaviors.CRD', 'egttools.behaviors.NormalForm', 'egttools.behaviors.NormalForm.TwoActions',
@@ -170,6 +171,7 @@ setup(
     package_dir={'egttools': "src/egttools",
                  'egttools.numerical': "src/egttools/numerical",
                  'egttools.numerical.structure': 'src/egttools/numerical/structure',
+                 'egttools.numerical.mpi': 'src/egttools/numerical/mpi',
                  'egttools.analytical': "src/egttools/analytical",
                  'egttools.plotting': "src/egttools/plotting", 'egttools.games': "src/egttools/games",
                  'egttools.behaviors': "src/egttools/behaviors", 'egttools.behaviors.CRD': "src/egttools/behaviors/CRD",

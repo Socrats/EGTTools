@@ -6,9 +6,13 @@ except Exception:
     raise Exception("numerical package not initialized")
 else:
     from .numerical_ import PairwiseComparisonNumerical
+    from .numerical_ import PairwiseComparisonTransitionOperator
     from .numerical_ import GeneralPopulationEvolver
     from .numerical_ import NetworkEvolver
     from .indicators import StationaryIndicatorResult
+    from . import linear_operator
+    from .linear_operator import stationary_distribution_from_sparse
 
-__all__ = ['numerical', 'PairwiseComparisonNumerical', 'GeneralPopulationEvolver', 'NetworkEvolver',
-           'StationaryIndicatorResult']
+__all__ = ['numerical', 'PairwiseComparisonNumerical', 'PairwiseComparisonTransitionOperator',
+           'GeneralPopulationEvolver', 'NetworkEvolver', 'StationaryIndicatorResult',
+           'linear_operator', 'stationary_distribution_from_sparse']
