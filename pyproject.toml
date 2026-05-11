@@ -38,8 +38,7 @@ dynamic = ["version"]
 description = "Efficient Python library for Evolutionary Game Theory (EGT)"
 readme = "README.md"
 requires-python = ">=3.10"
-license = "GPL-3.0-or-later"
-license-files = ["LICENSE"]
+license = {text = "GPL-3.0-or-later"}
 authors = [
     { name = "Elias F. Domingos", email = "elias.fernandez.domingos@vub.be" },
 ]
