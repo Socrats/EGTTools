@@ -1472,10 +1472,26 @@ numpy.ndarray
                 )
                 .def(
                     "calculate_fixation_probability",
-                    &FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability,
+                    [](FinitePopulations::analytical::PairwiseComparison &self,
+                       int inv, int res, double beta, bool high_precision) -> double {
+#if (HAS_BOOST)
+                        if (high_precision)
+                            return self.calculate_fixation_probability_boost(inv, res, beta);
+#else
+                        if (high_precision) {
+                            auto warnings = py::module_::import("warnings");
+                            warnings.attr("warn")(
+                                "high_precision=True requires Boost multiprecision, which is not "
+                                "available in this build; falling back to double precision.",
+                                py::module_::import("builtins").attr("UserWarning"));
+                        }
+#endif
+                        return self.calculate_fixation_probability(inv, res, beta);
+                    },
                     py::arg("invading_strategy_index"),
                     py::arg("resident_strategy_index"),
                     py::arg("beta"),
+                    py::arg("high_precision") = false,
                     R"pbdoc(
 Compute the fixation probability of one mutant in a monomorphic resident population.
 
@@ -1491,11 +1507,49 @@ resident_strategy_index : int
     Index of the resident strategy.
 beta : float
     Intensity of selection :math:`\beta`.
+high_precision : bool, optional
+    When *True* and the library was compiled with Boost multiprecision support,
+    the internal streaming log-sum-exp is evaluated in 50-digit decimal
+    arithmetic, extending the representable range of :math:`\exp(\log\phi)`.
+    The return value is still a ``float``; values below ``DBL_MIN`` (~2.2e-308)
+    are rounded to zero regardless.  Use
+    :meth:`calculate_log_fixation_probability` for the full dynamic range.
+    Defaults to ``False``.
 
 Returns
 -------
 float
     Probability that one invader fixates in a population of residents.
+)pbdoc"
+                )
+                .def(
+                    "calculate_log_fixation_probability",
+                    &FinitePopulations::analytical::PairwiseComparison::calculate_log_fixation_probability,
+                    py::arg("invading_strategy_index"),
+                    py::arg("resident_strategy_index"),
+                    py::arg("beta"),
+                    R"pbdoc(
+Return the natural log of the fixation probability, :math:`\log\rho`.
+
+Unlike :meth:`calculate_fixation_probability`, this method never underflows: the
+result is a finite ``float`` for any combination of :math:`\beta`, population
+size, and fitness values.  It is computed as
+:math:`-\mathrm{softplus}(\log\phi)`, so values as small as
+:math:`e^{-10^{308}}` are representable.
+
+Parameters
+----------
+invading_strategy_index : int
+    Index of the invading strategy.
+resident_strategy_index : int
+    Index of the resident strategy.
+beta : float
+    Intensity of selection :math:`\beta`.
+
+Returns
+-------
+float
+    :math:`\log\rho(\text{invader} \to \text{resident})`, always finite.
 )pbdoc"
                 )
                 .def(
@@ -1535,6 +1589,37 @@ tuple[numpy.ndarray, numpy.ndarray]
       `(nb_strategies, nb_strategies)`;
     - `fixation_probabilities[i, j]` is the probability that one mutant of
       strategy `j` fixates in a population of strategy `i`.
+)pbdoc"
+                )
+                .def(
+                    "calculate_transition_and_log_fixation_matrix_sml",
+                    &FinitePopulations::analytical::PairwiseComparison::calculate_transition_and_log_fixation_matrix_sml,
+                    py::arg("beta"),
+                    py::return_value_policy::move,
+                    py::call_guard<py::gil_scoped_release>(),
+                    R"pbdoc(
+Return a numerically stable SML transition matrix and the log-fixation matrix.
+
+Like :meth:`calculate_transition_and_fixation_matrix_sml` but stores
+:math:`\log\rho_{ij}` and builds the transition matrix by scaling all
+off-diagonal entries by :math:`\exp(-\max_{k\ne l}\log\rho_{kl})`.  This global
+rescaling preserves the stationary distribution while guaranteeing a valid
+stochastic matrix even when every :math:`\rho_{ij}` underflows to zero in
+double precision.
+
+Parameters
+----------
+beta : float
+    Intensity of selection :math:`\beta`.
+
+Returns
+-------
+tuple[numpy.ndarray, numpy.ndarray]
+    A tuple `(transition_matrix, log_fixation_probabilities)` where:
+
+    - `transition_matrix` has the same stationary distribution as the standard
+      SML matrix but is numerically well-conditioned;
+    - `log_fixation_probabilities[i, j]` = :math:`\log\rho_{ij}`.
 )pbdoc"
                 )
                 .def(

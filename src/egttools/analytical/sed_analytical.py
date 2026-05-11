@@ -615,6 +615,102 @@ class StochDynamics:
         log_phi = max_log + np.log(sum_exp)
         return 1.0 / (1.0 + np.exp(log_phi))
 
+    def log_fixation_probability(self, invader: int, resident: int, beta: float,
+                                 *args: Optional[list]) -> float:
+        """
+        Return the natural log of the fixation probability, log(rho).
+
+        Never underflows: the result is a finite float for any combination of
+        beta, population size, and fitness values.  Values as small as
+        exp(-1e308) are representable.
+
+        Parameters
+        ----------
+        invader : int
+            Index of the invading strategy.
+        resident : int
+            Index of the resident strategy.
+        beta : float
+            Intensity of selection.
+        args : Optional[list]
+            Extra arguments passed to the payoff functions.
+
+        Returns
+        -------
+        float
+            log(rho(invader -> resident)), always finite.
+        """
+        log_prod = 0.0
+        max_log = -np.inf
+        sum_exp = 0.0
+
+        for i in range(1, self.pop_size):
+            fitness_diff = self.fitness(i, invader, resident, *args)  # f_inv - f_res
+            log_prod += -beta * fitness_diff  # = beta * (f_res - f_inv)
+
+            if log_prod > max_log:
+                sum_exp = sum_exp * np.exp(max_log - log_prod) + 1.0
+                max_log = log_prod
+            else:
+                sum_exp += np.exp(log_prod - max_log)
+
+        if sum_exp == 0.0:
+            return 0.0  # rho = 1 → log(rho) = 0
+
+        log_phi = max_log + np.log(sum_exp)
+        # -softplus(log_phi) = log(1 / (1 + exp(log_phi))), stable for all log_phi
+        if log_phi >= 0.0:
+            return -(log_phi + np.log1p(np.exp(-log_phi)))
+        else:
+            return -np.log1p(np.exp(log_phi))
+
+    def transition_and_log_fixation_matrix(self, beta: float,
+                                           *args: Optional[list]) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        SML transition matrix and log-fixation-probability matrix.
+
+        Like :meth:`transition_and_fixation_matrix` but stores log(rho_ij) and
+        builds the transition matrix by scaling every off-diagonal entry by
+        exp(-max_log_rho).  This global rescaling preserves the stationary
+        distribution while guaranteeing a valid stochastic matrix even when
+        all rho values underflow to zero in double precision.
+
+        Parameters
+        ----------
+        beta : float
+            Intensity of selection.
+        args : Optional[list]
+            Extra arguments passed to the payoff functions.
+
+        Returns
+        -------
+        Tuple[numpy.ndarray, numpy.ndarray]
+            ``(transition_matrix, log_fixation_probabilities)`` where
+            ``log_fixation_probabilities[i, j]`` = log(rho) of strategy j
+            invading a population of strategy i.
+        """
+        log_fp = np.zeros((self.nb_strategies, self.nb_strategies))
+        for first in range(self.nb_strategies):
+            for second in range(self.nb_strategies):
+                if second != first:
+                    log_fp[first, second] = self.log_fixation_probability(second, first, beta, *args)
+
+        # Scale by the global max of off-diagonal entries only (diagonal = 0.0 is a sentinel,
+        # not a real log-probability), so at least one off-diagonal entry maps to exp(0)=1.
+        mask = np.ones((self.nb_strategies, self.nb_strategies), dtype=bool)
+        np.fill_diagonal(mask, False)
+        max_log_rho = log_fp[mask].max() if log_fp[mask].size > 0 else 0.0
+        scaled = np.where(mask, np.exp(log_fp - max_log_rho), 0.0)
+
+        transitions = np.zeros((self.nb_strategies, self.nb_strategies))
+        for i in range(self.nb_strategies):
+            for j in range(self.nb_strategies):
+                if i != j:
+                    transitions[i, j] = scaled[i, j] / float(self.nb_strategies - 1)
+            transitions[i, i] = 1.0 - transitions[i, :].sum() + transitions[i, i]
+
+        return transitions.T, log_fp
+
     def calculate_full_transition_matrix(self, beta: float, *args: Optional[list]) -> csr_matrix:
         """
         Returns the full transition matrix in sparse representation.

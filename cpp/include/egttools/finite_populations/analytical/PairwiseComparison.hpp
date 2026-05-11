@@ -36,6 +36,7 @@
 
 namespace egttools::FinitePopulations::analytical {
 #if (HAS_BOOST)
+    using cpp_dec_float_50  = boost::multiprecision::number<boost::multiprecision::cpp_dec_float<50>>;
     using cpp_dec_float_100 = boost::multiprecision::cpp_dec_float_100;
 #endif
     using FitnessCacheKey = std::uint64_t;
@@ -298,6 +299,60 @@ namespace egttools::FinitePopulations::analytical {
          */
         std::tuple<Matrix2D, Matrix2D> calculate_transition_and_fixation_matrix_sml(double beta);
 
+        /**
+         * @brief Returns @f$\log \rho@f$, the natural log of the fixation probability.
+         *
+         * Equivalent to `log(calculate_fixation_probability(...))` but numerically stable for
+         * any combination of @f$\beta@f$ and population size: the result is always a finite
+         * `double`, even when the actual fixation probability is far below `DBL_MIN`.
+         *
+         * The return value is @f$-\mathrm{softplus}(\log\phi)@f$ where
+         * @f$\phi = \sum_{k=1}^{Z-1}\prod_{i=1}^k (p^-_i/p^+_i)@f$, computed via a
+         * streaming log-sum-exp in double precision.
+         *
+         * @param index_invading_strategy Index of the invading strategy.
+         * @param index_resident_strategy Index of the resident strategy.
+         * @param beta Intensity of selection @f$\beta@f$.
+         * @return @f$\log \rho(\text{invader} \to \text{resident})@f$ as a finite double.
+         */
+        double calculate_log_fixation_probability(int index_invading_strategy, int index_resident_strategy,
+                                                  double beta);
+
+#if (HAS_BOOST)
+        /**
+         * @brief Fixation probability computed in Boost 50-digit decimal arithmetic.
+         *
+         * Uses the same log-space streaming logsumexp as `calculate_fixation_probability` but
+         * accumulates in `cpp_dec_float_50` and evaluates the final @f$\exp@f$ in extended
+         * range.  The returned value is still a `double`; it is non-zero for fixation
+         * probabilities as small as `DBL_MIN` (~2.2e-308) and rounds to zero below that.
+         * Use `calculate_log_fixation_probability` when you need the full dynamic range.
+         *
+         * @param index_invading_strategy Index of the invading strategy.
+         * @param index_resident_strategy Index of the resident strategy.
+         * @param beta Intensity of selection @f$\beta@f$.
+         * @return Fixation probability (double precision), computed via Boost arithmetic.
+         */
+        double calculate_fixation_probability_boost(int index_invading_strategy, int index_resident_strategy,
+                                                    double beta);
+#endif
+
+        /**
+         * @brief SML transition matrix and log-fixation-probability matrix.
+         *
+         * Like `calculate_transition_and_fixation_matrix_sml` but stores @f$\log\rho_{ij}@f$
+         * instead of @f$\rho_{ij}@f$, and builds the transition matrix by scaling all
+         * off-diagonal entries by @f$\exp(-\max_{k\ne l}\log\rho_{kl})@f$.  This global
+         * rescaling preserves the stationary distribution while ensuring the matrix is a
+         * valid stochastic matrix even when every @f$\rho_{ij}@f$ underflows to zero in
+         * double precision.
+         *
+         * @param beta Intensity of selection @f$\beta@f$.
+         * @return Tuple `(transition_matrix, log_fixation_probabilities)` where
+         *         `log_fixation_probabilities(i, j)` = @f$\log\rho_{ij}@f$.
+         */
+        std::tuple<Matrix2D, Matrix2D> calculate_transition_and_log_fixation_matrix_sml(double beta);
+
         // setters
 
         /**
@@ -417,6 +472,16 @@ namespace egttools::FinitePopulations::analytical {
         inline double calculate_fitness_(int strategy_index,
                                          const VectorXui &state,
                                          int64_t state_index);
+
+        /**
+         * @brief Core streaming log-sum-exp loop shared by all fixation-probability variants.
+         *
+         * Returns @f$\log\phi@f$ where @f$\phi = \sum_{k=1}^{Z-1}\prod_{i=1}^k(p^-_i/p^+_i)@f$,
+         * computed via the numerically stable online log-sum-exp algorithm.
+         * Returns @f$-\infty@f$ (i.e. `std::numeric_limits<double>::lowest()`) when the
+         * population has size 1 (no loop iterations, @f$\phi=0@f$, @f$\rho=1@f$).
+         */
+        double calculate_log_phi_(int index_invading_strategy, int index_resident_strategy, double beta);
     };
 } // namespace egttools::FinitePopulations::analytical
 
