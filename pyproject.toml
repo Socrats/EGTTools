@@ -108,6 +108,13 @@ docs-minimal = [
     "furo",
 ]
 
+# Wheel distribution tiers:
+#   egttools            — base (power iteration only, zero new deps)
+#   egttools[arpack]    — compiled with EGTTOOLS_ENABLE_ARPACK=ON (C library, no Python dep)
+#   egttools[mpi]       — compiled with EGTTOOLS_ENABLE_PETSC=ON  (PETSc/SLEPc are C libs)
+arpack = []                  # signals ARPACK wheel variant; arpack-ng is a C library
+mpi    = ["mpi4py>=3.1"]    # PETSc/SLEPc are C libraries; mpi4py for Python-level MPI use
+
 [tool.setuptools.package-data]
 egttools = [
     "py.typed",

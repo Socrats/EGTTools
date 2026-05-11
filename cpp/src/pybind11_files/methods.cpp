@@ -1472,10 +1472,26 @@ numpy.ndarray
                 )
                 .def(
                     "calculate_fixation_probability",
-                    &FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability,
+                    [](FinitePopulations::analytical::PairwiseComparison &self,
+                       int inv, int res, double beta, bool high_precision) -> double {
+#if (HAS_BOOST)
+                        if (high_precision)
+                            return self.calculate_fixation_probability_boost(inv, res, beta);
+#else
+                        if (high_precision) {
+                            auto warnings = py::module_::import("warnings");
+                            warnings.attr("warn")(
+                                "high_precision=True requires Boost multiprecision, which is not "
+                                "available in this build; falling back to double precision.",
+                                py::module_::import("builtins").attr("UserWarning"));
+                        }
+#endif
+                        return self.calculate_fixation_probability(inv, res, beta);
+                    },
                     py::arg("invading_strategy_index"),
                     py::arg("resident_strategy_index"),
                     py::arg("beta"),
+                    py::arg("high_precision") = false,
                     R"pbdoc(
 Compute the fixation probability of one mutant in a monomorphic resident population.
 
@@ -1491,11 +1507,49 @@ resident_strategy_index : int
     Index of the resident strategy.
 beta : float
     Intensity of selection :math:`\beta`.
+high_precision : bool, optional
+    When *True* and the library was compiled with Boost multiprecision support,
+    the internal streaming log-sum-exp is evaluated in 50-digit decimal
+    arithmetic, extending the representable range of :math:`\exp(\log\phi)`.
+    The return value is still a ``float``; values below ``DBL_MIN`` (~2.2e-308)
+    are rounded to zero regardless.  Use
+    :meth:`calculate_log_fixation_probability` for the full dynamic range.
+    Defaults to ``False``.
 
 Returns
 -------
 float
     Probability that one invader fixates in a population of residents.
+)pbdoc"
+                )
+                .def(
+                    "calculate_log_fixation_probability",
+                    &FinitePopulations::analytical::PairwiseComparison::calculate_log_fixation_probability,
+                    py::arg("invading_strategy_index"),
+                    py::arg("resident_strategy_index"),
+                    py::arg("beta"),
+                    R"pbdoc(
+Return the natural log of the fixation probability, :math:`\log\rho`.
+
+Unlike :meth:`calculate_fixation_probability`, this method never underflows: the
+result is a finite ``float`` for any combination of :math:`\beta`, population
+size, and fitness values.  It is computed as
+:math:`-\mathrm{softplus}(\log\phi)`, so values as small as
+:math:`e^{-10^{308}}` are representable.
+
+Parameters
+----------
+invading_strategy_index : int
+    Index of the invading strategy.
+resident_strategy_index : int
+    Index of the resident strategy.
+beta : float
+    Intensity of selection :math:`\beta`.
+
+Returns
+-------
+float
+    :math:`\log\rho(\text{invader} \to \text{resident})`, always finite.
 )pbdoc"
                 )
                 .def(
@@ -1535,6 +1589,37 @@ tuple[numpy.ndarray, numpy.ndarray]
       `(nb_strategies, nb_strategies)`;
     - `fixation_probabilities[i, j]` is the probability that one mutant of
       strategy `j` fixates in a population of strategy `i`.
+)pbdoc"
+                )
+                .def(
+                    "calculate_transition_and_log_fixation_matrix_sml",
+                    &FinitePopulations::analytical::PairwiseComparison::calculate_transition_and_log_fixation_matrix_sml,
+                    py::arg("beta"),
+                    py::return_value_policy::move,
+                    py::call_guard<py::gil_scoped_release>(),
+                    R"pbdoc(
+Return a numerically stable SML transition matrix and the log-fixation matrix.
+
+Like :meth:`calculate_transition_and_fixation_matrix_sml` but stores
+:math:`\log\rho_{ij}` and builds the transition matrix by scaling all
+off-diagonal entries by :math:`\exp(-\max_{k\ne l}\log\rho_{kl})`.  This global
+rescaling preserves the stationary distribution while guaranteeing a valid
+stochastic matrix even when every :math:`\rho_{ij}` underflows to zero in
+double precision.
+
+Parameters
+----------
+beta : float
+    Intensity of selection :math:`\beta`.
+
+Returns
+-------
+tuple[numpy.ndarray, numpy.ndarray]
+    A tuple `(transition_matrix, log_fixation_probabilities)` where:
+
+    - `transition_matrix` has the same stationary distribution as the standard
+      SML matrix but is numerically well-conditioned;
+    - `log_fixation_probabilities[i, j]` = :math:`\log\rho_{ij}`.
 )pbdoc"
                 )
                 .def(
@@ -2575,5 +2660,219 @@ Estimate time-independent average gradients of selection across multiple network
                 );
 
         options.enable_function_signatures();
+    }
+
+    // -------------------------------------------------------------------------
+    // PairwiseComparisonTransitionOperator
+    // -------------------------------------------------------------------------
+    {
+        using TransitionOperator = FinitePopulations::PairwiseComparisonTransitionOperator;
+
+        py::options options;
+        options.disable_function_signatures();
+
+        py::class_<TransitionOperator>(
+            m,
+            "PairwiseComparisonTransitionOperator",
+            R"pbdoc(
+Matrix-free transition operator for the pairwise comparison process.
+
+Computes matrix-vector products ``y = P x``, ``y = P^T x``, and
+``y = (I - P^T) x`` without ever assembling the transition matrix P.
+Designed for iterative eigensolvers (``scipy.sparse.linalg``, petsc4py)
+and as the basis for future MPI-distributed computation.
+
+The stationary distribution π satisfies ``P^T π = π``. Use
+``apply_transpose`` or wrap this object with
+``egttools.numerical.linear_operator.make_transition_operator`` to
+obtain a ``scipy.sparse.linalg.LinearOperator``.
+)pbdoc"
+        )
+        .def(
+            py::init<size_t, FinitePopulations::AbstractGame &, double, double>(),
+            py::arg("population_size"),
+            py::arg("game"),
+            py::arg("beta"),
+            py::arg("mu"),
+            py::keep_alive<1, 3>(),
+            R"pbdoc(
+Construct the matrix-free transition operator.
+
+Parameters
+----------
+population_size : int
+    Number of individuals Z (must be >= 2).
+game : egttools.games.AbstractGame
+    Game object defining strategy fitnesses.
+beta : float
+    Intensity of selection (Fermi parameter, >= 0).
+mu : float
+    Mutation probability per step (in [0, 1]).
+)pbdoc"
+        )
+        .def(
+            "apply_transpose",
+            [](TransitionOperator &self,
+               const Eigen::Ref<const egttools::Vector> &x,
+               Eigen::Ref<egttools::Vector> y) {
+                self.apply_transpose(x, y);
+            },
+            py::arg("x"),
+            py::arg("y"),
+            R"pbdoc(
+Compute y = P^T x in-place.
+
+The stationary distribution π satisfies P^T π = π, so this is the
+primary operation for iterative eigensolver use.
+
+Parameters
+----------
+x : numpy.ndarray
+    Input vector of length ``size``.
+y : numpy.ndarray
+    Output vector of length ``size``; zeroed and overwritten.
+)pbdoc"
+        )
+        .def(
+            "apply",
+            [](TransitionOperator &self,
+               const Eigen::Ref<const egttools::Vector> &x,
+               Eigen::Ref<egttools::Vector> y) {
+                self.apply(x, y);
+            },
+            py::arg("x"),
+            py::arg("y"),
+            R"pbdoc(
+Compute y = P x in-place.
+
+Parameters
+----------
+x : numpy.ndarray
+    Input vector of length ``size``.
+y : numpy.ndarray
+    Output vector of length ``size``; zeroed and overwritten.
+)pbdoc"
+        )
+        .def(
+            "apply_residual",
+            [](TransitionOperator &self,
+               const Eigen::Ref<const egttools::Vector> &x,
+               Eigen::Ref<egttools::Vector> y) {
+                self.apply_residual(x, y);
+            },
+            py::arg("x"),
+            py::arg("y"),
+            R"pbdoc(
+Compute y = (I - P^T) x in-place.
+
+Useful for iterative linear solvers: find π such that (I - P^T) π = 0.
+
+Parameters
+----------
+x : numpy.ndarray
+    Input vector of length ``size``.
+y : numpy.ndarray
+    Output vector of length ``size``; overwritten.
+)pbdoc"
+        )
+        .def_property_readonly(
+            "size",
+            &TransitionOperator::size,
+            "Total number of simplex states C(Z+k-1, k-1)."
+        )
+        .def_property_readonly(
+            "population_size",
+            &TransitionOperator::population_size,
+            "Population size Z."
+        )
+        .def_property_readonly(
+            "nb_strategies",
+            &TransitionOperator::nb_strategies,
+            "Number of strategies k."
+        )
+        .def_property_readonly(
+            "beta",
+            &TransitionOperator::beta,
+            "Intensity of selection β."
+        )
+        .def_property_readonly(
+            "mu",
+            &TransitionOperator::mu,
+            "Mutation probability μ."
+        )
+        .def(
+            "compute_stationary_distribution",
+            [](TransitionOperator &self, double tol, size_t max_iter) {
+                return self.compute_stationary_distribution(tol, max_iter);
+            },
+            py::arg("tol")      = 1e-10,
+            py::arg("max_iter") = size_t(10000),
+            R"pbdoc(
+Compute the stationary distribution via power iteration (pure C++).
+
+Iterates π ← P^T π / ‖P^T π‖₁ until L1 convergence or *max_iter* is
+reached.  Runs entirely in C++ with no Python callbacks — much faster
+than wrapping the operator in a ``scipy.sparse.linalg.LinearOperator``
+for large state spaces.
+
+Parameters
+----------
+tol : float
+    L1 convergence threshold (default 1e-10).
+max_iter : int
+    Maximum number of power-iteration steps (default 10000).
+
+Returns
+-------
+numpy.ndarray
+    Normalised stationary distribution of length ``size``.
+
+Raises
+------
+RuntimeError
+    If convergence is not reached within *max_iter* iterations.
+)pbdoc"
+        )
+#if HAS_ARPACK
+        .def(
+            "compute_stationary_arpack",
+            [](TransitionOperator &self, double tol, int ncv, int max_iter) {
+                return self.compute_stationary_arpack(tol, ncv, max_iter);
+            },
+            py::arg("tol")      = 0.0,
+            py::arg("ncv")      = 0,
+            py::arg("max_iter") = 300,
+            R"pbdoc(
+Compute the stationary distribution via ARPACK IRAM (pure C++).
+
+Uses ARPACK's implicitly restarted Arnoldi method to find the leading
+eigenvector of P^T.  Converges much faster than power iteration when
+the spectral gap is small (small μ or large Z), and eliminates Python
+callbacks entirely.
+
+Only available when EGTtools is compiled with ``EGTTOOLS_ENABLE_ARPACK=ON``.
+
+Parameters
+----------
+tol : float
+    ARPACK convergence tolerance (default 0.0 → machine precision).
+ncv : int
+    Krylov subspace size (default 0 → auto: max(2*nev+1, 20)).
+max_iter : int
+    Maximum Arnoldi iterations (default 300).
+
+Returns
+-------
+numpy.ndarray
+    Normalised stationary distribution of length ``size``.
+
+Raises
+------
+RuntimeError
+    On ARPACK error or non-convergence.
+)pbdoc"
+        )
+#endif // HAS_ARPACK
+        ;
     }
 }

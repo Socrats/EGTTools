@@ -1,0 +1,98 @@
+# Dockerfile.mpi — EGTtools built with PETSc/SLEPc/ARPACK for MPI-based benchmarks.
+#
+# Provides the `numerical_mpi_` pybind11 extension (PairwisePetscOperator) and
+# the `numerical_` extension with compute_stationary_arpack (HAS_ARPACK=True).
+#
+# Build:
+#   docker build -f Dockerfile.mpi -t egttools-mpi .
+#
+# Run tests:
+#   docker run --rm egttools-mpi pytest tests/test_mpi_operator.py
+#
+# Run MPI tests with 2 ranks:
+#   docker run --rm egttools-mpi mpiexec -n 2 pytest tests/test_mpi_operator.py
+
+FROM ubuntu:24.04
+
+ARG NUM_JOBS=4
+ARG DEBIAN_FRONTEND=noninteractive
+
+# ---------------------------------------------------------------------------
+# System packages: build tools + OpenMPI + PETSc/SLEPc + ARPACK
+# ---------------------------------------------------------------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        cmake \
+        ninja-build \
+        pkg-config \
+        git \
+        ca-certificates \
+        wget \
+        gfortran \
+        libblas-dev \
+        liblapack-dev \
+        libeigen3-dev \
+        libomp-dev \
+        libboost-dev \
+        # OpenMPI
+        libopenmpi-dev \
+        openmpi-bin \
+        # PETSc / SLEPc — Ubuntu 24.04 ships 3.19; sufficient for pkg-config detection
+        libpetsc-real-dev \
+        libslepc-real-dev \
+        # ARPACK-ng
+        libarpack2-dev \
+        libarpackng-dev \
+        # Python
+        python3 \
+        python3-pip \
+        python3-dev \
+        python3-venv \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Expose PETSc/SLEPc pkg-config paths (Ubuntu places them in arch-specific dirs)
+ENV PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/petsc/linux-gnu-real-32/lib/pkgconfig:\
+/usr/lib/x86_64-linux-gnu/slepc/linux-gnu-real-32/lib/pkgconfig:\
+/usr/lib/petsc/lib/pkgconfig:/usr/lib/slepc/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
+
+# ---------------------------------------------------------------------------
+# Python virtual environment
+# ---------------------------------------------------------------------------
+RUN python3 -m venv /opt/egtenv
+ENV PATH="/opt/egtenv/bin:${PATH}"
+
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install \
+        numpy scipy pandas pyarrow psutil \
+        mpi4py \
+        petsc4py \
+        slepc4py \
+        pytest
+
+# ---------------------------------------------------------------------------
+# Build EGTtools with PETSc + ARPACK
+# ---------------------------------------------------------------------------
+WORKDIR /EGTtools
+COPY . /EGTtools
+
+# Bootstrap pybind11 submodule (already included in repo)
+RUN git submodule update --init --recursive 2>/dev/null || true
+
+RUN pip install --no-build-isolation . -- \
+        -DEGTTOOLS_ENABLE_PETSC=ON \
+        -DEGTTOOLS_ENABLE_ARPACK=ON \
+        -DCMAKE_BUILD_PARALLEL_LEVEL=${NUM_JOBS}
+
+# ---------------------------------------------------------------------------
+# Smoke test: confirm the MPI extension loaded correctly
+# ---------------------------------------------------------------------------
+RUN python3 -c "
+from egttools.numerical import numerical_mpi_
+op_cls = numerical_mpi_.PairwisePetscOperator
+print('PairwisePetscOperator OK')
+from egttools.numerical import PairwiseComparisonTransitionOperator
+has_arpack = hasattr(PairwiseComparisonTransitionOperator, 'compute_stationary_arpack')
+print(f'HAS_ARPACK: {has_arpack}')
+"
+
+CMD ["/bin/bash"]

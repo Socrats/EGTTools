@@ -31,6 +31,7 @@ target_sources(numerical_ PRIVATE
         behaviors/NFGStrategies.cpp
         behaviors/CRDStrategies.cpp
         analytical/PairwiseComparison.cpp
+        PairwiseComparisonTransitionOperator.cpp
         evolvers/GeneralPopulationEvolver.cpp
         evolvers/NetworkEvolver.cpp
         )

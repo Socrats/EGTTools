@@ -1,6 +1,17 @@
 {% set name = "egttools" %}
 {% set version = "0.1.15" %}
 
+{# Resolve variant flags from conda_build_config.yaml.
+   arpack_variant / mpi_variant are "" (base) or a non-empty string (enabled). #}
+{% set use_arpack = arpack_variant | default("") != "" %}
+{% set use_mpi    = mpi_variant    | default("") != "" %}
+
+{# Build-string prefix encodes which optional C libraries are compiled in,
+   giving each variant a unique, human-readable build string. #}
+{% set variant_prefix = "" %}
+{% if use_arpack %}{% set variant_prefix = "arpack_" %}{% endif %}
+{% if use_mpi    %}{% set variant_prefix = variant_prefix + "mpi_" %}{% endif %}
+
 package:
   name: "{{ name|lower }}"
   version: "{{ version }}"
@@ -11,16 +22,41 @@ source:
 build:
   noarch: false  # C++ extension: NOT noarch
   number: 0
+  string: "{{ variant_prefix }}py{{ PY_VER | replace('.','') }}_{{ PKG_BUILDNUM }}"
+{% if use_arpack or use_mpi %}
+  # Non-base variants are deprioritised so that a plain `conda install egttools`
+  # always resolves to the base build.  Users opt in to a variant by pinning the
+  # build string (see README / recipe comments below).
+  track_features:
+{% if use_arpack %}
+    - egttools_arpack
+{% endif %}
+{% if use_mpi %}
+    - egttools_mpi
+{% endif %}
+{% endif %}
   script_env:
     # Passed to CMake so it can generate version.h without a git checkout
     # (conda-forge builds from a PyPI sdist tarball, so .git is absent).
     - EGTTOOLS_VERSION={{ version }}
+    # Optional feature flags — values rendered by Jinja2 at recipe-parse time.
+    - EGTTOOLS_ENABLE_ARPACK={{ "ON" if use_arpack else "OFF" }}
+    - EGTTOOLS_ENABLE_PETSC={{ "ON" if use_mpi else "OFF" }}
+  script:
+    # Append our feature flags to CMAKE_ARGS so scikit-build forwards them.
+    # SKIP_VCPKG prevents vcpkg from interfering in the conda build environment.
+    - export CMAKE_ARGS="${CMAKE_ARGS:-} -DEGTTOOLS_ENABLE_ARPACK=${EGTTOOLS_ENABLE_ARPACK} -DEGTTOOLS_ENABLE_PETSC=${EGTTOOLS_ENABLE_PETSC} -DSKIP_VCPKG=ON"  # [unix]
+    - set "CMAKE_ARGS=%CMAKE_ARGS% -DEGTTOOLS_ENABLE_ARPACK=%EGTTOOLS_ENABLE_ARPACK% -DEGTTOOLS_ENABLE_PETSC=%EGTTOOLS_ENABLE_PETSC% -DSKIP_VCPKG=ON"  # [win]
+    - {{ PYTHON }} -m pip install . --no-build-isolation --no-deps -vv
 
 requirements:
   build:
     - {{ compiler('cxx') }}
     - cmake >=3.27
     - ninja
+{% if use_mpi %}
+    - pkg-config  # needed to locate PETSc/SLEPc via pkg_check_modules
+{% endif %}
   host:
     - python
     - pip
@@ -36,6 +72,14 @@ requirements:
     - liblapacke
     - llvm-openmp  # [osx]
     - libgomp      # [linux]
+{% if use_arpack %}
+    - arpack
+{% endif %}
+{% if use_mpi %}
+    - petsc >=3.20
+    - slepc >=3.20
+    - openmpi
+{% endif %}
   run:
     - python
     - numpy >=1.26.3
@@ -48,6 +92,14 @@ requirements:
     - liblapack
     - llvm-openmp  # [osx]
     - libgomp      # [linux]
+{% if use_arpack %}
+    - arpack
+{% endif %}
+{% if use_mpi %}
+    - petsc >=3.20
+    - slepc >=3.20
+    - mpi4py >=3.1
+{% endif %}
 
 test:
   imports:
@@ -59,10 +111,14 @@ test:
     - egttools.datastructures
     - egttools.helpers
     - egttools.plotting
+    - egttools.numerical.mpi   # no-op import (empty __all__) when MPI not built
   source_files:
     - tests
   requires:
     - pytest
+{% if use_mpi %}
+    - mpi4py >=3.1
+{% endif %}
   commands:
     - pytest tests/ -x -q --ignore=tests/cpp
 
@@ -74,6 +130,17 @@ about:
   description: |
     EGTtools provides high-performance tools to study evolutionary game dynamics,
     including analytical methods, simulations, and visualization utilities.
+
+    Build variants
+    --------------
+    conda install egttools                      # base (default)
+    conda install "egttools=*=arpack_*"        # ARPACK native eigensolver
+    conda install "egttools=*=mpi_*"           # PETSc/SLEPc MPI-distributed solver
+    conda install "egttools=*=arpack_mpi_*"    # both
+
+    Non-base variants are deprioritised via track_features, so a plain
+    `conda install egttools` always resolves to the base build.  Pin the
+    build string as shown above to select a specific variant.
   doc_url: "https://egttools.readthedocs.io"
 
 extra:

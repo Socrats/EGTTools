@@ -115,6 +115,59 @@ endif ()
 egttools_enable_blas_lapack(numerical_)
 
 # ------------------------------------------------------------------------------
+# ARPACK (optional)
+# ------------------------------------------------------------------------------
+
+if (DEFINED EGTTOOLS_ARPACK_TARGET)
+    target_link_libraries(numerical_ PRIVATE ${EGTTOOLS_ARPACK_TARGET})
+    target_compile_definitions(numerical_ PRIVATE HAS_ARPACK=1)
+    message(STATUS "[EGTtools] numerical_: linking ${EGTTOOLS_ARPACK_TARGET} (HAS_ARPACK=1)")
+endif ()
+
+# ------------------------------------------------------------------------------
+# PETSc / SLEPc / MPI — optional numerical_mpi_ module
+# ------------------------------------------------------------------------------
+
+if (EGTTOOLS_ENABLE_PETSC)
+    # Compile PairwisePetscOperator into a static lib linked by numerical_mpi_.
+    add_subdirectory(egttools/mpi)
+
+    pybind11_add_module(numerical_mpi_
+        egttools_pybind11_mpi.cpp
+        pybind11_files/mpi_operators.cpp
+    )
+
+    target_include_directories(numerical_mpi_ PRIVATE
+        .
+        "${CMAKE_CURRENT_BINARY_DIR}"
+        "${PROJECT_SOURCE_DIR}/cpp/include"
+    )
+
+    target_link_libraries(numerical_mpi_ PRIVATE
+        egttools_mpi_core
+        ${EGTTOOLS_PETSC_TARGET}
+        ${EGTTOOLS_SLEPC_TARGET}
+        MPI::MPI_CXX
+        Eigen3::Eigen
+    )
+
+    set_target_properties(numerical_mpi_ PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED TRUE
+        POSITION_INDEPENDENT_CODE TRUE
+        C_VISIBILITY_PRESET hidden
+        CXX_VISIBILITY_PRESET hidden
+    )
+
+    if (SKBUILD)
+        install(TARGETS numerical_mpi_
+                LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX})
+    endif ()
+
+    message(STATUS "[EGTtools] numerical_mpi_: PETSc/SLEPc MPI module enabled")
+endif ()
+
+# ------------------------------------------------------------------------------
 # Create EGTToolsTargets export
 # ------------------------------------------------------------------------------
 

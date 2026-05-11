@@ -18,6 +18,8 @@
 
 #include <egttools/finite_populations/analytical/PairwiseComparison.hpp>
 #include <atomic>
+#include <cmath>
+#include <limits>
 
 namespace {
     inline std::uint64_t make_fitness_cache_key(const int64_t state_index,
@@ -473,11 +475,14 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_gradient_
     return gradients;
 }
 
-#if (HAS_BOOST)
-double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability(
-    int index_invading_strategy, int index_resident_strategy, const double beta) {
-    cpp_dec_float_100 phi = 0;
-    cpp_dec_float_100 prod = 1;
+// ---------------------------------------------------------------------------
+// Private helper: streaming log-sum-exp yielding log(φ)
+// ---------------------------------------------------------------------------
+double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_log_phi_(
+    int index_invading_strategy, int index_resident_strategy, double beta) {
+    double log_prod = 0.0;
+    double max_log  = -std::numeric_limits<double>::infinity();
+    double sum_exp  = 0.0;
 
     VectorXui population_state = VectorXui::Zero(nb_strategies_);
 
@@ -489,39 +494,65 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fi
                 static_cast<int64_t>(egttools::FinitePopulations::calculate_state(
                     population_size_, population_state));
 
-        // calculate fitness of invading strategy
-        const auto fitness_invading_strategy = calculate_fitness_(index_invading_strategy, population_state,
-                                                                  state_index);
-        const auto fitness_resident_strategy = calculate_fitness_(index_resident_strategy, population_state,
-                                                                  state_index);
+        const auto f_inv = calculate_fitness_(index_invading_strategy, population_state, state_index);
+        const auto f_res = calculate_fitness_(index_resident_strategy, population_state, state_index);
 
-        // Calculate the probability that the invading strategy will increase
-        cpp_dec_float_100 probability_increase = (static_cast<double>(population_size_ - i) / population_size_) * (
-                                                     static_cast<double>(i) / (population_size_ - 1));
-        probability_increase *= fermi(beta, fitness_resident_strategy,
-                                      fitness_invading_strategy);
-        cpp_dec_float_100 probability_decrease = (static_cast<double>(i) / population_size_) * (
-                                                     static_cast<double>(population_size_ - i) / (
-                                                         population_size_ - 1));
-        probability_decrease *= fermi(beta, fitness_invading_strategy,
-                                      fitness_resident_strategy);
+        // log(p- / p+) = beta * (f_resident - f_invading): always finite
+        log_prod += beta * (f_res - f_inv);
 
-        prod *= probability_decrease / probability_increase;
-        phi += prod;
-
-        if (phi > 1e7) return 0.0;
+        if (log_prod > max_log) {
+            sum_exp = sum_exp * std::exp(max_log - log_prod) + 1.0;
+            max_log = log_prod;
+        } else {
+            sum_exp += std::exp(log_prod - max_log);
+        }
     }
 
-    const cpp_dec_float_100 fixation_probability = 1 / (1. + phi);
-
-    return fixation_probability.convert_to<double>();
+    // sum_exp == 0 only when pop_size == 1 (no iterations): φ = 0 → log φ = -∞
+    if (sum_exp == 0.0) return -std::numeric_limits<double>::infinity();
+    return max_log + std::log(sum_exp);
 }
-#else
+
+// ---------------------------------------------------------------------------
+// Public: fixation probability ρ (double precision)
+// ---------------------------------------------------------------------------
 double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability(
     int index_invading_strategy, int index_resident_strategy, double beta) {
-    double phi = 0;
-    double prod = 1;
-    double probability_increase, probability_decrease;
+    const double log_phi = calculate_log_phi_(index_invading_strategy, index_resident_strategy, beta);
+    // 1/(1+exp(log_phi)): exp returns +∞ for large log_phi → result is 0.0, which is correct
+    return 1.0 / (1.0 + std::exp(log_phi));
+}
+
+// ---------------------------------------------------------------------------
+// Public: log fixation probability log(ρ) — always a finite double
+// ---------------------------------------------------------------------------
+double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_log_fixation_probability(
+    int index_invading_strategy, int index_resident_strategy, double beta) {
+    const double log_phi = calculate_log_phi_(index_invading_strategy, index_resident_strategy, beta);
+
+    if (log_phi == -std::numeric_limits<double>::infinity()) return 0.0;  // ρ = 1
+
+    // log(ρ) = -softplus(log_phi) = -log(1 + exp(log_phi)), numerically stable:
+    //   log_phi >= 0: -(log_phi + log1p(exp(-log_phi)))
+    //   log_phi <  0: -log1p(exp(log_phi))
+    return log_phi >= 0.0
+               ? -(log_phi + std::log1p(std::exp(-log_phi)))
+               : -std::log1p(std::exp(log_phi));
+}
+
+// ---------------------------------------------------------------------------
+// Public (Boost): fixation probability using 50-digit decimal arithmetic
+// ---------------------------------------------------------------------------
+#if (HAS_BOOST)
+double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability_boost(
+    int index_invading_strategy, int index_resident_strategy, double beta) {
+    using Scalar = cpp_dec_float_50;
+    using boost::multiprecision::exp;
+    using boost::multiprecision::log;
+
+    Scalar log_prod = 0;
+    Scalar max_log  = std::numeric_limits<Scalar>::lowest();  // effectively −∞
+    Scalar sum_exp  = 0;
 
     VectorXui population_state = VectorXui::Zero(nb_strategies_);
 
@@ -533,29 +564,68 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fi
                 static_cast<int64_t>(egttools::FinitePopulations::calculate_state(
                     population_size_, population_state));
 
-        // calculate fitness of invading strategy
-        auto fitness_invading_strategy = calculate_fitness_(index_invading_strategy, population_state, state_index);
-        auto fitness_resident_strategy = calculate_fitness_(index_resident_strategy, population_state, state_index);
+        const auto f_inv = calculate_fitness_(index_invading_strategy, population_state, state_index);
+        const auto f_res = calculate_fitness_(index_resident_strategy, population_state, state_index);
 
-        // Calculate the probability that the invading strategy will increase
-        probability_increase = (static_cast<double>(population_state(index_resident_strategy)) / population_size_) * (
-                                   static_cast<double>(i) / (population_size_ - 1));
-        probability_increase *= egttools::FinitePopulations::fermi(beta, fitness_resident_strategy,
-                                                                   fitness_invading_strategy);
-        probability_decrease = (static_cast<double>(i) / population_size_) * (
-                                   static_cast<double>(population_state(index_resident_strategy)) / (
-                                       population_size_ - 1));
-        probability_decrease *= egttools::FinitePopulations::fermi(beta, fitness_invading_strategy,
-                                                                   fitness_resident_strategy);
+        log_prod += Scalar(beta) * (Scalar(f_res) - Scalar(f_inv));
 
-        prod *= probability_decrease / probability_increase;
-        phi += prod;
-
-        if (phi > 1e7) return 0.0;
+        if (log_prod > max_log) {
+            sum_exp = sum_exp * exp(max_log - log_prod) + Scalar(1);
+            max_log = log_prod;
+        } else {
+            sum_exp += exp(log_prod - max_log);
+        }
     }
-    return 1 / (1. + phi);
+
+    if (sum_exp == 0) return 1.0;
+    const Scalar log_phi = max_log + log(sum_exp);
+    const Scalar rho     = Scalar(1) / (Scalar(1) + exp(log_phi));
+    return rho.convert_to<double>();
 }
 #endif
+
+// ---------------------------------------------------------------------------
+// Public: SML transition matrix + log-fixation matrix
+// ---------------------------------------------------------------------------
+std::tuple<egttools::Matrix2D, egttools::Matrix2D>
+egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_and_log_fixation_matrix_sml(
+    const double beta) {
+    Matrix2D log_rho    = Matrix2D::Constant(nb_strategies_, nb_strategies_, 0.0);
+    Matrix2D transitions = Matrix2D::Zero(nb_strategies_, nb_strategies_);
+
+    // --- Step 1: compute all log-ρ values ---
+#if defined(_OPENMP) && !defined(_MSC_VER)
+#pragma omp parallel for default(shared) shared(beta, nb_strategies_, log_rho)
+#endif
+    for (int i = 0; i < nb_strategies_; ++i) {
+        for (int j = 0; j < nb_strategies_; ++j) {
+            if (i != j)
+                log_rho(i, j) = calculate_log_fixation_probability(j, i, beta);
+        }
+    }
+
+    // --- Step 2: find global max off-diagonal log-ρ for scaling ---
+    double max_log_rho = -std::numeric_limits<double>::infinity();
+    for (int i = 0; i < nb_strategies_; ++i)
+        for (int j = 0; j < nb_strategies_; ++j)
+            if (i != j) max_log_rho = std::max(max_log_rho, log_rho(i, j));
+
+    // --- Step 3: build transition matrix scaled by exp(-max_log_rho) ---
+    // Scaling all off-diagonal entries by the same constant preserves the
+    // stationary distribution while guaranteeing a valid stochastic matrix.
+    for (int i = 0; i < nb_strategies_; ++i) {
+        double transition_stay = 1.0;
+        for (int j = 0; j < nb_strategies_; ++j) {
+            if (i != j) {
+                transitions(i, j) = std::exp(log_rho(i, j) - max_log_rho) / (nb_strategies_ - 1);
+                transition_stay -= transitions(i, j);
+            }
+        }
+        transitions(i, i) = transition_stay;
+    }
+
+    return {transitions, log_rho};
+}
 
 std::tuple<egttools::Matrix2D, egttools::Matrix2D>
 egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transition_and_fixation_matrix_sml(
