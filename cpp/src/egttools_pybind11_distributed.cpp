@@ -19,6 +19,9 @@
 #include <pybind11/pybind11.h>
 #include <egttools/OpenMPStatus.hpp>
 #include <egttools/BLASLAPACKStatus.hpp>
+#include <egttools/BoostStatus.hpp>
+#include <egttools/ARPACKStatus.hpp>
+#include <egttools/PETScStatus.hpp>
 
 #include "version.h"
 
@@ -51,7 +54,12 @@ PYBIND11_MODULE(numerical_, m) {
       "Check if EGTtools was compiled with OpenMP support.");
     m.def("is_blas_lapack_enabled", &egttools::is_blas_lapack_enabled,
       "Check if EGTtools was compiled with BLAS/LAPACK acceleration.");
-
+    m.def("is_boost_enabled", &egttools::is_boost_enabled,
+      "Check if EGTtools was compiled with Boost support.");
+    m.def("is_arpack_enabled", &egttools::is_arpack_enabled,
+      "Check if EGTtools was compiled with ARPACK eigensolver support.");
+    m.def("is_petsc_enabled", &egttools::is_petsc_enabled,
+      "Check if EGTtools was compiled with PETSc/SLEPc MPI eigensolver support.");
 
 #if (HAS_BOOST)
     m.attr("USES_BOOST") = true;

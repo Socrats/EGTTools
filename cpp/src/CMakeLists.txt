@@ -129,6 +129,9 @@ endif ()
 # ------------------------------------------------------------------------------
 
 if (EGTTOOLS_ENABLE_PETSC)
+    target_compile_definitions(numerical_ PRIVATE HAS_PETSC_MODULE=1)
+    message(STATUS "[EGTtools] numerical_: HAS_PETSC_MODULE=1 (PETSc/SLEPc available)")
+
     # Compile PairwisePetscOperator into a static lib linked by numerical_mpi_.
     add_subdirectory(egttools/mpi)
 

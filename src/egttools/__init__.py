@@ -31,20 +31,24 @@ except Exception:
 
 def show_build_info():
     """
-    Nicely print the EGTtools build information.
+    Nicely print the EGTtools build information and runtime feature support.
     """
-    if not isinstance(__build_info__, dict):
-        print("Build information unavailable.")
-        return
-
-    if "Error" in __build_info__:
+    if not isinstance(__build_info__, dict) or "Error" in __build_info__:
         print("Build information unavailable.")
         print("(No 'egttools_build_info.txt' found inside the package.)")
     else:
         print("\nEGTtools Build Information")
         print("-" * 30)
         for key, value in __build_info__.items():
-            print(f"{key:<20}: {value}")
+            print(f"{key:<22}: {value}")
+
+    print("\nFeature Support (runtime)")
+    print("-" * 30)
+    print(f"{'OpenMP':<22}: {'ON' if is_openmp_enabled() else 'OFF'}")
+    print(f"{'BLAS/LAPACK':<22}: {'ON' if is_blas_lapack_enabled() else 'OFF'}")
+    print(f"{'Boost':<22}: {'ON' if is_boost_enabled() else 'OFF'}")
+    print(f"{'ARPACK':<22}: {'ON' if is_arpack_enabled() else 'OFF'}")
+    print(f"{'PETSc/SLEPc':<22}: {'ON' if is_petsc_enabled() else 'OFF'}")
 
 
 try:
@@ -65,6 +69,9 @@ except Exception:
 else:
     from .numerical.numerical_ import is_openmp_enabled
     from .numerical.numerical_ import is_blas_lapack_enabled
+    from .numerical.numerical_ import is_boost_enabled
+    from .numerical.numerical_ import is_arpack_enabled
+    from .numerical.numerical_ import is_petsc_enabled
     from .numerical.numerical_ import USES_BOOST
     from .numerical.numerical_.random import Random
     from .numerical.numerical_ import (sample_simplex, sample_unit_simplex, calculate_nb_states,
@@ -93,6 +100,9 @@ else:
 __all__ = ['utils', 'plotting', 'analytical',
            'games', 'behaviors', 'numerical',
            'distributions', 'datastructures', '__version__', '__version_info__', 'Random',
+           'show_build_info', '__build_info__', 'USES_BOOST',
+           'is_openmp_enabled', 'is_blas_lapack_enabled', 'is_boost_enabled',
+           'is_arpack_enabled', 'is_petsc_enabled',
            'sample_simplex', 'sample_unit_simplex', 'calculate_nb_states', 'calculate_state',
            'calculate_strategies_distribution',
            'calculate_expected_payoff',

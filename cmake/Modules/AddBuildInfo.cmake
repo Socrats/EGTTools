@@ -23,6 +23,20 @@ else()
     set(BLAS_LAPACK_STATUS "OFF")
 endif()
 
+# ARPACK status
+if (DEFINED EGTTOOLS_ARPACK_TARGET)
+    set(ARPACK_STATUS "ON")
+else ()
+    set(ARPACK_STATUS "OFF")
+endif ()
+
+# PETSc / SLEPc status
+if (EGTTOOLS_ENABLE_PETSC AND DEFINED EGTTOOLS_PETSC_TARGET)
+    set(PETSC_STATUS "ON (PETSc ${PETSC_VERSION}, SLEPc ${SLEPC_VERSION})")
+else ()
+    set(PETSC_STATUS "OFF")
+endif ()
+
 # Version
 set(EGTTOOLS_VERSION "${PROJECT_VERSION}")
 
