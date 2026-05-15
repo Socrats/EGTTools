@@ -304,6 +304,7 @@ if (EGTTOOLS_ENABLE_ARPACK)
 
                     if (NOT _ARPACK_HAS_C_WRAPPERS)
                         message(STATUS "[EGTtools] ARPACK: dnaupd_c absent — compiling built-in Fortran→C wrappers")
+                        enable_language(C)
                         add_library(_egttools_arpack_cw STATIC
                             "${PROJECT_SOURCE_DIR}/cpp/src/arpack_cwrapper.c")
                         target_include_directories(_egttools_arpack_cw PRIVATE
