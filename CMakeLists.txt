@@ -283,6 +283,33 @@ if (EGTTOOLS_ENABLE_ARPACK)
                     target_link_directories(_egttools_arpack INTERFACE ${ARPACK_LIBRARY_DIRS})
                     set(EGTTOOLS_ARPACK_TARGET _egttools_arpack)
                     message(STATUS "[EGTtools] ARPACK: pkg-config ${ARPACK_VERSION}, hpp root: ${_arpack_hpp_root}, sys: ${_arpack_sys_includes}")
+
+                    # Check whether the C-API wrappers (dnaupd_c etc.) are present in
+                    # libarpack. EasyBuild Autotools builds compile only the Fortran core
+                    # and omit them. Use nm to probe the installed library.
+                    find_library(_ARPACK_LIB_FILE arpack
+                        HINTS ${ARPACK_LIBRARY_DIRS} NO_DEFAULT_PATH)
+                    set(_ARPACK_HAS_C_WRAPPERS FALSE)
+                    if (_ARPACK_LIB_FILE)
+                        execute_process(
+                            COMMAND nm "${_ARPACK_LIB_FILE}"
+                            COMMAND grep "dnaupd_c"
+                            RESULT_VARIABLE _nm_exit
+                            OUTPUT_QUIET ERROR_QUIET
+                        )
+                        if (_nm_exit EQUAL 0)
+                            set(_ARPACK_HAS_C_WRAPPERS TRUE)
+                        endif ()
+                    endif ()
+
+                    if (NOT _ARPACK_HAS_C_WRAPPERS)
+                        message(STATUS "[EGTtools] ARPACK: dnaupd_c absent — compiling built-in Fortran→C wrappers")
+                        add_library(_egttools_arpack_cw STATIC
+                            "${PROJECT_SOURCE_DIR}/cpp/src/arpack_cwrapper.c")
+                        target_include_directories(_egttools_arpack_cw PRIVATE
+                            ${_arpack_sys_includes})
+                        target_link_libraries(_egttools_arpack INTERFACE _egttools_arpack_cw)
+                    endif ()
                 else ()
                     message(WARNING "[EGTtools] EGTTOOLS_ENABLE_ARPACK=ON but arpack-ng not found — disabling")
                 endif ()
