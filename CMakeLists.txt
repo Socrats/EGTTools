@@ -244,25 +244,45 @@ if (EGTTOOLS_ENABLE_ARPACK)
             if (PKG_CONFIG_FOUND)
                 pkg_check_modules(ARPACK QUIET arpack)
                 if (ARPACK_FOUND)
-                    # EasyBuild arpack.pc sets includedir=${prefix}/include/arpack,
-                    # but headers are included as <arpack/arpack.hpp>, so we need
+                    # EasyBuild arpack.pc sets includedir=${prefix}/include/arpack.
+                    # Headers are included as <arpack/arpack.hpp>, so we need
                     # ${prefix}/include. Strip the trailing /arpack component if present.
-                    set(_arpack_fixed_includes)
+                    set(_arpack_sys_includes)
                     foreach(_d ${ARPACK_INCLUDE_DIRS})
                         get_filename_component(_leaf "${_d}" NAME)
                         if (_leaf STREQUAL "arpack")
                             get_filename_component(_d "${_d}" DIRECTORY)
                         endif ()
-                        list(APPEND _arpack_fixed_includes "${_d}")
+                        list(APPEND _arpack_sys_includes "${_d}")
                     endforeach()
-                    list(REMOVE_DUPLICATES _arpack_fixed_includes)
+                    list(REMOVE_DUPLICATES _arpack_sys_includes)
+
+                    # Check whether arpack/arpack.hpp is present in the system install.
+                    # EasyBuild Autotools builds omit the C++ wrapper; conda-forge CMake
+                    # builds include it. If absent, use the vendored copy in cpp/include/.
+                    find_path(_ARPACK_HPP_DIR "arpack/arpack.hpp"
+                        HINTS ${_arpack_sys_includes}
+                        NO_DEFAULT_PATH)
+                    if (_ARPACK_HPP_DIR)
+                        set(_arpack_hpp_root "${_ARPACK_HPP_DIR}")
+                        message(STATUS "[EGTtools] ARPACK: arpack.hpp found at ${_ARPACK_HPP_DIR}")
+                    else ()
+                        # Fall back to vendored arpack.hpp / arpack.h in cpp/include/arpack/.
+                        # Those headers use <arpack/arpackdef.h> so arpackdef.h is still
+                        # resolved from the system install via _arpack_sys_includes.
+                        set(_arpack_hpp_root "${PROJECT_SOURCE_DIR}/cpp/include")
+                        message(STATUS "[EGTtools] ARPACK: arpack.hpp not in system install — using vendored copy")
+                    endif ()
 
                     add_library(_egttools_arpack INTERFACE IMPORTED)
                     target_link_libraries(_egttools_arpack INTERFACE ${ARPACK_LINK_LIBRARIES})
-                    target_include_directories(_egttools_arpack INTERFACE ${_arpack_fixed_includes})
+                    # _arpack_hpp_root: parent of arpack/ (for <arpack/arpack.hpp>)
+                    # _arpack_sys_includes: system install base (for <arpack/arpackdef.h>)
+                    target_include_directories(_egttools_arpack INTERFACE
+                        "${_arpack_hpp_root}" ${_arpack_sys_includes})
                     target_link_directories(_egttools_arpack INTERFACE ${ARPACK_LIBRARY_DIRS})
                     set(EGTTOOLS_ARPACK_TARGET _egttools_arpack)
-                    message(STATUS "[EGTtools] ARPACK: found via pkg-config (arpack ${ARPACK_VERSION}), includes: ${_arpack_fixed_includes}")
+                    message(STATUS "[EGTtools] ARPACK: pkg-config ${ARPACK_VERSION}, hpp root: ${_arpack_hpp_root}, sys: ${_arpack_sys_includes}")
                 else ()
                     message(WARNING "[EGTtools] EGTTOOLS_ENABLE_ARPACK=ON but arpack-ng not found — disabling")
                 endif ()
