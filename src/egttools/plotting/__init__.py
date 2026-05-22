@@ -7,6 +7,14 @@ from .indicators import (
     plot_gradients,
     draw_invasion_diagram
 )
+from .network_plots import (
+    plot_network_state,
+    plot_strategy_evolution,
+    animate_network_evolution,
+    plot_edge_homophily,
+    plot_parameter_sweep,
+    plot_strategy_by_degree,
+)
 from .simplex2d import Simplex2D
 try:
     from .simplex3d import Simplex3D

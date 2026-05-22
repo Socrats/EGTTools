@@ -142,3 +142,4 @@ instance/
 .ropeproject
 celerybeat-schedule
 *.sage.py
+scripts/reproduce_pinheiro2012.py
