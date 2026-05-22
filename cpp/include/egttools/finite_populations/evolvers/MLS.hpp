@@ -2,24 +2,28 @@
 // Created by Elias Fernandez on 2019-04-25.
 //
 
-#ifndef DYRWIN_SED_MLS_HPP
-#define DYRWIN_SED_MLS_HPP
+#ifndef EGTTOOLS_FINITE_POPULATIONS_EVOLVERS_MLS_HPP
+#define EGTTOOLS_FINITE_POPULATIONS_EVOLVERS_MLS_HPP
 
-#include <Dyrwin/SeedGenerator.h>
-#include <Dyrwin/Types.h>
+#include <egttools/SeedGenerator.h>
+#include <egttools/Types.h>
 
-#include <Dyrwin/OpenMPUtils.hpp>
-#include <Dyrwin/SED/Utils.hpp>
-#include <Dyrwin/SED/structure/GarciaGroup.hpp>
-#include <Dyrwin/SED/structure/Group.hpp>
+#include <egttools/OpenMPExtensions.hpp>
+#include <egttools/finite_populations/Utils.hpp>
+#include <egttools/finite_populations/structure/GarciaGroup.hpp>
+#include <egttools/finite_populations/structure/Group.hpp>
+#if defined(_OPENMP) && !defined(_MSC_VER)
+#include <omp.h>
+#endif
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 #include <iterator>
 #include <random>
 #include <stdexcept>
 #include <unordered_set>
 
-namespace EGTTools::SED {
+namespace egttools::FinitePopulations {
 template<typename S = Group>
 class MLS {
  public:
@@ -331,8 +335,16 @@ class MLS {
   std::uniform_int_distribution<size_t> _uint_rand_strategy;
   std::uniform_real_distribution<double> _real_rand; // uniform random distribution
 
-  // Random generators
-  std::mt19937_64 _mt{EGTTools::Random::SeedGenerator::getInstance().getSeed()};
+  // Per-thread random generators (thread-safe for OpenMP parallel loops)
+  std::vector<std::mt19937_64> _generators;
+
+  inline std::mt19937_64 &_get_rng() {
+#if defined(_OPENMP) && !defined(_MSC_VER)
+    return _generators[omp_get_thread_num()];
+#else
+    return _generators[0];
+#endif
+  }
 
   inline void _update(double q, std::vector<S> &groups, VectorXui &strategies);
 
@@ -672,8 +684,16 @@ class MLS<GarciaGroup> {
   std::uniform_int_distribution<size_t> _uint_rand_strategy;
   std::uniform_real_distribution<double> _real_rand; // uniform random distribution
 
-  // Random generators
-  std::mt19937_64 _mt{EGTTools::Random::SeedGenerator::getInstance().getSeed()};
+  // Per-thread random generators (thread-safe for OpenMP parallel loops)
+  std::vector<std::mt19937_64> _generators;
+
+  inline std::mt19937_64 &_get_rng() {
+#if defined(_OPENMP) && !defined(_MSC_VER)
+    return _generators[omp_get_thread_num()];
+#else
+    return _generators[0];
+#endif
+  }
 
   /**
    * @brief Updates the population one step with migration, splitting, group conflict and inter-group interactions
@@ -831,8 +851,8 @@ class MLS<GarciaGroup> {
 template<typename S>
 MLS<S>::MLS(size_t generations, size_t nb_strategies,
             size_t group_size, size_t nb_groups, double w,
-            const Eigen::Ref<const EGTTools::Vector> &strategies_freq,
-            const Eigen::Ref<const EGTTools::Matrix2D> &payoff_matrix) : _generations(generations),
+            const Eigen::Ref<const egttools::Vector> &strategies_freq,
+            const Eigen::Ref<const egttools::Matrix2D> &payoff_matrix) : _generations(generations),
                                                                          _nb_strategies(nb_strategies),
                                                                          _group_size(group_size),
                                                                          _nb_groups(nb_groups),
@@ -860,6 +880,15 @@ MLS<S>::MLS(size_t generations, size_t nb_strategies,
   _uint_rand = std::uniform_int_distribution<size_t>(0, _nb_groups - 1);
   _uint_rand_strategy = std::uniform_int_distribution<size_t>(0, _nb_strategies - 1);
   _real_rand = std::uniform_real_distribution<double>(0.0, 1.0);
+
+  // Initialize one generator per thread
+  int n_threads = 1;
+#if defined(_OPENMP) && !defined(_MSC_VER)
+  n_threads = omp_get_max_threads();
+#endif
+  _generators.reserve(n_threads);
+  for (int ti = 0; ti < n_threads; ++ti)
+    _generators.emplace_back(egttools::Random::SeedGenerator::getInstance().getSeed());
 }
 
 template<typename S>
@@ -878,7 +907,7 @@ Vector MLS<S>::evolve(double q, double w, const Eigen::Ref<const VectorXui> &ini
   _strategies.array() = init_state;
   // Initialize population with initial state
   VectorXui group_strategies = VectorXui::Zero(_nb_strategies);
-  Group group(_nb_strategies, _group_size, w, group_strategies, _payoff_matrix);
+  S group(_nb_strategies, _group_size, w, group_strategies, _payoff_matrix);
   group.set_group_size(_group_size);
   std::vector<size_t> pop_container(_pop_size);
   // initialize container
@@ -888,7 +917,7 @@ Vector MLS<S>::evolve(double q, double w, const Eigen::Ref<const VectorXui> &ini
       pop_container[z++] = i;
     }
   }
-  std::vector<Group> groups(_nb_groups, group);
+  std::vector<S> groups(_nb_groups, group);
   _setState(groups, pop_container);
 
 
@@ -927,7 +956,7 @@ Vector MLS<S>::evolve(double q, double w, double lambda, const Eigen::Ref<const 
   _strategies.array() = init_state;
   // Initialize population with initial state
   VectorXui group_strategies = VectorXui::Zero(_nb_strategies);
-  Group group(_nb_strategies, _group_size, w, group_strategies, _payoff_matrix);
+  S group(_nb_strategies, _group_size, w, group_strategies, _payoff_matrix);
   group.set_group_size(_group_size);
   std::vector<size_t> pop_container(_pop_size);
   // initialize container
@@ -937,7 +966,7 @@ Vector MLS<S>::evolve(double q, double w, double lambda, const Eigen::Ref<const 
       pop_container[z++] = i;
     }
   }
-  std::vector<Group> groups(_nb_groups, group);
+  std::vector<S> groups(_nb_groups, group);
   _setState(groups, pop_container);
 
 
@@ -983,7 +1012,7 @@ Vector MLS<S>::evolve(double q, double w, double lambda, double kappa, double z,
   _strategies.array() = init_state;
   // Initialize population with initial state
   VectorXui group_strategies = VectorXui::Zero(_nb_strategies);
-  Group group(_nb_strategies, _group_size, w, group_strategies, _payoff_matrix);
+  S group(_nb_strategies, _group_size, w, group_strategies, _payoff_matrix);
   group.set_group_size(_group_size);
   std::vector<size_t> pop_container(_pop_size);
   // initialize container
@@ -993,7 +1022,7 @@ Vector MLS<S>::evolve(double q, double w, double lambda, double kappa, double z,
       pop_container[it++] = i;
     }
   }
-  std::vector<Group> groups(_nb_groups, group);
+  std::vector<S> groups(_nb_groups, group);
   _setState(groups, pop_container);
 
 
@@ -1010,7 +1039,7 @@ Vector MLS<S>::evolve(double q, double w, double lambda, double kappa, double z,
 template<typename S>
 double
 MLS<S>::fixationProbability(size_t invader, size_t resident, size_t runs, double q, double w) {
-  if (invader > _nb_strategies || resident > _nb_strategies)
+  if (invader >= _nb_strategies || resident >= _nb_strategies)
     throw std::invalid_argument(
         "you must specify a valid index for invader and resident [0, " + std::to_string(_nb_strategies) +
             ")");
@@ -1031,8 +1060,8 @@ _payoff_matrix, _nb_groups, _pop_size, _generations) reduction(+:r2m, r2r)
 #endif
   for (size_t i = 0; i < runs; ++i) {
     // First we initialize a homogeneous population with the resident strategy
-    SED::Group group(_nb_strategies, _group_size, w, group_strategies, _payoff_matrix);
-    std::vector<SED::Group> groups(_nb_groups, group);
+    S group(_nb_strategies, _group_size, w, group_strategies, _payoff_matrix);
+    std::vector<S> groups(_nb_groups, group);
     VectorXui strategies = VectorXui::Zero(_nb_strategies);
     strategies(resident) = _pop_size;
 
@@ -1055,14 +1084,17 @@ _payoff_matrix, _nb_groups, _pop_size, _generations) reduction(+:r2m, r2r)
     } // end Moran process loop
   } // end runs loop
   if ((r2m == 0.0) && (r2r == 0.0)) return 0.0;
-  else return r2m / (r2m + r2r);
+  if (r2m + r2r < static_cast<double>(runs) / 2.0)
+    std::cerr << "Warning: fewer than 50% of MLS fixationProbability runs converged within "
+              << _generations << " steps. Increase generations for reliable estimates.\n";
+  return r2m / (r2m + r2r);
 }
 
 template<typename S>
 double
 MLS<S>::fixationProbability(size_t invader, size_t resident, size_t runs,
                             double q, double lambda, double w) {
-  if (invader > _nb_strategies || resident > _nb_strategies)
+  if (invader >= _nb_strategies || resident >= _nb_strategies)
     throw std::invalid_argument(
         "you must specify a valid index for invader and resident [0, " + std::to_string(_nb_strategies) +
             ")");
@@ -1083,8 +1115,8 @@ _payoff_matrix, _nb_groups, _pop_size, _generations) reduction(+:r2m, r2r)
 #endif
   for (size_t i = 0; i < runs; ++i) {
     // First we initialize a homogeneous population with the resident strategy
-    SED::Group group(_nb_strategies, _group_size, w, group_strategies, _payoff_matrix);
-    std::vector<SED::Group> groups(_nb_groups, group);
+    S group(_nb_strategies, _group_size, w, group_strategies, _payoff_matrix);
+    std::vector<S> groups(_nb_groups, group);
     VectorXui strategies = VectorXui::Zero(_nb_strategies);
     strategies(resident) = _pop_size;
 
@@ -1108,13 +1140,16 @@ _payoff_matrix, _nb_groups, _pop_size, _generations) reduction(+:r2m, r2r)
   } // end runs loop
 
   if ((r2m == 0.0) && (r2r == 0.0)) return 0.0;
-  else return r2m / (r2m + r2r);
+  if (r2m + r2r < static_cast<double>(runs) / 2.0)
+    std::cerr << "Warning: fewer than 50% of MLS fixationProbability runs converged within "
+              << _generations << " steps. Increase generations for reliable estimates.\n";
+  return r2m / (r2m + r2r);
 }
 
 template<typename S>
 double MLS<S>::fixationProbability(size_t invader, size_t resident, size_t runs,
                                    double q, double lambda, double w, double kappa, double z) {
-  if (invader > _nb_strategies || resident > _nb_strategies)
+  if (invader >= _nb_strategies || resident >= _nb_strategies)
     throw std::invalid_argument(
         "you must specify a valid index for invader and resident [0, " + std::to_string(_nb_strategies) +
             ")");
@@ -1135,8 +1170,8 @@ _payoff_matrix, _nb_groups, _pop_size, _generations) reduction(+:r2m, r2r)
 #endif
   for (size_t i = 0; i < runs; ++i) {
     // First we initialize a homogeneous population with the resident strategy
-    SED::Group group(_nb_strategies, _group_size, w, group_strategies, _payoff_matrix);
-    std::vector<SED::Group> groups(_nb_groups, group);
+    S group(_nb_strategies, _group_size, w, group_strategies, _payoff_matrix);
+    std::vector<S> groups(_nb_groups, group);
     VectorXui strategies = VectorXui::Zero(_nb_strategies);
     strategies(resident) = _pop_size;
 
@@ -1160,13 +1195,16 @@ _payoff_matrix, _nb_groups, _pop_size, _generations) reduction(+:r2m, r2r)
   } // end runs loop
 
   if ((r2m == 0.0) && (r2r == 0.0)) return 0.0;
-  else return r2m / (r2m + r2r);
+  if (r2m + r2r < static_cast<double>(runs) / 2.0)
+    std::cerr << "Warning: fewer than 50% of MLS fixationProbability runs converged within "
+              << _generations << " steps. Increase generations for reliable estimates.\n";
+  return r2m / (r2m + r2r);
 }
 
 template<typename S>
 Vector MLS<S>::fixationProbability(size_t invader, const Eigen::Ref<const VectorXui> &init_state, size_t runs,
                                    double q, double w) {
-  if (invader > _nb_strategies)
+  if (invader >= _nb_strategies)
     throw std::invalid_argument(
         "you must specify a valid index for invader and resident [0, " + std::to_string(_nb_strategies) +
             ")");
@@ -1185,7 +1223,7 @@ Vector MLS<S>::fixationProbability(size_t invader, const Eigen::Ref<const Vector
 
   // Initialize population with initial state
   VectorXui group_strategies = VectorXui::Zero(_nb_strategies);
-  Group group(_nb_strategies, _group_size, w, group_strategies, _payoff_matrix);
+  S group(_nb_strategies, _group_size, w, group_strategies, _payoff_matrix);
   group.set_group_size(_group_size);
   std::vector<size_t> pop_container(_pop_size);
   // initialize container
@@ -1199,13 +1237,13 @@ Vector MLS<S>::fixationProbability(size_t invader, const Eigen::Ref<const Vector
   // This loop can be done in parallel
 #if defined(_OPENMP) && !defined(_MSC_VER)
 #pragma omp parallel for default(none) shared(group, pop_container, init_state, invader, runs, q, w, \
-group, _nb_groups, _generations, \
+_nb_groups, _generations, \
 _nb_strategies) reduction(+:fixations)
 #endif
   for (size_t i = 0; i < runs; ++i) {
     // First we initialize a homogeneous population with the resident strategy
     bool fixated = false;
-    std::vector<Group> groups(_nb_groups, group);
+    std::vector<S> groups(_nb_groups, group);
     VectorXui strategies = init_state;
     std::vector<size_t> container(pop_container);
     _setState(groups, container);
@@ -1238,7 +1276,7 @@ _nb_strategies) reduction(+:fixations)
 template<typename S>
 Vector
 MLS<S>::gradientOfSelection(size_t invader, size_t resident, size_t runs, double w, double q) {
-  if (invader > _nb_strategies || resident > _nb_strategies)
+  if (invader >= _nb_strategies || resident >= _nb_strategies)
     throw std::invalid_argument(
         "you must specify a valid index for invader and resident [0, " + std::to_string(_nb_strategies) +
             ")");
@@ -1255,9 +1293,9 @@ _pop_size, _nb_strategies, _group_size, _payoff_matrix, _nb_groups)
 #endif
   for (size_t k = 1; k < _pop_size; ++k) { // Loops over all population configurations
     VectorXui strategies = VectorXui::Zero(_nb_strategies);
-    Group group(_nb_strategies, _group_size, w, strategies, _payoff_matrix);
+    S group(_nb_strategies, _group_size, w, strategies, _payoff_matrix);
     group.set_group_size(_group_size);
-    std::vector<Group> groups(_nb_groups, group);
+    std::vector<S> groups(_nb_groups, group);
     std::vector<size_t> pop_container(_pop_size);
     size_t t_plus = 0; // resident to mutant count
     size_t t_minus = 0; // resident to resident count
@@ -1294,7 +1332,7 @@ template<typename S>
 Vector
 MLS<S>::gradientOfSelection(size_t invader, size_t resident, const Eigen::Ref<const VectorXui> &init_state,
                             size_t runs, double w, double q) {
-  if (invader > _nb_strategies)
+  if (invader >= _nb_strategies)
     throw std::invalid_argument(
         "you must specify a valid index for invader and resident [0, " + std::to_string(_nb_strategies) +
             ")");
@@ -1315,9 +1353,9 @@ _pop_size, _nb_strategies, _group_size, _payoff_matrix, _nb_groups, _pop_size)
 #endif
   for (size_t k = 0; k <= init_state(resident); ++k) { // Loops over all population configurations
     VectorXui strategies = VectorXui::Zero(_nb_strategies);
-    Group group(_nb_strategies, _group_size, w, strategies, _payoff_matrix);
+    S group(_nb_strategies, _group_size, w, strategies, _payoff_matrix);
     group.set_group_size(_group_size);
-    std::vector<Group> groups(_nb_groups, group);
+    std::vector<S> groups(_nb_groups, group);
     std::vector<size_t> pop_container(_pop_size);
     size_t t_plus = 0; // resident to mutant count
     size_t t_minus = 0; // resident to resident count
@@ -1362,15 +1400,15 @@ void MLS<S>::_update(double q, std::vector<S> &groups, VectorXui &strategies) {
 template<typename S>
 void MLS<S>::_update(double q, double lambda, std::vector<S> &groups, VectorXui &strategies) {
   _reproduce(groups, strategies, q);
-  if (_real_rand(_mt) < lambda) _migrate(q, groups, strategies);
+  if (_real_rand(_get_rng()) < lambda) _migrate(q, groups, strategies);
 }
 
 template<typename S>
 void
 MLS<S>::_update(double q, double lambda, double mu, std::vector<S> &groups, VectorXui &strategies) {
   _reproduce(groups, strategies, q);
-  if (_real_rand(_mt) < lambda) _migrate(q, groups, strategies);
-  if (_real_rand(_mt) < mu) _mutate(groups, strategies);
+  if (_real_rand(_get_rng()) < lambda) _migrate(q, groups, strategies);
+  if (_real_rand(_get_rng()) < mu) _mutate(groups, strategies);
 }
 
 template<typename S>
@@ -1380,10 +1418,10 @@ MLS<S>::_update(double q, double lambda, double kappa, double z, std::vector<S> 
   _resolve_conflict(kappa, z, groups, strategies);
   for (size_t i = 0; i < _nb_groups; ++i) {
     if (groups[i].isGroupOversize()) {
-      if (_real_rand(_mt) < q) { // split group
+      if (_real_rand(_get_rng()) < q) { // split group
         _splitGroup(i, groups, strategies);
       } else { // remove individual
-        size_t deleted_strategy = groups[i].deleteMember(_mt);
+        size_t deleted_strategy = groups[i].deleteMember(_get_rng());
         --strategies(deleted_strategy);
       }
     }
@@ -1399,10 +1437,10 @@ MLS<S>::_update(double q, double lambda, double alpha, double kappa, double z,
   _resolve_conflict(kappa, z, groups, strategies);
   for (size_t i = 0; i < _nb_groups; ++i) {
     if (groups[i].isGroupOversize()) {
-      if (_real_rand(_mt) < q) { // split group
+      if (_real_rand(_get_rng()) < q) { // split group
         _splitGroup(i, groups, strategies);
       } else { // remove individual
-        size_t deleted_strategy = groups[i].deleteMember(_mt);
+        size_t deleted_strategy = groups[i].deleteMember(_get_rng());
         --strategies(deleted_strategy);
       }
     }
@@ -1414,7 +1452,7 @@ void MLS<S>::_speedUpdate(double q, std::vector<S> &groups, VectorXui &strategie
   if (!_pseudoStationary(groups)) {
     _reproduce(groups, strategies, q);
   } else { // If the groups have reached maximum size and the population is monomorphic
-    if (_real_rand(_mt) < q) _reproduce(groups, strategies);
+    if (_real_rand(_get_rng()) < q) _reproduce(groups, strategies);
   }
 }
 
@@ -1422,9 +1460,9 @@ template<typename S>
 void MLS<S>::_speedUpdate(double q, double lambda, std::vector<S> &groups, VectorXui &strategies) {
   if (!_pseudoStationary(groups)) {
     _reproduce(groups, strategies, q);
-    if (_real_rand(_mt) < lambda) _migrate(q, groups, strategies);
+    if (_real_rand(_get_rng()) < lambda) _migrate(q, groups, strategies);
   } else { // If the groups have reached maximum size and the population is monomorphic
-    if ((_real_rand(_mt) * (q + lambda)) < q) _reproduce(groups, strategies);
+    if ((_real_rand(_get_rng()) * (q + lambda)) < q) _reproduce(groups, strategies);
     else _migrate(q, groups, strategies);
   }
 }
@@ -1435,10 +1473,10 @@ MLS<S>::_speedUpdate(double q, double lambda, double mu, std::vector<S> &groups,
                      VectorXui &strategies) {
   if (!_pseudoStationary(groups)) {
     _reproduce(groups, strategies, q);
-    if (_real_rand(_mt) < lambda) _migrate(q, groups, strategies);
-    if (_real_rand(_mt) < mu) _mutate(groups, strategies);
+    if (_real_rand(_get_rng()) < lambda) _migrate(q, groups, strategies);
+    if (_real_rand(_get_rng()) < mu) _mutate(groups, strategies);
   } else { // If the groups have reached maximum size and the population is monomorphic
-    double p = _real_rand(_mt) * (q + lambda + mu);
+    double p = _real_rand(_get_rng()) * (q + lambda + mu);
     if (p <= q) _reproduce(groups, strategies);
     else if (p <= (q + lambda)) _migrate(q, groups, strategies);
     else _mutate(groups, strategies);
@@ -1447,14 +1485,14 @@ MLS<S>::_speedUpdate(double q, double lambda, double mu, std::vector<S> &groups,
 
 template<typename S>
 void MLS<S>::_createMutant(size_t invader, size_t resident, std::vector<S> &groups) {
-  auto mutate_group = _uint_rand(_mt);
+  auto mutate_group = _uint_rand(_get_rng());
   groups[mutate_group].createMutant(invader, resident);
 }
 
 template<typename S>
-void MLS<S>::_createRandomMutant(size_t invader, std::vector<S> &groups, EGTTools::VectorXui &strategies) {
-  auto mutate_group = _uint_rand(_mt);
-  size_t mutating_strategy = groups[mutate_group].deleteMember(_mt);
+void MLS<S>::_createRandomMutant(size_t invader, std::vector<S> &groups, egttools::VectorXui &strategies) {
+  auto mutate_group = _uint_rand(_get_rng());
+  size_t mutating_strategy = groups[mutate_group].deleteMember(_get_rng());
   groups[mutate_group].addMember(invader);
   --strategies(mutating_strategy);
   ++strategies(invader);
@@ -1462,7 +1500,7 @@ void MLS<S>::_createRandomMutant(size_t invader, std::vector<S> &groups, EGTTool
 
 template<typename S>
 void MLS<S>::_updateFullPopulationFrequencies(size_t increase, size_t decrease,
-                                              EGTTools::VectorXui &strategies) {
+                                              egttools::VectorXui &strategies) {
   ++strategies(increase);
   --strategies(decrease);
 }
@@ -1470,7 +1508,7 @@ void MLS<S>::_updateFullPopulationFrequencies(size_t increase, size_t decrease,
 template<typename S>
 void MLS<S>::_reproduce(std::vector<S> &groups, VectorXui &strategies) {
   auto parent_group = _payoffProportionalSelection(groups);
-  auto[split, new_strategy] = groups[parent_group].createOffspring(_mt);
+  auto[split, new_strategy] = groups[parent_group].createOffspring(_get_rng());
   ++strategies(new_strategy);
   if (split) _splitGroup(parent_group, groups, strategies);
 }
@@ -1478,13 +1516,13 @@ void MLS<S>::_reproduce(std::vector<S> &groups, VectorXui &strategies) {
 template<typename S>
 void MLS<S>::_reproduce(std::vector<S> &groups, VectorXui &strategies, double q) {
   auto parent_group = _payoffProportionalSelection(groups);
-  auto[split, new_strategy] = groups[parent_group].createOffspring(_mt);
+  auto[split, new_strategy] = groups[parent_group].createOffspring(_get_rng());
   ++strategies(new_strategy);
   if (split) {
-    if (_real_rand(_mt) < q) { // split group
+    if (_real_rand(_get_rng()) < q) { // split group
       _splitGroup(parent_group, groups, strategies);
     } else { // remove individual
-      size_t deleted_strategy = groups[parent_group].deleteMember(_mt);
+      size_t deleted_strategy = groups[parent_group].deleteMember(_get_rng());
       --strategies(deleted_strategy);
     }
   }
@@ -1493,9 +1531,9 @@ void MLS<S>::_reproduce(std::vector<S> &groups, VectorXui &strategies, double q)
 template<typename S>
 void MLS<S>::_reproduce_garcia(std::vector<S> &groups, VectorXui &strategies, const double &lambda) {
   auto parent_group = _payoffProportionalSelection(groups);
-  auto[split, new_strategy] = groups[parent_group].createOffspring(_mt);
+  auto[split, new_strategy] = groups[parent_group].createOffspring(_get_rng());
   ++strategies(new_strategy);
-  if (_real_rand(_mt) < lambda) _migrate(parent_group, new_strategy, groups);
+  if (_real_rand(_get_rng()) < lambda) _migrate(parent_group, new_strategy, groups);
 }
 
 template<typename S>
@@ -1503,10 +1541,9 @@ void
 MLS<S>::_reproduce_garcia(std::vector<S> &groups, VectorXui &strategies, const double &lambda,
                           const double &alpha) {
   auto parent_group = _payoffProportionalSelection(alpha, groups, strategies);
-  auto[split, new_strategy] = groups[parent_group].createOffspring(_mt);
+  auto[split, new_strategy] = groups[parent_group].createOffspring(_get_rng());
   ++strategies(new_strategy);
-  if (_real_rand(_mt) < lambda) _migrate(parent_group, new_strategy, groups);
-  else groups[parent_group].totalPayoff();
+  if (_real_rand(_get_rng()) < lambda) _migrate(parent_group, new_strategy, groups);
 }
 
 template<typename S>
@@ -1514,17 +1551,17 @@ void MLS<S>::_migrate(double q, std::vector<S> &groups, VectorXui &strategies) {
   size_t parent_group, child_group, migrating_strategy;
 
   parent_group = _sizeProportionalSelection(groups);
-  while (groups[parent_group].group_size() < 2) parent_group = _uint_rand(_mt);
-  child_group = _uint_rand(_mt);
+  while (groups[parent_group].group_size() < 2) parent_group = _uint_rand(_get_rng());
+  child_group = _uint_rand(_get_rng());
   // Makes sure that parent group and child group are different
-  while (child_group == parent_group) child_group = _uint_rand(_mt);
+  while (child_group == parent_group) child_group = _uint_rand(_get_rng());
   // First we delete a random member from the parent group
-  migrating_strategy = groups[parent_group].deleteMember(_mt);
+  migrating_strategy = groups[parent_group].deleteMember(_get_rng());
   // Then add the member to the child group
   if (groups[child_group].addMember(migrating_strategy)) {
-    if (_real_rand(_mt) < q) _splitGroup(child_group, groups, strategies);
+    if (_real_rand(_get_rng()) < q) _splitGroup(child_group, groups, strategies);
     else { // in case we delete a random member, that strategy will diminish in the population
-      migrating_strategy = groups[child_group].deleteMember(_mt);
+      migrating_strategy = groups[child_group].deleteMember(_get_rng());
       --strategies(migrating_strategy);
     }
   }
@@ -1534,8 +1571,8 @@ template<typename S>
 void
 MLS<S>::_migrate(const size_t &parent_group, const size_t &migrating_strategy,
                  std::vector<S> &groups) {
-  size_t child_group = _uint_rand(_mt);
-  while (child_group == parent_group) child_group = _uint_rand(_mt);
+  size_t child_group = _uint_rand(_get_rng());
+  while (child_group == parent_group) child_group = _uint_rand(_get_rng());
   // First we delete the migrating strategy from the parent group
   groups[parent_group].deleteMember(migrating_strategy);
   // Then add the member to the randomly selected group
@@ -1549,9 +1586,9 @@ void MLS<S>::_mutate(std::vector<S> &groups, VectorXui &strategies) {
   size_t parent_group, mutating_strategy, new_strategy;
 
   parent_group = _sizeProportionalSelection(groups);
-  mutating_strategy = groups[parent_group].deleteMember(_mt);
-  new_strategy = _uint_rand_strategy(_mt);
-  while (mutating_strategy == new_strategy) new_strategy = _uint_rand_strategy(_mt);
+  mutating_strategy = groups[parent_group].deleteMember(_get_rng());
+  new_strategy = _uint_rand_strategy(_get_rng());
+  while (mutating_strategy == new_strategy) new_strategy = _uint_rand_strategy(_get_rng());
   groups[parent_group].addMember(new_strategy);
   --strategies(mutating_strategy);
   ++strategies(new_strategy);
@@ -1560,8 +1597,8 @@ void MLS<S>::_mutate(std::vector<S> &groups, VectorXui &strategies) {
 template<typename S>
 void MLS<S>::_splitGroup(size_t parent_group, std::vector<S> &groups, VectorXui &strategies) {
   // First choose a group to die
-  size_t child_group = _uint_rand(_mt);
-  while (child_group == parent_group) child_group = _uint_rand(_mt);
+  size_t child_group = _uint_rand(_get_rng());
+  while (child_group == parent_group) child_group = _uint_rand(_get_rng());
   // Now we split the group
   VectorXui &strategies_parent = groups[parent_group].strategies();
   VectorXui &strategies_child = groups[child_group].strategies();
@@ -1580,7 +1617,7 @@ void MLS<S>::_splitGroup(size_t parent_group, std::vector<S> &groups, VectorXui 
     for (size_t i = 0; i < _nb_strategies; ++i) {
       if (strategies_parent(i) > 0) {
         binomial.param(std::binomial_distribution<size_t>::param_type(strategies_parent(i), 0.5));
-        strategies_child(i) = binomial(_mt);
+        strategies_child(i) = binomial(_get_rng());
         sum += strategies_child(i);
       }
     }
@@ -1597,7 +1634,7 @@ size_t MLS<S>::_payoffProportionalSelection(std::vector<S> &groups) {
   double total_fitness = 0.0, tmp = 0.0;
   // Calculate total fitness
   for (auto &group: groups) total_fitness += group.totalPayoff();
-  total_fitness *= _real_rand(_mt);
+  total_fitness *= _real_rand(_get_rng());
   size_t parent_group = 0;
   for (parent_group = 0; parent_group < _nb_groups; ++parent_group) {
     tmp += groups[parent_group].group_fitness();
@@ -1613,7 +1650,7 @@ size_t MLS<S>::_payoffProportionalSelection(const double &alpha, std::vector<S> 
   double total_fitness = 0.0, tmp = 0.0;
   // Calculate total fitness
   for (auto &group: groups) total_fitness += group.totalPayoff(alpha, strategies);
-  total_fitness *= _real_rand(_mt);
+  total_fitness *= _real_rand(_get_rng());
   size_t parent_group = 0;
   for (parent_group = 0; parent_group < _nb_groups; ++parent_group) {
     tmp += groups[parent_group].group_fitness();
@@ -1628,7 +1665,7 @@ size_t MLS<S>::_sizeProportionalSelection(std::vector<S> &groups) {
   size_t pop_size = _current_pop_size(groups), tmp = 0;
   std::uniform_int_distribution<size_t> dist(0, pop_size - 1);
   // Calculate total fitness
-  size_t p = dist(_mt);
+  size_t p = dist(_get_rng());
   size_t parent_group = 0;
   for (parent_group = 0; parent_group < _nb_groups; ++parent_group) {
     tmp += groups[parent_group].group_size();
@@ -1665,7 +1702,7 @@ size_t MLS<S>::_current_pop_size(std::vector<S> &groups) {
 template<typename S>
 void MLS<S>::_setState(std::vector<S> &groups, std::vector<size_t> &container) {
   // Then we shuffle it randomly the contianer
-  std::shuffle(container.begin(), container.end(), _mt);
+  std::shuffle(container.begin(), container.end(), _get_rng());
 
   // Now we randomly initialize the groups with the population configuration from strategies
   for (size_t i = 0; i < _nb_groups; ++i) {
@@ -1705,29 +1742,29 @@ MLS<S>::_resolve_conflict(const double &kappa, const double &z, std::vector<S> &
 
   // Build conflict list
   for (size_t i = 0; i < _nb_groups; ++i) {
-    if (_real_rand(_mt) < kappa) conflicts.push_back(i);
+    if (_real_rand(_get_rng()) < kappa) conflicts.push_back(i);
     else no_conflicts.push_back(i);
   }
   // If no conflicts return
   if (conflicts.empty()) return;
   // Update if odd number of groups
   if (conflicts.size() % 2 != 0) {
-    if ((_real_rand(_mt) < 0.5) && (!no_conflicts.empty())) {
+    if ((_real_rand(_get_rng()) < 0.5) && (!no_conflicts.empty())) {
       std::uniform_int_distribution<size_t> dist(0, no_conflicts.size() - 1);
-      conflicts.push_back(no_conflicts[dist(_mt)]);
+      conflicts.push_back(no_conflicts[dist(_get_rng())]);
     } else if (conflicts.size() > 1) {
       std::uniform_int_distribution<size_t> dist(0, conflicts.size() - 1);
-      conflicts.erase(conflicts.begin() + dist(_mt));
+      conflicts.erase(conflicts.begin() + dist(_get_rng()));
     } else return;
   }
 
   // Resolve conflicts
   if (z > 0) {
     for (size_t i = 0; i < conflicts.size() - 1; i += 2) {
-      prob = EGTTools::SED::contest_success(z, groups[conflicts[i]].group_fitness(),
+      prob = egttools::FinitePopulations::contest_success(z, groups[conflicts[i]].group_fitness(),
                                             groups[conflicts[i + 1]].group_fitness());
 
-      if (_real_rand(_mt) < prob) {
+      if (_real_rand(_get_rng()) < prob) {
         strategies.array() -= groups[conflicts[i + 1]].strategies().array();
         strategies.array() += groups[conflicts[i]].strategies().array();
         // Second group is replaced by the first
@@ -1756,7 +1793,7 @@ MLS<S>::_resolve_conflict(const double &kappa, const double &z, std::vector<S> &
         groups[conflicts[i]] = groups[conflicts[i + 1]];
       } else {
         // A random group wins
-        if (_real_rand(_mt) < 0.5) {
+        if (_real_rand(_get_rng()) < 0.5) {
           strategies.array() -= groups[conflicts[i + 1]].strategies().array();
           strategies.array() += groups[conflicts[i]].strategies().array();
           // Second group is replaced by the first
@@ -1773,4 +1810,4 @@ MLS<S>::_resolve_conflict(const double &kappa, const double &z, std::vector<S> &
 }
 }
 
-#endif //DYRWIN_SED_MLS_HPP
+#endif //EGTTOOLS_FINITE_POPULATIONS_EVOLVERS_MLS_HPP

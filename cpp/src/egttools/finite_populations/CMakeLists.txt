@@ -34,4 +34,7 @@ target_sources(numerical_ PRIVATE
         PairwiseComparisonTransitionOperator.cpp
         evolvers/GeneralPopulationEvolver.cpp
         evolvers/NetworkEvolver.cpp
+        structure/Group.cpp
+        structure/GarciaGroup.cpp
+        evolvers/MLS.cpp
         )

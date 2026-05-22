@@ -2,10 +2,10 @@
 // Created by Elias Fernandez on 2019-04-25.
 //
 
-#include <Dyrwin/SED/structure/Group.hpp>
+#include <egttools/finite_populations/structure/Group.hpp>
 #include <iostream>
 
-using namespace EGTTools;
+using namespace egttools;
 
 /**
  * @brief adds a mutant of an invading strategy and reduces one member of the resident strategy.
@@ -13,7 +13,7 @@ using namespace EGTTools;
  * @param invader : index of the invading strategy
  * @param resident : index of the resident strategy
  */
-void SED::Group::createMutant(size_t invader, size_t resident) {
+void FinitePopulations::Group::createMutant(size_t invader, size_t resident) {
   ++_strategies(invader);
   --_strategies(resident);
 }
@@ -23,7 +23,7 @@ void SED::Group::createMutant(size_t invader, size_t resident) {
  *
  * @return group fitness
  */
-double SED::Group::totalPayoff() {
+double FinitePopulations::Group::totalPayoff() {
   if (_group_size == 1) return (1.0 - _w);
   _group_fitness = 0.0;
 
@@ -47,12 +47,12 @@ double SED::Group::totalPayoff() {
   return _group_fitness;
 }
 
-bool SED::Group::addMember(size_t new_strategy) {
+bool FinitePopulations::Group::addMember(size_t new_strategy) {
   ++_strategies(new_strategy);
   return ++_group_size <= _max_group_size;
 }
 
-bool SED::Group::deleteMember(const size_t &member_strategy) {
+bool FinitePopulations::Group::deleteMember(const size_t &member_strategy) {
   if (_strategies(member_strategy) <= 0) return false;
   --_strategies(member_strategy);
   --_group_size;
@@ -64,7 +64,7 @@ bool SED::Group::deleteMember(const size_t &member_strategy) {
  *
  * @return true if monomorphic, otherwise false
  */
-bool SED::Group::isPopulationMonomorphic() {
+bool FinitePopulations::Group::isPopulationMonomorphic() {
   for (size_t i = 0; i < _nb_strategies; ++i)
     if (_strategies(i) > 0 && _strategies(i) < _group_size)
       return false;
@@ -75,13 +75,13 @@ bool SED::Group::isPopulationMonomorphic() {
  * @brief makes the population in the group homonegous
  * @param strategy
  */
-void SED::Group::setPopulationHomogeneous(size_t strategy) {
+void FinitePopulations::Group::setPopulationHomogeneous(size_t strategy) {
   _group_size = _max_group_size;
   _strategies.setZero();
   _strategies(strategy) = _max_group_size;
 }
 
-SED::Group::Group(const SED::Group &grp)
+FinitePopulations::Group::Group(const FinitePopulations::Group &grp)
     : _nb_strategies(grp.nb_strategies()),
       _max_group_size(grp.max_group_size()),
       _w(grp.selection_intensity()),
@@ -94,7 +94,7 @@ SED::Group::Group(const SED::Group &grp)
   assert(_group_size <= _max_group_size);
 }
 
-SED::Group &SED::Group::operator=(const SED::Group &grp) {
+FinitePopulations::Group &FinitePopulations::Group::operator=(const FinitePopulations::Group &grp) {
   if (this == &grp) return *this;
   _nb_strategies = grp.nb_strategies();
   _max_group_size = grp.max_group_size();
@@ -105,6 +105,6 @@ SED::Group &SED::Group::operator=(const SED::Group &grp) {
   return *this;
 }
 
-bool SED::Group::isGroupOversize() {
+bool FinitePopulations::Group::isGroupOversize() {
   return _group_size > _max_group_size;
 }

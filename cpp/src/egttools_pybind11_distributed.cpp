@@ -42,6 +42,8 @@ void init_datastructures(py::module_ &);
 
 void init_random(py::module_ &);
 
+void init_evolvers(py::module_ &);
+
 PYBIND11_MODULE(numerical_, m) {
     // Version: EGTTOOLS_VERSION_STRING is already a string literal from the generated version.h
     m.attr("__version__") = EGTTOOLS_VERSION_STRING;
@@ -100,4 +102,5 @@ PYBIND11_MODULE(numerical_, m) {
     init_datastructures(mData);
     init_methods(m);
     init_random(mRandom);
+    init_evolvers(m);
 }

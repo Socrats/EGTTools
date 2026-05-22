@@ -2,15 +2,15 @@
 // Created by Elias Fernandez on 2019-04-25.
 //
 
-#ifndef DYRWIN_SED_STRUCTURE_GROUP_HPP
-#define DYRWIN_SED_STRUCTURE_GROUP_HPP
+#ifndef EGTTOOLS_FINITE_POPULATIONS_STRUCTURE_GROUP_HPP
+#define EGTTOOLS_FINITE_POPULATIONS_STRUCTURE_GROUP_HPP
 
 #include <cmath>
 #include <random>
 #include <algorithm>
-#include <Dyrwin/Types.h>
+#include <egttools/Types.h>
 
-namespace EGTTools::SED {
+namespace egttools::FinitePopulations {
 class Group {
  public:
   /**
@@ -206,4 +206,4 @@ size_t Group::payoffProportionalSelection(G &generator) {
 }
 }
 
-#endif //DYRWIN_SED_STRUCTURE_GROUP_HPP
+#endif //EGTTOOLS_FINITE_POPULATIONS_STRUCTURE_GROUP_HPP

@@ -2,9 +2,9 @@
 // Created by Elias Fernandez on 2019-04-25.
 //
 
-#include <Dyrwin/SED/structure/GarciaGroup.hpp>
+#include <egttools/finite_populations/structure/GarciaGroup.hpp>
 
-using namespace EGTTools;
+using namespace egttools;
 
 /**
  * @brief adds a mutant of an invading strategy and reduces one member of the resident strategy.
@@ -12,12 +12,12 @@ using namespace EGTTools;
  * @param invader : index of the invading strategy
  * @param resident : index of the resident strategy
  */
-void SED::GarciaGroup::createMutant(size_t invader, size_t resident) {
+void FinitePopulations::GarciaGroup::createMutant(size_t invader, size_t resident) {
   ++_strategies(invader);
   --_strategies(resident);
 }
 
-double SED::GarciaGroup::totalPayoff(const double &alpha, EGTTools::VectorXui &strategies) {
+double FinitePopulations::GarciaGroup::totalPayoff(const double &alpha, egttools::VectorXui &strategies) {
   double tmp1, tmp2;
   size_t out_pop_size = strategies.sum() - _group_size;
   assert (out_pop_size > 0);
@@ -51,12 +51,12 @@ double SED::GarciaGroup::totalPayoff(const double &alpha, EGTTools::VectorXui &s
   return _group_fitness;
 }
 
-bool SED::GarciaGroup::addMember(size_t new_strategy) {
+bool FinitePopulations::GarciaGroup::addMember(size_t new_strategy) {
   ++_strategies(new_strategy);
   return ++_group_size <= _max_group_size;
 }
 
-bool SED::GarciaGroup::deleteMember(const size_t &member_strategy) {
+bool FinitePopulations::GarciaGroup::deleteMember(const size_t &member_strategy) {
   if (_strategies(member_strategy) <= 0) return false;
   --_strategies(member_strategy);
   --_group_size;
@@ -68,7 +68,7 @@ bool SED::GarciaGroup::deleteMember(const size_t &member_strategy) {
  *
  * @return true if monomorphic, otherwise false
  */
-bool SED::GarciaGroup::isPopulationMonomorphic() {
+bool FinitePopulations::GarciaGroup::isPopulationMonomorphic() {
   for (size_t i = 0; i < _nb_strategies; ++i)
     if (_strategies(i) > 0 && _strategies(i) < _group_size)
       return false;
@@ -79,13 +79,13 @@ bool SED::GarciaGroup::isPopulationMonomorphic() {
  * @brief makes the population in the group homonegous
  * @param strategy
  */
-void SED::GarciaGroup::setPopulationHomogeneous(size_t strategy) {
+void FinitePopulations::GarciaGroup::setPopulationHomogeneous(size_t strategy) {
   _group_size = _max_group_size;
   _strategies.setZero();
   _strategies(strategy) = _max_group_size;
 }
 
-SED::GarciaGroup::GarciaGroup(const SED::GarciaGroup &grp)
+FinitePopulations::GarciaGroup::GarciaGroup(const FinitePopulations::GarciaGroup &grp)
     : _nb_strategies(grp.nb_strategies()),
       _max_group_size(grp.max_group_size()),
       _w(grp.selection_intensity()),
@@ -101,7 +101,7 @@ SED::GarciaGroup::GarciaGroup(const SED::GarciaGroup &grp)
   assert(_group_size <= _max_group_size);
 }
 
-SED::GarciaGroup &SED::GarciaGroup::operator=(const SED::GarciaGroup &grp) {
+FinitePopulations::GarciaGroup &FinitePopulations::GarciaGroup::operator=(const FinitePopulations::GarciaGroup &grp) {
   if (this == &grp) return *this;
 
   _nb_strategies = grp.nb_strategies();
@@ -114,6 +114,6 @@ SED::GarciaGroup &SED::GarciaGroup::operator=(const SED::GarciaGroup &grp) {
   return *this;
 }
 
-bool SED::GarciaGroup::isGroupOversize() {
+bool FinitePopulations::GarciaGroup::isGroupOversize() {
   return _group_size > _max_group_size;
 }
