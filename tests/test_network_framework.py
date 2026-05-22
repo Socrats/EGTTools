@@ -32,7 +32,6 @@ import pytest
 egt = pytest.importorskip("egttools")
 
 from egttools.numerical.structure import (
-    Network,
     NetworkMCEstimatorPC,
     NetworkMCEstimatorBD,
     NetworkMCEstimatorDB,
