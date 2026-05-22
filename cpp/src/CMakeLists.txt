@@ -38,6 +38,7 @@ pybind11_add_module(numerical_
         pybind11_files/methods.cpp
         pybind11_files/random.cpp
         pybind11_files/datastructures.cpp
+        pybind11_files/evolvers.cpp
 )
 
 # ------------------------------------------------------------------------------

@@ -8,6 +8,8 @@ else:
     from .numerical_ import PairwiseComparisonNumerical
     from .numerical_ import PairwiseComparisonTransitionOperator
     from .numerical_ import GeneralPopulationEvolver
+    from .numerical_ import MLSTraulsen
+    from .numerical_ import MLSGarcia
     from .indicators import StationaryIndicatorResult
     from . import linear_operator
     from .linear_operator import stationary_distribution_from_sparse
@@ -28,4 +30,5 @@ __all__ = [
     'FixationResult', 'AbsorptionTimeResult', 'AbsorptionProbabilityResult',
     'StrategyDistributionResult', 'StationaryDistributionResult', 'AGoSResult',
     'PairwiseComparisonEstimator', 'NetworkEstimator',
+    'MLSTraulsen', 'MLSGarcia',
 ]
