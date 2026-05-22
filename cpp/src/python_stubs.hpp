@@ -836,12 +836,12 @@ namespace stubs {
         }
 
         /* Trampoline (need one for each virtual function) */
-        egttools::FinitePopulations::structure::NodeDictionary &network() override {
+        const egttools::FinitePopulations::structure::AdjacencyList &network() override {
             /* Acquire GIL before calling Python code */
             py::gil_scoped_acquire acquire;
 
             PYBIND11_OVERRIDE_PURE(
-                egttools::FinitePopulations::structure::NodeDictionary &, /* Return type */
+                const egttools::FinitePopulations::structure::AdjacencyList &, /* Return type */
                 egttools::FinitePopulations::structure::AbstractNetworkStructure, /* Parent class */
                 network, /* Name of function in C++ (must match Python name) */
                 /* Argument(s) */

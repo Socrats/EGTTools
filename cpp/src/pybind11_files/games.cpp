@@ -1703,4 +1703,51 @@ float
             .def("min_nb_cooperators", &egttools::FinitePopulations::games::OneShotCRDNetworkGame::min_nb_cooperators)
             .def("__str__", &egttools::FinitePopulations::games::OneShotCRDNetworkGame::toString)
             .def("type", &egttools::FinitePopulations::games::OneShotCRDNetworkGame::type);
+
+    using LRGame = egttools::FinitePopulations::games::LocalRedistributionGame<
+            egttools::FinitePopulations::games::AbstractSpatialGame>;
+
+    py::class_<LRGame,
+               egttools::FinitePopulations::games::AbstractSpatialGame>(
+               mGames, "LocalRedistributionGame",
+               R"pbdoc(
+Payoff post-processing wrapper implementing local wealth redistribution.
+
+Wraps any ``AbstractSpatialGame`` and applies a redistribution step after fitness
+evaluation: a fraction ``redistribution_rate`` (alpha) of the excess payoff held by a
+richer focal node (relative to its neighbourhood average) is shared with poorer neighbours.
+
+This implements a mean-field approximation of the redistribution mechanism from
+Pinheiro & Santos (2018).
+
+Parameters
+----------
+base_game : egttools.games.AbstractSpatialGame
+    Underlying game.  The caller is responsible for keeping the game alive
+    as long as the wrapper is in use.
+redistribution_rate : float
+    Fraction alpha in [0, 1] of excess payoff redistributed to poorer neighbours.
+)pbdoc")
+        .def(
+            py::init([](egttools::FinitePopulations::games::AbstractSpatialGame &base_game,
+                        double alpha) {
+                return new LRGame(base_game, alpha);
+            }),
+            py::arg("base_game"),
+            py::arg("redistribution_rate"),
+            py::keep_alive<1, 2>()
+        )
+        .def(
+            "calculate_fitness",
+            &LRGame::calculate_fitness,
+            py::arg("strategy_index"),
+            py::arg("state"),
+            R"pbdoc(
+Compute redistributed fitness of the focal strategy given its neighbourhood state.
+)pbdoc"
+        )
+        .def("nb_strategies", &LRGame::nb_strategies)
+        .def("redistribution_rate", &LRGame::redistribution_rate)
+        .def("__str__", &LRGame::toString)
+        .def("type", &LRGame::type);
 }
