@@ -275,6 +275,53 @@ tuple[numpy.ndarray, numpy.ndarray]
     cls.def("topology", [](const T &self) -> const egttools::FinitePopulations::AdjacencyList & {
         return self.topology();
     }, py::return_value_policy::reference_internal);
+
+    // Step-by-step simulation API
+    cls.def(
+        "initialize",
+        [](T &self, const egttools::VectorXui &init_state) { self.initialize(init_state); },
+        py::arg("init_state"),
+        R"pbdoc(
+Initialise a manual-stepping session with the given strategy counts.
+
+Parameters
+----------
+init_state : numpy.ndarray
+    Strategy count vector of length nb_strategies; sum must equal population_size.
+)pbdoc"
+    );
+    cls.def(
+        "initialize",
+        [](T &self) { self.initialize(); },
+        R"pbdoc(
+Initialise a manual-stepping session with a uniformly random strategy assignment.
+)pbdoc"
+    );
+    cls.def(
+        "step",
+        [](T &self) { self.step(); },
+        R"pbdoc(
+Advance the session by one generation.
+
+For asynchronous rules: N individual update steps (one per node on average).
+For synchronous rules (e.g. LinearProportional): one full simultaneous sweep.
+Raises RuntimeError if initialize() has not been called first.
+)pbdoc"
+    );
+    cls.def(
+        "population_strategies",
+        [](const T &self) -> std::vector<int> { return self.population_strategies(); },
+        R"pbdoc(
+Return per-node strategy assignments as a list of integers (length = population_size).
+)pbdoc"
+    );
+    cls.def(
+        "mean_population_state",
+        [](const T &self) -> egttools::VectorXui { return self.mean_population_state(); },
+        R"pbdoc(
+Return strategy count vector (length = nb_strategies).
+)pbdoc"
+    );
 }
 
 // =========================================================================
@@ -423,52 +470,6 @@ topology_callback : callable, optional
         return self.initial_topology();
     }, py::return_value_policy::reference_internal);
 }
-
-namespace egttools {
-    std::unique_ptr<NetworkStructure> init_network_structure(
-        int nb_strategies,
-        double beta,
-        double mu,
-        const egttools::FinitePopulations::structure::NodeDictionary &network,
-        egttools::FinitePopulations::games::AbstractSpatialGame &game,
-        int cache_size
-    ) {
-        return std::make_unique<NetworkStructure>(nb_strategies, beta, mu, network, game, cache_size);
-    }
-
-    std::unique_ptr<NetworkStructureSync> init_network_structure_sync(
-        int nb_strategies,
-        double beta,
-        double mu,
-        const egttools::FinitePopulations::structure::NodeDictionary &network,
-        egttools::FinitePopulations::games::AbstractSpatialGame &game,
-        int cache_size
-    ) {
-        return std::make_unique<NetworkStructureSync>(nb_strategies, beta, mu, network, game, cache_size);
-    }
-
-    std::unique_ptr<NetworkGroupStructure> init_network_group_structure(
-        int nb_strategies,
-        double beta,
-        double mu,
-        const egttools::FinitePopulations::structure::NodeDictionary &network,
-        egttools::FinitePopulations::games::AbstractSpatialGame &game,
-        int cache_size
-    ) {
-        return std::make_unique<NetworkGroupStructure>(nb_strategies, beta, mu, network, game, cache_size);
-    }
-
-    std::unique_ptr<NetworkGroupStructureSync> init_network_group_structure_sync(
-        int nb_strategies,
-        double beta,
-        double mu,
-        const egttools::FinitePopulations::structure::NodeDictionary &network,
-        egttools::FinitePopulations::games::AbstractSpatialGame &game,
-        int cache_size
-    ) {
-        return std::make_unique<NetworkGroupStructureSync>(nb_strategies, beta, mu, network, game, cache_size);
-    }
-} // namespace egttools
 
 void init_structure(py::module_ &m) {
     py::options options;
@@ -647,456 +648,6 @@ list[list[int]]
 )pbdoc"
             );
 
-    py::class_<NetworkStructure,
-                egttools::FinitePopulations::structure::AbstractNetworkStructure>(
-                m,
-                "Network",
-                R"pbdoc(
-Asynchronous network population structure with pairwise imitation updates.
-)pbdoc"
-            )
-            .def(
-                py::init(&egttools::init_network_structure),
-                py::arg("nb_strategies"),
-                py::arg("beta"),
-                py::arg("mu"),
-                py::arg("network"),
-                py::arg("game"),
-                py::arg("cache_size") = 1000,
-                py::keep_alive<1, 6>(),
-                R"pbdoc(
-Construct a network structure.
-
-Parameters
-----------
-nb_strategies : int
-    Maximum number of strategies in the population.
-beta : float
-    Intensity of selection.
-mu : float
-    Mutation probability.
-network : dict[int, list[int]]
-    Network adjacency dictionary.
-game : egttools.games.AbstractSpatialGame
-    Spatial game played by the population.
-cache_size : int, optional
-    Cache size used for fitness evaluations.
-)pbdoc"
-            )
-
-            .def(
-                "initialize",
-                &NetworkStructure::initialize,
-                R"pbdoc(
-Initialize the population.
-
-Each individual adopts one of the available strategies with approximately equal
-probability.
-)pbdoc"
-            )
-
-            .def(
-                "initialize_state",
-                &NetworkStructure::initialize_state,
-                py::arg("state"),
-                R"pbdoc(
-Initialize the population at a specified aggregate state.
-
-Parameters
-----------
-state : numpy.ndarray
-    One-dimensional array containing the counts of each strategy in the population.
-)pbdoc"
-            )
-
-            .def(
-                "update_population",
-                &NetworkStructure::update_population,
-                R"pbdoc(
-Update the population by one generation.
-)pbdoc"
-            )
-
-            .def(
-                "update_node",
-                &NetworkStructure::update_node,
-                py::arg("node"),
-                R"pbdoc(
-Update the strategy of a given node.
-
-Parameters
-----------
-node : int
-    Index of the node to update.
-)pbdoc"
-            )
-
-            .def(
-                "calculate_average_gradient_of_selection",
-                &NetworkStructure::calculate_average_gradient_of_selection,
-                py::return_value_policy::reference_internal,
-                R"pbdoc(
-Calculate the average gradient of selection at the current network state.
-
-Returns
--------
-numpy.ndarray
-    Averaged gradient of selection for each strategy.
-)pbdoc"
-            )
-
-            .def(
-                "calculate_average_gradient_of_selection_and_update_population",
-                &NetworkStructure::calculate_average_gradient_of_selection_and_update_population,
-                py::return_value_policy::reference_internal,
-                R"pbdoc(
-Calculate the average gradient of selection and update the population.
-
-Returns
--------
-numpy.ndarray
-    Averaged gradient of selection for each strategy.
-)pbdoc"
-            )
-
-            .def(
-                "calculate_fitness",
-                &NetworkStructure::calculate_fitness,
-                py::arg("index"),
-                R"pbdoc(
-Calculate the fitness of the individual at a given node.
-
-Parameters
-----------
-index : int
-    Index of the node whose fitness is calculated.
-
-Returns
--------
-float
-    Fitness of the individual at the given node.
-)pbdoc"
-            )
-
-            .def("population_size", &NetworkStructure::population_size)
-            .def("nb_strategies", &NetworkStructure::nb_strategies)
-
-            .def(
-                "network",
-                &NetworkStructure::network,
-                py::return_value_policy::reference_internal,
-                R"pbdoc(
-Return the network adjacency structure.
-
-Returns
--------
-list[list[int]]
-    Adjacency list: entry i contains the neighbor node indices of node i.
-)pbdoc"
-            )
-
-            .def(
-                "population_strategies",
-                &NetworkStructure::population_strategies,
-                py::return_value_policy::reference_internal,
-                R"pbdoc(
-Return the strategy currently adopted by each node.
-
-Returns
--------
-list[int]
-    Strategy index for each node.
-)pbdoc"
-            )
-
-            .def(
-                "mean_population_state",
-                &NetworkStructure::mean_population_state,
-                py::return_value_policy::reference_internal,
-                R"pbdoc(
-Return the aggregate population state.
-
-Returns
--------
-numpy.ndarray
-    Total counts of each strategy in the population.
-)pbdoc"
-            )
-
-            .def(
-                "game",
-                &NetworkStructure::game,
-                py::return_value_policy::reference_internal,
-                R"pbdoc(
-Return the game played by the population.
-
-Returns
--------
-egttools.games.AbstractSpatialGame
-    Game used to evaluate fitness.
-)pbdoc"
-            );
-
-    py::class_<NetworkGroupStructure,
-                egttools::FinitePopulations::structure::AbstractNetworkStructure>(
-                m,
-                "NetworkGroup",
-                R"pbdoc(
-Asynchronous network-group population structure with group interactions.
-)pbdoc"
-            )
-            .def(
-                py::init(&egttools::init_network_group_structure),
-                py::arg("nb_strategies"),
-                py::arg("beta"),
-                py::arg("mu"),
-                py::arg("network"),
-                py::arg("game"),
-                py::arg("cache_size") = 1000,
-                py::keep_alive<1, 6>(),
-                R"pbdoc(
-Construct a network-group structure.
-
-Parameters
-----------
-nb_strategies : int
-    Maximum number of strategies in the population.
-beta : float
-    Intensity of selection.
-mu : float
-    Mutation probability.
-network : dict[int, list[int]]
-    Network adjacency dictionary.
-game : egttools.games.AbstractSpatialGame
-    Spatial game played by the population.
-cache_size : int, optional
-    Cache size used for fitness evaluations.
-)pbdoc"
-            )
-
-            .def("initialize", &NetworkGroupStructure::initialize)
-            .def("initialize_state", &NetworkGroupStructure::initialize_state, py::arg("state"))
-            .def("update_population", &NetworkGroupStructure::update_population)
-            .def("update_node", &NetworkGroupStructure::update_node, py::arg("node"))
-
-            .def(
-                "calculate_average_gradient_of_selection",
-                &NetworkGroupStructure::calculate_average_gradient_of_selection,
-                py::return_value_policy::reference_internal
-            )
-
-            .def(
-                "calculate_average_gradient_of_selection_and_update_population",
-                &NetworkGroupStructure::calculate_average_gradient_of_selection_and_update_population,
-                py::return_value_policy::reference_internal
-            )
-
-            .def(
-                "calculate_fitness",
-                &NetworkGroupStructure::calculate_fitness,
-                py::arg("index"),
-                R"pbdoc(
-Calculate the fitness of the individual at a given node.
-
-The fitness is the accumulated payoff over the focal interaction and the
-interactions centered on neighboring nodes.
-
-Parameters
-----------
-index : int
-    Index of the node whose fitness is calculated.
-
-Returns
--------
-float
-    Fitness of the individual at the given node.
-)pbdoc"
-            )
-
-            .def(
-                "calculate_game_payoff",
-                &NetworkGroupStructure::calculate_game_payoff,
-                py::arg("index"),
-                R"pbdoc(
-Calculate the game payoff of the individual at a given node.
-
-Parameters
-----------
-index : int
-    Index of the node whose payoff is calculated.
-
-Returns
--------
-float
-    Payoff of the individual at the given node.
-)pbdoc"
-            )
-
-            .def("population_size", &NetworkGroupStructure::population_size)
-            .def("nb_strategies", &NetworkGroupStructure::nb_strategies)
-
-            .def("network", &NetworkGroupStructure::network,
-                 py::return_value_policy::reference_internal)
-            .def("population_strategies", &NetworkGroupStructure::population_strategies,
-                 py::return_value_policy::reference_internal)
-            .def("mean_population_state", &NetworkGroupStructure::mean_population_state,
-                 py::return_value_policy::reference_internal)
-            .def("game", &NetworkGroupStructure::game,
-                 py::return_value_policy::reference_internal);
-
-    py::class_<NetworkStructureSync,
-                egttools::FinitePopulations::structure::AbstractNetworkStructure>(
-                m,
-                "NetworkSync",
-                R"pbdoc(
-Synchronous network population structure with pairwise imitation updates.
-)pbdoc"
-            )
-            .def(
-                py::init(&egttools::init_network_structure_sync),
-                py::arg("nb_strategies"),
-                py::arg("beta"),
-                py::arg("mu"),
-                py::arg("network"),
-                py::arg("game"),
-                py::arg("cache_size") = 1000,
-                py::keep_alive<1, 6>()
-            )
-
-            .def("initialize", &NetworkStructureSync::initialize)
-            .def("initialize_state", &NetworkStructureSync::initialize_state, py::arg("state"))
-            .def("update_population", &NetworkStructureSync::update_population)
-            .def("update_node", &NetworkStructureSync::update_node, py::arg("node"))
-
-            .def(
-                "calculate_average_gradient_of_selection",
-                &NetworkStructureSync::calculate_average_gradient_of_selection,
-                py::return_value_policy::reference_internal
-            )
-
-            .def(
-                "calculate_average_gradient_of_selection_and_update_population",
-                &NetworkStructureSync::calculate_average_gradient_of_selection_and_update_population,
-                py::return_value_policy::reference_internal
-            )
-
-            .def(
-                "calculate_fitness",
-                &NetworkStructureSync::calculate_fitness,
-                py::arg("index"),
-                R"pbdoc(
-Calculate the fitness of the individual at a given node.
-
-Parameters
-----------
-index : int
-    Index of the node whose fitness is calculated.
-
-Returns
--------
-float
-    Fitness of the individual at the given node.
-)pbdoc"
-            )
-
-            .def("population_size", &NetworkStructureSync::population_size)
-            .def("nb_strategies", &NetworkStructureSync::nb_strategies)
-            .def("network", &NetworkStructureSync::network,
-                 py::return_value_policy::reference_internal)
-            .def("population_strategies", &NetworkStructureSync::population_strategies,
-                 py::return_value_policy::reference_internal)
-            .def("mean_population_state", &NetworkStructureSync::mean_population_state,
-                 py::return_value_policy::reference_internal)
-            .def("game", &NetworkStructureSync::game,
-                 py::return_value_policy::reference_internal);
-
-    py::class_<NetworkGroupStructureSync,
-                egttools::FinitePopulations::structure::AbstractNetworkStructure>(
-                m,
-                "NetworkGroupSync",
-                R"pbdoc(
-Synchronous network-group population structure with group interactions.
-)pbdoc"
-            )
-            .def(
-                py::init(&egttools::init_network_group_structure_sync),
-                py::arg("nb_strategies"),
-                py::arg("beta"),
-                py::arg("mu"),
-                py::arg("network"),
-                py::arg("game"),
-                py::arg("cache_size") = 1000,
-                py::keep_alive<1, 6>()
-            )
-
-            .def("initialize", &NetworkGroupStructureSync::initialize)
-            .def("initialize_state", &NetworkGroupStructureSync::initialize_state, py::arg("state"))
-            .def("update_population", &NetworkGroupStructureSync::update_population)
-            .def("update_node", &NetworkGroupStructureSync::update_node, py::arg("node"))
-
-            .def(
-                "calculate_average_gradient_of_selection",
-                &NetworkGroupStructureSync::calculate_average_gradient_of_selection,
-                py::return_value_policy::reference_internal
-            )
-
-            .def(
-                "calculate_average_gradient_of_selection_and_update_population",
-                &NetworkGroupStructureSync::calculate_average_gradient_of_selection_and_update_population,
-                py::return_value_policy::reference_internal
-            )
-
-            .def(
-                "calculate_fitness",
-                &NetworkGroupStructureSync::calculate_fitness,
-                py::arg("index"),
-                R"pbdoc(
-Calculate the fitness of the individual at a given node.
-
-The fitness is the accumulated payoff over the focal interaction and the
-interactions centered on neighboring nodes.
-
-Parameters
-----------
-index : int
-    Index of the node whose fitness is calculated.
-
-Returns
--------
-float
-    Fitness of the individual at the given node.
-)pbdoc"
-            )
-
-            .def(
-                "calculate_game_payoff",
-                &NetworkGroupStructureSync::calculate_game_payoff,
-                py::arg("index"),
-                R"pbdoc(
-Calculate the game payoff of the individual at a given node.
-
-Parameters
-----------
-index : int
-    Index of the node whose payoff is calculated.
-
-Returns
--------
-float
-    Payoff of the individual at the given node.
-)pbdoc"
-            )
-
-            .def("population_size", &NetworkGroupStructureSync::population_size)
-            .def("nb_strategies", &NetworkGroupStructureSync::nb_strategies)
-            .def("network", &NetworkGroupStructureSync::network,
-                 py::return_value_policy::reference_internal)
-            .def("population_strategies", &NetworkGroupStructureSync::population_strategies,
-                 py::return_value_policy::reference_internal)
-            .def("mean_population_state", &NetworkGroupStructureSync::mean_population_state,
-                 py::return_value_policy::reference_internal)
-            .def("game", &NetworkGroupStructureSync::game,
-                 py::return_value_policy::reference_internal);
 
     options.enable_function_signatures();
 
@@ -1152,6 +703,22 @@ selection intensity beta(t) and mutation rate mu(t).
     }
 
     {
+        auto cls = py::class_<NetworkMCEstimatorLP>(
+            m, "NetworkMCEstimatorLP",
+            R"pbdoc(
+Monte Carlo estimator for evolutionary games on networks using the Linear-Proportional synchronous update rule.
+
+Implements the update rule from Santos, Pacheco & Lenaerts (2006) PNAS.
+Each generation all nodes simultaneously accumulate payoffs against all neighbours,
+then simultaneously copy a neighbour's strategy with probability proportional to
+the payoff advantage, normalised by max(degree) * D_>, where D_> = max(T,1) - min(S,0).
+
+Pass ``beta = max(T, 1.0) - min(S, 0.0)`` as the selection intensity.
+)pbdoc");
+        bind_network_mc_estimator_methods(cls);
+    }
+
+    {
         auto cls = py::class_<NetworkCoEvoPCRandom>(
             m, "NetworkCoEvolutionaryPC",
             R"pbdoc(
@@ -1175,4 +742,147 @@ and preferentially reconnects to a same-strategy non-neighbour. Models social po
 )pbdoc");
         bind_network_coevo_methods(cls);
     }
+
+    // -------------------------------------------------------------------------
+    // run_network_sweep — OpenMP parallel parameter sweep
+    // -------------------------------------------------------------------------
+    m.def(
+        "run_network_sweep",
+        [](std::vector<py::object>                               &py_games,
+           py::array_t<double, py::array::c_style>               py_betas,
+           std::vector<egttools::FinitePopulations::structure::NodeDictionary> &py_topos,
+           int nb_strategies, double mu,
+           int64_t nb_runs, int64_t avg_gens, int64_t transitory,
+           py::array_t<uint64_t, py::array::c_style>             py_init,
+           const std::string                                     &update_rule,
+           int cache_size) -> py::array_t<double> {
+
+            using namespace egttools::FinitePopulations;
+            using GameT = games::AbstractSpatialGame;
+
+            // --- Validate game types and collect raw pointers (GIL held) ---
+            std::vector<GameT *> cpp_games;
+            cpp_games.reserve(py_games.size());
+            for (auto &obj : py_games) {
+                auto *g = obj.cast<GameT *>();
+                if (py::get_override(g, "calculate_fitness")) {
+                    throw py::type_error(
+                        "run_network_sweep requires C++ game classes "
+                        "(e.g. NormalFormNetworkGame). Python subclasses of "
+                        "AbstractSpatialGame are not supported in the parallel path "
+                        "because calculate_fitness would be called without the GIL.");
+                }
+                cpp_games.push_back(g);
+            }
+
+            // --- Convert NodeDictionary -> AdjacencyList (GIL held) ---
+            std::vector<structure::AdjacencyList> topos;
+            topos.reserve(py_topos.size());
+            for (auto &nd : py_topos)
+                topos.push_back(structure::dict_to_adjacency_list(nd));
+
+            // --- Copy numeric inputs ---
+            std::vector<double> betas(py_betas.data(),
+                                      py_betas.data() + py_betas.size());
+
+            egttools::VectorXui init_state(py_init.size());
+            for (py::ssize_t i = 0; i < py_init.size(); ++i)
+                init_state(static_cast<Eigen::Index>(i)) =
+                    static_cast<unsigned int>(py_init.data()[i]);
+
+            egttools::Matrix2D result;
+            {
+                py::gil_scoped_release release;
+                if (update_rule == "LP" || update_rule == "LinearProportional") {
+                    result = run_network_sweep<update_rules::LinearProportional>(
+                        cpp_games, betas, topos, nb_strategies, mu,
+                        nb_runs, avg_gens, transitory, init_state, cache_size);
+                } else if (update_rule == "PC" || update_rule == "PairwiseComparison") {
+                    result = run_network_sweep<update_rules::PairwiseComparison>(
+                        cpp_games, betas, topos, nb_strategies, mu,
+                        nb_runs, avg_gens, transitory, init_state, cache_size);
+                } else if (update_rule == "BD" || update_rule == "BirthDeath") {
+                    result = run_network_sweep<update_rules::BirthDeath>(
+                        cpp_games, betas, topos, nb_strategies, mu,
+                        nb_runs, avg_gens, transitory, init_state, cache_size);
+                } else if (update_rule == "DB" || update_rule == "DeathBirth") {
+                    result = run_network_sweep<update_rules::DeathBirth>(
+                        cpp_games, betas, topos, nb_strategies, mu,
+                        nb_runs, avg_gens, transitory, init_state, cache_size);
+                } else {
+                    throw std::invalid_argument(
+                        "Unknown update_rule '" + update_rule + "'. "
+                        "Choose from: 'LP'/'LinearProportional', 'PC'/'PairwiseComparison', "
+                        "'BD'/'BirthDeath', 'DB'/'DeathBirth'.");
+                }
+            }
+
+            // Return as a 2-D numpy array (row-major copy of Eigen column-major data)
+            const Eigen::Index rows = result.rows();
+            const Eigen::Index cols = result.cols();
+            py::array_t<double> out({static_cast<py::ssize_t>(rows),
+                                     static_cast<py::ssize_t>(cols)});
+            auto buf = out.mutable_unchecked<2>();
+            for (Eigen::Index r = 0; r < rows; ++r)
+                for (Eigen::Index c = 0; c < cols; ++c)
+                    buf(r, c) = result(r, c);
+            return out;
+        },
+        py::arg("games"),
+        py::arg("betas"),
+        py::arg("topologies"),
+        py::arg("nb_strategies"),
+        py::arg("mu"),
+        py::arg("nb_runs"),
+        py::arg("avg_gens"),
+        py::arg("transitory"),
+        py::arg("init_state"),
+        py::arg("update_rule") = "PC",
+        py::arg("cache_size")  = 100000,
+        R"pbdoc(
+Run a parallel parameter sweep over multiple games and topologies using OpenMP.
+
+Each (game, topology) combination is simulated independently with ``nb_runs`` runs.
+Topologies are shared read-only across threads — the adjacency list is never copied —
+so even a complete graph at large N uses only one copy of memory.
+
+Parameters
+----------
+games : list[AbstractSpatialGame]
+    One C++ game object per parameter combination (e.g. one per (T, S) grid point).
+    **Must be C++ classes** such as ``NormalFormNetworkGame`` or
+    ``OneShotCRDNetworkGame``.  Python subclasses of ``AbstractSpatialGame`` raise
+    ``TypeError`` because ``calculate_fitness`` would be called without the GIL.
+betas : np.ndarray, shape (n_games,)
+    Selection-intensity / payoff-normalisation constant, one per game.
+    For the LP rule pass ``max(T, 1.0) - min(S, 0.0)`` per (T, S) point.
+topologies : list[dict[int, list[int]]]
+    Network adjacency dicts (NetworkX format).  Shared read-only across threads.
+nb_strategies : int
+    Number of strategies.
+mu : float
+    Mutation probability per time step.
+nb_runs : int
+    Independent simulation runs per (game, topology) combination.
+avg_gens : int
+    Generations to record after the transitory.
+transitory : int
+    Burn-in generations (discarded before recording).
+init_state : np.ndarray[uint64], shape (nb_strategies,)
+    Initial strategy counts; must sum to population_size.
+update_rule : str, optional
+    ``"LP"`` / ``"LinearProportional"`` (default for Santos 2006),
+    ``"PC"`` / ``"PairwiseComparison"``, ``"BD"`` / ``"BirthDeath"``,
+    ``"DB"`` / ``"DeathBirth"``.
+cache_size : int, optional
+    Per-thread LRU fitness cache capacity (default 100 000).
+
+Returns
+-------
+np.ndarray, shape (n_games, n_topologies)
+    Mean cooperation fraction (strategy-0 count / N) for each (game, topology)
+    pair, averaged over ``nb_runs`` runs and ``avg_gens`` recording generations.
+    Average over the topology axis to get a single cooperation frequency per
+    parameter combination.
+)pbdoc");
 }

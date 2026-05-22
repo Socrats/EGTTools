@@ -57,6 +57,8 @@ namespace egttools::FinitePopulations::update_rules {
      */
     struct BirthDeath {
 
+        static constexpr bool synchronous = false;
+
         [[nodiscard]] static std::string name() { return "BirthDeath"; }
 
         template<class GameType, class CacheType>

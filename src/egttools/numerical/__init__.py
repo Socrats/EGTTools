@@ -8,7 +8,6 @@ else:
     from .numerical_ import PairwiseComparisonNumerical
     from .numerical_ import PairwiseComparisonTransitionOperator
     from .numerical_ import GeneralPopulationEvolver
-    from .numerical_ import NetworkEvolver
     from .indicators import StationaryIndicatorResult
     from . import linear_operator
     from .linear_operator import stationary_distribution_from_sparse
@@ -24,7 +23,7 @@ else:
 
 __all__ = [
     'numerical', 'PairwiseComparisonNumerical', 'PairwiseComparisonTransitionOperator',
-    'GeneralPopulationEvolver', 'NetworkEvolver', 'StationaryIndicatorResult',
+    'GeneralPopulationEvolver', 'StationaryIndicatorResult',
     'linear_operator', 'stationary_distribution_from_sparse',
     'FixationResult', 'AbsorptionTimeResult', 'AbsorptionProbabilityResult',
     'StrategyDistributionResult', 'StationaryDistributionResult', 'AGoSResult',

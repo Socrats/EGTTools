@@ -52,6 +52,8 @@ namespace egttools::FinitePopulations::update_rules {
      */
     class TimeDependentPC {
     public:
+        static constexpr bool synchronous = false;
+
         using Schedule = std::vector<std::pair<int64_t, double>>;
 
         explicit TimeDependentPC(Schedule beta_schedule = {},
