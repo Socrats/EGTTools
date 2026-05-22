@@ -52,6 +52,8 @@ namespace egttools::FinitePopulations::update_rules {
      */
     struct PairwiseComparison {
 
+        static constexpr bool synchronous = false;
+
         [[nodiscard]] static std::string name() { return "PairwiseComparison"; }
 
         // ---------- fitness helper (shared by step and compute_exact_gradient) ----------

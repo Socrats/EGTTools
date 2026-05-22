@@ -268,12 +268,45 @@ namespace egttools::FinitePopulations {
         void set_beta(double beta) { beta_ = beta; }
         void set_mu(double mu) { mu_ = mu; }
 
+        // ------------------------------------------------------------------
+        // Step-by-step simulation (interactive / manual use)
+        // ------------------------------------------------------------------
+
+        /** Initialise a simulation session with the given strategy counts. */
+        void initialize(const VectorXui &init_state);
+
+        /** Initialise a simulation session with a uniformly random strategy assignment. */
+        void initialize();
+
+        /**
+         * Advance the session by one generation.
+         * For async rules: N individual update steps.
+         * For sync rules (e.g. LinearProportional): one full simultaneous sweep.
+         * Throws std::runtime_error if initialize() has not been called first.
+         */
+        void step();
+
+        /** Per-node strategy assignments (length = population_size). */
+        [[nodiscard]] const std::vector<int> &population_strategies() const;
+
+        /** Strategy count vector (length = nb_strategies). */
+        [[nodiscard]] const VectorXui &mean_population_state() const;
+
     private:
         AbstractSpatialGame &game_;
         AdjacencyList network_;
         int population_size_, nb_strategies_, cache_size_;
         double beta_, mu_;
         UpdateRule update_rule_;
+
+        // --- step-by-step session state (used by initialize / step) ---
+        std::vector<int> session_population_;
+        VectorXui        session_mean_state_;
+        std::mt19937_64  session_gen_;
+        CacheType        session_cache_;
+        VectorXui        session_nbuf_;
+        int64_t          session_step_count_{0};
+        bool             session_initialized_{false};
 
         // ------------------------------------------------------------------
         // Internal helpers
@@ -286,10 +319,10 @@ namespace egttools::FinitePopulations {
         void initialize_invasion_(std::vector<int> &population, VectorXui &mean_state,
                                   int invader, int resident, std::mt19937_64 &gen) const;
 
-        // Advance t by one step through the update rule.
-        void do_step_(std::vector<int> &population, VectorXui &mean_state,
-                      CacheType &cache, VectorXui &nbuf,
-                      std::mt19937_64 &gen, int64_t t = 0);
+        // Advance by one generation: N async steps or one full sync sweep.
+        void do_generation_(std::vector<int> &population, VectorXui &mean_state,
+                            CacheType &cache, VectorXui &nbuf,
+                            std::mt19937_64 &gen, UpdateRule &rule, int64_t gen_idx);
 
         // Check whether the population is monomorphic.
         static bool is_monomorphic_(const VectorXui &mean_state);
@@ -314,7 +347,8 @@ namespace egttools::FinitePopulations {
           cache_size_(cache_size),
           beta_(beta),
           mu_(mu),
-          update_rule_(std::move(update_rule)) {}
+          update_rule_(std::move(update_rule)),
+          session_cache_(cache_size) {}
 
     template<class UR, class CT>
     NetworkMCEstimator<UR, CT>::NetworkMCEstimator(AbstractSpatialGame &game,
@@ -381,12 +415,7 @@ namespace egttools::FinitePopulations {
             population[seed_node] = invader;
 
             for (int64_t t = 0; t < nb_generations; ++t) {
-                // N asynchronous steps per generation
-                for (int step = 0; step < population_size_; ++step) {
-                    local_rule.step(population, mean_state, network_, game_, cache,
-                                    nbuf, nb_strategies_, beta_, mu_, gen,
-                                    static_cast<int64_t>(t) * population_size_ + step);
-                }
+                do_generation_(population, mean_state, cache, nbuf, gen, local_rule, t);
                 if (static_cast<int>(mean_state(invader)) == population_size_) { ++fixations; break; }
                 if (mean_state(invader) == 0u) { ++extinctions; break; }
             }
@@ -443,11 +472,7 @@ namespace egttools::FinitePopulations {
                 Vector run_sum = Vector::Zero(nb_strategies_);
 
                 for (int64_t g = 0; g < nb_generations; ++g) {
-                    for (int step = 0; step < population_size_; ++step) {
-                        local_rule.step(population, mean_state, network_, game_, cache,
-                                        nbuf, nb_strategies_, beta_, mu_, gen,
-                                        g * population_size_ + step);
-                    }
+                    do_generation_(population, mean_state, cache, nbuf, gen, local_rule, g);
                     if (g >= transitory) {
                         for (int s = 0; s < nb_strategies_; ++s)
                             run_sum(s) += static_cast<double>(mean_state(s)) / population_size_;
@@ -525,11 +550,7 @@ namespace egttools::FinitePopulations {
                 Vector run_sum = Vector::Zero(nb_ind);
 
                 for (int64_t g = 0; g < nb_generations; ++g) {
-                    for (int step = 0; step < population_size_; ++step) {
-                        local_rule.step(population, mean_state, network_, game_, cache,
-                                        nbuf, nb_strategies_, beta_, mu_, gen,
-                                        g * population_size_ + step);
-                    }
+                    do_generation_(population, mean_state, cache, nbuf, gen, local_rule, g);
                     if (g >= transitory) {
                         for (int k = 0; k < nb_ind; ++k) {
                             Vector vals = indicators[k](population, network_);
@@ -582,11 +603,7 @@ namespace egttools::FinitePopulations {
 
         int64_t row = 0;
         for (int64_t g = 0; g < nb_generations; ++g) {
-            for (int step = 0; step < population_size_; ++step) {
-                update_rule_.step(population, mean_state, network_, game_, cache,
-                                  nbuf, nb_strategies_, beta_, mu_, gen,
-                                  g * population_size_ + step);
-            }
+            do_generation_(population, mean_state, cache, nbuf, gen, update_rule_, g);
             if (g >= transitory) {
                 trajectory.row(row++) = mean_state;
             }
@@ -619,11 +636,7 @@ namespace egttools::FinitePopulations {
 
         int64_t post_transitory_gen = 0;
         for (int64_t g = 0; g < nb_generations; ++g) {
-            for (int step = 0; step < population_size_; ++step) {
-                update_rule_.step(population, mean_state, network_, game_, cache,
-                                  nbuf, nb_strategies_, beta_, mu_, gen,
-                                  g * population_size_ + step);
-            }
+            do_generation_(population, mean_state, cache, nbuf, gen, update_rule_, g);
             if (g >= transitory) {
                 if (post_transitory_gen % snapshot_interval == 0) {
                     callback(post_transitory_gen, population);
@@ -657,6 +670,82 @@ namespace egttools::FinitePopulations {
         for (Eigen::Index i = 0; i < mean_state.size(); ++i)
             if (mean_state(i) > 0) ++non_zero;
         return non_zero <= 1;
+    }
+
+    // ------------------------------------------------------------------
+    // do_generation_: sync/async dispatch via if constexpr
+    // ------------------------------------------------------------------
+
+    template<class UR, class CT>
+    void NetworkMCEstimator<UR, CT>::do_generation_(
+        std::vector<int> &population, VectorXui &mean_state,
+        CT &cache, VectorXui &nbuf,
+        std::mt19937_64 &gen, UR &rule, int64_t gen_idx) {
+        if constexpr (UR::synchronous) {
+            rule.step(population, mean_state, network_, game_, cache, nbuf,
+                      nb_strategies_, beta_, mu_, gen, gen_idx);
+        } else {
+            for (int s = 0; s < population_size_; ++s) {
+                rule.step(population, mean_state, network_, game_, cache, nbuf,
+                          nb_strategies_, beta_, mu_, gen,
+                          gen_idx * population_size_ + s);
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Step-by-step session
+    // ------------------------------------------------------------------
+
+    template<class UR, class CT>
+    void NetworkMCEstimator<UR, CT>::initialize(const VectorXui &init_state) {
+        session_population_.resize(population_size_);
+        session_mean_state_.resize(nb_strategies_);
+        session_gen_.seed(egttools::Random::SeedGenerator::getInstance().getSeed());
+        session_cache_ = CT(cache_size_);
+        session_nbuf_  = VectorXui::Zero(nb_strategies_);
+        initialize_state_(session_population_, session_mean_state_, init_state, session_gen_);
+        session_step_count_    = 0;
+        session_initialized_   = true;
+    }
+
+    template<class UR, class CT>
+    void NetworkMCEstimator<UR, CT>::initialize() {
+        session_population_.resize(population_size_);
+        session_mean_state_ = VectorXui::Zero(nb_strategies_);
+        session_gen_.seed(egttools::Random::SeedGenerator::getInstance().getSeed());
+        session_cache_ = CT(cache_size_);
+        session_nbuf_  = VectorXui::Zero(nb_strategies_);
+        std::uniform_int_distribution<int> s_dist(0, nb_strategies_ - 1);
+        for (int i = 0; i < population_size_; ++i) {
+            session_population_[i] = s_dist(session_gen_);
+            session_mean_state_(session_population_[i]) += 1;
+        }
+        session_step_count_  = 0;
+        session_initialized_ = true;
+    }
+
+    template<class UR, class CT>
+    void NetworkMCEstimator<UR, CT>::step() {
+        if (!session_initialized_)
+            throw std::runtime_error("NetworkMCEstimator: call initialize() before step()");
+        do_generation_(session_population_, session_mean_state_,
+                       session_cache_, session_nbuf_, session_gen_,
+                       update_rule_, session_step_count_++);
+    }
+
+    template<class UR, class CT>
+    const std::vector<int> &NetworkMCEstimator<UR, CT>::population_strategies() const {
+        if (!session_initialized_)
+            throw std::runtime_error("NetworkMCEstimator: call initialize() before accessing population_strategies()");
+        return session_population_;
+    }
+
+    template<class UR, class CT>
+    const VectorXui &NetworkMCEstimator<UR, CT>::mean_population_state() const {
+        if (!session_initialized_)
+            throw std::runtime_error("NetworkMCEstimator: call initialize() before accessing mean_population_state()");
+        return session_mean_state_;
     }
 
     // ------------------------------------------------------------------
@@ -737,11 +826,7 @@ namespace egttools::FinitePopulations {
                 }
 
                 for (int64_t g = 0; g < nb_generations; ++g) {
-                    for (int step = 0; step < N; ++step) {
-                        local_rule.step(population, mean_state, network_, game_,
-                                        dyn_cache, nbuf, K, beta_, mu_, gen,
-                                        g * N + step);
-                    }
+                    do_generation_(population, mean_state, dyn_cache, nbuf, gen, local_rule, g);
                     if (g >= transitory) {
                         const int j = static_cast<int>(mean_state(0));
                         if (j > 0 && j < N) {
@@ -837,11 +922,7 @@ namespace egttools::FinitePopulations {
                 }
 
                 for (int g = 0; g < T; ++g) {
-                    for (int step = 0; step < N; ++step) {
-                        local_rule.step(population, mean_state, network_, game_,
-                                        dyn_cache, nbuf, K, beta_, mu_, gen,
-                                        static_cast<int64_t>(g) * N + step);
-                    }
+                    do_generation_(population, mean_state, dyn_cache, nbuf, gen, local_rule, static_cast<int64_t>(g));
                     const int j = static_cast<int>(mean_state(0));
                     if (j > 0 && j < N) {
                         Vector grad = local_rule.compute_exact_gradient(
