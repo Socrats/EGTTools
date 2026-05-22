@@ -1,9 +1,20 @@
 """The structure submodule contains population structures"""
 
 try:
-    from ..numerical_.structure import (AbstractStructure, Network, NetworkGroup,
-                                        NetworkSync, NetworkGroupSync)
+    from ..numerical_.structure import (
+        AbstractStructure,
+        Network, NetworkGroup, NetworkSync, NetworkGroupSync,
+        NetworkMCEstimatorPC, NetworkMCEstimatorBD,
+        NetworkMCEstimatorDB, NetworkMCEstimatorTDPC,
+        NetworkCoEvolutionaryPC, NetworkCoEvolutionaryPCHomophilic,
+    )
 except Exception:
     raise Exception("numerical package not initialized")
 
-__all__ = ['AbstractStructure', 'Network', 'NetworkGroup', 'NetworkSync', 'NetworkGroupSync']
+__all__ = [
+    'AbstractStructure',
+    'Network', 'NetworkGroup', 'NetworkSync', 'NetworkGroupSync',
+    'NetworkMCEstimatorPC', 'NetworkMCEstimatorBD',
+    'NetworkMCEstimatorDB', 'NetworkMCEstimatorTDPC',
+    'NetworkCoEvolutionaryPC', 'NetworkCoEvolutionaryPCHomophilic',
+]
