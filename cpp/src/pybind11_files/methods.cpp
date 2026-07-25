@@ -2030,6 +2030,76 @@ numpy.ndarray
                                        "Payoff matrix used for selection dynamics.")
                 .def_property_readonly("nb_states", &PairwiseComparison::nb_states,
                                        "Number of discrete states in the population.")
+                .def_property_readonly("mutation_matrix", &PairwiseComparison::mutation_matrix,
+                                       "Current (nb_strategies, nb_strategies) mutation matrix. Row i is "
+                                       "the (unnormalized) distribution over target strategies when "
+                                       "mutating away from strategy i; the diagonal is always 0. Defaults "
+                                       "to uniform (all-ones off-diagonal) until set_mutation_weights is "
+                                       "called.")
+                .def(
+                    "set_mutation_matrix",
+                    &PairwiseComparison::set_mutation_matrix,
+                    py::arg("mutation_matrix"),
+                    R"pbdoc(
+Set a full source-strategy-dependent mutation bias.
+
+Row ``i`` of ``mutation_matrix`` is the (unnormalized) distribution over
+target strategies when an individual currently playing strategy ``i``
+mutates. The diagonal is always ignored (mutation always changes strategy).
+Each row must have at least one strictly positive entry among the other
+strategies.
+
+Parameters
+----------
+mutation_matrix : numpy.ndarray
+    Shape ``(nb_strategies, nb_strategies)``, non-negative entries.
+
+See Also
+--------
+set_mutation_weights : convenience method accepting a single vector (bias
+    shared by all source strategies) or a full matrix.
+)pbdoc"
+                )
+                .def(
+                    "set_mutation_weights",
+                    [](PairwiseComparison &self, py::object weights) -> void {
+                        py::array arr = py::array::ensure(weights);
+                        if (!arr)
+                            throw py::type_error("mutation_weights must be array-like.");
+                        if (arr.ndim() == 1) {
+                            self.set_mutation_weights(arr.cast<Vector>());
+                        } else if (arr.ndim() == 2) {
+                            self.set_mutation_matrix(arr.cast<Matrix2D>());
+                        } else {
+                            throw py::value_error(
+                                "mutation_weights must be a 1D vector (length nb_strategies) or a "
+                                "2D matrix (nb_strategies, nb_strategies), got an array with " +
+                                std::to_string(arr.ndim()) + " dimensions.");
+                        }
+                    },
+                    py::arg("weights"),
+                    R"pbdoc(
+Set the mutation bias. Accepts either shape:
+
+- 1D, length ``nb_strategies``: a target-strategy bias shared by all source
+  strategies (broadcast into every row of the mutation matrix; equivalent to
+  ``set_mutation_matrix`` with every row equal to this vector and the
+  diagonal zeroed).
+- 2D, shape ``(nb_strategies, nb_strategies)``: row ``i`` is the bias over
+  target strategies when mutating away from strategy ``i`` (equivalent to
+  calling ``set_mutation_matrix`` directly).
+
+Diagonal entries are always ignored (mutation always changes strategy).
+Each row must have at least one positive entry among the other strategies,
+otherwise mutating away from that strategy would have no valid target and
+this raises. A solver's mutation is uniform by default; call this to bias it.
+
+Parameters
+----------
+weights : array_like
+    1D (length ``nb_strategies``) or 2D (``nb_strategies x nb_strategies``).
+)pbdoc"
+                )
                 .def_property("pop_size",
                               &PairwiseComparison::population_size,
                               &PairwiseComparison::set_population_size,
@@ -2154,7 +2224,8 @@ numpy.ndarray
                        const std::string &indicator_type,
                        py::object group_size_obj,
                        double tolerance, size_t check_every,
-                       double confidence, bool verbose, int n_bootstrap) -> py::object {
+                       double confidence, bool verbose, int n_bootstrap,
+                       int64_t precompute_limit) -> py::object {
 
                         // --- normalise to list ----------------------------------------
                         py::list indicator_list;
@@ -2174,18 +2245,48 @@ numpy.ndarray
                         const int64_t nb_strategies = static_cast<int64_t>(self.nb_strategies());
                         const int64_t pop_size      = static_cast<int64_t>(self.population_size());
 
+                        // Would the dense (nb_states x nb_indicators) matrix exceed the
+                        // memory/time budget?  Computed in double to avoid overflow when
+                        // nb_states itself is astronomically large.
+                        const bool matrix_too_large =
+                            static_cast<double>(nb_states) * static_cast<double>(nb_indicator_count) >
+                            static_cast<double>(precompute_limit);
+
                         Matrix2D indicator_matrix;
+                        bool use_direct = false;
 
                         if (indicator_type == "state") {
-                            indicator_matrix.resize(nb_states, nb_indicator_count);
-                            for (int64_t s = 0; s < nb_states; ++s) {
-                                py::object state = egt.attr("sample_simplex")(s, pop_size, nb_strategies);
-                                for (int64_t k = 0; k < nb_indicator_count; ++k) {
-                                    indicator_matrix(s, k) =
-                                        indicator_list[k](state).template cast<double>();
+                            if (matrix_too_large) {
+                                // nb_states is too large to enumerate/store a dense
+                                // indicator matrix.  Fall back to evaluating the
+                                // indicators directly on the live simulation state at
+                                // each recorded step (see estimate_stationary_indicators_direct):
+                                // O(nb_indicators) memory instead of O(nb_states).
+                                use_direct = true;
+                            } else {
+                                indicator_matrix.resize(nb_states, nb_indicator_count);
+                                for (int64_t s = 0; s < nb_states; ++s) {
+                                    py::object state = egt.attr("sample_simplex")(s, pop_size, nb_strategies);
+                                    for (int64_t k = 0; k < nb_indicator_count; ++k) {
+                                        indicator_matrix(s, k) =
+                                            indicator_list[k](state).template cast<double>();
+                                    }
                                 }
                             }
                         } else if (indicator_type == "group") {
+                            if (matrix_too_large) {
+                                throw std::invalid_argument(
+                                    "Population state space is too large (nb_states=" +
+                                    std::to_string(nb_states) + ", nb_indicators=" +
+                                    std::to_string(nb_indicator_count) +
+                                    ") to build the group-level indicator matrix (nb_states * "
+                                    "nb_indicators must be <= precompute_limit=" +
+                                    std::to_string(precompute_limit) + "). Group-level indicators "
+                                    "do not yet support state spaces this large; use "
+                                    "indicator_type='state' (which falls back automatically to a "
+                                    "memory-bounded direct estimator) or reduce the population "
+                                    "size / number of strategies.");
+                            }
                             if (group_size_obj.is_none())
                                 throw std::invalid_argument(
                                     "group_size must be specified when indicator_type='group'.");
@@ -2250,9 +2351,31 @@ numpy.ndarray
                                 1);
                         }
 
-                        // --- run C++ simulation (GIL released) -----------------------
+                        // --- run C++ simulation -----------------------------------------
                         Matrix2D per_run;
-                        {
+                        if (use_direct) {
+                            // Wrap callables: C++ passes std::vector<size_t> which pybind11
+                            // converts to a Python list; the wrapper turns it into np.ndarray
+                            // so users can write ``lambda s: s[0] / Z`` regardless of which
+                            // path is used. The GIL is intentionally NOT released here:
+                            // estimate_stationary_indicators_direct is single-threaded and
+                            // calls back into these Python callables on the same thread.
+                            auto np = py::module_::import("numpy");
+                            std::vector<std::function<double(const std::vector<size_t> &)>> direct_indicators;
+                            direct_indicators.reserve(static_cast<size_t>(nb_indicator_count));
+                            for (int64_t k = 0; k < nb_indicator_count; ++k) {
+                                py::object f = indicator_list[k];
+                                direct_indicators.emplace_back(
+                                    [f, np](const std::vector<size_t> &state) -> double {
+                                        py::object arr = np.attr("asarray")(
+                                            state, py::arg("dtype") = np.attr("intp"));
+                                        return f(arr).template cast<double>();
+                                    });
+                            }
+                            per_run = self.estimate_stationary_indicators_direct(
+                                nb_runs, nb_generations, transitory, beta, mu,
+                                direct_indicators, tolerance, check_every);
+                        } else {
                             py::gil_scoped_release release;
                             per_run = self.estimate_stationary_indicators(
                                 nb_runs, nb_generations, transitory, beta, mu,
@@ -2297,12 +2420,24 @@ numpy.ndarray
                     py::arg("confidence")     = 0.95,
                     py::arg("verbose")        = false,
                     py::arg("n_bootstrap")    = 9999,
+                    py::arg("precompute_limit") = 20'000'000,
                     R"pbdoc(
 Estimate expected indicator values under the stationary distribution.
 
-Runs stochastic simulations and accumulates precomputed indicator values at
-each post-transitory step.  The time-average converges to the true expectation
-by the ergodic theorem without storing the full stationary distribution.
+Runs stochastic simulations and accumulates indicator values at each
+post-transitory step.  The time-average converges to the true expectation by
+the ergodic theorem without storing the full stationary distribution.
+
+For ``indicator_type='state'``, when ``nb_states * len(indicators)`` exceeds
+``precompute_limit`` this method automatically falls back to evaluating the
+indicators directly on the live simulation state at each recorded step,
+instead of precomputing a dense ``(nb_states, nb_indicators)`` matrix
+upfront.  This keeps memory use at ``O(nb_indicators)`` regardless of the
+size of the state space, at the cost of a Python callback per indicator per
+recorded generation (slower per-step than the matrix lookup, but the only
+way to stay within memory when ``nb_states`` is too large to enumerate).
+This fallback is not yet available for ``indicator_type='group'``, which
+raises a clear error instead of attempting the same allocation.
 
 Parameters
 ----------
@@ -2345,6 +2480,11 @@ verbose : bool, default False
     If ``True``, attach per-run values to the result.
 n_bootstrap : int, default 9999
     Number of bootstrap resamples.
+precompute_limit : int, default 20_000_000
+    Maximum number of elements (``nb_states * len(indicators)``) allowed in
+    the precomputed indicator matrix.  Above this, ``indicator_type='state'``
+    switches automatically to a direct, memory-bounded estimator (see above);
+    ``indicator_type='group'`` raises instead.
 
 Returns
 -------

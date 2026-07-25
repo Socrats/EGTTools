@@ -558,6 +558,100 @@ class TestPrecomputedMethod:
 
 
 # ---------------------------------------------------------------------------
+# Direct-path fallback tests (memory-bounded MC for huge state spaces)
+# ---------------------------------------------------------------------------
+
+class TestDirectPathFallback:
+    """Tests for the ``precompute_limit`` auto-fallback to the direct,
+    no-precomputed-matrix estimator (``estimate_stationary_indicators_direct``
+    under the hood).  ``hd_solver`` has ``nb_states = 21`` (Z=20, 2 strategies),
+    so ``precompute_limit=1`` reliably forces the fallback in every test here.
+    """
+
+    def test_direct_path_close_to_analytical(self, hd_solver, hd_analytical):
+        sd_sparse = hd_analytical["sd_sparse"]
+        Z = hd_analytical["Z"]
+        beta = hd_analytical["beta"]
+        mu = hd_analytical["mu"]
+
+        result = hd_solver.estimate_stationary_indicators(
+            [lambda s: float(s[0]) / Z, lambda s: float(s[1]) / Z],
+            nb_runs=500,
+            nb_generations=3_000,
+            transitory=300,
+            beta=beta,
+            mu=mu,
+            precompute_limit=1,
+        )
+
+        analytical_hawk = egt.calculate_expected_state_indicator(
+            Z, 2, sd_sparse, lambda s: float(s[0]) / Z
+        )
+        analytical_dove = egt.calculate_expected_state_indicator(
+            Z, 2, sd_sparse, lambda s: float(s[1]) / Z
+        )
+        assert abs(result.mean[0] - analytical_hawk) < 0.03
+        assert abs(result.mean[1] - analytical_dove) < 0.03
+
+    def test_direct_path_agrees_with_precomputed_path(self, hd_solver, hd_analytical):
+        """Forcing the direct path vs. the default precomputed path on the
+        same solver/params must agree within 3%."""
+        Z = hd_analytical["Z"]
+        beta = hd_analytical["beta"]
+        mu = hd_analytical["mu"]
+        kwargs = dict(
+            nb_runs=300,
+            nb_generations=2_000,
+            transitory=200,
+            beta=beta,
+            mu=mu,
+        )
+
+        precomputed = hd_solver.estimate_stationary_indicators(
+            lambda s: float(s[0]) / Z, **kwargs
+        )
+        direct = hd_solver.estimate_stationary_indicators(
+            lambda s: float(s[0]) / Z, precompute_limit=1, **kwargs
+        )
+        assert abs(direct.mean[0] - precomputed.mean[0]) < 0.03
+
+    def test_direct_path_return_type_and_shape(self, hd_solver, hd_analytical):
+        Z = hd_analytical["Z"]
+        result = hd_solver.estimate_stationary_indicators(
+            [lambda s: float(s[0]) / Z, lambda s: float(s[1]) / Z],
+            nb_runs=10,
+            nb_generations=500,
+            transitory=50,
+            beta=hd_analytical["beta"],
+            mu=hd_analytical["mu"],
+            precompute_limit=1,
+            verbose=True,
+        )
+        assert isinstance(result, StationaryIndicatorResult)
+        assert result.mean.shape == (2,)
+        assert result.per_run_values.shape == (10, 2)
+
+    def test_group_type_raises_when_too_large(self, npg_solver, npg_analytical):
+        """Group-level indicators don't have a memory-bounded fallback yet;
+        a too-small precompute_limit must raise a clear error rather than
+        attempting the same O(nb_states) allocation."""
+        beta = npg_analytical["beta"]
+        mu = npg_analytical["mu"]
+        with pytest.raises(Exception):
+            npg_solver.estimate_stationary_indicators(
+                lambda g: float(g[0]) / 3,
+                nb_runs=5,
+                nb_generations=100,
+                transitory=10,
+                beta=beta,
+                mu=mu,
+                indicator_type="group",
+                group_size=3,
+                precompute_limit=1,
+            )
+
+
+# ---------------------------------------------------------------------------
 # Tolerance / early stopping tests
 # ---------------------------------------------------------------------------
 

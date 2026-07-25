@@ -97,14 +97,25 @@ class PairwiseComparisonEstimator:
         LRU cache size for fitness computations (default 100 000).
     strategy_names : list[str], optional
         Human-readable strategy names used in result reprs.
+    mutation_weights : array_like, optional
+        Biases the mutation kernel away from uniform. Either a 1D array of
+        length ``nb_strategies`` (target-strategy bias shared by all source
+        strategies) or a 2D array of shape ``(nb_strategies, nb_strategies)``
+        (row ``i`` is the bias over target strategies when mutating away
+        from strategy ``i``). See
+        ``PairwiseComparisonNumerical.set_mutation_weights`` for details.
+        Defaults to uniform mutation when omitted.
     """
 
     def __init__(self, game, pop_size: int,
                  cache_size: int = 100_000,
-                 strategy_names: Optional[Sequence[str]] = None):
+                 strategy_names: Optional[Sequence[str]] = None,
+                 mutation_weights=None):
         from egttools.numerical import PairwiseComparisonNumerical
         self._est = PairwiseComparisonNumerical(pop_size, game, cache_size)
         self._strategy_names = list(strategy_names) if strategy_names else None
+        if mutation_weights is not None:
+            self._est.set_mutation_weights(mutation_weights)
 
     def __getattr__(self, name):
         return getattr(self._est, name)
