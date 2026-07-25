@@ -1349,7 +1349,7 @@ MLS<S>::gradientOfSelection(size_t invader, size_t resident, const Eigen::Ref<co
   // This loop can be done in parallel
 #if defined(_OPENMP) && !defined(_MSC_VER)
 #pragma omp parallel for default(none) shared(gradient, invader, resident, runs, w, q, init_state, \
-_pop_size, _nb_strategies, _group_size, _payoff_matrix, _nb_groups, _pop_size)
+_pop_size, _nb_strategies, _group_size, _payoff_matrix, _nb_groups)
 #endif
   for (size_t k = 0; k <= init_state(resident); ++k) { // Loops over all population configurations
     VectorXui strategies = VectorXui::Zero(_nb_strategies);
