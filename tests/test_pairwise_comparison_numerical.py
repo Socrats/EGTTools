@@ -212,6 +212,157 @@ class TestRunWithMutation:
 
 
 # ---------------------------------------------------------------------------
+# Biased mutation tests
+# ---------------------------------------------------------------------------
+
+class TestBiasedMutation:
+    """Tests for set_mutation_matrix / set_mutation_weights / mutation_matrix.
+
+    Statistical tests isolate a single mutation event by starting from a
+    homogeneous population and running exactly 2 generations with mu close
+    to 1: the homogeneous branch waits `k` generations (k=0 with near-certain
+    probability when mu~1) then applies exactly one mutation, and with
+    nb_generations=2 the post-mutation state lands exactly on the last row
+    with no further generations processed — so the observed target strategy
+    is a clean draw from the configured mutation kernel, uncontaminated by
+    subsequent selection/imitation dynamics. Payoffs are neutral (all equal)
+    so the homogeneous branch never invokes the fitness/fermi comparison.
+    """
+
+    @staticmethod
+    def _neutral_solver(pop_size=20, nb_strategies=3):
+        payoffs = np.ones((nb_strategies, nb_strategies))
+        game = Matrix2PlayerGameHolder(nb_strategies, payoffs)
+        return PairwiseComparisonNumerical(pop_size, game, 1000)
+
+    @staticmethod
+    def _single_mutation_targets(solver, init_state, n_samples=1000):
+        """Runs n_samples independent 2-generation trajectories from a
+        homogeneous init_state and returns a Counter of which strategy the
+        single mutation event landed on."""
+        from collections import Counter
+        counts = Counter()
+        init_signed = init_state.astype(np.int64)
+        for _ in range(n_samples):
+            final = solver.run_with_mutation(2, 1.0, 0.999, init_state)[-1].astype(np.int64)
+            counts[int(np.argmax(final - init_signed))] += 1
+        return counts
+
+    # -- defaults / getters -------------------------------------------------
+
+    def test_default_mutation_matrix_is_uniform(self, pc3):
+        expected = np.ones((3, 3))
+        np.fill_diagonal(expected, 0.0)
+        np.testing.assert_array_equal(pc3.mutation_matrix, expected)
+
+    # -- setters --------------------------------------------------------
+
+    def test_set_mutation_weights_broadcasts_to_matrix(self):
+        solver = self._neutral_solver()
+        solver.set_mutation_weights([1, 1, 5])
+        expected = np.array([
+            [0, 1, 5],
+            [1, 0, 5],
+            [1, 1, 0],
+        ], dtype=float)
+        np.testing.assert_array_equal(solver.mutation_matrix, expected)
+
+    def test_set_mutation_matrix_forces_zero_diagonal(self):
+        """Diagonal entries are always ignored/zeroed, even if the caller
+        passes non-zero values on the diagonal."""
+        solver = self._neutral_solver()
+        given = np.array([
+            [9, 1, 1],
+            [1, 9, 1],
+            [1, 1, 9],
+        ], dtype=float)
+        solver.set_mutation_matrix(given)
+        expected = np.array([
+            [0, 1, 1],
+            [1, 0, 1],
+            [1, 1, 0],
+        ], dtype=float)
+        np.testing.assert_array_equal(solver.mutation_matrix, expected)
+
+    # -- validation -------------------------------------------------------
+
+    def test_set_mutation_weights_wrong_length_raises(self):
+        solver = self._neutral_solver()
+        with pytest.raises(Exception):
+            solver.set_mutation_weights([1, 1])
+
+    def test_set_mutation_matrix_wrong_shape_raises(self):
+        solver = self._neutral_solver()
+        with pytest.raises(Exception):
+            solver.set_mutation_matrix(np.ones((2, 3)))
+
+    def test_negative_weights_raise(self):
+        solver = self._neutral_solver()
+        with pytest.raises(Exception):
+            solver.set_mutation_weights([-1, 1, 1])
+
+    def test_row_with_no_positive_target_raises(self):
+        """Row 0 has no positive entry among strategies 1, 2 -> mutating
+        away from strategy 0 would have no valid target."""
+        solver = self._neutral_solver()
+        with pytest.raises(Exception):
+            solver.set_mutation_matrix(np.array([
+                [0, 0, 0],
+                [1, 1, 0],
+                [1, 0, 1],
+            ], dtype=float))
+
+    # -- statistical bias checks --------------------------------------------
+
+    def test_vector_bias_skews_mutation_target(self):
+        """With weights [1, 1, 100], mutating away from strategy 0 should
+        land on strategy 2 in ~100/101 ~= 99% of events."""
+        solver = self._neutral_solver()
+        solver.set_mutation_weights([1, 1, 100])
+        init_state = np.array([20, 0, 0], dtype=np.uint64)
+        counts = self._single_mutation_targets(solver, init_state, n_samples=1000)
+        assert counts[2] / 1000 > 0.9
+        assert counts[1] / 1000 < 0.1
+
+    def test_matrix_bias_is_source_dependent(self):
+        """An asymmetric matrix must bias the mutation target differently
+        depending on which strategy is currently mutating, proving the bias
+        is not just a target-only vector under the hood."""
+        solver = self._neutral_solver()
+        solver.set_mutation_matrix(np.array([
+            [0, 100, 1],
+            [1, 0, 100],
+            [100, 1, 0],
+        ], dtype=float))
+
+        counts_from_0 = self._single_mutation_targets(
+            solver, np.array([20, 0, 0], dtype=np.uint64), n_samples=1000)
+        counts_from_1 = self._single_mutation_targets(
+            solver, np.array([0, 20, 0], dtype=np.uint64), n_samples=1000)
+
+        # From strategy 0: should favor strategy 1, not strategy 2.
+        assert counts_from_0[1] / 1000 > 0.9
+        # From strategy 1: should favor strategy 2, not strategy 0.
+        assert counts_from_1[2] / 1000 > 0.9
+
+    def test_bias_applies_to_estimate_strategy_distribution(self):
+        """The bias must also be visible through estimate_strategy_distribution,
+        which reaches mutate_() via _update_step/_update_multi_step rather
+        than the run() trajectory path -- confirms the duplicated inline
+        mutation call sites were fixed consistently."""
+        solver_uniform = self._neutral_solver()
+        solver_biased = self._neutral_solver()
+        solver_biased.set_mutation_weights([1, 1, 100])
+
+        kwargs = dict(nb_runs=50, nb_generations=2000, transitory=200, beta=1.0, mu=0.3)
+        dist_uniform = solver_uniform.estimate_strategy_distribution(**kwargs)
+        dist_biased = solver_biased.estimate_strategy_distribution(**kwargs)
+
+        # Strategy 2's share must be markedly higher under the biased kernel.
+        assert dist_biased[2] > dist_uniform[2] + 0.1
+
+
+# ---------------------------------------------------------------------------
 # estimate_fixation_probability() tests
 # ---------------------------------------------------------------------------
 

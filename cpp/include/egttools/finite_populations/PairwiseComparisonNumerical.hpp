@@ -27,6 +27,8 @@
 #include <egttools/finite_populations/Utils.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <egttools/utils/ThreadSafeLRUCache.hpp>
+#include <functional>
+#include <numeric>
 #include <random>
 #include <stdexcept>
 #include <vector>
@@ -341,6 +343,44 @@ namespace egttools::FinitePopulations {
             const Eigen::Ref<const Matrix2D> &indicator_values,
             double tolerance = 0.0, size_t check_every = 0);
 
+        /**
+         * @brief Estimates the expected value of one or more state-level indicator
+         *        functions under the stationary distribution, evaluating each
+         *        indicator directly on the live population state at every
+         *        post-transitory step instead of looking it up in a precomputed
+         *        (nb_states × nb_indicators) matrix.
+         *
+         * Use this instead of estimate_stationary_indicators when nb_states is
+         * too large to enumerate or to store a dense indicator matrix for (the
+         * same situation estimate_strategy_distribution addresses for the raw
+         * strategy distribution). Memory use is O(nb_indicators + nb_strategies)
+         * per run, independent of the size of the state space.
+         *
+         * Because @p indicators typically wraps Python callables (via
+         * std::function), this method does not use OpenMP: worker threads
+         * spawned without holding the GIL cannot safely call back into Python.
+         * See the commented-out OpenMP pragma in
+         * egttools::utils::calculate_expected_indicator
+         * (CalculateExpectedIndicators.h) for the same constraint applied to
+         * the exact-computation group-level indicators.
+         *
+         * @param nb_runs            maximum number of independent simulation runs.
+         * @param nb_generations     number of generations per run.
+         * @param transitory         transitory period excluded from accumulation.
+         * @param beta               intensity of selection.
+         * @param mu                 mutation probability (must be > 0).
+         * @param indicators         list of callables, each double(const std::vector<size_t>&),
+         *                           receiving the population state (counts, sums to pop_size).
+         * @param tolerance          L1 convergence threshold; 0.0 disables early stopping.
+         * @param check_every        batch size for convergence checks; 0 → auto.
+         * @return Matrix2D of shape (nb_runs_used × nb_indicators).
+         */
+        Matrix2D estimate_stationary_indicators_direct(
+            size_t nb_runs, size_t nb_generations, size_t transitory,
+            double beta, double mu,
+            const std::vector<std::function<double(const std::vector<size_t> &)>> &indicators,
+            double tolerance = 0.0, size_t check_every = 0);
+
         // Getters
         [[nodiscard]] size_t nb_strategies() const;
 
@@ -354,6 +394,17 @@ namespace egttools::FinitePopulations {
 
         [[nodiscard]] int64_t nb_states() const;
 
+        /**
+         * @brief Current mutation matrix.
+         *
+         * Row i holds the (unnormalized) weights over target strategies when
+         * an individual currently playing strategy i mutates; the diagonal
+         * is always 0 (mutation always changes strategy). Defaults to
+         * uniform (all-ones off-diagonal) until set_mutation_matrix or
+         * set_mutation_weights is called.
+         */
+        [[nodiscard]] const Matrix2D &mutation_matrix() const;
+
         // Setters
         void set_population_size(size_t pop_size);
 
@@ -361,15 +412,48 @@ namespace egttools::FinitePopulations {
 
         void change_game(egttools::FinitePopulations::AbstractGame &game);
 
+        /**
+         * @brief Sets a full (nb_strategies x nb_strategies) mutation matrix.
+         *
+         * Row i is the (unnormalized) distribution over target strategies
+         * when mutating away from strategy i. The diagonal is ignored (always
+         * treated as 0): mutation always changes strategy. Each row must have
+         * at least one strictly positive entry among the other strategies,
+         * otherwise mutating away from that strategy would have no valid
+         * target.
+         *
+         * @param mutation_matrix (nb_strategies x nb_strategies) matrix of non-negative weights.
+         */
+        void set_mutation_matrix(const Eigen::Ref<const Matrix2D> &mutation_matrix);
+
+        /**
+         * @brief Sets a target-strategy mutation bias shared by all source strategies.
+         *
+         * Convenience wrapper around set_mutation_matrix: broadcasts
+         * @p mutation_weights (length nb_strategies) into every row of the
+         * mutation matrix, i.e. the bias towards each target strategy does
+         * not depend on which strategy is currently mutating. Equivalent to
+         * calling set_mutation_matrix with mutation_weights repeated in every row.
+         *
+         * @param mutation_weights length-nb_strategies vector of non-negative weights.
+         */
+        void set_mutation_weights(const Eigen::Ref<const Vector> &mutation_weights);
+
     private:
         size_t _nb_strategies, _pop_size, _cache_size, _nb_states;
         egttools::FinitePopulations::AbstractGame *_game;
 
         // Random distributions
         std::uniform_int_distribution<size_t> _pop_sampler;
-        std::uniform_int_distribution<size_t> _strategy_sampler;
         std::uniform_int_distribution<size_t> _state_sampler;
         std::uniform_real_distribution<double> _real_rand;
+
+        // Mutation kernel: row i of _mutation_matrix is the (unnormalized)
+        // distribution over target strategies when mutating away from
+        // strategy i (diagonal always 0). _mutation_samplers[i] is the
+        // corresponding ready-to-sample discrete_distribution.
+        Matrix2D _mutation_matrix;
+        std::vector<std::discrete_distribution<size_t>> _mutation_samplers;
 
         // Random generators
         std::mt19937_64 _mt{egttools::Random::SeedGenerator::getInstance().getSeed()};
@@ -459,10 +543,12 @@ namespace egttools::FinitePopulations {
         // Initialize random uniform distribution
         _nb_strategies = game.nb_strategies();
         _pop_sampler = std::uniform_int_distribution<size_t>(0, _pop_size - 1);
-        _strategy_sampler = std::uniform_int_distribution<size_t>(0, _nb_strategies - 1);
         _real_rand = std::uniform_real_distribution<double>(0.0, 1.0);
         _nb_states = egttools::starsBars(_pop_size, _nb_strategies);
         _state_sampler = std::uniform_int_distribution<size_t>(0, _nb_states - 1);
+        // Uniform mutation by default: every off-diagonal entry equal.
+        set_mutation_matrix(Matrix2D::Ones(static_cast<int64_t>(_nb_strategies),
+                                           static_cast<int64_t>(_nb_strategies)));
     }
 
     template<class Cache>
@@ -619,9 +705,7 @@ namespace egttools::FinitePopulations {
                 }
 
                 // mutate
-                birth = _strategy_sampler(_mt);
-                // If population still homogeneous we wait for another mutation
-                while (birth == idx_homo) birth = _strategy_sampler(_mt);
+                mutate_(_mt, birth, idx_homo);
                 strategies(birth) += 1;
                 strategies(idx_homo) -= 1;
                 homogeneous = false;
@@ -681,9 +765,7 @@ namespace egttools::FinitePopulations {
                 k = geometric(_mt);
 
                 // mutate
-                birth = _strategy_sampler(_mt);
-                // If population still homogeneous we wait for another mutation
-                while (birth == idx_homo) birth = _strategy_sampler(_mt);
+                mutate_(_mt, birth, idx_homo);
                 strategies(birth) += 1;
                 strategies(idx_homo) -= 1;
                 homogeneous = false;
@@ -721,9 +803,7 @@ namespace egttools::FinitePopulations {
                 // Update state after mutation
                 if (j <= total_counting_generations) {
                     // mutate
-                    birth = _strategy_sampler(_mt);
-                    // If population still homogeneous we wait for another mutation
-                    while (birth == idx_homo) birth = _strategy_sampler(_mt);
+                    mutate_(_mt, birth, idx_homo);
                     strategies(birth) += 1;
                     strategies(idx_homo) -= 1;
                     homogeneous = false;
@@ -1578,11 +1658,146 @@ namespace egttools::FinitePopulations {
     }
 
     template<class Cache>
+    auto PairwiseComparisonNumerical<Cache>::estimate_stationary_indicators_direct(
+        const size_t nb_runs, const size_t nb_generations,
+        const size_t transitory, const double beta, double mu,
+        const std::vector<std::function<double(const std::vector<size_t> &)>> &indicators,
+        const double tolerance,
+        const size_t check_every) -> Matrix2D {
+        if (mu <= 0) {
+            throw std::invalid_argument(
+                "mu must be > 0. If you want to run a simulation without mutation, "
+                "please use the method signature without the mu parameter");
+        }
+        if (beta < 0) throw std::invalid_argument("beta must be >= 0!");
+        if (transitory > nb_generations)
+            throw std::invalid_argument("transitory must be < nb_generations!");
+        if (nb_runs < 1) throw std::invalid_argument("nb_runs must be >= 1!");
+        if (nb_generations < 1) throw std::invalid_argument("nb_generations must be >= 1!");
+
+        const auto nb_indicators = static_cast<int64_t>(indicators.size());
+
+        // Pre-allocate output: one row per run (up to nb_runs).
+        // Rows beyond runs_done are unused when early stopping triggers.
+        Matrix2D per_run_results = Matrix2D::Zero(static_cast<int64_t>(nb_runs), nb_indicators);
+
+        // Evaluates every indicator on the current state and returns a row vector.
+        // Kept as a lambda (rather than precomputed anything) so the cost is
+        // O(nb_indicators) per call, independent of the size of the state space.
+        auto evaluate_indicators = [&](const VectorXui &strategies) {
+            std::vector<size_t> state_vec(strategies.data(), strategies.data() + strategies.size());
+            Eigen::RowVectorXd values(nb_indicators);
+            for (int64_t k = 0; k < nb_indicators; ++k)
+                values(k) = indicators[static_cast<size_t>(k)](state_vec);
+            return values;
+        };
+
+        // Lambda that fills rows [start, start+batch_size) of per_run_results.
+        // No OpenMP here: `indicators` typically wraps Python callables (via
+        // std::function), and calling into Python from worker OS threads
+        // without holding the GIL is unsafe. This mirrors the same constraint
+        // documented for the group-level indicator template in
+        // CalculateExpectedIndicators.h.
+        auto run_batch = [&](const size_t start, const size_t batch_size) {
+            std::geometric_distribution<size_t> geometric(mu);
+
+            for (size_t i = 0; i < batch_size; ++i) {
+                std::mt19937_64 generator{egttools::Random::SeedGenerator::getInstance().getSeed()};
+                Cache cache(_cache_size);
+
+                VectorXui strategies = VectorXui::Zero(_nb_strategies);
+                auto current_state = _state_sampler(generator);
+                egttools::FinitePopulations::sample_simplex(current_state, _pop_size, _nb_strategies, strategies);
+
+                int die = 0, birth = 0, strategy_p1 = 0, strategy_p2 = 0;
+                auto [homogeneous, idx_homo] = _is_homogeneous(strategies);
+                if (homogeneous) {
+                    mutate_(generator, birth, idx_homo);
+                    strategies(static_cast<int>(birth)) += 1;
+                    strategies(idx_homo) -= 1;
+                    homogeneous = false;
+                }
+
+                // Accumulator for this run.
+                Eigen::RowVectorXd run_sum = Eigen::RowVectorXd::Zero(nb_indicators);
+                size_t run_count = 0;
+                size_t k, j;
+
+                // Transitory phase (no accumulation).
+                for (j = 0; j < transitory; ++j) {
+                    _sample_players(strategy_p1, strategy_p2, strategies, generator);
+                    k = _update_multi_step(strategy_p1, strategy_p2, beta, mu,
+                                           birth, die, homogeneous, idx_homo,
+                                           strategies, cache, geometric, generator);
+                    j += k;
+                }
+
+                // Counting phase.
+                for (; j < nb_generations; ++j) {
+                    if (homogeneous) {
+                        k = geometric(generator);
+                        // k+1 steps spent in the current (homogeneous) state before mutation.
+                        run_sum += evaluate_indicators(strategies) * static_cast<double>(k + 1);
+                        run_count += k + 1;
+                        mutate_(generator, birth, idx_homo);
+                        strategies(static_cast<int>(birth)) += 1;
+                        strategies(idx_homo) -= 1;
+                        // 1 step in the post-mutation state.
+                        run_sum += evaluate_indicators(strategies);
+                        ++run_count;
+                        homogeneous = false;
+                        j += k;
+                    } else {
+                        _sample_players(strategy_p1, strategy_p2, strategies, generator);
+                        _update_step(strategy_p1, strategy_p2, beta, mu,
+                                     birth, die, homogeneous, idx_homo,
+                                     strategies, cache, generator);
+                        run_sum += evaluate_indicators(strategies);
+                        ++run_count;
+                    }
+                }
+
+                // Store time-average for this run.
+                const auto row_idx = static_cast<int64_t>(start + i);
+                if (run_count > 0)
+                    per_run_results.row(row_idx) = run_sum / static_cast<double>(run_count);
+                else
+                    per_run_results.row(row_idx) = run_sum;  // edge case: 0 counting steps
+            }
+        };
+
+        if (tolerance <= 0.0) {
+            run_batch(0, nb_runs);
+            return per_run_results;
+        }
+
+        // Tolerance-based early stopping: process in batches, check L1 on column means.
+        const size_t batch_size = (check_every > 0) ? check_every : std::max<size_t>(1, nb_runs / 10);
+        Eigen::RowVectorXd prev_mean = Eigen::RowVectorXd::Zero(nb_indicators);
+        size_t runs_done = 0;
+
+        while (runs_done < nb_runs) {
+            const size_t this_batch = std::min(batch_size, nb_runs - runs_done);
+            run_batch(runs_done, this_batch);
+            runs_done += this_batch;
+
+            // Column-wise mean over completed rows.
+            Eigen::RowVectorXd current_mean =
+                per_run_results.topRows(static_cast<int64_t>(runs_done)).colwise().mean();
+            const double l1 = (current_mean - prev_mean).lpNorm<1>();
+            prev_mean = current_mean;
+            if (l1 < tolerance) break;
+        }
+
+        return per_run_results.topRows(static_cast<int64_t>(runs_done)).eval();
+    }
+
+    template<class Cache>
     void PairwiseComparisonNumerical<Cache>::mutate_(std::mt19937_64 &generator, int &birth, const int &idx_homo) {
-        // mutate
-        birth = _strategy_sampler(generator);
-        // We assume mutations imply changing strategy
-        while (birth == idx_homo) birth = _strategy_sampler(generator);
+        // The distribution for source strategy idx_homo already excludes
+        // idx_homo (its weight was zeroed when the mutation matrix was set),
+        // so no rejection loop is needed.
+        birth = static_cast<int>(_mutation_samplers[static_cast<size_t>(idx_homo)](generator));
     }
 
     template<class Cache>
@@ -1701,9 +1916,7 @@ namespace egttools::FinitePopulations {
         } else {
             // Check if player mutates
             if (_real_rand(generator) < mu) {
-                birth = _strategy_sampler(generator);
-                // Assumes that a mutation is always to a different strategy
-                while (birth == die) birth = _strategy_sampler(generator);
+                mutate_(generator, birth, die);
                 strategies(birth) += 1;
                 strategies(die) -= 1;
 
@@ -1829,6 +2042,49 @@ namespace egttools::FinitePopulations {
     template<class Cache>
     const GroupPayoffs &PairwiseComparisonNumerical<Cache>::payoffs() const {
         return _game->payoffs();
+    }
+
+    template<class Cache>
+    const Matrix2D &PairwiseComparisonNumerical<Cache>::mutation_matrix() const {
+        return _mutation_matrix;
+    }
+
+    template<class Cache>
+    void PairwiseComparisonNumerical<Cache>::set_mutation_matrix(const Eigen::Ref<const Matrix2D> &mutation_matrix) {
+        const auto n = static_cast<int64_t>(_nb_strategies);
+        if (mutation_matrix.rows() != n || mutation_matrix.cols() != n)
+            throw std::invalid_argument(
+                "mutation_matrix must have shape (nb_strategies, nb_strategies) = (" +
+                std::to_string(_nb_strategies) + ", " + std::to_string(_nb_strategies) + ").");
+        if ((mutation_matrix.array() < 0.0).any())
+            throw std::invalid_argument("mutation_matrix entries must be non-negative.");
+
+        _mutation_matrix = mutation_matrix;
+        _mutation_matrix.diagonal().setZero();// diagonal is never used: mutation always changes strategy
+
+        _mutation_samplers.clear();
+        _mutation_samplers.reserve(_nb_strategies);
+        for (size_t i = 0; i < _nb_strategies; ++i) {
+            std::vector<double> row_weights(_nb_strategies);
+            for (size_t j = 0; j < _nb_strategies; ++j)
+                row_weights[j] = _mutation_matrix(static_cast<int64_t>(i), static_cast<int64_t>(j));
+            const double row_sum = std::accumulate(row_weights.begin(), row_weights.end(), 0.0);
+            if (row_sum <= 0.0)
+                throw std::invalid_argument(
+                    "mutation_matrix row " + std::to_string(i) + " has no positive weight among "
+                    "the other strategies (the diagonal is always ignored); mutating away from "
+                    "strategy " + std::to_string(i) + " would have no valid target.");
+            _mutation_samplers.emplace_back(row_weights.begin(), row_weights.end());
+        }
+    }
+
+    template<class Cache>
+    void PairwiseComparisonNumerical<Cache>::set_mutation_weights(const Eigen::Ref<const Vector> &mutation_weights) {
+        if (mutation_weights.size() != static_cast<int64_t>(_nb_strategies))
+            throw std::invalid_argument(
+                "mutation_weights must have length nb_strategies (" + std::to_string(_nb_strategies) + ").");
+        const Matrix2D broadcast = mutation_weights.transpose().replicate(static_cast<int64_t>(_nb_strategies), 1);
+        set_mutation_matrix(broadcast);
     }
 
     template<class Cache>
