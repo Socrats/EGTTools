@@ -203,7 +203,7 @@ jobs:
         run: ./vcpkg/vcpkg install --x-binarycaching
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.23.4
+        uses: pypa/cibuildwheel@v3.3.1
         env:
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_BUILD: >-
