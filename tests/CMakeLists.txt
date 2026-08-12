@@ -62,6 +62,9 @@ add_library(egttoolsNumerical STATIC
         ../cpp/src/egttools/finite_populations/behaviors/CRDStrategies.cpp
         ../cpp/src/egttools/finite_populations/evolvers/GeneralPopulationEvolver.cpp
         ../cpp/src/egttools/finite_populations/evolvers/NetworkEvolver.cpp
+        ../cpp/src/egttools/finite_populations/structure/Group.cpp
+        ../cpp/src/egttools/finite_populations/structure/GarciaGroup.cpp
+        ../cpp/src/egttools/finite_populations/evolvers/MLS.cpp
 )
 
 set_target_properties(egttoolsNumerical PROPERTIES
@@ -117,6 +120,8 @@ add_egttools_test(testNetworkEvolver cpp/test_network_evolver.cpp)
 add_egttools_test(testFixations cpp/test_calculate_fixation_probabilities.cpp)
 add_egttools_test(testTSLRUCache cpp/test_thread_safe_lru_cache.cpp)
 add_egttools_test(testPairwiseComparisonAnalytical cpp/test_pairwise_comparison_analytical.cpp)
+add_egttools_test(testMLSTraulsen cpp/test_mls_traulsen.cpp)
+add_egttools_test(testMLSGarcia cpp/test_mls_garcia.cpp)
 
 if (APPLE)
     add_egttools_test(testBLASLAPACK cpp/test_blas_lapack.cpp)

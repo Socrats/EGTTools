@@ -5,6 +5,7 @@
 #ifndef EGTTOOLS_FINITE_POPULATIONS_STRUCTURE_GROUP_HPP
 #define EGTTOOLS_FINITE_POPULATIONS_STRUCTURE_GROUP_HPP
 
+#include <cassert>
 #include <cmath>
 #include <random>
 #include <algorithm>
