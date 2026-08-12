@@ -1,0 +1,110 @@
+egttools.utils.csr\_matrix
+==========================
+
+.. currentmodule:: egttools.utils
+
+.. autoclass:: csr_matrix
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~csr_matrix.arcsin
+      ~csr_matrix.arcsinh
+      ~csr_matrix.arctan
+      ~csr_matrix.arctanh
+      ~csr_matrix.argmax
+      ~csr_matrix.argmin
+      ~csr_matrix.asformat
+      ~csr_matrix.asfptype
+      ~csr_matrix.astype
+      ~csr_matrix.ceil
+      ~csr_matrix.check_format
+      ~csr_matrix.conj
+      ~csr_matrix.conjugate
+      ~csr_matrix.copy
+      ~csr_matrix.count_nonzero
+      ~csr_matrix.deg2rad
+      ~csr_matrix.diagonal
+      ~csr_matrix.dot
+      ~csr_matrix.eliminate_zeros
+      ~csr_matrix.expm1
+      ~csr_matrix.floor
+      ~csr_matrix.getH
+      ~csr_matrix.get_shape
+      ~csr_matrix.getcol
+      ~csr_matrix.getformat
+      ~csr_matrix.getmaxprint
+      ~csr_matrix.getnnz
+      ~csr_matrix.getrow
+      ~csr_matrix.log1p
+      ~csr_matrix.max
+      ~csr_matrix.maximum
+      ~csr_matrix.mean
+      ~csr_matrix.min
+      ~csr_matrix.minimum
+      ~csr_matrix.multiply
+      ~csr_matrix.nanmax
+      ~csr_matrix.nanmin
+      ~csr_matrix.nonzero
+      ~csr_matrix.power
+      ~csr_matrix.prune
+      ~csr_matrix.rad2deg
+      ~csr_matrix.reshape
+      ~csr_matrix.resize
+      ~csr_matrix.rint
+      ~csr_matrix.set_shape
+      ~csr_matrix.setdiag
+      ~csr_matrix.sign
+      ~csr_matrix.sin
+      ~csr_matrix.sinh
+      ~csr_matrix.sort_indices
+      ~csr_matrix.sorted_indices
+      ~csr_matrix.sqrt
+      ~csr_matrix.sum
+      ~csr_matrix.sum_duplicates
+      ~csr_matrix.tan
+      ~csr_matrix.tanh
+      ~csr_matrix.toarray
+      ~csr_matrix.tobsr
+      ~csr_matrix.tocoo
+      ~csr_matrix.tocsc
+      ~csr_matrix.tocsr
+      ~csr_matrix.todense
+      ~csr_matrix.todia
+      ~csr_matrix.todok
+      ~csr_matrix.tolil
+      ~csr_matrix.trace
+      ~csr_matrix.transpose
+      ~csr_matrix.trunc
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~csr_matrix.T
+      ~csr_matrix.dtype
+      ~csr_matrix.format
+      ~csr_matrix.has_canonical_format
+      ~csr_matrix.has_sorted_indices
+      ~csr_matrix.imag
+      ~csr_matrix.ndim
+      ~csr_matrix.nnz
+      ~csr_matrix.real
+      ~csr_matrix.shape
+      ~csr_matrix.size
+   
+   

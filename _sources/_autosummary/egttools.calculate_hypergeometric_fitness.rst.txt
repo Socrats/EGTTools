@@ -1,0 +1,6 @@
+egttools.calculate\_hypergeometric\_fitness
+===========================================
+
+.. currentmodule:: egttools
+
+.. autofunction:: calculate_hypergeometric_fitness

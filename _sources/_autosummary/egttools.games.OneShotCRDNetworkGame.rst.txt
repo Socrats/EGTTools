@@ -1,0 +1,33 @@
+egttools.games.OneShotCRDNetworkGame
+====================================
+
+.. currentmodule:: egttools.games
+
+.. autoclass:: OneShotCRDNetworkGame
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~OneShotCRDNetworkGame.calculate_fitness
+      ~OneShotCRDNetworkGame.cost
+      ~OneShotCRDNetworkGame.endowment
+      ~OneShotCRDNetworkGame.min_nb_cooperators
+      ~OneShotCRDNetworkGame.nb_strategies
+      ~OneShotCRDNetworkGame.risk
+      ~OneShotCRDNetworkGame.type
+   
+   
+
+   
+   
+   

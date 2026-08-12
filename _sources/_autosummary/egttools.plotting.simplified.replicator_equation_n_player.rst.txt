@@ -1,0 +1,6 @@
+egttools.plotting.simplified.replicator\_equation\_n\_player
+============================================================
+
+.. currentmodule:: egttools.plotting.simplified
+
+.. autofunction:: replicator_equation_n_player

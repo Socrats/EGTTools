@@ -1,0 +1,40 @@
+egttools.plotting.indicators.AutoMinorLocator
+=============================================
+
+.. currentmodule:: egttools.plotting.indicators
+
+.. autoclass:: AutoMinorLocator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~AutoMinorLocator.create_dummy_axis
+      ~AutoMinorLocator.nonsingular
+      ~AutoMinorLocator.raise_if_exceeds
+      ~AutoMinorLocator.set_axis
+      ~AutoMinorLocator.set_params
+      ~AutoMinorLocator.tick_values
+      ~AutoMinorLocator.view_limits
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AutoMinorLocator.MAXTICKS
+      ~AutoMinorLocator.axis
+   
+   

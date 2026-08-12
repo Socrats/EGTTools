@@ -1,0 +1,6 @@
+egttools.plotting.network\_plots.animate\_network\_evolution
+============================================================
+
+.. currentmodule:: egttools.plotting.network_plots
+
+.. autofunction:: animate_network_evolution

@@ -1,0 +1,6 @@
+egttools.calculate\_expected\_state\_indicators
+===============================================
+
+.. currentmodule:: egttools
+
+.. autofunction:: calculate_expected_state_indicators

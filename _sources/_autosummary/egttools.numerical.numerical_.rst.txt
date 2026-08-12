@@ -1,0 +1,73 @@
+egttools.numerical.numerical\_
+==============================
+
+.. automodule:: egttools.numerical.numerical_
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      calculate_expected_group_success
+      calculate_expected_indicator
+      calculate_expected_indicators
+      calculate_expected_indicators_precomputed
+      calculate_expected_payoff
+      calculate_expected_state_indicator
+      calculate_expected_state_indicators
+      calculate_expected_state_indicators_precomputed
+      calculate_hypergeometric_expected_value
+      calculate_hypergeometric_fitness
+      calculate_nb_states
+      calculate_state
+      calculate_strategies_distribution
+      is_arpack_enabled
+      is_blas_lapack_enabled
+      is_boost_enabled
+      is_openmp_enabled
+      is_petsc_enabled
+      precompute_group_to_state_indicator_matrix
+      replicator_equation
+      replicator_equation_n_player
+      sample_simplex
+      sample_simplex_directly
+      sample_unit_simplex
+      vectorized_replicator_equation
+      vectorized_replicator_equation_n_player
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      GeneralPopulationEvolver
+      MLSGarcia
+      MLSTraulsen
+      PairwiseComparison
+      PairwiseComparisonNumerical
+      PairwiseComparisonTransitionOperator
+   
+   
+
+   
+   
+   
+
+   
+   
+   

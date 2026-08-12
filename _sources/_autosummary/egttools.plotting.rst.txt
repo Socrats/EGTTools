@@ -1,0 +1,68 @@
+egttools.plotting
+=================
+
+.. automodule:: egttools.plotting
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      animate_network_evolution
+      draw_invasion_diagram
+      plot_edge_homophily
+      plot_gradient
+      plot_gradients
+      plot_network_state
+      plot_pairwise_comparison_rule_dynamics_in_simplex
+      plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots
+      plot_parameter_sweep
+      plot_replicator_dynamics_in_simplex
+      plot_strategy_by_degree
+      plot_strategy_evolution
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      Simplex2D
+      Simplex3D
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. autosummary::
+      :toctree:
+      :template: custom-module-template.rst
+      :recursive:
+   
+      barplots
+      helpers
+      indicators
+      network_plots
+      simplex2d
+      simplex3d
+      simplified
+   
+   

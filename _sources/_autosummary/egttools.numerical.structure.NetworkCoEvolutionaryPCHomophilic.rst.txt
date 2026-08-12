@@ -1,0 +1,39 @@
+egttools.numerical.structure.NetworkCoEvolutionaryPCHomophilic
+==============================================================
+
+.. currentmodule:: egttools.numerical.structure
+
+.. autoclass:: NetworkCoEvolutionaryPCHomophilic
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~NetworkCoEvolutionaryPCHomophilic.beta
+      ~NetworkCoEvolutionaryPCHomophilic.estimate_fixation_probability
+      ~NetworkCoEvolutionaryPCHomophilic.estimate_strategy_distribution
+      ~NetworkCoEvolutionaryPCHomophilic.initial_topology
+      ~NetworkCoEvolutionaryPCHomophilic.mu
+      ~NetworkCoEvolutionaryPCHomophilic.nb_strategies
+      ~NetworkCoEvolutionaryPCHomophilic.population_size
+      ~NetworkCoEvolutionaryPCHomophilic.rewiring_probability
+      ~NetworkCoEvolutionaryPCHomophilic.run
+      ~NetworkCoEvolutionaryPCHomophilic.run_snapshots
+      ~NetworkCoEvolutionaryPCHomophilic.set_beta
+      ~NetworkCoEvolutionaryPCHomophilic.set_mu
+      ~NetworkCoEvolutionaryPCHomophilic.set_rewiring_probability
+   
+   
+
+   
+   
+   

@@ -1,0 +1,6 @@
+egttools.plotting.simplified.check\_if\_there\_is\_random\_drift
+================================================================
+
+.. currentmodule:: egttools.plotting.simplified
+
+.. autofunction:: check_if_there_is_random_drift

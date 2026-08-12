@@ -1,0 +1,6 @@
+egttools.plotting.simplex3d.gradient\_to\_cartesian
+===================================================
+
+.. currentmodule:: egttools.plotting.simplex3d
+
+.. autofunction:: gradient_to_cartesian

@@ -1,0 +1,30 @@
+egttools.numerical.structure.AbstractStructure
+==============================================
+
+.. currentmodule:: egttools.numerical.structure
+
+.. autoclass:: AbstractStructure
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~AbstractStructure.initialize
+      ~AbstractStructure.mean_population_state
+      ~AbstractStructure.nb_strategies
+      ~AbstractStructure.update_population
+   
+   
+
+   
+   
+   

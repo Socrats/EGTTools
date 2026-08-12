@@ -1,0 +1,6 @@
+egttools.utils.find\_saddle\_type\_and\_gradient\_direction
+===========================================================
+
+.. currentmodule:: egttools.utils
+
+.. autofunction:: find_saddle_type_and_gradient_direction

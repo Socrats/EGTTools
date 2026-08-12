@@ -1,0 +1,6 @@
+egttools.plotting.plot\_strategy\_by\_degree
+============================================
+
+.. currentmodule:: egttools.plotting
+
+.. autofunction:: plot_strategy_by_degree

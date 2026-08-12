@@ -1,0 +1,32 @@
+egttools.behaviors.CPR.cpr\_strategies.FreeStrategy
+===================================================
+
+.. currentmodule:: egttools.behaviors.CPR.cpr_strategies
+
+.. autoclass:: FreeStrategy
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~FreeStrategy.get_extraction
+      ~FreeStrategy.get_payoff
+      ~FreeStrategy.is_commitment_validated
+      ~FreeStrategy.proposes_commitment
+      ~FreeStrategy.type
+      ~FreeStrategy.would_like_to_commit
+   
+   
+
+   
+   
+   

@@ -1,0 +1,6 @@
+egttools.plotting.helpers.find\_roots\_in\_discrete\_barycentric\_coordinates
+=============================================================================
+
+.. currentmodule:: egttools.plotting.helpers
+
+.. autofunction:: find_roots_in_discrete_barycentric_coordinates

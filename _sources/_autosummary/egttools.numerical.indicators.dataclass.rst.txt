@@ -1,0 +1,6 @@
+egttools.numerical.indicators.dataclass
+=======================================
+
+.. currentmodule:: egttools.numerical.indicators
+
+.. autofunction:: dataclass

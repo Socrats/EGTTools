@@ -1,0 +1,43 @@
+egttools.behaviors.pgg\_behaviors
+=================================
+
+.. automodule:: egttools.behaviors.pgg_behaviors
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      player_factory
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      PGGOneShotStrategy
+   
+   
+
+   
+   
+   
+
+   
+   
+   

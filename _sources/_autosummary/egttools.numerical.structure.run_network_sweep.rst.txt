@@ -1,0 +1,6 @@
+egttools.numerical.structure.run\_network\_sweep
+================================================
+
+.. currentmodule:: egttools.numerical.structure
+
+.. autofunction:: run_network_sweep

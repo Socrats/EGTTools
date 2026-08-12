@@ -1,0 +1,6 @@
+egttools.plotting.simplex2d.find\_where\_point\_is\_in\_simplex
+===============================================================
+
+.. currentmodule:: egttools.plotting.simplex2d
+
+.. autofunction:: find_where_point_is_in_simplex

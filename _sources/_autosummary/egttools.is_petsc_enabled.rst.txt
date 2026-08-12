@@ -1,0 +1,6 @@
+egttools.is\_petsc\_enabled
+===========================
+
+.. currentmodule:: egttools
+
+.. autofunction:: is_petsc_enabled

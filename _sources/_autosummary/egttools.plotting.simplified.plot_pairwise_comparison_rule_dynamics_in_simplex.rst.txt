@@ -1,0 +1,6 @@
+egttools.plotting.simplified.plot\_pairwise\_comparison\_rule\_dynamics\_in\_simplex
+====================================================================================
+
+.. currentmodule:: egttools.plotting.simplified
+
+.. autofunction:: plot_pairwise_comparison_rule_dynamics_in_simplex

@@ -1,0 +1,6 @@
+egttools.numerical.results.dataclass
+====================================
+
+.. currentmodule:: egttools.numerical.results
+
+.. autofunction:: dataclass

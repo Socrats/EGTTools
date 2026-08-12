@@ -1,0 +1,42 @@
+egttools.games.CommonPoolResourceDilemmaCommitment
+==================================================
+
+.. currentmodule:: egttools.games
+
+.. autoclass:: CommonPoolResourceDilemmaCommitment
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~CommonPoolResourceDilemmaCommitment.add_group_extraction
+      ~CommonPoolResourceDilemmaCommitment.calculate_expected_consumption
+      ~CommonPoolResourceDilemmaCommitment.calculate_fitness
+      ~CommonPoolResourceDilemmaCommitment.calculate_payoffs
+      ~CommonPoolResourceDilemmaCommitment.calculate_total_extraction
+      ~CommonPoolResourceDilemmaCommitment.check_if_commitment_validated
+      ~CommonPoolResourceDilemmaCommitment.get_nb_committed
+      ~CommonPoolResourceDilemmaCommitment.group_size
+      ~CommonPoolResourceDilemmaCommitment.nb_group_configurations
+      ~CommonPoolResourceDilemmaCommitment.nb_strategies
+      ~CommonPoolResourceDilemmaCommitment.payoff
+      ~CommonPoolResourceDilemmaCommitment.payoffs
+      ~CommonPoolResourceDilemmaCommitment.play
+      ~CommonPoolResourceDilemmaCommitment.save_payoffs
+      ~CommonPoolResourceDilemmaCommitment.type
+      ~CommonPoolResourceDilemmaCommitment.update_payoff
+   
+   
+
+   
+   
+   

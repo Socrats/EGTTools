@@ -1,0 +1,6 @@
+egttools.plotting.plot\_edge\_homophily
+=======================================
+
+.. currentmodule:: egttools.plotting
+
+.. autofunction:: plot_edge_homophily

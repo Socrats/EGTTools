@@ -1,0 +1,6 @@
+egttools.numerical.results.field
+================================
+
+.. currentmodule:: egttools.numerical.results
+
+.. autofunction:: field

@@ -1,0 +1,6 @@
+egttools.utils.get\_payoff\_function
+====================================
+
+.. currentmodule:: egttools.utils
+
+.. autofunction:: get_payoff_function

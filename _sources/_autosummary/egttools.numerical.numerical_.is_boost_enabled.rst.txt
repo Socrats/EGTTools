@@ -1,0 +1,6 @@
+egttools.numerical.numerical\_.is\_boost\_enabled
+=================================================
+
+.. currentmodule:: egttools.numerical.numerical_
+
+.. autofunction:: is_boost_enabled

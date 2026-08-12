@@ -1,0 +1,6 @@
+egttools.analytical.utils.check\_if\_there\_is\_random\_drift
+=============================================================
+
+.. currentmodule:: egttools.analytical.utils
+
+.. autofunction:: check_if_there_is_random_drift

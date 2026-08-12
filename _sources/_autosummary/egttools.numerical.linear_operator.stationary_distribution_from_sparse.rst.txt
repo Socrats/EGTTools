@@ -1,0 +1,6 @@
+egttools.numerical.linear\_operator.stationary\_distribution\_from\_sparse
+==========================================================================
+
+.. currentmodule:: egttools.numerical.linear_operator
+
+.. autofunction:: stationary_distribution_from_sparse

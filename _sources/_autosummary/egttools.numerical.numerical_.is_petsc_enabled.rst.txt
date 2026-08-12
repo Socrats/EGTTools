@@ -1,0 +1,6 @@
+egttools.numerical.numerical\_.is\_petsc\_enabled
+=================================================
+
+.. currentmodule:: egttools.numerical.numerical_
+
+.. autofunction:: is_petsc_enabled

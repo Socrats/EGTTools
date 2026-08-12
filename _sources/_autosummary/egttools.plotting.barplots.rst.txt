@@ -1,0 +1,48 @@
+egttools.plotting.barplots
+==========================
+
+.. automodule:: egttools.plotting.barplots
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      stacked_barplot
+      stacked_barplots
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AutoMinorLocator
+      Legend
+      MaxNLocator
+      NullLocator
+      TypeVar
+   
+   
+
+   
+   
+   
+
+   
+   
+   

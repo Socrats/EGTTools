@@ -1,0 +1,6 @@
+egttools.numerical.linear\_operator.make\_residual\_operator
+============================================================
+
+.. currentmodule:: egttools.numerical.linear_operator
+
+.. autofunction:: make_residual_operator

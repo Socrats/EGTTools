@@ -1,0 +1,6 @@
+egttools.utils.transform\_payoffs\_to\_pairwise
+===============================================
+
+.. currentmodule:: egttools.utils
+
+.. autofunction:: transform_payoffs_to_pairwise

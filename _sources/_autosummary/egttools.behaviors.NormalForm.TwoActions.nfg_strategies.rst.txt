@@ -1,0 +1,39 @@
+egttools.behaviors.NormalForm.TwoActions.nfg\_strategies
+========================================================
+
+.. automodule:: egttools.behaviors.NormalForm.TwoActions.nfg_strategies
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AbstractNFGStrategy
+      Detective
+      EpsilonGRIM
+      EpsilonTFT
+      MemoryOneStrategy
+   
+   
+
+   
+   
+   
+
+   
+   
+   

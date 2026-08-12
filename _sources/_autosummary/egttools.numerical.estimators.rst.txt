@@ -1,0 +1,42 @@
+egttools.numerical.estimators
+=============================
+
+.. automodule:: egttools.numerical.estimators
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AGoSResult
+      AbsorptionProbabilityResult
+      AbsorptionTimeResult
+      FixationResult
+      NetworkEstimator
+      PairwiseComparisonEstimator
+      StationaryDistributionResult
+      StrategyDistributionResult
+   
+   
+
+   
+   
+   
+
+   
+   
+   

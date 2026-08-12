@@ -1,0 +1,6 @@
+egttools.behaviors.CPR.cpr\_strategies.payoff\_no\_commitment
+=============================================================
+
+.. currentmodule:: egttools.behaviors.CPR.cpr_strategies
+
+.. autofunction:: payoff_no_commitment

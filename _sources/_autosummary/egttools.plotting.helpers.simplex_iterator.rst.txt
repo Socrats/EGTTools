@@ -1,0 +1,6 @@
+egttools.plotting.helpers.simplex\_iterator
+===========================================
+
+.. currentmodule:: egttools.plotting.helpers
+
+.. autofunction:: simplex_iterator

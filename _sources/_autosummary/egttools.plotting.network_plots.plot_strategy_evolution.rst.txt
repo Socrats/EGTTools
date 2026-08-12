@@ -1,0 +1,6 @@
+egttools.plotting.network\_plots.plot\_strategy\_evolution
+==========================================================
+
+.. currentmodule:: egttools.plotting.network_plots
+
+.. autofunction:: plot_strategy_evolution

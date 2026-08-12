@@ -1,0 +1,36 @@
+egttools.numerical.results.AbsorptionProbabilityResult
+======================================================
+
+.. currentmodule:: egttools.numerical.results
+
+.. autoclass:: AbsorptionProbabilityResult
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AbsorptionProbabilityResult.ci95
+      ~AbsorptionProbabilityResult.strategy_names
+      ~AbsorptionProbabilityResult.probabilities
+      ~AbsorptionProbabilityResult.stderr
+      ~AbsorptionProbabilityResult.nb_runs
+   
+   

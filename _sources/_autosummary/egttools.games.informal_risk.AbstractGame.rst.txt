@@ -1,0 +1,34 @@
+egttools.games.informal\_risk.AbstractGame
+==========================================
+
+.. currentmodule:: egttools.games.informal_risk
+
+.. autoclass:: AbstractGame
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~AbstractGame.calculate_fitness
+      ~AbstractGame.calculate_payoffs
+      ~AbstractGame.nb_strategies
+      ~AbstractGame.payoff
+      ~AbstractGame.payoffs
+      ~AbstractGame.play
+      ~AbstractGame.save_payoffs
+      ~AbstractGame.type
+   
+   
+
+   
+   
+   

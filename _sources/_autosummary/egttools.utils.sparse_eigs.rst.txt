@@ -1,0 +1,6 @@
+egttools.utils.sparse\_eigs
+===========================
+
+.. currentmodule:: egttools.utils
+
+.. autofunction:: sparse_eigs

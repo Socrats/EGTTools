@@ -1,0 +1,46 @@
+egttools.games.opinion\_game
+============================
+
+.. automodule:: egttools.games.opinion_game
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      moment
+      sample_simplex
+      sigmoid
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AbstractNPlayerGame
+      OpinionGame
+   
+   
+
+   
+   
+   
+
+   
+   
+   

@@ -1,0 +1,6 @@
+egttools.distributions.comb
+===========================
+
+.. currentmodule:: egttools.distributions
+
+.. autofunction:: comb

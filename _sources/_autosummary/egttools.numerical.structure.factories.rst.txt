@@ -1,0 +1,51 @@
+egttools.numerical.structure.factories
+======================================
+
+.. automodule:: egttools.numerical.structure.factories
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      network_coevo_factory
+      network_mc_estimator_factory
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AbstractSpatialGame
+      NetworkCoEvolutionaryPC
+      NetworkCoEvolutionaryPCHomophilic
+      NetworkMCEstimatorBD
+      NetworkMCEstimatorDB
+      NetworkMCEstimatorLP
+      NetworkMCEstimatorPC
+      NetworkMCEstimatorTDPC
+   
+   
+
+   
+   
+   
+
+   
+   
+   

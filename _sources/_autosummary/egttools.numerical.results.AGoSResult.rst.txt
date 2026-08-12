@@ -1,0 +1,36 @@
+egttools.numerical.results.AGoSResult
+=====================================
+
+.. currentmodule:: egttools.numerical.results
+
+.. autoclass:: AGoSResult
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AGoSResult.roots
+      ~AGoSResult.strategy_names
+      ~AGoSResult.mean_gradient
+      ~AGoSResult.se_gradient
+      ~AGoSResult.nb_runs
+   
+   

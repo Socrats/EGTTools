@@ -1,0 +1,39 @@
+egttools.numerical.structure.factories.NetworkCoEvolutionaryPC
+==============================================================
+
+.. currentmodule:: egttools.numerical.structure.factories
+
+.. autoclass:: NetworkCoEvolutionaryPC
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~NetworkCoEvolutionaryPC.beta
+      ~NetworkCoEvolutionaryPC.estimate_fixation_probability
+      ~NetworkCoEvolutionaryPC.estimate_strategy_distribution
+      ~NetworkCoEvolutionaryPC.initial_topology
+      ~NetworkCoEvolutionaryPC.mu
+      ~NetworkCoEvolutionaryPC.nb_strategies
+      ~NetworkCoEvolutionaryPC.population_size
+      ~NetworkCoEvolutionaryPC.rewiring_probability
+      ~NetworkCoEvolutionaryPC.run
+      ~NetworkCoEvolutionaryPC.run_snapshots
+      ~NetworkCoEvolutionaryPC.set_beta
+      ~NetworkCoEvolutionaryPC.set_mu
+      ~NetworkCoEvolutionaryPC.set_rewiring_probability
+   
+   
+
+   
+   
+   

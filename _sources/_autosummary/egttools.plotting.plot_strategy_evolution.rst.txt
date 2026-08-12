@@ -1,0 +1,6 @@
+egttools.plotting.plot\_strategy\_evolution
+===========================================
+
+.. currentmodule:: egttools.plotting
+
+.. autofunction:: plot_strategy_evolution

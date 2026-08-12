@@ -1,0 +1,6 @@
+egttools.games.opinion\_game.sample\_simplex
+============================================
+
+.. currentmodule:: egttools.games.opinion_game
+
+.. autofunction:: sample_simplex

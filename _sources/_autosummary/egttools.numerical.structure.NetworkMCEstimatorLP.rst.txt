@@ -1,0 +1,44 @@
+egttools.numerical.structure.NetworkMCEstimatorLP
+=================================================
+
+.. currentmodule:: egttools.numerical.structure
+
+.. autoclass:: NetworkMCEstimatorLP
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~NetworkMCEstimatorLP.beta
+      ~NetworkMCEstimatorLP.calculate_gradient_of_selection
+      ~NetworkMCEstimatorLP.estimate_agos
+      ~NetworkMCEstimatorLP.estimate_agos_time_dependent
+      ~NetworkMCEstimatorLP.estimate_fixation_probability
+      ~NetworkMCEstimatorLP.estimate_strategy_distribution
+      ~NetworkMCEstimatorLP.initialize
+      ~NetworkMCEstimatorLP.mean_population_state
+      ~NetworkMCEstimatorLP.mu
+      ~NetworkMCEstimatorLP.nb_strategies
+      ~NetworkMCEstimatorLP.population_size
+      ~NetworkMCEstimatorLP.population_strategies
+      ~NetworkMCEstimatorLP.run
+      ~NetworkMCEstimatorLP.run_snapshots
+      ~NetworkMCEstimatorLP.set_beta
+      ~NetworkMCEstimatorLP.set_mu
+      ~NetworkMCEstimatorLP.step
+      ~NetworkMCEstimatorLP.topology
+   
+   
+
+   
+   
+   

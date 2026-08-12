@@ -1,0 +1,6 @@
+egttools.analytical.sed\_analytical.calculate\_state
+====================================================
+
+.. currentmodule:: egttools.analytical.sed_analytical
+
+.. autofunction:: calculate_state

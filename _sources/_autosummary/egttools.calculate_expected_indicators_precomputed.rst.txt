@@ -1,0 +1,6 @@
+egttools.calculate\_expected\_indicators\_precomputed
+=====================================================
+
+.. currentmodule:: egttools
+
+.. autofunction:: calculate_expected_indicators_precomputed

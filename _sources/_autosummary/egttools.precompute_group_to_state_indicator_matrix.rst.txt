@@ -1,0 +1,6 @@
+egttools.precompute\_group\_to\_state\_indicator\_matrix
+========================================================
+
+.. currentmodule:: egttools
+
+.. autofunction:: precompute_group_to_state_indicator_matrix

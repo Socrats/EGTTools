@@ -1,0 +1,6 @@
+egttools.plotting.draw\_invasion\_diagram
+=========================================
+
+.. currentmodule:: egttools.plotting
+
+.. autofunction:: draw_invasion_diagram

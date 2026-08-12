@@ -1,0 +1,29 @@
+egttools.behaviors.NormalForm.TwoActions.ActionInertia
+======================================================
+
+.. currentmodule:: egttools.behaviors.NormalForm.TwoActions
+
+.. autoclass:: ActionInertia
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~ActionInertia.get_action
+      ~ActionInertia.is_stochastic
+      ~ActionInertia.type
+   
+   
+
+   
+   
+   

@@ -1,0 +1,44 @@
+egttools.numerical.structure.NetworkMCEstimatorTDPC
+===================================================
+
+.. currentmodule:: egttools.numerical.structure
+
+.. autoclass:: NetworkMCEstimatorTDPC
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~NetworkMCEstimatorTDPC.beta
+      ~NetworkMCEstimatorTDPC.calculate_gradient_of_selection
+      ~NetworkMCEstimatorTDPC.estimate_agos
+      ~NetworkMCEstimatorTDPC.estimate_agos_time_dependent
+      ~NetworkMCEstimatorTDPC.estimate_fixation_probability
+      ~NetworkMCEstimatorTDPC.estimate_strategy_distribution
+      ~NetworkMCEstimatorTDPC.initialize
+      ~NetworkMCEstimatorTDPC.mean_population_state
+      ~NetworkMCEstimatorTDPC.mu
+      ~NetworkMCEstimatorTDPC.nb_strategies
+      ~NetworkMCEstimatorTDPC.population_size
+      ~NetworkMCEstimatorTDPC.population_strategies
+      ~NetworkMCEstimatorTDPC.run
+      ~NetworkMCEstimatorTDPC.run_snapshots
+      ~NetworkMCEstimatorTDPC.set_beta
+      ~NetworkMCEstimatorTDPC.set_mu
+      ~NetworkMCEstimatorTDPC.step
+      ~NetworkMCEstimatorTDPC.topology
+   
+   
+
+   
+   
+   

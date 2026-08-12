@@ -1,0 +1,6 @@
+egttools.behaviors.pgg\_behaviors.player\_factory
+=================================================
+
+.. currentmodule:: egttools.behaviors.pgg_behaviors
+
+.. autofunction:: player_factory

@@ -1,0 +1,6 @@
+egttools.is\_boost\_enabled
+===========================
+
+.. currentmodule:: egttools
+
+.. autofunction:: is_boost_enabled

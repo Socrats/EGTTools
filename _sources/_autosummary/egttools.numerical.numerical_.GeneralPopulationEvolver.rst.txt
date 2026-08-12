@@ -1,0 +1,29 @@
+egttools.numerical.numerical\_.GeneralPopulationEvolver
+=======================================================
+
+.. currentmodule:: egttools.numerical.numerical_
+
+.. autoclass:: GeneralPopulationEvolver
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~GeneralPopulationEvolver.evolve
+      ~GeneralPopulationEvolver.run
+      ~GeneralPopulationEvolver.structure
+   
+   
+
+   
+   
+   

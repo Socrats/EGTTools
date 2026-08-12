@@ -1,0 +1,69 @@
+egttools.numerical
+==================
+
+.. automodule:: egttools.numerical
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      stationary_distribution_from_sparse
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AGoSResult
+      AbsorptionProbabilityResult
+      AbsorptionTimeResult
+      FixationResult
+      GeneralPopulationEvolver
+      MLSGarcia
+      MLSTraulsen
+      NetworkEstimator
+      PairwiseComparisonEstimator
+      PairwiseComparisonNumerical
+      PairwiseComparisonTransitionOperator
+      StationaryDistributionResult
+      StationaryIndicatorResult
+      StrategyDistributionResult
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. autosummary::
+      :toctree:
+      :template: custom-module-template.rst
+      :recursive:
+   
+      estimators
+      indicators
+      linear_operator
+      mpi
+      numerical_
+      results
+      structure
+   
+   

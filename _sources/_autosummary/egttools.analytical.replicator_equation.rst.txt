@@ -1,0 +1,6 @@
+egttools.analytical.replicator\_equation
+========================================
+
+.. currentmodule:: egttools.analytical
+
+.. autofunction:: replicator_equation

@@ -1,0 +1,6 @@
+egttools.utils.calculate\_spectral\_gap
+=======================================
+
+.. currentmodule:: egttools.utils
+
+.. autofunction:: calculate_spectral_gap

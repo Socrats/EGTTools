@@ -1,0 +1,6 @@
+egttools.games.opinion\_game.sigmoid
+====================================
+
+.. currentmodule:: egttools.games.opinion_game
+
+.. autofunction:: sigmoid

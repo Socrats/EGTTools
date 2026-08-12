@@ -1,0 +1,32 @@
+egttools.helpers
+================
+
+.. automodule:: egttools.helpers
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. autosummary::
+      :toctree:
+      :template: custom-module-template.rst
+      :recursive:
+   
+      vectorized
+   
+   

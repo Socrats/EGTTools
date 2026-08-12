@@ -1,0 +1,41 @@
+egttools.plotting.barplots.MaxNLocator
+======================================
+
+.. currentmodule:: egttools.plotting.barplots
+
+.. autoclass:: MaxNLocator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~MaxNLocator.create_dummy_axis
+      ~MaxNLocator.nonsingular
+      ~MaxNLocator.raise_if_exceeds
+      ~MaxNLocator.set_axis
+      ~MaxNLocator.set_params
+      ~MaxNLocator.tick_values
+      ~MaxNLocator.view_limits
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MaxNLocator.MAXTICKS
+      ~MaxNLocator.axis
+      ~MaxNLocator.default_params
+   
+   

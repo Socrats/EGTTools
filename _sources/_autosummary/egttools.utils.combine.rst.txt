@@ -1,0 +1,6 @@
+egttools.utils.combine
+======================
+
+.. currentmodule:: egttools.utils
+
+.. autofunction:: combine
