@@ -29,6 +29,7 @@
 #include <egttools/utils/ThreadSafeLRUCache.hpp>
 #include <functional>
 #include <numeric>
+#include <optional>
 #include <random>
 #include <stdexcept>
 #include <vector>
@@ -62,8 +63,18 @@ namespace egttools::FinitePopulations {
          * @param pop_size
          * @param game : pointer to the game class (it must be a child of AbstractGame)
          * @param cache_size : maximum number of elements in the cache
+         * @param seed : optional explicit seed for this instance's sequential-method
+         *               generator (_mt, used by evolve/run/run_with_mutation etc.).
+         *               When omitted (default), _mt is seeded from the process-global
+         *               egttools::Random::SeedGenerator singleton as before. When
+         *               given, this instance's sequential trajectory methods become
+         *               independently reproducible regardless of what else is drawing
+         *               from the global singleton. Does NOT affect the OpenMP-parallel
+         *               batched estimate_* methods, whose per-run generators still
+         *               seed from the global singleton.
          */
-        PairwiseComparisonNumerical(size_t pop_size, AbstractGame &game, size_t cache_size = 1000000);
+        PairwiseComparisonNumerical(size_t pop_size, AbstractGame &game, size_t cache_size = 1000000,
+                                    std::optional<unsigned long int> seed = std::nullopt);
 
         /**
          * Runs the moran process for a given number of generations or until it reaches a monomorphic state
@@ -537,7 +548,8 @@ namespace egttools::FinitePopulations {
     template<class Cache>
     PairwiseComparisonNumerical<Cache>::PairwiseComparisonNumerical(size_t pop_size,
                                                                     egttools::FinitePopulations::AbstractGame &game,
-                                                                    size_t cache_size) : _pop_size(pop_size),
+                                                                    size_t cache_size,
+                                                                    std::optional<unsigned long int> seed) : _pop_size(pop_size),
         _cache_size(cache_size),
         _game(&game) {
         // Initialize random uniform distribution
@@ -549,6 +561,11 @@ namespace egttools::FinitePopulations {
         // Uniform mutation by default: every off-diagonal entry equal.
         set_mutation_matrix(Matrix2D::Ones(static_cast<int64_t>(_nb_strategies),
                                            static_cast<int64_t>(_nb_strategies)));
+        // _mt's in-class default initializer already seeded it from the global
+        // singleton; if the caller passed an explicit seed, override that here so
+        // this instance's sequential trajectory methods (run/evolve/...) become
+        // independently reproducible regardless of the global singleton's state.
+        if (seed.has_value()) _mt.seed(*seed);
     }
 
     template<class Cache>

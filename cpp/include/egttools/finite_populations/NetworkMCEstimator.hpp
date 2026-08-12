@@ -30,6 +30,7 @@
 #include <cmath>
 #include <functional>
 #include <numeric>
+#include <optional>
 #include <random>
 #include <stdexcept>
 #include <string>
@@ -81,6 +82,11 @@ namespace egttools::FinitePopulations {
          * @param beta         Selection intensity (Fermi parameter or exp-weight base).
          * @param mu           Mutation probability per time step.
          * @param cache_size   Per-thread LRU cache size for fitness values.
+         * @param seed         Optional explicit seed for the step-by-step session
+         *                     generator (used by initialize()/step()), independent
+         *                     of the process-global egttools::Random singleton.
+         *                     Does not affect the OpenMP-parallel batched
+         *                     estimate_* methods. Omit (default) for prior behavior.
          * @param update_rule  Update rule instance (default-constructed for stateless rules).
          */
         NetworkMCEstimator(AbstractSpatialGame &game,
@@ -89,6 +95,7 @@ namespace egttools::FinitePopulations {
                            double beta,
                            double mu,
                            int cache_size = 100000,
+                           std::optional<unsigned long int> seed = std::nullopt,
                            UpdateRule update_rule = UpdateRule{});
 
         /**
@@ -101,6 +108,7 @@ namespace egttools::FinitePopulations {
                            double beta,
                            double mu,
                            int cache_size = 100000,
+                           std::optional<unsigned long int> seed = std::nullopt,
                            UpdateRule update_rule = UpdateRule{});
 
         // ------------------------------------------------------------------
@@ -299,6 +307,12 @@ namespace egttools::FinitePopulations {
         double beta_, mu_;
         UpdateRule update_rule_;
 
+        // Optional explicit seed (set via constructor) for the step-by-step
+        // session generator (session_gen_). When unset, initialize()/initialize
+        // draw from the process-global egttools::Random::SeedGenerator singleton
+        // as before, matching prior behavior.
+        std::optional<unsigned long int> explicit_seed_;
+
         // --- step-by-step session state (used by initialize / step) ---
         std::vector<int> session_population_;
         VectorXui        session_mean_state_;
@@ -339,6 +353,7 @@ namespace egttools::FinitePopulations {
                                                    double beta,
                                                    double mu,
                                                    int cache_size,
+                                                   std::optional<unsigned long int> seed,
                                                    UR update_rule)
         : game_(game),
           network_(std::move(topology)),
@@ -348,6 +363,7 @@ namespace egttools::FinitePopulations {
           beta_(beta),
           mu_(mu),
           update_rule_(std::move(update_rule)),
+          explicit_seed_(seed),
           session_cache_(cache_size) {}
 
     template<class UR, class CT>
@@ -357,11 +373,12 @@ namespace egttools::FinitePopulations {
                                                    double beta,
                                                    double mu,
                                                    int cache_size,
+                                                   std::optional<unsigned long int> seed,
                                                    UR update_rule)
         : NetworkMCEstimator(game,
                              structure::dict_to_adjacency_list(topology),
                              nb_strategies, beta, mu, cache_size,
-                             std::move(update_rule)) {}
+                             seed, std::move(update_rule)) {}
 
     // ------------------------------------------------------------------
     // Numerically exact gradient
@@ -701,7 +718,8 @@ namespace egttools::FinitePopulations {
     void NetworkMCEstimator<UR, CT>::initialize(const VectorXui &init_state) {
         session_population_.resize(population_size_);
         session_mean_state_.resize(nb_strategies_);
-        session_gen_.seed(egttools::Random::SeedGenerator::getInstance().getSeed());
+        session_gen_.seed(explicit_seed_ ? *explicit_seed_
+                                          : egttools::Random::SeedGenerator::getInstance().getSeed());
         session_cache_ = CT(cache_size_);
         session_nbuf_  = VectorXui::Zero(nb_strategies_);
         initialize_state_(session_population_, session_mean_state_, init_state, session_gen_);
@@ -713,7 +731,8 @@ namespace egttools::FinitePopulations {
     void NetworkMCEstimator<UR, CT>::initialize() {
         session_population_.resize(population_size_);
         session_mean_state_ = VectorXui::Zero(nb_strategies_);
-        session_gen_.seed(egttools::Random::SeedGenerator::getInstance().getSeed());
+        session_gen_.seed(explicit_seed_ ? *explicit_seed_
+                                          : egttools::Random::SeedGenerator::getInstance().getSeed());
         session_cache_ = CT(cache_size_);
         session_nbuf_  = VectorXui::Zero(nb_strategies_);
         std::uniform_int_distribution<int> s_dist(0, nb_strategies_ - 1);
@@ -826,15 +845,44 @@ namespace egttools::FinitePopulations {
                 }
 
                 for (int64_t g = 0; g < nb_generations; ++g) {
-                    do_generation_(population, mean_state, dyn_cache, nbuf, gen, local_rule, g);
-                    if (g >= transitory) {
-                        const int j = static_cast<int>(mean_state(0));
-                        if (j > 0 && j < N) {
-                            Vector grad = local_rule.compute_exact_gradient(
-                                population, network_, game_, grad_cache, nbuf2, K, beta_);
-                            thr_sum[tid].row(j)  += grad.transpose();
-                            thr_sum2[tid].row(j) += grad.array().square().matrix().transpose();
-                            thr_cnt[tid](j)      += 1;
+                    if constexpr (UR::synchronous) {
+                        // Synchronous rules (e.g. LinearProportional) update all
+                        // nodes at once each generation: there is no closed-form
+                        // per-step transition probability the way there is for
+                        // asynchronous rules, so compute_exact_gradient() is not
+                        // applicable (see its stub returning Vector::Zero()).
+                        // Estimate the gradient empirically instead, as the
+                        // observed one-generation change in mean_state, binned
+                        // by the cooperator count *before* the step. Note this
+                        // is a per-GENERATION quantity, not per elementary event
+                        // like the asynchronous branch below -- the two are not
+                        // on the same time scale, which is inherent to having
+                        // no smaller unit of time than one generation under
+                        // synchronous updating.
+                        if (g >= transitory) {
+                            const int j_before = static_cast<int>(mean_state(0));
+                            const VectorXui state_before = mean_state;
+                            do_generation_(population, mean_state, dyn_cache, nbuf, gen, local_rule, g);
+                            if (j_before > 0 && j_before < N) {
+                                Vector grad = mean_state.cast<double>() - state_before.cast<double>();
+                                thr_sum[tid].row(j_before)  += grad.transpose();
+                                thr_sum2[tid].row(j_before) += grad.array().square().matrix().transpose();
+                                thr_cnt[tid](j_before)      += 1;
+                            }
+                        } else {
+                            do_generation_(population, mean_state, dyn_cache, nbuf, gen, local_rule, g);
+                        }
+                    } else {
+                        do_generation_(population, mean_state, dyn_cache, nbuf, gen, local_rule, g);
+                        if (g >= transitory) {
+                            const int j = static_cast<int>(mean_state(0));
+                            if (j > 0 && j < N) {
+                                Vector grad = local_rule.compute_exact_gradient(
+                                    population, network_, game_, grad_cache, nbuf2, K, beta_);
+                                thr_sum[tid].row(j)  += grad.transpose();
+                                thr_sum2[tid].row(j) += grad.array().square().matrix().transpose();
+                                thr_cnt[tid](j)      += 1;
+                            }
                         }
                     }
                 }
@@ -922,14 +970,29 @@ namespace egttools::FinitePopulations {
                 }
 
                 for (int g = 0; g < T; ++g) {
-                    do_generation_(population, mean_state, dyn_cache, nbuf, gen, local_rule, static_cast<int64_t>(g));
-                    const int j = static_cast<int>(mean_state(0));
-                    if (j > 0 && j < N) {
-                        Vector grad = local_rule.compute_exact_gradient(
-                            population, network_, game_, grad_cache, nbuf2, K, beta_);
-                        thr_sum[tid][g].row(j)  += grad.transpose();
-                        thr_sum2[tid][g].row(j) += grad.array().square().matrix().transpose();
-                        thr_cnt[tid][g](j)      += 1;
+                    if constexpr (UR::synchronous) {
+                        // See the (non-time-dependent) estimate_agos for why
+                        // synchronous rules use an empirical one-generation
+                        // Δmean_state estimate instead of compute_exact_gradient.
+                        const int j_before = static_cast<int>(mean_state(0));
+                        const VectorXui state_before = mean_state;
+                        do_generation_(population, mean_state, dyn_cache, nbuf, gen, local_rule, static_cast<int64_t>(g));
+                        if (j_before > 0 && j_before < N) {
+                            Vector grad = mean_state.cast<double>() - state_before.cast<double>();
+                            thr_sum[tid][g].row(j_before)  += grad.transpose();
+                            thr_sum2[tid][g].row(j_before) += grad.array().square().matrix().transpose();
+                            thr_cnt[tid][g](j_before)      += 1;
+                        }
+                    } else {
+                        do_generation_(population, mean_state, dyn_cache, nbuf, gen, local_rule, static_cast<int64_t>(g));
+                        const int j = static_cast<int>(mean_state(0));
+                        if (j > 0 && j < N) {
+                            Vector grad = local_rule.compute_exact_gradient(
+                                population, network_, game_, grad_cache, nbuf2, K, beta_);
+                            thr_sum[tid][g].row(j)  += grad.transpose();
+                            thr_sum2[tid][g].row(j) += grad.array().square().matrix().transpose();
+                            thr_cnt[tid][g](j)      += 1;
+                        }
                     }
                 }
             }

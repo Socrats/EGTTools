@@ -18,6 +18,8 @@
 
 #include <egttools/SeedGenerator.h>
 
+#include <sstream>
+
 using namespace egttools::Random;
 
 SeedGenerator::SeedGenerator() {
@@ -49,6 +51,19 @@ void SeedGenerator::setMainSeed(unsigned long seed) {
     std::lock_guard<std::mutex> lock(_mutex);
     _rng_seed = seed;
     _rng_engine.seed(_rng_seed);
+}
+
+std::string SeedGenerator::getState() const {
+    std::lock_guard<std::mutex> lock(_mutex);
+    std::ostringstream oss;
+    oss << _rng_engine;
+    return oss.str();
+}
+
+void SeedGenerator::setState(const std::string &state) {
+    std::lock_guard<std::mutex> lock(_mutex);
+    std::istringstream iss(state);
+    iss >> _rng_engine;
 }
 
 std::mt19937_64 * egttools::Random::thread_local_generator() {

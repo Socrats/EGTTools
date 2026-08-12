@@ -1698,10 +1698,12 @@ Numerical solver for evolutionary dynamics under the pairwise comparison rule.
 )pbdoc"
                 )
                 .def(
-                    py::init<size_t, FinitePopulations::AbstractGame &, size_t>(),
+                    py::init<size_t, FinitePopulations::AbstractGame &, size_t,
+                             std::optional<unsigned long int>>(),
                     py::arg("pop_size"),
                     py::arg("game"),
                     py::arg("cache_size"),
+                    py::arg("seed") = py::none(),
                     py::keep_alive<1, 3>(),
                     R"pbdoc(
 Construct a numerical solver for a finite-population game.
@@ -1714,6 +1716,14 @@ game : egttools.games.AbstractGame
     Game object implementing the payoff and fitness structure.
 cache_size : int
     Maximum cache size for fitness computations.
+seed : int, optional
+    If given, seeds this instance's sequential-method generator (used by
+    ``evolve``/``run``/``run_with_mutation``/etc.) independently of the
+    process-global ``egttools.Random`` singleton, making those methods
+    reproducible for this instance regardless of what else is drawing from
+    the global generator. Does not affect the OpenMP-parallel batched
+    ``estimate_*`` methods, whose per-run generators still draw from the
+    global singleton. Omit (default) to keep the previous behavior.
 )pbdoc"
                 )
                 .def(

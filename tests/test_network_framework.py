@@ -35,6 +35,7 @@ from egttools.numerical.structure import (
     NetworkMCEstimatorPC,
     NetworkMCEstimatorBD,
     NetworkMCEstimatorDB,
+    NetworkMCEstimatorLP,
     NetworkCoEvolutionaryPC,
 )
 from egttools.numerical.structure.factories import (
@@ -203,6 +204,104 @@ def test_db_gradient_sums_to_zero():
     population = list(rng.integers(0, 2, size=N))
     grad = np.asarray(estimator.calculate_gradient_of_selection(population))
     np.testing.assert_allclose(grad.sum(), 0.0, atol=1e-12)
+
+
+# ---------------------------------------------------------------------------
+# 4b. estimate_agos: LinearProportional (synchronous) must not silently
+# return an all-zero gradient. LinearProportional::compute_exact_gradient
+# is a stub (Vector::Zero) since synchronous rules have no closed-form
+# per-step transition probability; estimate_agos must route synchronous
+# rules through an empirical one-generation Δmean_state estimate instead
+# (see NetworkMCEstimator::estimate_agos's `if constexpr (UR::synchronous)`
+# branch) rather than calling compute_exact_gradient directly. Before that
+# fix, every gradient sample here was silently 0.
+# ---------------------------------------------------------------------------
+
+def _lp_beta(game: CoopDefectGame) -> float:
+    """D_> normalisation constant required by LinearProportional: max(T,1) - min(S,0)."""
+    return max(game.T, 1.0) - min(game.S, 0.0)
+
+
+def test_lp_agos_not_identically_zero():
+    N = 20
+    game = CoopDefectGame(R=1.0, S=-0.5, T=1.5, P=0.0)
+    topo = ring_topology(N)
+    estimator = NetworkMCEstimatorLP(game, topo, 2, beta=_lp_beta(game), mu=0.0, cache_size=1000)
+
+    mean_G, se_G = estimator.estimate_agos(nb_runs=150, nb_generations=25, transitory=5)
+    mean_G = np.asarray(mean_G)
+    se_G = np.asarray(se_G)
+
+    assert mean_G.shape == (N + 1, 2)
+    assert se_G.shape == (N + 1, 2)
+    assert not np.allclose(mean_G, 0.0), (
+        "LinearProportional AGoS returned an all-zero gradient -- "
+        "compute_exact_gradient's stub is leaking through estimate_agos again."
+    )
+
+
+def test_lp_agos_time_dependent_not_identically_zero():
+    N = 16
+    game = CoopDefectGame(R=1.0, S=-0.5, T=1.5, P=0.0)
+    topo = ring_topology(N)
+    estimator = NetworkMCEstimatorLP(game, topo, 2, beta=_lp_beta(game), mu=0.0, cache_size=1000)
+
+    mean_G_t, se_G_t = estimator.estimate_agos_time_dependent(nb_runs=100, nb_generations=15)
+    mean_G_t = np.asarray(mean_G_t)
+
+    assert mean_G_t.shape == (15, N + 1, 2)
+    assert not np.allclose(mean_G_t, 0.0)
+
+
+def test_lp_agos_cooperator_gradient_responds_to_game_parameters():
+    """Qualitative/directional check: a game where cooperation strictly
+    dominates (no temptation to defect, T <= R) must show a systematically
+    less negative (more cooperation-favoring) gradient for strategy 0 than
+    a harsh PD (high T, low S) at the same intermediate cooperator counts --
+    confirms the fix responds sensibly to the game, not just "any nonzero
+    number"."""
+    N = 24
+    topo = ring_topology(N)
+
+    harsh_pd = CoopDefectGame(R=1.0, S=-1.0, T=2.0, P=0.0)
+    friendly = CoopDefectGame(R=1.0, S=0.2, T=1.0, P=0.0)  # T<=R: cooperation dominates
+
+    est_harsh = NetworkMCEstimatorLP(harsh_pd, topo, 2, beta=_lp_beta(harsh_pd), mu=0.0, cache_size=1000)
+    est_friendly = NetworkMCEstimatorLP(friendly, topo, 2, beta=_lp_beta(friendly), mu=0.0, cache_size=1000)
+
+    egt.Random.init_with_seed(2024)
+    mean_harsh, _ = est_harsh.estimate_agos(nb_runs=300, nb_generations=25, transitory=5)
+    egt.Random.init_with_seed(2024)
+    mean_friendly, _ = est_friendly.estimate_agos(nb_runs=300, nb_generations=25, transitory=5)
+
+    mean_harsh = np.asarray(mean_harsh)
+    mean_friendly = np.asarray(mean_friendly)
+
+    # Average cooperator-strategy (column 0) gradient over the interior
+    # (excluding the absorbing boundaries j=0 and j=N) must be higher
+    # (more cooperation-favoring) under the friendly game.
+    interior = slice(1, N)
+    avg_harsh = mean_harsh[interior, 0].mean()
+    avg_friendly = mean_friendly[interior, 0].mean()
+    assert avg_friendly > avg_harsh, (
+        f"Expected the cooperation-dominant game's gradient ({avg_friendly:.4f}) to be "
+        f"higher (more cooperation-favoring) than the harsh PD's ({avg_harsh:.4f})"
+    )
+
+
+def test_pc_agos_unaffected_by_synchronous_dispatch():
+    """Regression guard: the if constexpr (UR::synchronous) branch added to
+    estimate_agos must leave the asynchronous path (compute_exact_gradient)
+    exactly as before."""
+    N = 16
+    game = CoopDefectGame()
+    topo = ring_topology(N)
+    estimator = NetworkMCEstimatorPC(game, topo, 2, beta=1.0, mu=0.0, cache_size=1000)
+
+    mean_G, se_G = estimator.estimate_agos(nb_runs=150, nb_generations=25, transitory=5)
+    mean_G = np.asarray(mean_G)
+    assert mean_G.shape == (N + 1, 2)
+    assert not np.allclose(mean_G, 0.0)
 
 
 # ---------------------------------------------------------------------------
