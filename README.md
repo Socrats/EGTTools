@@ -101,18 +101,31 @@ After that, `conda install egttools` works without a channel flag.
 
 ## 🖥️ Platform Notes
 
+These notes apply when **building from source**; the prebuilt pip/conda
+packages already bundle everything below.
+
 ### 🐧 Linux
 
-- OpenMP is fully supported and enabled by default.
-- Packages are built with optimized BLAS/LAPACK (via conda's `libblas`/`liblapack`).
-- Recommended for high-performance simulation runs.
+- OpenMP is enabled by default (`USE_OPENMP=ON`).
+- System packages needed: `libomp-dev`, `libblas-dev`, `liblapack-dev`,
+  `autoconf`, `automake`, `autoconf-archive` (see
+  [`build_tools/github/apt-packages.txt`](build_tools/github/apt-packages.txt)):
+
+  ```bash
+  sudo apt-get install -y libomp-dev libblas-dev liblapack-dev autoconf automake autoconf-archive
+  ```
+
+- Boost and Eigen are fetched automatically via the bundled `vcpkg` submodule
+  — no manual installation needed.
+- BLAS/LAPACK acceleration is auto-detected (system BLAS/LAPACK); there is no
+  toggle to enable/disable it.
 
 ### 🍎 macOS (Intel or Apple Silicon)
 
 - Supported on both `x86_64` and `arm64` (M1–M4).
-- OpenMP is enabled by default via `llvm-openmp`.
 - **The conda package is the easiest install on macOS** — all native
-  dependencies are resolved automatically.
+  dependencies are resolved automatically. If you only need the Python
+  package, prefer that over building from source.
 - When using pip in a conda environment, prefer
   [miniforge](https://github.com/conda-forge/miniforge) for ABI compatibility:
 
@@ -121,33 +134,57 @@ After that, `conda install egttools` works without a channel flag.
   pip install egttools --no-deps
   ```
 
+- When building **from source**, install `libomp` (and `openblas`/`lapack`
+  for acceleration) via Homebrew or conda, e.g.:
+
+  ```bash
+  brew install libomp openblas lapack autoconf automake autoconf-archive
+  ```
+
+  CMake needs to find the `libomp` install; the most reliable way is to point
+  it at the package directory explicitly via `EGTTOOLS_EXTRA_CMAKE_ARGS` when
+  building (see below), e.g. with a conda-installed `llvm-openmp`:
+
+  ```bash
+  export EGTTOOLS_EXTRA_CMAKE_ARGS="-DLIBOMP_DIR=/path/to/llvm-openmp/pkg"
+  ```
+
+- BLAS/LAPACK acceleration uses Apple's `Accelerate` framework automatically
+  when available, falling back to OpenBLAS/LAPACK otherwise — no manual
+  toggle needed.
+
 ### 🪟 Windows (x86_64 and ARM64)
 
 - Windows wheels are available for both Intel and ARM architectures.
 - OpenMP is currently not available on Windows.
 - Simulations will fall back to single-threaded mode.
-- BLAS/LAPACK can be enabled via conda or system libraries if building from source.
+- No system OpenMP/BLAS packages are needed — these are provided by MSVC.
+  Boost and Eigen are fetched automatically via `vcpkg`.
 
 ---
 
 ## ⚙️ Advanced Configuration (BLAS, OpenMP, vcpkg)
 
-The C++ backend of EGTTools supports several build-time options that can be toggled when building from source:
+The C++ backend of EGTTools supports several build-time options (defined in
+`CMakeLists.txt`) that can be toggled when building from source:
 
-| Feature       | CMake Option               | Default          | Description                                     |
-|---------------|----------------------------|------------------|-------------------------------------------------|
-| OpenMP        | `-DEGTTOOLS_USE_OPENMP=ON` | ON (Linux/macOS) | Enables parallel computation for simulations    |
-| BLAS/LAPACK   | `-DEGTTOOLS_USE_BLAS=ON`   | OFF              | Enables matrix acceleration (e.g., OpenBLAS)    |
-| Use vcpkg     | `-DEGTTOOLS_USE_VCPKG=ON`  | ON               | Automatically fetches Boost and Eigen           |
-| Disable vcpkg | `-DEGTTOOLS_USE_VCPKG=OFF` |                  | Allows using system-provided libraries manually |
+| Feature            | CMake Option                       | Default | Description                                                       |
+|---------------------|-------------------------------------|---------|---------------------------------------------------------------------|
+| OpenMP              | `-DUSE_OPENMP=ON\|OFF`              | ON      | Enables parallel computation for simulations (Linux/macOS)          |
+| Skip vcpkg          | `-DSKIP_VCPKG=ON\|OFF`              | OFF     | Skip the vcpkg toolchain and use system-provided Boost/Eigen instead |
+| ARPACK eigensolver  | `-DEGTTOOLS_ENABLE_ARPACK=ON\|OFF`  | OFF     | Opt-in native ARPACK eigensolver (requires `arpack-ng`)              |
+| PETSc/SLEPc (MPI)   | `-DEGTTOOLS_ENABLE_PETSC=ON\|OFF`   | OFF     | Opt-in MPI-distributed eigensolver (`numerical_mpi_` module)         |
 
-### 🧰 When to disable vcpkg
+BLAS/LAPACK is **auto-detected** (Apple Accelerate on macOS, system
+BLAS/LAPACK on Linux/Windows) — there is no separate flag to toggle it.
 
-You may want to disable `vcpkg` in CI environments or when using a distribution that provides all necessary dependencies
-system-wide. To do this:
+### 🧰 When to skip vcpkg
+
+You may want to skip `vcpkg` in CI environments or when using a distribution that provides all necessary dependencies
+system-wide:
 
 ```bash
-cmake -DEGTTOOLS_USE_VCPKG=OFF .
+EGTTOOLS_EXTRA_CMAKE_ARGS="-DSKIP_VCPKG=ON" pip install .
 ```
 
 In this case, you are responsible for ensuring that compatible versions of Boost and Eigen are available in your system
@@ -157,7 +194,10 @@ paths.
 
 ## 🔧 Build from Source (with vcpkg)
 
-To build EGTTools from source with all dependencies managed via `vcpkg`, run:
+EGTTools builds via [scikit-build](https://scikit-build.readthedocs.io/), so
+CMake configuration happens through `pip`/`setup.py`, not by invoking
+`cmake`/`make` directly. To build from source with all dependencies managed
+via the bundled `vcpkg` submodule, run:
 
 ```bash
 git clone --recurse-submodules https://github.com/Socrats/EGTTools.git
@@ -165,11 +205,29 @@ cd EGTTools
 pip install .
 ```
 
-To configure optional features manually, such as OpenMP or BLAS support:
+For iterative development (rebuilding just the C++ extension in place):
 
 ```bash
-cmake -DEGTTOOLS_USE_OPENMP=ON -DEGTTOOLS_USE_BLAS=ON -DEGTTOOLS_USE_VCPKG=OFF .
-make
+python setup.py build_ext --inplace
+```
+
+To pass extra CMake options (e.g. disabling OpenMP, skipping vcpkg, enabling
+ARPACK), use the `EGTTOOLS_EXTRA_CMAKE_ARGS` environment variable — this is
+the same mechanism the CI wheel builds use:
+
+```bash
+EGTTOOLS_EXTRA_CMAKE_ARGS="-DUSE_OPENMP=OFF" pip install .
+```
+
+On macOS you will typically also need to point CMake at your `libomp`
+installation this way (see the macOS platform notes above).
+
+`vcpkg` is auto-detected from a `vcpkg/` submodule checkout at the project
+root; if you've bootstrapped `vcpkg` elsewhere, point `VCPKG_PATH` at that
+**project root** (not the `vcpkg` subdirectory itself):
+
+```bash
+export VCPKG_PATH=/path/to/your/checkout
 ```
 
 If using `conda`, make sure to activate your environment first and ensure that Python, NumPy, and compiler toolchains
