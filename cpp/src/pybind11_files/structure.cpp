@@ -28,8 +28,9 @@ static void bind_network_mc_estimator_methods(py::class_<T> &cls) {
 
     cls.def(
         py::init([](GameT &game, const NDT &topo,
-                    int nb_s, double beta, double mu, int cache) {
-            return new T(game, topo, nb_s, beta, mu, cache);
+                    int nb_s, double beta, double mu, int cache,
+                    std::optional<unsigned long int> seed) {
+            return new T(game, topo, nb_s, beta, mu, cache, seed);
         }),
         py::arg("game"),
         py::arg("topology"),
@@ -37,6 +38,7 @@ static void bind_network_mc_estimator_methods(py::class_<T> &cls) {
         py::arg("beta"),
         py::arg("mu"),
         py::arg("cache_size") = 100000,
+        py::arg("seed") = py::none(),
         py::keep_alive<1, 2>(),
         R"pbdoc(
 Construct a NetworkMCEstimator.
@@ -55,6 +57,11 @@ mu : float
     Mutation probability per time step.
 cache_size : int, optional
     Per-thread LRU fitness cache size (default 100000).
+seed : int, optional
+    If given, seeds the step-by-step session generator (used by
+    ``initialize``/``step``) independently of the process-global
+    ``egttools.Random`` singleton. Does not affect the OpenMP-parallel
+    batched ``estimate_*`` methods. Omit (default) for prior behavior.
 )pbdoc"
     );
 

@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <mutex>
 #include <random>
+#include <string>
 #include <thread>
 
 namespace egttools::Random {
@@ -99,6 +100,28 @@ namespace egttools::Random {
         * @return main seed (unsigned long int)
         */
         [[nodiscard]] unsigned long int getMainSeed() const { return _rng_seed; }
+
+        /**
+        * @brief Serializes the full engine state (not just the original seed).
+        *
+        * Unlike getMainSeed(), which only reports the last explicitly-set seed,
+        * this captures the engine's current position in its sequence — enough
+        * to resume draws exactly where they left off via set_state(). Intended
+        * for checkpointing long-running Monte Carlo estimations.
+        *
+        * @return opaque string encoding of the mt19937_64 engine state.
+        */
+        [[nodiscard]] std::string getState() const;
+
+        /**
+        * @brief Restores the engine state previously captured by getState().
+        *
+        * Does not change the recorded main seed (getMainSeed() still reports
+        * whatever seed was last set via setMainSeed()/the constructor).
+        *
+        * @param state opaque string previously returned by getState().
+        */
+        void setState(const std::string &state);
 
     private:
         // Random generator

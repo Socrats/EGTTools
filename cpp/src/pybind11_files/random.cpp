@@ -131,4 +131,54 @@ egttools.Random.init_with_seed
 egttools.Random.seed
 )pbdoc"
     );
+
+    random_mod.def(
+        "get_state",
+        []() {
+            return Random::SeedGenerator::getInstance().getState();
+        },
+        R"pbdoc(
+Capture the full internal engine state, not just the originating seed.
+
+Unlike ``current_seed()``, which only reports the last explicitly-set seed,
+this captures the engine's current position in its draw sequence — enough
+to resume exactly where it left off via ``set_state()``. Intended for
+checkpointing long-running Monte Carlo estimations so a resumed run does
+not repeat already-consumed random draws.
+
+Returns
+-------
+str
+    Opaque string encoding of the current engine state. Treat as a black
+    box; only pass it back to ``set_state()``.
+
+See Also
+--------
+egttools.Random.set_state
+)pbdoc"
+    );
+
+    random_mod.def(
+        "set_state",
+        [](const std::string &state) {
+            Random::SeedGenerator::getInstance().setState(state);
+        },
+        py::arg("state"),
+        R"pbdoc(
+Restore an engine state previously captured by ``get_state()``.
+
+Does not change what ``current_seed()`` reports — that still reflects the
+last seed set via ``init_with_seed()``/``seed()``, independent of the live
+engine position restored here.
+
+Parameters
+----------
+state : str
+    A string previously returned by ``get_state()``.
+
+See Also
+--------
+egttools.Random.get_state
+)pbdoc"
+    );
 }
