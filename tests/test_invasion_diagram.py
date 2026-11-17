@@ -1,0 +1,148 @@
+"""Tests for egttools.plotting.invasion_graph and draw_invasion_diagram."""
+import matplotlib
+import numpy as np
+import pytest
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+from matplotlib.patches import FancyArrowPatch
+
+import egttools as egt
+from egttools.analytical import PairwiseComparison
+
+Z = 50
+
+
+def sml(payoffs, beta=1.0):
+    evolver = PairwiseComparison(Z, egt.games.Matrix2PlayerGameHolder(len(payoffs), np.asarray(payoffs, float)))
+    transitions, fixation = evolver.calculate_transition_and_fixation_matrix_sml(beta)
+    return np.asarray(fixation), egt.utils.calculate_stationary_distribution(np.asarray(transitions).T)
+
+
+def edges(graph):
+    return {(u, v): d["kind"] for u, v, d in graph.edges(data=True)}
+
+
+def ratio_matrix(r01, r10):
+    """Fixation matrix for two strategies with given rho/rho_N in each direction."""
+    return np.array([[0., r01], [r10, 0.]]) / Z
+
+
+def test_pair_classification():
+    tol = 0.005
+    # one-way selection: 1 invades 0
+    assert edges(egt.plotting.invasion_graph(ratio_matrix(3., .2), Z)) == {(0, 1): "selection"}
+    # mutual invasion: two directed edges
+    assert edges(egt.plotting.invasion_graph(ratio_matrix(3., 2.), Z)) == {(0, 1): "selection", (1, 0): "selection"}
+    # exact and near-neutral pairs: one drift edge
+    assert edges(egt.plotting.invasion_graph(ratio_matrix(1., 1.), Z)) == {(0, 1): "drift"}
+    assert edges(egt.plotting.invasion_graph(ratio_matrix(1 + tol / 2, 1 - tol / 2), Z)) == {(0, 1): "drift"}
+    # neither invades (bistable pair): no edge
+    assert edges(egt.plotting.invasion_graph(ratio_matrix(.5, .4), Z)) == {}
+    # just above the tolerance: selection
+    assert edges(egt.plotting.invasion_graph(ratio_matrix(1 + 2 * tol, 1 - 2 * tol), Z)) == {(0, 1): "selection"}
+
+
+def test_near_neutral_strategies_are_drift():
+    # X and Y differ by 1e-5 in one payoff: rho/rho_N is 1.0002 and 0.9999
+    fixation, sd = sml([[1., 1., 2.], [1. + 1e-5, 1., 2.], [0., 0., 1.]])
+    graph = egt.plotting.invasion_graph(fixation, Z, sd, ["X", "Y", "W"])
+    assert edges(graph) == {(0, 1): "drift", (2, 0): "selection", (2, 1): "selection"}
+
+
+def test_graph_attributes_and_filtering():
+    fixation, sd = sml([[0., 3., 1.], [1., 2., 1.], [-1., -1., 0.]])
+    graph = egt.plotting.invasion_graph(fixation, Z, sd, ["H", "D", "L"])
+    assert graph.graph["population_size"] == Z
+    assert graph.nodes[0]["label"] == "H"
+    assert graph.nodes[0]["frequency"] == pytest.approx(sd[0])
+    for u, v, data in graph.edges(data=True):
+        assert data["ratio"] == pytest.approx(fixation[u, v] * Z)
+    filtered = egt.plotting.invasion_graph(fixation, Z, sd, ["H", "D", "L"], min_frequency=1e-3)
+    assert 2 not in filtered.nodes                      # the dominated strategy is filtered out
+    assert all(2 not in e for e in filtered.edges)
+
+
+def test_duplicate_labels_do_not_merge_strategies():
+    graph = egt.plotting.invasion_graph(ratio_matrix(1., 1.), Z, labels=["A", "A"])
+    assert graph.number_of_nodes() == 2
+
+
+@pytest.mark.parametrize("bad", [dict(fixation=np.zeros((2, 3))), dict(population_size=1),
+                                 dict(labels=["only one"]), dict(sd=np.ones(3))])
+def test_invalid_input(bad):
+    with pytest.raises(ValueError):
+        egt.plotting.invasion_graph(bad.get("fixation", ratio_matrix(1., 1.)), bad.get("population_size", Z),
+                                    bad.get("sd"), bad.get("labels"))
+
+
+def test_drawing_mutual_invasion_and_drift():
+    fixation, sd = sml([[0., 3., 1., 0.], [1., 2., 1., 1.], [-1., -1., 0., -1.], [0., 3., 1., 0.]])
+    graph = egt.plotting.invasion_graph(fixation, Z, sd, ["Hawk", "Dove", "Loser", "HawkCopy"])
+    _, ax = plt.subplots()
+    returned = egt.plotting.draw_invasion_diagram(graph, ax=ax)
+    assert returned is ax
+    patches = [p for p in ax.patches if isinstance(p, FancyArrowPatch)]
+    kinds = list(edges(graph).values())
+    assert len(patches) == len(kinds)
+    curved = [p for p in patches if getattr(p.get_connectionstyle(), "rad", 0) != 0]
+    mutual = [e for e in graph.edges if graph.has_edge(e[1], e[0]) and graph.edges[e]["kind"] == "selection"]
+    assert len(curved) == len(mutual) == 4               # Hawk<->Dove and HawkCopy<->Dove
+    dashed = [p for p in patches if p.get_linestyle() in ("--", "dashed")]
+    assert len(dashed) == kinds.count("drift") == 1      # Hawk -- HawkCopy
+    ratio_texts = [t for t in ax.texts if "rho" in t.get_text()]
+    assert len(ratio_texts) == kinds.count("selection")
+    plt.close("all")
+
+
+def test_drawing_with_filter_and_colours_indexed_by_strategy():
+    fixation, sd = sml([[0., 3., 1.], [1., 2., 1.], [-1., -1., 0.]])
+    graph = egt.plotting.invasion_graph(fixation, Z, sd, ["H", "D", "L"], min_frequency=1e-3)
+    _, ax = plt.subplots()
+    egt.plotting.draw_invasion_diagram(graph, ax=ax, colors=["red", "blue", "gray"],
+                                       scale_nodes_by_frequency=True, scale_edges_by_ratio=True)
+    facecolors = ax.collections[-1].get_facecolors()
+    np.testing.assert_allclose(facecolors[:, :3], [matplotlib.colors.to_rgb(c) for c in ("red", "blue")])
+    _, ax = plt.subplots()
+    egt.plotting.draw_invasion_diagram(graph, ax=ax, colors={"H": "red", "D": "blue"}, layout={0: (0, 0), 1: (1, 0)})
+    plt.close("all")
+
+
+def test_min_ratio_and_labels_can_be_hidden():
+    fixation, sd = sml([[0., 3., 1.], [1., 2., 1.], [-1., -1., 0.]])
+    graph = egt.plotting.invasion_graph(fixation, Z, sd)
+    _, ax = plt.subplots()
+    egt.plotting.draw_invasion_diagram(graph, ax=ax, min_ratio=1e6, show_frequencies=False)
+    assert not [p for p in ax.patches if isinstance(p, FancyArrowPatch)]
+    assert {t.get_text() for t in ax.texts} == {"0", "1", "2"}
+    plt.close("all")
+
+
+@pytest.mark.parametrize("label_position", ["outside", "inside"])
+def test_label_positions(label_position):
+    fixation, sd = sml([[0., 3., 1.], [1., 2., 1.], [-1., -1., 0.]])
+    graph = egt.plotting.invasion_graph(fixation, Z, sd, ["H", "D", "L"])
+    _, ax = plt.subplots()
+    egt.plotting.draw_invasion_diagram(graph, ax=ax, label_position=label_position, show_ratios=False,
+                                       label_offsets={"L": (0., -40.)})
+    texts = {t.get_text(): t for t in ax.texts}
+    assert {"H", "D", "L"} <= set(texts)
+    assert {f"{f:.2f}" for f in sd} <= set(texts)
+    if label_position == "outside":
+        assert texts["L"].xyann == (0., -40.)            # custom offset used for the name block
+    else:
+        assert texts["H"].xyann == texts["H"].xy         # name written at the node itself, no offset
+    plt.close("all")
+
+
+def test_invalid_label_position():
+    graph = egt.plotting.invasion_graph(ratio_matrix(3., .2), Z)
+    with pytest.raises(ValueError):
+        egt.plotting.draw_invasion_diagram(graph, label_position="above")
+    plt.close("all")
+
+
+def test_contrasting_text_color():
+    from egttools.plotting.indicators import _contrasting_text_color
+    assert _contrasting_text_color("navy") == "white"
+    assert _contrasting_text_color("yellow") != "white"

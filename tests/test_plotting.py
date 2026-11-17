@@ -47,15 +47,10 @@ def test_draw_invasion_diagram():
         transition_matrix.transpose()
     )
 
-    assert isinstance(
-        egt.plotting.draw_invasion_diagram(
-            strategies=strategy_labels,
-            drift=1,
-            fixation_probabilities=fixation_probabilities,
-            stationary_distribution=stationary_distribution,
-        ),
-        nx.DiGraph,
-    )
+    graph = egt.plotting.invasion_graph(fixation_probabilities, Z, stationary_distribution, strategy_labels)
+    assert isinstance(graph, nx.DiGraph)
+    ax = egt.plotting.draw_invasion_diagram(graph)
+    assert ax.get_figure() is not None
 
 
 class DummyPairwiseReplicatorGame(egt.games.AbstractReplicatorGame):
