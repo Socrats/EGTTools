@@ -9,7 +9,7 @@ and the known numerical bugs fixed. PyPI is still at 0.1.14.2.
 |----|------|--------|-----|------|----|------|-----|
 | REL-01 | Clean up `pyproject.toml` configuration | done | P0 | S | 0.2 | — | merge `83d6789` |
 | REL-02 | Move non-test scripts out of `tests/` | todo | P1 | S | 0.2 | — | — |
-| REL-03 | Fix `calculate_stationary_distribution` (+ `_non_hermitian`) | todo | P0 | M | 0.2 | — | — |
+| REL-03 | Fix `calculate_stationary_distribution` (+ `_non_hermitian`) | done | P0 | M | 0.2 | — | merge `233473c` |
 | REL-04 | Fix fractional-state cast in simplex gradient plotting | todo | P1 | S | 0.2 | — | — |
 | REL-05 | Diagnose and fix failing wheel jobs (sdist, win_amd64, win_arm64) | todo | P0 | M | 0.2 | — | — |
 | REL-06 | Add CPython 3.14 wheels | todo | P1 | S | 0.2 | REL-05 | — |
@@ -36,6 +36,9 @@ and the known numerical bugs fixed. PyPI is still at 0.1.14.2.
   a proper left-eigenvector or linear-system solve. Add tests against chains
   whose stationary distribution is known in closed form. Keep the public
   signatures; the full solver API is `SOL-01`.
+  *Done:* Schur form reordered; sparse input solved via a reduced sparse system
+  (SuperLU), ARPACK fallback for reducible chains; `scipy.sparse` arrays accepted.
+  The plain `eig` path was already correct.
 - **REL-04**: `plotting/simplified.py` lines ~413/416 pass fractional states to
   `calculate_gradient_of_selection*`. NumPy warns "invalid value encountered in
   cast", which suggests truncation to integers. First confirm whether the
