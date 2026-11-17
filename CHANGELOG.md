@@ -18,6 +18,33 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 - Both functions failed on `scipy.sparse` array types (e.g. `csr_array`); all sparse
   matrix and array types are now accepted.
 
+- Monte Carlo simulation of the pairwise comparison process (`PairwiseComparisonNumerical`)
+  spent one update too many in homogeneous populations before each mutation. As a result,
+  `estimate_stationary_distribution`, `estimate_stationary_distribution_sparse` and
+  `estimate_stationary_indicators` overweighted monomorphic states (by a factor of about
+  1/(1-μ)), `estimate_strategy_distribution` skipped the state reached by each such mutation,
+  and `run_with_mutation` mutated at rate μ/(1+μ) in homogeneous states. Waiting times that
+  run past the end of a simulation window no longer trigger a mutation, which affected the
+  final state returned by `evolve` and the start of the counting phase. Results obtained with
+  these methods change, most visibly for larger μ.
+- `run_with_mutation` with a transient period could write one row past the end of its
+  output matrix.
+- `PairwiseComparison.calculate_gradient_of_selection` scaled the gradient by 2/k for k ≥ 3
+  strategies, and `calculate_gradient_of_selection_with_mutation` weighted mutation and
+  selection inconsistently (wrong for every k when μ > 0). Both now return the expected
+  change in strategy counts per update, consistent with `calculate_transition_matrix`.
+  Directions and roots without mutation are unchanged; magnitudes for k ≥ 3 and anything
+  computed with μ > 0 change.
+- `StochDynamics.full_gradient_selection{,_without_mutation}` drew the role model from all Z
+  individuals instead of the other Z−1, and its mutation term only added probability
+  (gradient components did not sum to zero).
+
+### Added
+
+- Documentation page specifying the pairwise comparison process (state space, fitness,
+  update rule, transition probabilities, gradient of selection) with references, and tests
+  that check every implementation against it.
+
 ### Changed
 
 - Both functions now warn when a sparse chain is reducible (no unique stationary

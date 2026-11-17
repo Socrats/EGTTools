@@ -514,23 +514,14 @@ class StochDynamics:
 
         Returns
         -------
-        npt.NDArray[np.float64][numpy.float64[m,m]]
-            Matrix indicating the likelihood of change in the population given a starting point.
+        numpy.ndarray
+            Expected change in the number of individuals of each strategy in one update
+            (Definition 5.1 in the pairwise comparison theory page of the documentation).
         """
-        probability_selecting_strategy_first = population_state / self.pop_size
-        probability_selecting_strategy_second = population_state / self.pop_size
-        probabilities = np.outer(probability_selecting_strategy_first, probability_selecting_strategy_second)
-        fitness = np.zeros(shape=(self.nb_strategies, self.nb_strategies))
-        for j in range(self.nb_strategies):
-            if population_state[j] == 0:
-                continue
-            for i in range(self.nb_strategies):
-                if population_state[i] == 0:
-                    continue
-                fitness[j, i] = self.full_fitness(i, j, population_state)
-
-        return (probabilities * np.tanh((beta / 2) * fitness)).sum(axis=0) * (1 - self.mu) + (
-                self.mu / (self.nb_strategies - 1)) * probability_selecting_strategy_second
+        counts = np.asarray(population_state, dtype=np.float64)
+        selection = self.full_gradient_selection_without_mutation(population_state, beta)
+        mutation = (self.mu / (self.nb_strategies - 1)) * (self.pop_size - self.nb_strategies * counts) / self.pop_size
+        return (1 - self.mu) * selection + mutation
 
     def full_gradient_selection_without_mutation(self, population_state: np.ndarray, beta: float) -> np.ndarray:
         """
@@ -551,9 +542,10 @@ class StochDynamics:
             Matrix indicating the likelihood of change in the population given a starting point.
         """
 
-        probability_selecting_strategy_first = population_state / self.pop_size
-        probability_selecting_strategy_second = population_state / self.pop_size
-        probabilities = np.outer(probability_selecting_strategy_first, probability_selecting_strategy_second)
+        counts = np.asarray(population_state, dtype=np.float64)
+        # Probability that the focal individual plays j and the role model, drawn from the
+        # other Z - 1 individuals, plays i.
+        probabilities = np.outer(counts, counts) / (self.pop_size * (self.pop_size - 1))
         fitness = np.zeros(shape=(self.nb_strategies, self.nb_strategies))
         for j in range(self.nb_strategies):
             if population_state[j] == 0:
@@ -561,7 +553,7 @@ class StochDynamics:
             for i in range(self.nb_strategies):
                 if population_state[i] == 0:
                     continue
-                fitness[j, i] = self.full_fitness(i, j, population_state)
+                fitness[j, i] = self.full_fitness(i, j, population_state)  # f_i - f_j
 
         return (probabilities * np.tanh((beta / 2) * fitness)).sum(axis=0)
 

@@ -381,36 +381,27 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transitio
 
 egttools::Vector egttools::FinitePopulations::analytical::PairwiseComparison::calculate_gradient_of_selection(
     const double beta, const Eigen::Ref<const VectorXui> &state) const {
-    // The gradient of selection can be calculated by summing all
-    // transition incoming transition probabilities and resting all
-    // outgoing transition probabilities.
-    // We can do that by looping over all possible dimensions (nb_strategies)
-    // adding a delta (a change possible change in the state), calculating the transition
-    // probability from the new state to the current, and subtracting it from the probability
-    // of transitioning from the current state to the new.
-
+    // Definition 5.1 (mu = 0) of docs/theory/pairwise_comparison.md:
+    //   G_i = sum_{j != i} [T_{j->i} - T_{i->j}]
+    //       = sum_{j != i} n_i n_j / (Z (Z - 1)) tanh(beta/2 (f_i - f_j)).
+    // Each unordered pair {i, j} contributes the same net flow with opposite signs to
+    // G_i and G_j, so every pair is visited exactly once.
     Vector gradients = egttools::Vector::Zero(nb_strategies_);
     VectorXui current_state(state);
 
     for (int i = 0; i < nb_strategies_; ++i) {
-        // The first loop is used to get the dimension for which
-        // we calculate the gradient.
         if (current_state(i) == 0) continue;
-
-        // Check if decreasing this strategy is possible, otherwise the gradient
-        // in this direction is 0.
-        for (int j = 0; j < nb_strategies_; ++j) {
-            // The second loop is used to get the direction of change
-            if (j == i) continue;
+        for (int j = i + 1; j < nb_strategies_; ++j) {
             if (current_state(j) == 0) continue;
 
-            auto gradient_increase = calculate_local_gradient_(j, i, beta, current_state);
-            gradients(i) += gradient_increase;
-            gradients(j) -= gradient_increase;
+            // Net flow from j to i: T_{j->i} - T_{i->j}.
+            const auto net_flow = calculate_local_gradient_(j, i, beta, current_state);
+            gradients(i) += net_flow;
+            gradients(j) -= net_flow;
         }
     }
 
-    return gradients / nb_strategies_;
+    return gradients;
 }
 
 double egttools::FinitePopulations::analytical::PairwiseComparison::effective_mutation_probability_(
@@ -446,25 +437,15 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_gradient_
         gradients = (1.0 - mu) * calculate_gradient_of_selection(beta, state);
     }
 
-    // Mutation contribution.
+    // Mutation contribution (Definition 5.1 of docs/theory/pairwise_comparison.md):
     //
-    // Under the current transition convention, the mutation-only contribution for strategy i is
+    //   sum_{j != i} [ n_j / Z - n_i / Z ] * mu / (k - 1)  =  mu / (k - 1) * (Z - k n_i) / Z,
     //
-    //   (1 / nb_strategies_) * sum_{j != i} [ x_j / Z * m_eff - x_i / Z * m_eff ]
-    //
-    // where
-    //   m_eff = mu / (nb_strategies - 1)    if nb_strategies > 2
-    //   m_eff = mu                           if nb_strategies == 2
-    //
-    // which simplifies to
-    //
-    //   m_eff / (nb_strategies * Z) * (Z - nb_strategies * x_i).
-    //
+    // i.e. inflow from every other strategy minus outflow to every other strategy, with the
+    // total mutation probability mu split uniformly over the other k - 1 strategies.
     const double mutation_probability = effective_mutation_probability_(mu);
     const double inv_population_size = 1.0 / static_cast<double>(population_size_);
-    const double inv_nb_strategies = 1.0 / static_cast<double>(nb_strategies_);
-    const double mutation_prefactor =
-            mutation_probability * inv_population_size * inv_nb_strategies;
+    const double mutation_prefactor = mutation_probability * inv_population_size;
 
     for (int i = 0; i < nb_strategies_; ++i) {
         gradients(i) += mutation_prefactor *

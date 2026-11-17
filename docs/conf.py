@@ -65,6 +65,10 @@ source_suffix = {
     '.md': 'markdown',
 }
 
+# Markdown pages (e.g. docs/theory/) write math as $...$ and $$...$$.
+myst_enable_extensions = ['dollarmath', 'amsmath']
+myst_heading_anchors = 3
+
 master_doc = 'index'
 
 templates_path = ['_templates']
