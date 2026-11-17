@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres
 to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- `egttools.utils.calculate_stationary_distribution_non_hermitian` could return a wrong
+  distribution: it used a Schur vector as the eigenvector, which is only valid when the
+  eigenvalue 1 comes first in the Schur form. The Schur form is now reordered so that it does.
+- `egttools.utils.calculate_stationary_distribution{,_non_hermitian}` no longer convert sparse
+  input to a dense matrix. Sparse input is solved with a sparse direct solver, so large state
+  spaces no longer need O(n²) memory and O(n³) time.
+- Both functions failed on `scipy.sparse` array types (e.g. `csr_array`); all sparse
+  matrix and array types are now accepted.
+
+### Changed
+
+- Both functions now warn when a sparse chain is reducible (no unique stationary
+  distribution), and `calculate_stationary_distribution_non_hermitian` warns when
+  eigenvalue 1 is not simple.
+
 ## [0.1.14] - 20-07-2025
 
 ### Added

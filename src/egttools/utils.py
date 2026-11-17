@@ -19,12 +19,14 @@
 This python module contains some utility functions
 to find saddle points and plot gradients in 2 player, 2 strategy games.
 """
+import warnings
 from warnings import warn
 
 import numpy as np
 from scipy.linalg import schur, eigvals
-from scipy.sparse import csr_matrix, csc_matrix, issparse
-from scipy.sparse.linalg import eigs as sparse_eigs
+from scipy.sparse import csr_matrix, csc_matrix, issparse, spmatrix, sparray
+from scipy.sparse import identity as sp_identity
+from scipy.sparse.linalg import eigs as sparse_eigs, spsolve, MatrixRankWarning
 from typing import Optional, List, Generator, Union, Callable, Dict
 from networkx import Graph
 from egttools.games import AbstractGame
@@ -182,90 +184,152 @@ def transform_payoffs_to_pairwise(nb_strategies: int,
         [[get_payoff_function(i, j, nb_strategies, game) for j in range(nb_strategies)] for i in range(nb_strategies)])
 
 
-def calculate_stationary_distribution(transition_matrix: Union[np.ndarray, csr_matrix, csc_matrix]) -> np.ndarray:
+def _warn_if_degenerate(transition_matrix) -> None:
+    """Warn if any transition probability is (numerically) 1, a sign of absorbing states."""
+    values = transition_matrix.data if issparse(transition_matrix) else np.asarray(transition_matrix)
+    if np.isclose(values, 1., atol=1e-11).any():
+        warn(
+            "Some of the entries in the transition matrix are close to 1 (with a tolerance of 1e-11). "
+            "This could result in more than one eigenvalue of magnitude 1 "
+            "(the Markov Chain is degenerate), so please be careful when analysing the results.", RuntimeWarning)
+
+
+def _normalize_distribution(vector: np.ndarray) -> np.ndarray:
+    """Turn an eigenvector (any sign or phase) into a probability vector."""
+    sd = np.abs(np.real(vector))
+    return sd / sd.sum()
+
+
+def _stationary_distribution_sparse(transition_matrix) -> np.ndarray:
     """
-    Calculates stationary distribution from a transition matrix of Markov chain.
+    Stationary distribution of a sparse column-stochastic matrix, without densifying it.
 
-    The use of this function is not recommended if the matrix is non-Hermitian. Please use
-    calculate_stationary_distribution_non_hermitian instead in this case.
+    Solves ``(M - I) x = 0``: one equation is redundant, so fix ``x[-1] = 1``, solve the
+    remaining (n-1)x(n-1) system with a sparse direct solver (SuperLU) and normalise. For an
+    irreducible chain the reduced system is non-singular. If it is singular (the chain is
+    reducible), falls back to ARPACK and warns.
+    """
+    n = transition_matrix.shape[0]
+    if n == 1:
+        return np.ones(1)
+    system = (csr_matrix(transition_matrix, dtype=np.float64) - sp_identity(n, format="csr")).tocsc()
+    reduced = system[:-1, :-1]
+    rhs = -system[:-1, [n - 1]].toarray().ravel()
 
-    The stationary distribution is the normalized eigenvector associated with the eigenvalue 1
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", MatrixRankWarning)
+        try:
+            solution = np.append(spsolve(reduced, rhs), 1.)
+        except (MatrixRankWarning, RuntimeError):
+            solution = None
+
+    if solution is not None and np.all(np.isfinite(solution)) and solution.min() > -1e-8 * solution.max():
+        solution = np.clip(solution, 0., None)  # remove round-off negatives
+        return solution / solution.sum()
+
+    warn("The linear system for the stationary distribution is singular, so the Markov chain is "
+         "probably reducible and has no unique stationary distribution. Falling back to the "
+         "eigenvector of the eigenvalue of largest magnitude (ARPACK).", RuntimeWarning)
+    _, eigenvectors = sparse_eigs(csr_matrix(transition_matrix, dtype=np.float64), k=1, which="LM")
+    return _normalize_distribution(eigenvectors[:, 0])
+
+
+def calculate_stationary_distribution(transition_matrix: Union[np.ndarray, spmatrix, sparray]) -> np.ndarray:
+    """
+    Calculates the stationary distribution of a Markov chain from its transition matrix.
+
+    The stationary distribution is the normalized eigenvector associated with the eigenvalue 1.
+
+    The matrix must be **column-stochastic** (each column sums to 1), i.e. the transpose of the
+    row-stochastic matrices returned by ``calculate_transition_matrix``. Pass ``T.T``.
+
+    Dense input is solved with a full eigendecomposition. Sparse input (any ``scipy.sparse``
+    matrix or array) is kept sparse and solved with a sparse direct solver, so large state
+    spaces don't need O(n²) memory.
 
     Parameters
     ----------
-    transition_matrix : Union[numpy.ndarray, scipy.sparse.csr_matrix, scipy.sparse.csc_matrix]
-        A 2 dimensional transition matrix
+    transition_matrix : Union[numpy.ndarray, scipy.sparse.spmatrix, scipy.sparse.sparray]
+        A 2 dimensional, column-stochastic transition matrix.
 
     Returns
     -------
     numpy.ndarray
         A 1-dimensional vector containing the stationary distribution
+
+    Warns
+    -----
+    RuntimeWarning
+        If some transition probability is close to 1, or if (for sparse input) the chain
+        is reducible and has no unique stationary distribution.
 
     See Also
     --------
     egttools.utils.calculate_stationary_distribution_non_hermitian
 
     """
-    if (type(transition_matrix) == csr_matrix) or (type(transition_matrix) == csc_matrix):
-        tmp = transition_matrix.toarray()
-    else:
-        tmp = transition_matrix
+    _warn_if_degenerate(transition_matrix)
 
-    # Check if there is any transition with value 1 - this would mean that the game is degenerate
-    if np.isclose(tmp, 1., atol=1e-11).any():
-        warn(
-            "Some of the entries in the transition matrix are close to 1 (with a tolerance of 1e-11). "
-            "This could result in more than one eigenvalue of magnitute 1 "
-            "(the Markov Chain is degenerate), so please be careful when analysing the results.", RuntimeWarning)
+    if issparse(transition_matrix):
+        return _stationary_distribution_sparse(transition_matrix)
 
     # calculate stationary distributions using eigenvalues and eigenvectors
-    eigenvalues, eigenvectors = np.linalg.eig(tmp)
+    eigenvalues, eigenvectors = np.linalg.eig(np.asarray(transition_matrix))
     index_stationary = np.argmin(abs(eigenvalues - 1.0))  # look for the element closest to 1 in the list of eigenvalues
-    sd = abs(eigenvectors[:, index_stationary].T.real)  # it is essential to access the matrix by column
-    return sd / sd.sum()  # normalize
+    return _normalize_distribution(eigenvectors[:, index_stationary])  # eigenvectors are stored by column
 
 
 def calculate_stationary_distribution_non_hermitian(
-        transition_matrix: Union[np.ndarray, csr_matrix, csc_matrix]) -> np.ndarray:
+        transition_matrix: Union[np.ndarray, spmatrix, sparray]) -> np.ndarray:
     """
-    Calculates stationary distribution from a transition matrix of Markov chain which is not hermitian.
+    Calculates the stationary distribution of a Markov chain using a Schur decomposition.
 
-    The stationary distribution is the normalized eigenvector associated with the eigenvalue 1
+    Produces the same result as :func:`calculate_stationary_distribution`; the Schur
+    decomposition is more numerically stable than a full eigendecomposition for
+    ill-conditioned dense matrices.
+
+    The matrix must be **column-stochastic** (each column sums to 1), i.e. the transpose of the
+    row-stochastic matrices returned by ``calculate_transition_matrix``. Pass ``T.T``.
+    Sparse input is kept sparse and solved as in :func:`calculate_stationary_distribution`.
 
     Parameters
     ----------
-    transition_matrix : Union[numpy.ndarray, scipy.sparse.csr_matrix, scipy.sparse.csc_matrix]
-        A 2 dimensional transition matrix
+    transition_matrix : Union[numpy.ndarray, scipy.sparse.spmatrix, scipy.sparse.sparray]
+        A 2 dimensional, column-stochastic transition matrix.
 
     Returns
     -------
     numpy.ndarray
         A 1-dimensional vector containing the stationary distribution
 
+    Warns
+    -----
+    RuntimeWarning
+        If some transition probability is close to 1, or if eigenvalue 1 is not simple
+        (the chain has no unique stationary distribution).
+
     See Also
     --------
     egttools.utils.calculate_stationary_distribution
 
     """
-    if (type(transition_matrix) == csr_matrix) or (type(transition_matrix) == csc_matrix):
-        tmp = transition_matrix.toarray()
-    else:
-        tmp = transition_matrix
+    _warn_if_degenerate(transition_matrix)
 
-    # Check if there is any transition with value 1 - this would mean that the game is degenerate
-    if np.isclose(tmp, 1., atol=1e-11).any():
-        warn(
-            "Some of the entries in the transition matrix are close to 1 (with a tolerance of 1e-11). "
-            "This could result in more than one eigenvalue of magnitute 1 "
-            "(the Markov Chain is degenerate), so please be careful when analysing the results.", RuntimeWarning)
+    if issparse(transition_matrix):
+        return _stationary_distribution_sparse(transition_matrix)
 
-    # calculate stationary distributions using eigenvalues and eigenvectors
+    dense = np.asarray(transition_matrix)
+    eigenvalues = eigvals(dense)
+    distance_to_one = np.min(np.abs(eigenvalues - 1.0))
+    # Only the first Schur vector is an eigenvector, so reorder the Schur form to put the
+    # eigenvalue closest to 1 in the top-left corner.
     # noinspection PyTupleAssignmentBalance
-    schur_form, eigenvectors = schur(tmp)
-    eigenvalues = eigvals(schur_form)
-    index_stationary = np.argmin(abs(eigenvalues - 1.0))  # look for the element closest to 1 in the list of eigenvalues
-    sd = abs(eigenvectors[:, index_stationary].T.real)  # it is essential to access the matrix by column
-    return sd / sd.sum()  # normalize
+    _, schur_vectors, nb_selected = schur(dense, output="complex",
+                                          sort=lambda z: abs(z - 1.0) <= distance_to_one + 1e-12)
+    if nb_selected > 1:
+        warn("The eigenvalue 1 is not simple, so the Markov chain has no unique stationary "
+             "distribution; returning one of them.", RuntimeWarning)
+    return _normalize_distribution(schur_vectors[:, 0] / schur_vectors[np.argmax(np.abs(schur_vectors[:, 0])), 0])
 
 
 def calculate_spectral_gap(
