@@ -61,11 +61,19 @@ if (_EGTTOOLS_VERSION STREQUAL "0.0.0")
     )
 endif ()
 
+# project(VERSION) accepts only numeric components (X[.Y[.Z[.W]]]), so drop suffixes such
+# as "-patch2" or "rc1". The full Python package version comes from setuptools-scm.
+string(REGEX MATCH "^[0-9]+(\\.[0-9]+)*" _EGTTOOLS_VERSION_NUMERIC "${_EGTTOOLS_VERSION}")
+if (NOT _EGTTOOLS_VERSION_NUMERIC)
+    message(WARNING "[EGTtools] Version '${_EGTTOOLS_VERSION}' has no numeric prefix; using 0.0.0.")
+    set(_EGTTOOLS_VERSION_NUMERIC "0.0.0")
+endif ()
+
 # ------------------------------------------------------------------------------
 # Project definition
 # ------------------------------------------------------------------------------
 
-project(egttools VERSION ${_EGTTOOLS_VERSION} LANGUAGES CXX)
+project(egttools VERSION ${_EGTTOOLS_VERSION_NUMERIC} LANGUAGES CXX)
 
 # ------------------------------------------------------------------------------
 # Options
