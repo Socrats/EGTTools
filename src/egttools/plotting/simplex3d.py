@@ -46,6 +46,30 @@ except ImportError as _plotly_err:
     ) from _plotly_err
 
 
+def _plotly_colorscale(colorscale):
+    """Returns ``colorscale`` in a form plotly accepts.
+
+    Plotly colorscale names and explicit ``[[position, colour], ...]`` lists are returned as they
+    are; matplotlib colormap names (e.g. ``"coolwarm"``) and ``matplotlib.colors.Colormap``
+    objects are sampled into an explicit list, so the same colormap can be used in 2D and 3D plots.
+    """
+    if colorscale is None:
+        return None
+    if isinstance(colorscale, str):
+        try:
+            pc.get_colorscale(colorscale)
+            return colorscale
+        except Exception:
+            import matplotlib.pyplot as plt
+            colormap = plt.get_cmap(colorscale)  # raises ValueError for unknown names
+    elif hasattr(colorscale, "N") and callable(colorscale):  # matplotlib.colors.Colormap
+        colormap = colorscale
+    else:
+        return colorscale
+    return [[float(x), "rgb({:.0f},{:.0f},{:.0f})".format(*(255 * np.asarray(colormap(x)[:3])))]
+            for x in np.linspace(0., 1., 11)]
+
+
 def _sample_colorscale(colorscale: str, values: np.ndarray) -> List[str]:
     """Map an array of values in [0, 1] to RGB colour strings.
 
@@ -471,7 +495,7 @@ class Simplex3D:
             max_line_width: float = 5.0,
             cone_scale: float = 0.008,
             arrow_fraction: float = 0.5,
-            colorscale: str = 'Viridis',
+            colorscale: Union[str, list, object] = 'Viridis',
             show_slice_mesh: bool = True,
             min_distance: float = 0.04,
             dt: float = 0.005,
@@ -512,7 +536,7 @@ class Simplex3D:
         arrow_fraction : float
             Position of the arrowhead along each streamline (0 = start,
             1 = end, 0.5 = mid-point, matching matplotlib streamplot).
-        colorscale : str
+        colorscale : str, list or matplotlib.colors.Colormap
             Plotly colorscale for shaft and cone colouring by magnitude.
         show_slice_mesh : bool
             Whether to draw the filled triangular panel.
@@ -523,6 +547,7 @@ class Simplex3D:
         max_steps : int
             Maximum integration steps per streamline.
         """
+        colorscale = _plotly_colorscale(colorscale)
         if not (0 <= fixed_strategy <= 3):
             raise ValueError("fixed_strategy must be 0, 1, 2, or 3")
         if not (0.0 <= value < 1.0):
@@ -651,7 +676,7 @@ class Simplex3D:
             fixed_strategy: Optional[int] = None,
             fixed_value: Optional[float] = None,
             n_seeds: int = 5,
-            colorscale: str = 'Viridis',
+            colorscale: Union[str, list, object] = 'Viridis',
             arrow_color: str = '#c0392b',
             min_line_width: float = 1.5,
             max_line_width: float = 5.0,
@@ -691,7 +716,7 @@ class Simplex3D:
             Slice value for automatic seed generation.
         n_seeds : int
             Grid resolution for automatic seed generation.
-        colorscale : str
+        colorscale : str, list or matplotlib.colors.Colormap
             Plotly colorscale for shaft/cone colouring by magnitude.
         arrow_color : str
             Flat colour when ``colorscale`` is ``None``.
@@ -712,6 +737,7 @@ class Simplex3D:
             Minimum Cartesian distance between any two streamline points from
             *different* streamlines.  Acts as the density mask from streamplot.
         """
+        colorscale = _plotly_colorscale(colorscale)
         if seeds is None:
             if fixed_strategy is None or fixed_value is None:
                 raise ValueError(
@@ -855,7 +881,7 @@ class Simplex3D:
             self,
             stationary_distribution: np.ndarray,
             population_size: int,
-            colorscale: str = 'Greys',
+            colorscale: Union[str, list, object] = 'Greys',
             opacity_scale: float = 3.0,
             min_opacity: float = 0.0,
             max_opacity: float = 0.9,
@@ -882,7 +908,7 @@ class Simplex3D:
             ``egt.sample_simplex(i, population_size, 4)`` for i=0..nb_states-1.
         population_size : int
             Population size ``Z`` used when computing the distribution.
-        colorscale : str
+        colorscale : str, list or matplotlib.colors.Colormap
             Plotly colorscale for marker colour (e.g. ``'Reds'``, ``'Hot'``).
         opacity_scale : float
             Controls how steeply opacity rises with probability.  Higher values
@@ -903,6 +929,7 @@ class Simplex3D:
         colorbar_label : str
             Colorbar title.
         """
+        colorscale = _plotly_colorscale(colorscale)
         from egttools import sample_simplex, calculate_nb_states
 
         nb_states = len(stationary_distribution)

@@ -23,9 +23,33 @@ import numpy as np
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 from matplotlib import patheffects
+from matplotlib.collections import LineCollection
 
 from matplotlib.ticker import AutoMinorLocator
 from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
+
+
+def _plot_gradient_curves(ax: plt.Axes, x: np.ndarray, gradients: np.ndarray, color, cmap, linewidth, label,
+                          zorder) -> None:
+    """Plots one or several gradient curves, in ``color`` or coloured by their value with ``cmap``.
+
+    With ``cmap``, the colour norm is centred on 0 and shared by all curves, so a diverging colormap
+    separates positive from negative selection.
+    """
+    if cmap is None:
+        ax.plot(x, gradients, color=color, linewidth=linewidth, label=label, zorder=zorder)
+        return
+    curves = np.asarray(gradients, dtype=np.float64).reshape(len(x), -1)
+    halfrange = float(np.nanmax(np.abs(curves))) if np.isfinite(curves).any() else 1.
+    norm = mcolors.CenteredNorm(vcenter=0., halfrange=halfrange if halfrange > 0 else 1.)
+    for k in range(curves.shape[1]):
+        y = curves[:, k]
+        segments = np.stack([np.column_stack([x[:-1], y[:-1]]), np.column_stack([x[1:], y[1:]])], axis=1)
+        collection = LineCollection(segments, cmap=cmap, norm=norm, linewidths=linewidth, zorder=zorder,
+                                    label=label if k == 0 else None)
+        collection.set_array((y[:-1] + y[1:]) / 2)
+        ax.add_collection(collection)
+    ax.autoscale_view()
 
 
 def plot_gradients(gradients: numpy.ndarray, fig_title: Optional[str] = None,
@@ -69,7 +93,8 @@ def plot_gradients(gradients: numpy.ndarray, fig_title: Optional[str] = None,
                    spine_right_linewidth: Optional[int] = 2,
                    spine_top_linewidth: Optional[int] = 2,
                    spine_bottom_linewidth: Optional[int] = 2,
-                   ax: Optional[plt.axis] = None) -> plt.axis:
+                   ax: Optional[plt.axis] = None,
+                   cmap: Optional[Union[str, mcolors.Colormap]] = None) -> plt.axis:
     """
     This function plots the gradient of selection for 1-simplexes (only two strategies).
 
@@ -119,6 +144,9 @@ def plot_gradients(gradients: numpy.ndarray, fig_title: Optional[str] = None,
     spine_bottom_linewidth: line width of the bottom spine.
     ax: a matplotlib.pyplot axis object in which this figure will be plot. If None, then a new axis and figure will
         be created.
+    cmap: if given, colour the gradient curve(s) by the value of the gradient with this colormap (instead of
+        ``color``). The colour norm is centred on 0, so a diverging colormap (e.g. ``"RdBu"``) shows where
+        selection favours and where it opposes the strategy.
 
     Returns
     -------
@@ -134,7 +162,7 @@ def plot_gradients(gradients: numpy.ndarray, fig_title: Optional[str] = None,
     if fig_title is not None:
         ax.set_title(fig_title)
 
-    ax.plot(x_values, gradients, color=color, linewidth=linewidth_gradient, label=linelabel, zorder=1)
+    _plot_gradient_curves(ax, x_values, gradients, color, cmap, linewidth_gradient, linelabel, zorder=1)
     if marker is not None:
         [ ax.scatter(x_values[::marker_plot_freq], gradient[::marker_plot_freq], 
 marker=marker, s=marker_size, facecolors=marker_facecolor,
@@ -228,7 +256,7 @@ marker=marker, s=marker_size, facecolors=marker_facecolor,
 
 
 def plot_gradient(x, gradients, saddle_points, saddle_type, gradient_direction, fig_title='', xlabel='', figsize=(5, 4),
-                  **kwargs):
+                  cmap=None, **kwargs):
     """
     Creates a figure plotting the gradient of selection together with the saddle points,
     and the gradient arrows.
@@ -242,6 +270,7 @@ def plot_gradient(x, gradients, saddle_points, saddle_type, gradient_direction, 
     :param fig_title: a string containing the title of the figure
     :param xlabel: label for x axis
     :param figsize: a tuple indicating the size of the figure
+    :param cmap: if given, colour the gradient by its value with this colormap (norm centred on 0)
     :param kwargs: you may pass an axis object
     :returns a figure object
     """
@@ -249,7 +278,8 @@ def plot_gradient(x, gradients, saddle_points, saddle_type, gradient_direction, 
         fig, ax = plt.subplots(figsize=figsize)
     else:
         ax = kwargs['ax']
-    ax.plot(x, gradients, zorder=1)
+    _plot_gradient_curves(ax, np.asarray(x, dtype=np.float64), np.asarray(gradients, dtype=np.float64), None, cmap,
+                          None, None, zorder=1)
     ax.plot([0, 1], [0, 0], 'k', zorder=1)
     # First we plot unstable points
     if saddle_points[~saddle_type].any():

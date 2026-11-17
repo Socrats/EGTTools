@@ -63,6 +63,13 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Colormap support in the gradient and simplex plots: `plot_gradients` and `plot_gradient`
+  take `cmap` to colour the gradient by its value (norm centred on 0, so diverging colormaps
+  separate positive and negative selection); the `Simplex2D` trajectory methods
+  (`draw_trajectories`, `draw_trajectory_from_points`, `draw_trajectory_from_roots`,
+  `draw_trajectory_from_vector`, `draw_scatter_shadow`) take `cmap` to colour trajectories along
+  time; and the `Simplex3D` `colorscale` parameters also accept matplotlib colormap names and
+  objects.
 - `egttools.plotting.invasion_graph`, which builds the invasion graph of the small-mutation
   limit as a `networkx.DiGraph`, classifying each pair of strategies once as selection (one
   or both directions with ρ/ρ_N > 1 + tolerance) or drift.

@@ -21,6 +21,7 @@ import matplotlib.tri as tri
 import numpy as np
 
 from scipy.integrate import odeint
+from matplotlib.collections import LineCollection
 from matplotlib.patches import Circle
 from typing import Optional, Tuple, List, Union, Callable, TypeVar
 from numpy.typing import ArrayLike
@@ -532,10 +533,39 @@ class Simplex2D:
 
         return self
 
+    def _draw_path(self, v: np.ndarray, color, cmap, linewidth, zorder, draw_arrow: bool = False,
+                   arrowsize=None, arrowstyle=None, position=None, arrowdirection='right'):
+        """Draws one trajectory (xy points), in a single colour or coloured along time by ``cmap``."""
+        if cmap is None:
+            line = self.ax.plot(v[:, 0], v[:, 1], color, linewidth=linewidth, zorder=zorder)[0]
+            arrow_color = None
+        else:
+            colormap = plt.get_cmap(cmap) if isinstance(cmap, str) else cmap
+            segments = np.stack([v[:-1], v[1:]], axis=1)
+            self.ax.add_collection(LineCollection(segments, colors=colormap(np.linspace(0, 1, len(segments))),
+                                                  linewidths=linewidth, zorder=zorder))
+            # Invisible line that carries the geometry for add_arrow.
+            line = self.ax.plot(v[:, 0], v[:, 1], linewidth=linewidth, alpha=0., zorder=zorder)[0]
+            where = v[:, 0].mean() if position is None else position
+            arrow_color = colormap(np.argmin(np.abs(v[:, 0] - where)) / max(len(v) - 1, 1))
+        if draw_arrow:
+            add_arrow(line, size=arrowsize, arrowstyle=arrowstyle, position=position, direction=arrowdirection,
+                      color=arrow_color)
+        return line
+
+    def _scatter_path(self, v: np.ndarray, s, color, cmap, marker, zorder):
+        """Scatters the points of one trajectory, in a single colour or coloured along time by ``cmap``."""
+        if cmap is None:
+            self.ax.scatter(v[:, 0], v[:, 1], s, color=color, marker=marker, zorder=zorder)
+        else:
+            self.ax.scatter(v[:, 0], v[:, 1], s, c=np.linspace(0, 1, len(v)), cmap=cmap, vmin=0, vmax=1,
+                            marker=marker, zorder=zorder)
+
     def draw_trajectories(self, f: Callable[[np.ndarray, int], np.ndarray], nb_trajectories: int,
                           trajectory_length: Optional[int] = 15, step: Optional[float] = 0.01,
                           color: Optional[Union[str, Tuple[int, int, int]]] = 'whitesmoke',
-                          ms: Optional[float] = 0.5, zorder: Optional[int] = 0) -> SelfSimplex2D:
+                          ms: Optional[float] = 0.5, zorder: Optional[int] = 0,
+                          cmap: Optional[Union[str, matplotlib.colors.Colormap]] = None) -> SelfSimplex2D:
         """
         Draws trajectories inside the unit simplex starting from random initial points.
 
@@ -557,6 +587,10 @@ class Simplex2D:
         zorder: Optional[int]
             The order in which this plot should appear in the figure (above or bellow other plots).
 
+        cmap: Optional[Union[str, matplotlib.colors.Colormap]]
+            If given, colour each trajectory along time with this colormap (start to end) instead
+            of a single ``color``; arrows take the colour of the trajectory where they are drawn.
+
         Returns
         -------
         Simplex2D
@@ -572,14 +606,20 @@ class Simplex2D:
                 x = odeint(f, u, np.arange(0, trajectory_length, step), full_output=False)
                 # noinspection PyTypeChecker
                 v = barycentric_to_xy_coordinates(x / self.size, self.corners)
-                self.ax.plot(v[:, 0], v[:, 1], color, ms=ms, zorder=zorder)
+                if cmap is None:
+                    self.ax.plot(v[:, 0], v[:, 1], color, ms=ms, zorder=zorder)
+                else:
+                    self._draw_path(v, color, cmap, None, zorder)
         else:
             for _ in range(nb_trajectories):
                 u = sample_unit_simplex(3)
                 x = odeint(f, u, np.arange(0, trajectory_length, step), full_output=False)
                 # noinspection PyTypeChecker
                 v = barycentric_to_xy_coordinates(x, self.corners)
-                self.ax.plot(v[:, 0], v[:, 1], color, ms=ms, zorder=zorder)
+                if cmap is None:
+                    self.ax.plot(v[:, 0], v[:, 1], color, ms=ms, zorder=zorder)
+                else:
+                    self._draw_path(v, color, cmap, None, zorder)
 
         return self
 
@@ -590,7 +630,8 @@ class Simplex2D:
                                     draw_arrow: Optional[bool] = False, arrowstyle: Optional[str] = 'fancy',
                                     arrowsize: Optional[int] = 50,
                                     position: Optional[int] = None,
-                                    arrowdirection: Optional[str] = 'right') -> SelfSimplex2D:
+                                    arrowdirection: Optional[str] = 'right',
+                                    cmap: Optional[Union[str, matplotlib.colors.Colormap]] = None) -> SelfSimplex2D:
         """
         Draws trajectories inside the unit simplex starting from the indicated points.
 
@@ -623,6 +664,10 @@ class Simplex2D:
             Indicates whether the arrow should be plotted in the direction of the advancing trajectory (right) or
             the opposite.
 
+        cmap: Optional[Union[str, matplotlib.colors.Colormap]]
+            If given, colour each trajectory along time with this colormap (start to end) instead
+            of a single ``color``; arrows take the colour of the trajectory where they are drawn.
+
         Returns
         -------
         Simplex2D
@@ -634,10 +679,8 @@ class Simplex2D:
 
             # noinspection PyTypeChecker
             v = barycentric_to_xy_coordinates(x, self.corners)
-            line = self.ax.plot(v[:, 0], v[:, 1], color, linewidth=linewidth, zorder=zorder)[0]
-            if draw_arrow:
-                add_arrow(line, size=arrowsize, arrowstyle=arrowstyle, position=position,
-                          direction=arrowdirection)
+            self._draw_path(v, color, cmap, linewidth, zorder, draw_arrow, arrowsize, arrowstyle,
+                            position, arrowdirection)
 
         return self
 
@@ -651,7 +694,8 @@ class Simplex2D:
                                    arrowsize: Optional[int] = 50,
                                    position: Optional[int] = None,
                                    arrowdirection: Optional[str] = 'right',
-                                   atol: Optional[float] = 1e-7) -> SelfSimplex2D:
+                                   atol: Optional[float] = 1e-7,
+                                   cmap: Optional[Union[str, matplotlib.colors.Colormap]] = None) -> SelfSimplex2D:
         """
         Draws trajectories inside the unit simplex starting from the stationary points.
 
@@ -691,6 +735,10 @@ class Simplex2D:
         atol: Optional[float]
             Tolerance to consider a value equal to 0. Used to check if a point is on an edge of the simplex.
 
+        cmap: Optional[Union[str, matplotlib.colors.Colormap]]
+            If given, colour each trajectory along time with this colormap (start to end) instead
+            of a single ``color``; arrows take the colour of the trajectory where they are drawn.
+
         Returns
         -------
         Simplex2D
@@ -721,10 +769,8 @@ class Simplex2D:
                         x = x[:last_inside]
                     # noinspection PyTypeChecker
                     v = barycentric_to_xy_coordinates(x / self.size, self.corners)
-                    line = self.ax.plot(v[:, 0], v[:, 1], color, linewidth=linewidth, zorder=zorder)[0]
-                    if draw_arrow:
-                        add_arrow(line, size=arrowsize, arrowstyle=arrowstyle, position=position,
-                                  direction=arrowdirection)
+                    self._draw_path(v, color, cmap, linewidth, zorder, draw_arrow, arrowsize, arrowstyle,
+                                    position, arrowdirection)
         else:
             for i, stationary_point in enumerate(roots):
                 # First let's check if stationary point is in an edge with random drift
@@ -739,19 +785,40 @@ class Simplex2D:
 
                     # noinspection PyTypeChecker
                     v = barycentric_to_xy_coordinates(x, self.corners)
-                    line = self.ax.plot(v[:, 0], v[:, 1], color, linewidth=linewidth, zorder=zorder)[0]
-                    if draw_arrow:
-                        add_arrow(line, size=arrowsize, arrowstyle=arrowstyle, position=position,
-                                  direction=arrowdirection)
+                    self._draw_path(v, color, cmap, linewidth, zorder, draw_arrow, arrowsize, arrowstyle,
+                                    position, arrowdirection)
 
         return self
 
     def draw_trajectory_from_vector(self, trajectory: np.ndarray,
                                     color: Optional[Union[str, Tuple[int, int, int]]] = 'k',
-                                    linewidth: Optional[float] = 0.5, zorder: Optional[int] = 0, ):
+                                    linewidth: Optional[float] = 0.5, zorder: Optional[int] = 0,
+                                    cmap: Optional[Union[str, matplotlib.colors.Colormap]] = None):
+        """
+        Draws a trajectory given as a sequence of points in barycentric coordinates.
+
+        Parameters
+        ----------
+        trajectory: numpy.ndarray
+            Array of shape (nb_points, 3) with the trajectory in barycentric coordinates.
+        color: Optional[Union[str, Tuple[int, int, int]]]
+            Colour of the trajectory when ``cmap`` is not given.
+        linewidth: Optional[float]
+            Width of the line.
+        zorder: Optional[int]
+            Drawing order of the line.
+        cmap: Optional[Union[str, matplotlib.colors.Colormap]]
+            If given, colour each trajectory along time with this colormap (start to end) instead
+            of a single ``color``.
+
+        Returns
+        -------
+        Simplex2D
+            A reference to the current object.
+        """
         points = np.asarray([barycentric_to_xy_coordinates(x, self.corners) for x in trajectory])
 
-        self.ax.plot(points[:, 0], points[:, 1], color, linewidth=linewidth, zorder=zorder)
+        self._draw_path(points, color, cmap, linewidth, zorder)
 
         return self
 
@@ -759,7 +826,8 @@ class Simplex2D:
                             trajectory_length: Optional[int] = 15, step: Optional[float] = 0.1,
                             s: Optional[Union[float, ArrayLike]] = 0.1,
                             color: Optional[Union[str, Tuple[int, int, int]]] = 'whitesmoke',
-                            marker: Optional[str] = '.', zorder: Optional[int] = 0) -> SelfSimplex2D:
+                            marker: Optional[str] = '.', zorder: Optional[int] = 0,
+                            cmap: Optional[Union[str, matplotlib.colors.Colormap]] = None) -> SelfSimplex2D:
         """
         Draws a series of point which follows trajectories in the simplex starting from random points.
 
@@ -785,6 +853,10 @@ class Simplex2D:
         zorder: Optional[int]
             The order in which this plot should appear in the figure (above or bellow other plots).
 
+        cmap: Optional[Union[str, matplotlib.colors.Colormap]]
+            If given, colour each trajectory along time with this colormap (start to end) instead
+            of a single ``color``; arrows take the colour of the trajectory where they are drawn.
+
         Returns
         -------
         Simplex2D
@@ -800,14 +872,14 @@ class Simplex2D:
                 x = odeint(f, u, np.arange(0, trajectory_length, step), full_output=False)
                 # noinspection PyTypeChecker
                 v = barycentric_to_xy_coordinates(x / self.size, self.corners)
-                self.ax.scatter(v[:, 0], v[:, 1], s, color=color, marker=marker, zorder=zorder)
+                self._scatter_path(v, s, color, cmap, marker, zorder)
         else:
             for _ in range(nb_trajectories):
                 u = sample_unit_simplex(3)
                 x = odeint(f, u, np.arange(0, trajectory_length, step), full_output=False)
                 # noinspection PyTypeChecker
                 v = barycentric_to_xy_coordinates(x, self.corners)
-                self.ax.scatter(v[:, 0], v[:, 1], s, color=color, marker=marker, zorder=zorder)
+                self._scatter_path(v, s, color, cmap, marker, zorder)
 
         return self
 
