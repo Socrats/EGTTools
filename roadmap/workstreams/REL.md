@@ -18,6 +18,7 @@ and the known numerical bugs fixed. PyPI is still at 0.1.14.2.
 | REL-09 | Tag `v0.2.0`, publish GitHub release and PyPI | todo | P0 | S | 0.2 | REL-08 | — |
 | REL-10 | Specify the pairwise comparison process and verify every implementation against it | done | P0 | L | 0.2 | — | merge `50d98c4` |
 | REL-11 | Apply the homogeneous-state fix to `ImitationMultipleGames` (not exposed to Python) | todo | P3 | S | later | REL-10 | — |
+| REL-12 | Invasion diagrams: per-pair drift/selection classification, curved mutual invasions, labels, flexible API | done | P1 | M | 0.2 | — | merge `a9b355e` |
 
 ## Notes
 
@@ -71,5 +72,9 @@ and the known numerical bugs fixed. PyPI is still at 0.1.14.2.
   states), an out-of-bounds row write in `run_with_mutation` with a transient, the
   2/k scaling and mutation term of the C++ gradient, and `StochDynamics`' gradient
   (Z vs Z−1, non-conserving mutation term).
+- **REL-12**: new `invasion_graph` + redrawn `draw_invasion_diagram` (breaking, justified
+  in CHANGELOG). Convention kept: arrows for every advantageous transition (ρ > ρ_N),
+  dashed lines for drift; mutual invasions show as two curved arrows (they indicate a
+  mixed equilibrium on that edge). Users can filter the graph for other conventions.
 - **REL-09**: the existing `v0.1.15` tag was never released. Leave it in place;
   0.2.0 supersedes it.
