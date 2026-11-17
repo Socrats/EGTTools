@@ -2,6 +2,8 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-17 · API-06, DOC-13, DOC-14 · Added: transposed SML transition matrix in StochDynamics, Sphinx warnings, notebooks not executed in CI.
+- 2026-11-17 · REL-12 · Merged (`a9b355e`): invasion_graph + redesigned draw_invasion_diagram; near-neutral drift, mutual invasions, colours/filter, labels.
 - 2026-11-17 · REL-04 · Merged (`3050629`): lattice interpolation of the exact gradient, exact roots, stability rewrite.
 - 2026-11-17 · REL-05 · Merged (`fc50406`): `setup.py` tag_regex and container safe.directory; CI green on all platforms, wheels still `0.0.0` before this.
 - 2026-11-17 · CI-08, API-05, DOC-12, REL-11 · Added from findings (uv evaluation, silent deprecated stub, more theory pages, ImitationMultipleGames).

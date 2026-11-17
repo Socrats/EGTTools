@@ -20,3 +20,5 @@ narrative documentation. GitHub: #84.
 | DOC-10 | Changelog page in docs, sourced from `CHANGELOG.md` | todo | P2 | S | 0.4 | — | — |
 | DOC-11 | Developer guide: build from source, architecture overview, adding C++ bindings | todo | P1 | M | 0.4 | — | — |
 | DOC-12 | Theory pages for the other processes (fixation, small-mutation limit, Moran BD/DB, networks), each with spec tests | todo | P1 | L | 0.3 | REL-10 | — |
+| DOC-13 | Fix the ~1,850 Sphinx warnings (mostly unresolved docstring type references) and fail docs CI on new warnings | todo | P1 | M | 0.4 | — | — |
+| DOC-14 | Execute example notebooks in CI (two used a removed API); fix the local Jupyter kernelspec | todo | P1 | S | 0.3 | — | — |
