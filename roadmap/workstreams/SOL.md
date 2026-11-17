@@ -1,0 +1,36 @@
+# SOL: Stationary-distribution solvers
+
+> LLMs have been used to create this list automatically based on the project definitions of @Socrats.
+
+Goal: one documented interface to standard, robust solvers for the stationary
+distribution of large sparse transition matrices, both explicit and
+matrix-free.
+
+Scope covers standard methods only: direct, ARPACK, Krylov
+(GMRES / LGMRES / BiCGSTAB) and power iteration.
+
+| ID | Task | Status | Pri | Size | MS | Deps | Ref |
+|----|------|--------|-----|------|----|------|-----|
+| SOL-01 | Unified API: `stationary_distribution(P, method=...)` returning a result object | todo | P0 | M | 0.3 | REL-03 | — |
+| SOL-02 | Direct sparse solve (SuperLU) and ARPACK eigensolver | todo | P0 | M | 0.3 | SOL-01 | — |
+| SOL-03 | GMRES, LGMRES and BiCGSTAB with optional ILU preconditioning | todo | P0 | M | 0.3 | SOL-01 | — |
+| SOL-04 | ILU size guard: warn above a threshold, hard limit falls back to no preconditioner | todo | P0 | S | 0.3 | SOL-03 | — |
+| SOL-05 | Power iteration and Anderson-accelerated power iteration | todo | P1 | M | 0.3 | SOL-01 | — |
+| SOL-06 | Matrix-free path through `PairwiseComparisonTransitionOperator` (native C++, no Python callbacks) | todo | P1 | M | 0.3 | SOL-01 | — |
+| SOL-07 | Optional GPU (CuPy) power iteration, as an extra | todo | P2 | M | 0.3 | SOL-05 | — |
+| SOL-08 | Expose existing PETSc/SLEPc operator through the same API (`egttools[mpi]`) | todo | P2 | M | 0.3 | SOL-01 | — |
+| SOL-09 | Result diagnostics: residual ‖πP − π‖, iterations, converged flag, wall time | todo | P0 | S | 0.3 | SOL-01 | — |
+| SOL-10 | Tests per method on chains with known stationary distribution | todo | P0 | M | 0.3 | SOL-02..05 | — |
+| SOL-11 | Per-method reference documentation | todo | P1 | M | 0.3 | SOL-10 | — |
+
+## Notes
+
+- **SOL-04**: ILU fill-in makes preconditioning impractical for very large
+  systems. Above a configurable soft size, warn. Above a hard size, skip ILU
+  and run unpreconditioned, warning the user. Let the user override both
+  limits explicitly.
+- **SOL-06**: Python `LinearOperator` callbacks are 15–90× slower than an
+  explicit CSR matrix with ARPACK at moderate sizes. The matrix-free path must
+  stay in native code.
+- **SOL-11**: document what each method does, its parameters, and its cost per
+  iteration. Defaults are documented as defaults only.
