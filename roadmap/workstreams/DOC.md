@@ -4,7 +4,7 @@
 
 Goal: a user guide that covers every public module, an accurate API
 reference, and runnable examples. Several large subsystems currently have no
-narrative documentation.
+narrative documentation. GitHub: #84.
 
 | ID | Task | Status | Pri | Size | MS | Deps | Ref |
 |----|------|--------|-----|------|----|------|-----|
