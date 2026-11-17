@@ -232,6 +232,9 @@ jobs:
           # Inside the manylinux container the outer runner's vcpkg binary is unusable
           # (different glibc). Re-bootstrap and re-install vcpkg inside the container.
           CIBW_BEFORE_ALL_LINUX: |
+            # The repository is mounted from the host with another owner; let git (and so
+            # setuptools-scm) read it.
+            git config --global --add safe.directory '*'
             bash {package}/build_tools/github/install_blas_openmp.sh
             if [ -f "{package}/vcpkg/bootstrap-vcpkg.sh" ]; then
               {package}/vcpkg/bootstrap-vcpkg.sh --disableMetrics
