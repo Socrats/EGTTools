@@ -30,9 +30,10 @@ Each workstream file has a task table with these columns:
 | `Size` | `S` (≤ ½ day) · `M` (≤ 2 days) · `L` (≤ 1 week) · `XL` (> 1 week; split it) |
 | `MS` | Target milestone: `0.2` · `0.3` · `0.4` · `later` |
 | `Deps` | IDs that must be `done` first, or `—`. |
-| `Ref` | Branch / PR / issue once one exists, or `—`. |
+| `Ref` | Branch, merge commit, and/or issue once one exists, or `—`. |
 
-**Status flow:** `todo → ready → doing → review → done`. `blocked` needs a
+**Status flow:** `todo → ready → doing → review → done`. `review` means the
+work is finished and tested on its branch but not yet merged. `blocked` needs a
 note saying what it is waiting on. `dropped` needs a note saying why, and goes
 into `DECISIONS.md` if it is a scope decision.
 
@@ -43,9 +44,16 @@ bindings changed.
 ## Workflow
 
 1. Pick a `ready` task with all deps `done`. Set it to `doing`.
-2. Create a branch named `<id>-<slug>` (e.g. `rel-03-stationary-dist`), with one PR per task.
-3. Set the task to `review` with the PR in `Ref`. Set it to `done` on merge.
-4. Add a line to `LOG.md`. Record any scope change in `DECISIONS.md`.
+2. Create a branch from `master` named `<id>-<slug>` (e.g. `rel-03-stationary-dist`).
+   Use one branch per task.
+3. When tests pass, set the task to `review` with the branch in `Ref`.
+4. Merge into `master` with `git merge --no-ff <branch>`, so each task stays
+   visible as one merge in the history. Then set the task to `done` with the
+   merge commit in `Ref`, and delete the branch.
+5. Add a line to `LOG.md`. Record any scope change in `DECISIONS.md`.
+
+Pull requests are not used while there is a single maintainer. External
+contributions still arrive as PRs (see `CONTRIBUTING.md`).
 
 ## Areas
 

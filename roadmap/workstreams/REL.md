@@ -43,7 +43,7 @@ and the known numerical bugs fixed. PyPI is still at 0.1.14.2.
 - **REL-05**: Wheels workflow red on `master` since 2026-08-12; logs have expired.
   Re-run, read logs, fix.
 - **REL-07**: the current tests run only inside cibuildwheel. Add a separate
-  workflow on `pull_request` that builds once (Linux, one Python), runs pytest
+  workflow on `push` (all branches) and `pull_request` that builds once (Linux, one Python), runs pytest
   (skipping `slow`), and runs the C++ tests registered in `tests/CMakeLists.txt`.
   This is a prerequisite for branch protection (`PM-09`).
 - **REL-09**: the existing `v0.1.15` tag was never released. Leave it in place;
