@@ -107,22 +107,34 @@ def calculate_stability(
         roots: List[NDArray[np.float64]],
         f: Callable[[NDArray[np.float64]], NDArray[np.float64]],
         atol: float = 1e-7,
-        return_mode: Literal["bool", "int"] = "bool"
+        return_mode: Literal["bool", "int"] = "bool",
+        delta: float = 0.1,
 ) -> List[bool] | List[int]:
     """
     Calculates the stability of the roots. Returns stability classification for each root.
+
+    From each root :math:`x`, the function steps a distance ``delta`` in every feasible
+    direction :math:`d = e_i - e_j` (moving mass from strategy :math:`j` to strategy :math:`i`
+    without leaving the simplex) and checks whether the flow points back towards the root
+    (:math:`f \\cdot d < 0`) or away from it (:math:`f \\cdot d > 0`). The root is stable if the
+    flow points back in every direction, unstable if it points away in every direction, and a
+    saddle otherwise. Directions that leave an edge or a vertex towards the interior count,
+    so a root that is stable along its edge but invadable by the third strategy is a saddle.
 
     Parameters
     ----------
     roots : List[NDArray[np.float64]]
         A list of barycentric coordinates of the roots.
     f : Callable[[NDArray[np.float64]], NDArray[np.float64]]
-        A function which computes the gradient at any point in the simplex.
+        A function which computes the gradient at any point in the simplex, in barycentric
+        coordinates.
     atol : float, default=1e-7
         Numerical tolerance for zero comparisons.
     return_mode : {'bool', 'int'}, default='bool'
         - 'bool' returns True for stable, False otherwise.
         - 'int' returns 1 (stable), -1 (unstable), or 0 (saddle).
+    delta : float, default=0.1
+        Size of the perturbation, in barycentric coordinates.
 
     Returns
     -------
@@ -130,55 +142,27 @@ def calculate_stability(
         Stability of each root, as booleans or ternary integers.
     """
     stability = []
+    nb_strategies = 3
 
     for stationary_point in roots:
+        stationary_point = np.asarray(stationary_point, dtype=np.float64)
         signs = []
+        for i in range(nb_strategies):
+            for j in range(nb_strategies):
+                if i == j or stationary_point[j] - delta < -atol:
+                    continue  # moving mass from j to i would leave the simplex
+                direction = np.zeros(nb_strategies)
+                direction[i], direction[j] = 1., -1.
+                grad = np.asarray(f(stationary_point + delta * direction), dtype=np.float64)
+                flow = float(grad @ direction)
+                signs.append(0. if abs(flow) <= atol else np.sign(flow))
 
-        if np.isclose(stationary_point, 0., atol=atol).any():
-            edge = np.where(~np.isclose(stationary_point, 0., atol=atol))[0]
-            if edge.shape[0] > 1:
-                # Perturb along edge
-                for delta in [+0.1, -0.1]:
-                    tmp = stationary_point.copy()
-                    if 0. <= tmp[edge[0]] + delta <= 1. and 0. <= tmp[edge[1]] - delta <= 1.:
-                        tmp[edge[0]] += delta
-                        tmp[edge[1]] -= delta
-                        grad = f(tmp)
-                        signs.append(np.sign(grad[edge[0]]))
-            else:
-                # At a vertex
-                idx = edge[0]
-                for shift in [+0.1, -0.1]:
-                    tmp = stationary_point.copy()
-                    if 0. <= tmp[idx] + shift <= 1.:
-                        tmp[idx] += shift
-                        tmp[(idx + 1) % 3] -= shift
-                        grad = f(tmp)
-                        signs.append(np.sign(grad[idx]))
-                    if 0. <= tmp[(idx + 1) % 3] - shift <= 1.:
-                        tmp[(idx + 1) % 3] -= shift
-                        tmp[(idx + 2) % 3] += shift
-                        grad = f(tmp)
-                        signs.append(np.sign(grad[idx]))
+        if signs and all(s < 0 for s in signs):
+            result = 1  # Stable: the flow returns from every direction
+        elif signs and all(s > 0 for s in signs):
+            result = -1  # Unstable: the flow leaves in every direction
         else:
-            # Interior point
-            for i in range(3):
-                for delta in [+0.1, -0.1]:
-                    tmp = stationary_point.copy()
-                    if 0. <= tmp[i] + delta <= 1.:
-                        tmp[i] += delta
-                        for j in [j for j in range(3) if j != i]:
-                            if 0. <= tmp[j] - delta <= 1.:
-                                tmp[j] -= delta
-                                grad = f(tmp)
-                                signs.append(np.sign(grad[i]))
-
-        if all(s <= 0 for s in signs) and any(s < 0 for s in signs):
-            result = 1  # Stable
-        elif all(s >= 0 for s in signs) and any(s > 0 for s in signs):
-            result = -1  # Unstable
-        else:
-            result = 0  # Saddle (mixed signs or zero)
+            result = 0  # Saddle (mixed or neutral directions)
 
         if return_mode == "bool":
             stability.append(result == 1)
@@ -539,3 +523,118 @@ def find_where_point_is_in_simplex(point: np.ndarray) -> Tuple[int, np.ndarray]:
             return 0, edge
     else:  # we are in the interior of the simplex
         return 2, np.array([0, 1, 2])
+
+
+def lattice_gradient_interpolator(
+        gradient_fn: Callable[[NDArray[np.int64]], NDArray[np.float64]],
+        population_size: int,
+) -> Tuple[Callable[[NDArray[np.float64]], NDArray[np.float64]], NDArray[np.float64]]:
+    """
+    Continuous extension of a gradient defined on the states of a finite population of 3 strategies.
+
+    The gradient of selection of a finite population is defined only at the integer states
+    :math:`(n_0, n_1, n_2)` with :math:`n_0 + n_1 + n_2 = Z`. This function evaluates
+    ``gradient_fn`` once at every such state and interpolates linearly inside each triangle of
+    the lattice, which gives a continuous, piecewise-linear field that equals the exact gradient
+    at every population state. Root finding, stability analysis and trajectory integration need
+    such a continuous field.
+
+    Parameters
+    ----------
+    gradient_fn : Callable[[numpy.ndarray], numpy.ndarray]
+        Function returning the gradient (length 3) at an integer population state.
+    population_size : int
+        Population size :math:`Z`.
+
+    Returns
+    -------
+    Tuple[Callable[[numpy.ndarray], numpy.ndarray], numpy.ndarray]
+        The interpolating function, which takes a state in counts (3 floats; it is projected
+        onto the plane :math:`\\sum_i n_i = Z` and clipped to the simplex), and the array of
+        lattice gradients of shape ``(Z + 1, Z + 1, 3)``, where entry ``[i, j]`` holds the
+        gradient at state ``(i, j, Z - i - j)`` and entries with ``i + j > Z`` are NaN.
+    """
+    z = int(population_size)
+    if z < 1:
+        raise ValueError("population_size must be >= 1")
+    lattice = np.full((z + 1, z + 1, 3), np.nan)
+    for i in range(z + 1):
+        for j in range(z + 1 - i):
+            lattice[i, j] = gradient_fn(np.array([i, j, z - i - j], dtype=np.int64))
+
+    def interpolate(state: NDArray[np.float64]) -> NDArray[np.float64]:
+        u = np.asarray(state, dtype=np.float64)
+        u = u + (z - u.sum()) / 3.  # project onto the plane n_0 + n_1 + n_2 = Z
+        a, b = min(max(u[0], 0.), float(z)), min(max(u[1], 0.), float(z))
+        if a + b > z:
+            a, b = a * z / (a + b), b * z / (a + b)
+        i = min(int(np.floor(a)), z - 1)
+        j = min(int(np.floor(b)), z - 1 - i)
+        fa, fb = a - i, b - j
+        if fa + fb <= 1. or i + j + 2 > z:
+            # lower triangle (i, j), (i + 1, j), (i, j + 1)
+            g0 = lattice[i, j]
+            return g0 + fa * (lattice[i + 1, j] - g0) + fb * (lattice[i, j + 1] - g0)
+        # upper triangle (i + 1, j + 1), (i, j + 1), (i + 1, j)
+        g0 = lattice[i + 1, j + 1]
+        return g0 + (1. - fa) * (lattice[i, j + 1] - g0) + (1. - fb) * (lattice[i + 1, j] - g0)
+
+    return interpolate, lattice
+
+
+def find_roots_of_lattice_gradient(
+        lattice: NDArray[np.float64],
+        atol: float = 1e-10,
+) -> List[NDArray[np.float64]]:
+    """
+    Zeros of the piecewise-linear gradient built by :func:`lattice_gradient_interpolator`.
+
+    Inside each lattice triangle the interpolated gradient is affine, so its zero is the solution
+    of a 2x2 linear system and is found exactly; no initial guesses are needed. Population
+    states where the gradient itself is zero (e.g. monomorphic states without mutation) are
+    included. Triangles where the gradient vanishes identically (neutral drift) contribute only
+    their vertices.
+
+    Parameters
+    ----------
+    lattice : numpy.ndarray
+        Lattice gradients of shape ``(Z + 1, Z + 1, 3)`` as returned by
+        :func:`lattice_gradient_interpolator`.
+    atol : float
+        Tolerance below which a gradient (or a determinant) counts as zero.
+
+    Returns
+    -------
+    List[numpy.ndarray]
+        Roots in barycentric coordinates (fractions summing to 1), without duplicates.
+    """
+    z = lattice.shape[0] - 1
+    points = []
+    for i in range(z + 1):
+        for j in range(z + 1 - i):
+            if np.max(np.abs(lattice[i, j])) <= atol:
+                points.append((float(i), float(j)))
+
+    def solve(origin, g0, e1, g1, e2, g2):
+        # g0 + s (g1 - g0) + t (g2 - g0) = 0, using two components (the third follows: sum is 0)
+        m = np.array([[g1[0] - g0[0], g2[0] - g0[0]], [g1[1] - g0[1], g2[1] - g0[1]]])
+        det = np.linalg.det(m)
+        if abs(det) <= atol:
+            return
+        s, t = np.linalg.solve(m, -g0[:2])
+        if s >= -1e-12 and t >= -1e-12 and s + t <= 1. + 1e-12:
+            points.append((origin[0] + s * e1[0] + t * e2[0], origin[1] + s * e1[1] + t * e2[1]))
+
+    for i in range(z):
+        for j in range(z - i):
+            solve((i, j), lattice[i, j], (1, 0), lattice[i + 1, j], (0, 1), lattice[i, j + 1])
+            if i + j + 2 <= z:
+                solve((i + 1, j + 1), lattice[i + 1, j + 1], (-1, 0), lattice[i, j + 1], (0, -1),
+                      lattice[i + 1, j])
+
+    roots: List[NDArray[np.float64]] = []
+    for a, b in points:
+        root_point = np.array([a, b, z - a - b]) / z
+        if not any(np.allclose(root_point, other, atol=1e-6) for other in roots):
+            roots.append(root_point)
+    return roots
