@@ -211,10 +211,10 @@ jobs:
         env:
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_BUILD: >-
-            cp310-${{ matrix.platform_id }}
             cp311-${{ matrix.platform_id }}
             cp312-${{ matrix.platform_id }}
             cp313-${{ matrix.platform_id }}
+            cp314-${{ matrix.platform_id }}
           # Linux: project is mounted at /project inside the manylinux container.
           # macOS/Windows: runs on the host; VCPKG_PATH is set via $GITHUB_ENV in the
           # bootstrap step and referenced explicitly here to avoid relying on inheritance.
@@ -260,7 +260,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: rtd-wheel
-          path: wheelhouse/egttools-*-cp310-*-manylinux*_x86_64*.whl
+          path: wheelhouse/egttools-*-cp312-*-manylinux*_x86_64*.whl
           if-no-files-found: error
 
       - name: Setup tmate session

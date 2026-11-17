@@ -81,7 +81,7 @@ jobs:
       # -----------------------------------------------------------------------
       # Build all Python variants in one conda-build run.
       # conda_build_config.yaml in the recipe dir drives the python × numpy
-      # matrix (3.10 / 3.11 / 3.12 / 3.13).
+      # matrix (3.11 / 3.12 / 3.13 / 3.14).
       # -----------------------------------------------------------------------
       - name: Build conda packages
         run: |
