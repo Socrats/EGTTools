@@ -39,6 +39,9 @@ def _version():
             relative_to=__file__,
             local_scheme="no-local-version",
             fallback_version="0.0.0",
+            # Keep in sync with [tool.setuptools_scm] in pyproject.toml: explicit arguments
+            # here take precedence over that table.
+            tag_regex=r"^v?(?P<version>\d+(?:\.\d+){0,2}(?:(?:a|b|rc)\d+)?)(?:-patch\d+)?$",
             write_to="src/egttools/_version.py",
         )
     except Exception:
