@@ -98,11 +98,11 @@ Workstreams: `DOC`, `CI`, `PERF`, `API`, and the 0.4 tasks in `TEST`.
 
 Update this table when tasks change. Recount a milestone (here 0.2) from the repo root with:
 `grep -h "| 0.2 |" roadmap/workstreams/*.md | grep -c "| done |"` (done) and
-`grep -h "| 0.2 |" roadmap/workstreams/*.md | wc -l` (total).
+`grep -h "| 0.2 |" roadmap/workstreams/*.md | grep -vc "| dropped |"` (total, excluding dropped).
 
 | Milestone | Done / total |
 |-----------|-------------|
-| v0.2.0 | 1 / 19 |
+| v0.2.0 | 2 / 18 |
 | v0.3.0 | 0 / 41 |
 | v0.4.0 | 0 / 28 |
 | later  | 0 / 2 |
