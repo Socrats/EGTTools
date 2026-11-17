@@ -243,8 +243,8 @@ tuple[numpy.ndarray, numpy.ndarray]
             const int NP1 = T_ > 0 ? static_cast<int>(mean_t[0].rows()) : 0;
             const int K_  = T_ > 0 ? static_cast<int>(mean_t[0].cols()) : 0;
 
-            py::array_t<double> arr_mean(std::vector<ssize_t>{T_, NP1, K_});
-            py::array_t<double> arr_se(std::vector<ssize_t>{T_, NP1, K_});
+            py::array_t<double> arr_mean(std::vector<py::ssize_t>{T_, NP1, K_});
+            py::array_t<double> arr_se(std::vector<py::ssize_t>{T_, NP1, K_});
             auto m = arr_mean.mutable_unchecked<3>();
             auto s = arr_se.mutable_unchecked<3>();
             for (int t = 0; t < T_; ++t)

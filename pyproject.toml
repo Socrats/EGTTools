@@ -140,6 +140,11 @@ ignore = [
     "enkinsfile",
     "*.mo",
     ".vscode/*",
+    "Dockerfile.mpi",
+    "roadmap",
+    "roadmap/**",
+    "scripts",
+    "scripts/**",
 ]
 
 [tool.cibuildwheel]

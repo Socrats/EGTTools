@@ -1,4 +1,4 @@
-include *.md
+include README.md CHANGELOG.md CONTRIBUTING.md CODE_OF_CONDUCT.md
 include CITATION.cff
 include LICENSE
 
