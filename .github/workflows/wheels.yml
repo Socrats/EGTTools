@@ -26,6 +26,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          # Full history and tags: setuptools-scm derives the version from them.
+          fetch-depth: 0
           submodules: recursive
 
       - name: Make sure submodules are updated
@@ -138,6 +140,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          # Full history and tags: setuptools-scm derives the version from them.
+          fetch-depth: 0
           submodules: recursive
 
       - name: Make sure submodules are updated
