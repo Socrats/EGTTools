@@ -15,6 +15,8 @@ changes. Today nothing checks for them in CI.
 | MEM-06 | Memory-growth regression tests on long-running estimators (pytest-memray limits) | todo | P1 | S | 0.3 | — | — |
 | MEM-07 | Document how to run sanitizer builds locally (Linux and macOS) | todo | P2 | S | 0.3 | MEM-01 | — |
 
+Found and fixed so far: out-of-bounds row write in `run_with_mutation` with a transient (REL-10).
+
 ## Notes
 
 - **MEM-03**: CPython's own allocations produce false positives. Use

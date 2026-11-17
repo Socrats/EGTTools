@@ -15,9 +15,15 @@ structural work.
 | CI-05 | Decide on extra wheel targets: Linux aarch64, macOS x86_64 | todo | P2 | S | 0.4 | REL-05 | — |
 | CI-06 | Consolidate docs workflows (`docs.yml`, `jekyll-gh-pages.yml`, RTD trigger) | todo | P2 | M | 0.4 | — | — |
 | CI-07 | Concurrency groups and path filters so docs-only changes skip wheel builds | todo | P2 | S | 0.4 | — | — |
+| CI-08 | Evaluate uv for the development workflow (uv.lock for dev/test/docs tools, `uv build` front end) | todo | P2 | M | 0.4 | CI-02 | — |
 
 ## Notes
 
+- **CI-08**: uv is a front end and environment manager; its own build backend
+  (`uv_build`) is pure-Python only, so the C++ extension stays with scikit-build-core.
+  uv can drive that backend (`uv build`), manage the dev/test/docs environment with a
+  lock file, and speed up CI test jobs. Published dependencies stay as ranges; native
+  dependencies (vcpkg, OpenMP, BLAS) stay outside uv. Decide after CI-02.
 - **CI-02**: removes the need to keep `setup.py` `package_data` and
   `[tool.setuptools.package-data]` in sync by hand, and the `if (NOT SKBUILD)`
   guards around `install()`.
