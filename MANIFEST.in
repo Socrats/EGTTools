@@ -54,7 +54,6 @@ include .gitmodules
 
 graft cmake
 graft res
-include pytest.ini
 
 graft docs
 prune docs/_build
