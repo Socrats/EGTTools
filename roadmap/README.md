@@ -102,7 +102,7 @@ Update this table when tasks change. Recount a milestone (here 0.2) from the rep
 
 | Milestone | Done / total |
 |-----------|-------------|
-| v0.2.0 | 8 / 19 |
+| v0.2.0 | 9 / 19 |
 | v0.3.0 | 0 / 41 |
 | v0.4.0 | 0 / 28 |
 | later  | 0 / 2 |
