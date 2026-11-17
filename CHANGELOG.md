@@ -84,8 +84,9 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   becomes `invasion_graph(..., min_frequency=...)`, and `atol` becomes
   `invasion_graph(..., drift_tolerance=...)` (default 0.005, so ratios shown as 1.00 count as
   drift). New drawing options: `layout` (named layouts or positions), `colors` as a sequence
-  over all strategies or a dict by index or label, `label_position` (`"outside"` or
-  `"inside"`), `label_offsets`, `scale_nodes_by_frequency`, `scale_edges_by_ratio`,
+  over all strategies or a dict by index or label, `name_position` and `frequency_position`
+  (by default names outside the nodes and stationary frequencies inside, as percentages),
+  `label_offsets`, `frequency_format` (string or function), `scale_nodes_by_frequency`, `scale_edges_by_ratio`,
   `min_ratio`, and keyword dicts for nodes, edges and every text element. Pairs that invade
   each other are drawn as two curved arrows with separate labels.
 - Supported Python versions are now 3.11–3.14: wheels are built for CPython 3.14, and
