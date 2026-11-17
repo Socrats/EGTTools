@@ -19,6 +19,9 @@ local_scheme = "no-local-version"
 # Fallback used when building from an sdist without a git checkout
 # (e.g. conda-forge builds from a PyPI tarball).
 fallback_version = "0.0.0"
+# Accept the historical vX.Y.Z-patchN tags (the -patchN suffix is not PEP 440) and
+# pre-release tags such as v0.2.0rc1.
+tag_regex = '^v?(?P<version>\d+(?:\.\d+){0,2}(?:(?:a|b|rc)\d+)?)(?:-patch\d+)?$'
 
 [project]
 name = "egttools"
