@@ -492,7 +492,15 @@ namespace egttools::FinitePopulations {
                                  std::mt19937_64 &generator);
 
         /**
-         * @brief updates the population of strategies and return the number of steps
+         * @brief Advances the population by one update, or by several if it is homogeneous.
+         *
+         * Implements Definition 3.2 of docs/theory/pairwise_comparison.md. In a homogeneous
+         * population only a mutation can change the state, so the number of updates without
+         * mutation is drawn at once: k ~ Geometric(mu) (failures before the first mutation).
+         * The population stays unchanged for k updates and mutates on update k + 1. If that
+         * would exceed @p max_steps, the population stays homogeneous for all @p max_steps
+         * updates and does not mutate.
+         *
          * @param s1 : index of strategy 1
          * @param s2 : index of strategy 2
          * @param beta : intensity of selection
@@ -505,14 +513,15 @@ namespace egttools::FinitePopulations {
          * @param cache : reference to cache container
          * @param geometric : geometric distribution of steps for a mutation to occur
          * @param generator : random generator
-         * @return the number of steps that the update takes.
+         * @param max_steps : number of updates left in the current window (>= 1)
+         * @return the number of updates consumed minus one, so callers can do `j += k` inside a `++j` loop.
          */
         inline size_t
         _update_multi_step(int s1, int s2, double beta, double mu,
                            int &birth, int &die, bool &homogeneous, int &idx_homo,
                            VectorXui &strategies,
                            Cache &cache, std::geometric_distribution<size_t> &geometric,
-                           std::mt19937_64 &generator);
+                           std::mt19937_64 &generator, size_t max_steps);
 
         /**
          * @brief samples 2 players from the population of strategies and updates references @param s1 and s2.
@@ -600,10 +609,7 @@ namespace egttools::FinitePopulations {
             size_t k = _update_multi_step(strategy_p1, strategy_p2, beta, mu,
                                           birth, die, homogeneous, idx_homo,
                                           strategies, cache,
-                                          geometric, _mt);
-
-            // Saturating add: avoid size_t wrap-around when k is very large
-            if (k >= nb_generations - j) break;
+                                          geometric, _mt, nb_generations - j);
             j += k;
         }
 
@@ -669,10 +675,7 @@ namespace egttools::FinitePopulations {
             size_t k = _update_multi_step(strategy_p1, strategy_p2, beta, mu,
                                           birth, die, homogeneous, idx_homo,
                                           strategies, cache,
-                                          geometric, generator);
-
-            // Saturating add: avoid size_t wrap-around when k is very large
-            if (k >= nb_generations - j) break;
+                                          geometric, generator, nb_generations - j);
             j += k;
         }
 
@@ -710,28 +713,22 @@ namespace egttools::FinitePopulations {
             // Update with mutation and return how many steps should be added to the current
             // generation if the only change in the population could have been a mutation
             if (homogeneous) {
-                int k = geometric(_mt);
-                // Update states matrix
-                if (k == 0) states.row(j) = strategies;
-                else if ((j + k) < nb_generations + 1) {
-                    for (int64_t z = j; z <= j + k; ++z)
-                        states.row(z).array() = strategies;
-                } else {
+                // Definition 3.2: k updates without change (rows j .. j + k - 1), then a
+                // mutation on update k + 1 (row j + k), unless the window ends first.
+                const int64_t k = geometric(_mt);
+                if (k >= nb_generations + 1 - j) {
                     for (int64_t z = j; z < nb_generations + 1; ++z)
                         states.row(z).array() = strategies;
+                    break;
                 }
-
-                // mutate
+                for (int64_t z = j; z < j + k; ++z)
+                    states.row(z).array() = strategies;
                 mutate_(_mt, birth, idx_homo);
                 strategies(birth) += 1;
                 strategies(idx_homo) -= 1;
                 homogeneous = false;
-
-                // Update state count by k steps
-                j += k + 1;
-                // Update state after mutation
-                if (j < nb_generations + 1)
-                    states.row(j).array() = strategies;
+                j += k;
+                states.row(j).array() = strategies;
             } else {
                 // First we pick 2 players randomly
                 _sample_players(strategy_p1, strategy_p2, strategies, _mt);
@@ -773,22 +770,21 @@ namespace egttools::FinitePopulations {
 
         // Creates a cache for the fitness data
         Cache cache(_cache_size);
-        int k;
 
         for (int64_t j = 0; j < transient; ++j) {
             // Update with mutation and return how many steps should be added to the current
             // generation if the only change in the population could have been a mutation
             if (homogeneous) {
-                k = geometric(_mt);
-
-                // mutate
+                // Definition 3.2: k updates without change, then a mutation on update k + 1.
+                // If the transient ends first, the population is still homogeneous when
+                // counting starts (the geometric waiting time is memoryless).
+                const int64_t k = geometric(_mt);
+                if (k >= transient - j) break;
                 mutate_(_mt, birth, idx_homo);
                 strategies(birth) += 1;
                 strategies(idx_homo) -= 1;
                 homogeneous = false;
-
-                // Update state count by k steps
-                j += k + 1;
+                j += k;
             } else {
                 // First we pick 2 players randomly
                 _sample_players(strategy_p1, strategy_p2, strategies, _mt);
@@ -804,29 +800,22 @@ namespace egttools::FinitePopulations {
             // Update with mutation and return how many steps should be added to the current
             // generation if the only change in the population could have been a mutation
             if (homogeneous) {
-                k = geometric(_mt);
-                // Update states matrix
-                if (k == 0) states.row(j) = strategies;
-                else if ((j + k) < total_counting_generations) {
-                    for (int64_t z = j; z <= j + k; ++z)
-                        states.row(z).array() = strategies;
-                } else {
+                // Definition 3.2: k updates without change (rows j .. j + k - 1), then a
+                // mutation on update k + 1 (row j + k), unless the window ends first.
+                const int64_t k = geometric(_mt);
+                if (k >= total_counting_generations - j) {
                     for (int64_t z = j; z < total_counting_generations; ++z)
                         states.row(z).array() = strategies;
+                    break;
                 }
-
-                // Update state count by k steps
-                j += k + 1;
-                // Update state after mutation
-                if (j <= total_counting_generations) {
-                    // mutate
-                    mutate_(_mt, birth, idx_homo);
-                    strategies(birth) += 1;
-                    strategies(idx_homo) -= 1;
-                    homogeneous = false;
-
-                    states.row(j).array() = strategies;
-                }
+                for (int64_t z = j; z < j + k; ++z)
+                    states.row(z).array() = strategies;
+                mutate_(_mt, birth, idx_homo);
+                strategies(birth) += 1;
+                strategies(idx_homo) -= 1;
+                homogeneous = false;
+                j += k;
+                states.row(j).array() = strategies;
             } else {
                 // First we pick 2 players randomly
                 _sample_players(strategy_p1, strategy_p2, strategies, _mt);
@@ -1203,7 +1192,7 @@ namespace egttools::FinitePopulations {
                     k = _update_multi_step(strategy_p1, strategy_p2, beta, mu,
                                            birth, die, homogeneous, idx_homo,
                                            strategies, cache,
-                                           geometric, generator);
+                                           geometric, generator, transitory - j);
                     j += k;
                 }
 
@@ -1214,7 +1203,13 @@ namespace egttools::FinitePopulations {
                 for (; j < nb_generations; ++j) {
                     if (homogeneous) {
                         k = geometric(generator);
-                        sdist(static_cast<int64_t>(current_state)) += k + 1;
+                        // Definition 3.2: k updates without change, then a mutation on update
+                        // k + 1, unless the counting window ends first.
+                        if (k >= nb_generations - j) {
+                            sdist(static_cast<int64_t>(current_state)) += nb_generations - j;
+                            break;
+                        }
+                        sdist(static_cast<int64_t>(current_state)) += k;
                         mutate_(generator, birth, idx_homo);
 
                         strategies(static_cast<int64_t>(birth)) += 1;
@@ -1344,7 +1339,7 @@ namespace egttools::FinitePopulations {
                     k = _update_multi_step(strategy_p1, strategy_p2, beta, mu,
                                            birth, die, homogeneous, idx_homo,
                                            strategies, cache,
-                                           geometric, generator);
+                                           geometric, generator, transitory - j);
                     j += k;
                 }
 
@@ -1355,7 +1350,13 @@ namespace egttools::FinitePopulations {
                 for (; j < nb_generations; ++j) {
                     if (homogeneous) {
                         k = geometric(generator);
-                        sdist.coeffRef(0, static_cast<signed long>(current_state)) += k + 1;
+                        // Definition 3.2: k updates without change, then a mutation on update
+                        // k + 1, unless the counting window ends first.
+                        if (k >= nb_generations - j) {
+                            sdist.coeffRef(0, static_cast<signed long>(current_state)) += nb_generations - j;
+                            break;
+                        }
+                        sdist.coeffRef(0, static_cast<signed long>(current_state)) += k;
                         mutate_(generator, birth, idx_homo);
 
                         strategies(static_cast<int>(birth)) += 1;
@@ -1483,7 +1484,7 @@ namespace egttools::FinitePopulations {
                     k = _update_multi_step(strategy_p1, strategy_p2, beta, mu,
                                            birth, die, homogeneous, idx_homo,
                                            strategies, cache,
-                                           geometric, generator);
+                                           geometric, generator, transitory - j);
                     j += k;
                 }
 
@@ -1491,11 +1492,18 @@ namespace egttools::FinitePopulations {
                 for (; j < nb_generations; ++j) {
                     if (homogeneous) {
                         k = geometric(generator);
+                        // Definition 3.2: k updates without change, then a mutation on update
+                        // k + 1, unless the counting window ends first.
+                        if (k >= nb_generations - j) {
+                            strategy_dist += strategies * (nb_generations - j);
+                            break;
+                        }
                         strategy_dist += strategies * k;
                         mutate_(generator, birth, idx_homo);
 
                         strategies(static_cast<int>(birth)) += 1;
                         strategies(idx_homo) -= 1;
+                        strategy_dist += strategies;
 
                         homogeneous = false;
                         j += k;
@@ -1606,7 +1614,7 @@ namespace egttools::FinitePopulations {
                     _sample_players(strategy_p1, strategy_p2, strategies, generator);
                     k = _update_multi_step(strategy_p1, strategy_p2, beta, mu,
                                            birth, die, homogeneous, idx_homo,
-                                           strategies, cache, geometric, generator);
+                                           strategies, cache, geometric, generator, transitory - j);
                     j += k;
                 }
 
@@ -1616,9 +1624,16 @@ namespace egttools::FinitePopulations {
                 for (; j < nb_generations; ++j) {
                     if (homogeneous) {
                         k = geometric(generator);
-                        // k+1 steps spent in current_state before mutation.
-                        run_sum += indicator_values.row(static_cast<int64_t>(current_state)) * static_cast<double>(k + 1);
-                        run_count += k + 1;
+                        // Definition 3.2: k updates without change, then a mutation on update
+                        // k + 1, unless the counting window ends first.
+                        if (k >= nb_generations - j) {
+                            run_sum += indicator_values.row(static_cast<int64_t>(current_state)) *
+                                       static_cast<double>(nb_generations - j);
+                            run_count += nb_generations - j;
+                            break;
+                        }
+                        run_sum += indicator_values.row(static_cast<int64_t>(current_state)) * static_cast<double>(k);
+                        run_count += k;
                         mutate_(generator, birth, idx_homo);
                         strategies(static_cast<int>(birth)) += 1;
                         strategies(idx_homo) -= 1;
@@ -1745,7 +1760,7 @@ namespace egttools::FinitePopulations {
                     _sample_players(strategy_p1, strategy_p2, strategies, generator);
                     k = _update_multi_step(strategy_p1, strategy_p2, beta, mu,
                                            birth, die, homogeneous, idx_homo,
-                                           strategies, cache, geometric, generator);
+                                           strategies, cache, geometric, generator, transitory - j);
                     j += k;
                 }
 
@@ -1753,9 +1768,15 @@ namespace egttools::FinitePopulations {
                 for (; j < nb_generations; ++j) {
                     if (homogeneous) {
                         k = geometric(generator);
-                        // k+1 steps spent in the current (homogeneous) state before mutation.
-                        run_sum += evaluate_indicators(strategies) * static_cast<double>(k + 1);
-                        run_count += k + 1;
+                        // Definition 3.2: k updates without change, then a mutation on update
+                        // k + 1, unless the counting window ends first.
+                        if (k >= nb_generations - j) {
+                            run_sum += evaluate_indicators(strategies) * static_cast<double>(nb_generations - j);
+                            run_count += nb_generations - j;
+                            break;
+                        }
+                        run_sum += evaluate_indicators(strategies) * static_cast<double>(k);
+                        run_count += k;
                         mutate_(generator, birth, idx_homo);
                         strategies(static_cast<int>(birth)) += 1;
                         strategies(idx_homo) -= 1;
@@ -1905,13 +1926,16 @@ namespace egttools::FinitePopulations {
                                                            VectorXui &strategies,
                                                            Cache &cache,
                                                            std::geometric_distribution<size_t> &geometric,
-                                                           std::mt19937_64 &generator) {
+                                                           std::mt19937_64 &generator,
+                                                           const size_t max_steps) {
         size_t k = 0;
         die = s1, birth = s1;
 
         if (homogeneous) {
-            k += geometric(generator);
-            // mutate
+            k = geometric(generator);
+            // No mutation within the window: stay homogeneous for all remaining updates.
+            if (k >= max_steps) return max_steps - 1;
+            // k updates without change, then a mutation on update k + 1.
             die = idx_homo;
             mutate_(generator, birth, die);
             strategies(birth) += 1;
