@@ -3,7 +3,7 @@ Installation
 
 EGTtools is distributed via **PyPI** (pip wheels) and **conda** (Anaconda.org).
 Prebuilt packages are available for Linux (x86_64), macOS (x86_64 and arm64),
-and Windows (x86_64 and arm64), for **Python 3.10 – 3.13**.
+and Windows (x86_64 and arm64), for **Python 3.11 – 3.14**.
 
 .. list-table::
    :header-rows: 1
@@ -15,15 +15,15 @@ and Windows (x86_64 and arm64), for **Python 3.10 – 3.13**.
      - OpenMP
    * - Linux
      - x86_64
-     - 3.10 – 3.13
+     - 3.11 – 3.14
      - ✅
    * - macOS
      - x86_64, arm64 (M1–M4)
-     - 3.10 – 3.13
+     - 3.11 – 3.14
      - ✅
    * - Windows
      - x86_64, arm64
-     - 3.10 – 3.13
+     - 3.11 – 3.14
      - ❌
 
 
@@ -101,7 +101,7 @@ Requirements
 * A C++17-capable compiler (GCC ≥ 9, Clang ≥ 10, MSVC 2019+)
 * `Eigen <https://eigen.tuxfamily.org>`_ ≥ 3.4 (or 5.x)
 * `Boost <https://www.boost.org>`_ ≥ 1.82 (header-only multiprecision)
-* Python ≥ 3.10
+* Python ≥ 3.11
 
 The easiest way to satisfy the C++ dependencies is via **vcpkg** (bundled as a
 git submodule) or via conda.

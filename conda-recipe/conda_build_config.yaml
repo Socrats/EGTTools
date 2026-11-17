@@ -1,14 +1,20 @@
 python:
-  - "3.10"
   - "3.11"
   - "3.12"
   - "3.13"
+  - "3.14"
 
-# Minimum numpy that satisfies the run requirement; conda-build uses this to
-# determine the ABI tag.  We pin loosely so the package works with any numpy
-# >=1.26.3 at runtime (as declared in meta.yaml run requirements).
+# Oldest numpy with builds for each Python version (paired via zip_keys); conda-build
+# uses it to determine the ABI tag. Packages built against numpy 2.x also work with
+# numpy >=1.26.3 at runtime (as declared in meta.yaml run requirements).
 numpy:
   - "2.0"
+  - "2.0"
+  - "2.1"
+  - "2.3"
+
+zip_keys:
+  - [python, numpy]
 
 # Optional C-library build variants.  Each combination produces a separate
 # conda package with a distinct build string.

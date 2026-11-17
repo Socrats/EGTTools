@@ -47,6 +47,8 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Supported Python versions are now 3.11–3.14: wheels are built for CPython 3.14, and
+  Python 3.10 (end of life in October 2026) is no longer supported.
 - Both functions now warn when a sparse chain is reducible (no unique stationary
   distribution), and `calculate_stationary_distribution_non_hermitian` warns when
   eigenvalue 1 is not simple.

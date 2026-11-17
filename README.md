@@ -53,9 +53,9 @@ Prebuilt packages are available for all major platforms:
 
 | Platform        | Architectures          | Python Versions  | OpenMP Supported |
 |-----------------|------------------------|------------------|------------------|
-| Linux (x86_64)  | x86_64                 | 3.10 – 3.13      | ✅ Yes            |
-| macOS (x86/arm) | x86_64, arm64 (M1–M4)  | 3.10 – 3.13      | ✅ Yes            |
-| Windows         | x86_64, arm64          | 3.10 – 3.13      | ❌ Not available  |
+| Linux (x86_64)  | x86_64                 | 3.11 – 3.14      | ✅ Yes            |
+| macOS (x86/arm) | x86_64, arm64 (M1–M4)  | 3.11 – 3.14      | ✅ Yes            |
+| Windows         | x86_64, arm64          | 3.11 – 3.14      | ❌ Not available  |
 
 ---
 
@@ -569,7 +569,7 @@ Developed and maintained by [Elias Fernández](https://efernandez.eu).
 
 - On **Windows**, OpenMP is currently not supported. All simulations will run single-threaded.
 - On **macOS**, OpenMP is supported but performance may depend on the installed `libomp`. If using `conda`, make sure `llvm-openmp` is available.
-- Wheels are only built for **Python 3.10 – 3.12**.
+- Wheels are only built for **Python 3.11 – 3.14**.
 - Numerical simulations require large RAM allocations when using large population sizes or caching; ensure you configure the `cache` size accordingly.
 - Advanced users building from source should ensure Boost, Eigen, and BLAS/LAPACK libraries are compatible with their compiler toolchain.
 
