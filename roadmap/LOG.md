@@ -2,6 +2,10 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-17 · CI-08, API-05, DOC-12, REL-11 · Added from findings (uv evaluation, silent deprecated stub, more theory pages, ImitationMultipleGames).
+- 2026-11-17 · REL-06 · Merged (`8f5b901`): Python 3.11–3.14, cp314 wheels, conda numpy pairing.
+- 2026-11-17 · REL-05 · Merged (`754c5f6`): CMake accepts suffixed tags; first CI run after fetching tags failed on `v0.1.14-patch2`.
+- 2026-11-17 · REL-10 · Merged (`50d98c4`): pairwise comparison spec + 49 tests; MC homogeneous-state bias, OOB write, C++ and StochDynamics gradients fixed.
 - 2026-11-17 · REL-04 · Investigated: roots, stability and arrows of the pairwise-comparison simplex plot use truncated/invalid states.
 - 2026-11-17 · REL-02 · Merged (`5c43eaf`).
 - 2026-11-17 · REL-05 · Merged (`4aee21d`): Windows `ssize_t`, check-manifest, CI version detection, explicit MANIFEST Markdown list. Waiting for CI.
