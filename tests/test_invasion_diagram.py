@@ -118,27 +118,46 @@ def test_min_ratio_and_labels_can_be_hidden():
     plt.close("all")
 
 
-@pytest.mark.parametrize("label_position", ["outside", "inside"])
-def test_label_positions(label_position):
+@pytest.mark.parametrize("name_position", ["outside", "inside"])
+@pytest.mark.parametrize("frequency_position", ["outside", "inside"])
+def test_label_positions(name_position, frequency_position):
     fixation, sd = sml([[0., 3., 1.], [1., 2., 1.], [-1., -1., 0.]])
     graph = egt.plotting.invasion_graph(fixation, Z, sd, ["H", "D", "L"])
     _, ax = plt.subplots()
-    egt.plotting.draw_invasion_diagram(graph, ax=ax, label_position=label_position, show_ratios=False,
+    egt.plotting.draw_invasion_diagram(graph, ax=ax, name_position=name_position,
+                                       frequency_position=frequency_position, show_ratios=False,
                                        label_offsets={"L": (0., -40.)})
     texts = {t.get_text(): t for t in ax.texts}
     assert {"H", "D", "L"} <= set(texts)
-    assert {f"{f:.2f}" for f in sd} <= set(texts)
-    if label_position == "outside":
-        assert texts["L"].xyann == (0., -40.)            # custom offset used for the name block
+    percentages = {f"{f:.0%}" if f >= 0.005 or f == 0 else "<1%" for f in sd}
+    assert percentages <= set(texts)
+    if name_position == "outside":
+        assert texts["L"].xyann == (0., -40.)            # custom offset used for the outside name
     else:
-        assert texts["H"].xyann == texts["H"].xy         # name written at the node itself, no offset
+        assert abs(texts["H"].xyann[0]) < 1e-12          # name centred horizontally on the node
     plt.close("all")
 
 
-def test_invalid_label_position():
+def test_frequency_format():
+    from egttools.plotting.indicators import _format_percentage
+    assert _format_percentage(0.4567) == "46%"
+    assert _format_percentage(0.001) == "<1%"
+    assert _format_percentage(0.0) == "0%"
+    graph = egt.plotting.invasion_graph(ratio_matrix(3., .2), Z, np.array([0.25, 0.75]))
+    _, ax = plt.subplots()
+    egt.plotting.draw_invasion_diagram(graph, ax=ax, frequency_format="{:.3f}")
+    assert {"0.250", "0.750"} <= {t.get_text() for t in ax.texts}
+    _, ax = plt.subplots()
+    egt.plotting.draw_invasion_diagram(graph, ax=ax, frequency_format=lambda f: f"p={f:.1f}")
+    assert {"p=0.2", "p=0.8"} <= {t.get_text() for t in ax.texts}
+    plt.close("all")
+
+
+@pytest.mark.parametrize("bad", [dict(name_position="above"), dict(frequency_position="left")])
+def test_invalid_label_position(bad):
     graph = egt.plotting.invasion_graph(ratio_matrix(3., .2), Z)
     with pytest.raises(ValueError):
-        egt.plotting.draw_invasion_diagram(graph, label_position="above")
+        egt.plotting.draw_invasion_diagram(graph, **bad)
     plt.close("all")
 
 

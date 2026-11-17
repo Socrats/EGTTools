@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 from matplotlib import patheffects
 
 from matplotlib.ticker import AutoMinorLocator
-from typing import Dict, List, Optional, Sequence, Tuple, Union
+from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 
 def plot_gradients(gradients: numpy.ndarray, fig_title: Optional[str] = None,
@@ -366,6 +366,13 @@ def invasion_graph(fixation_probabilities: np.ndarray,
     return graph
 
 
+def _format_percentage(frequency: float) -> str:
+    """Whole percentage, with "<1%" for positive frequencies that would round to 0%."""
+    if 0. < frequency < 0.005:
+        return "<1%"
+    return f"{frequency:.0%}"
+
+
 def _contrasting_text_color(color) -> str:
     """Black or white, whichever is more readable on ``color`` (WCAG relative luminance)."""
     channels = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in mcolors.to_rgb(color)]
@@ -397,9 +404,10 @@ def draw_invasion_diagram(graph: nx.DiGraph,
                           show_ratios: bool = True,
                           show_frequencies: bool = True,
                           ratio_format: str = r"{:.2f}$\rho_N$",
-                          frequency_format: str = "{:.2f}",
+                          frequency_format: Union[str, Callable[[float], str], None] = None,
                           ratio_label_position: float = 0.35,
-                          label_position: str = "outside",
+                          name_position: str = "outside",
+                          frequency_position: str = "inside",
                           label_offsets: Optional[Dict] = None,
                           label_padding: float = 4.,
                           node_kwargs: Optional[Dict] = None,
@@ -444,17 +452,21 @@ def draw_invasion_diagram(graph: nx.DiGraph,
     show_ratios, show_frequencies : bool, default=True
         Whether to write :math:`\\rho/\\rho_N` on selection edges and the stationary frequency next
         to each node.
-    ratio_format, frequency_format : str
-        Format strings for those labels.
+    ratio_format : str
+        Format string for :math:`\\rho/\\rho_N`.
+    frequency_format : str or callable, optional
+        Format string or function for the stationary frequencies. Defaults to whole percentages,
+        with ``"<1%"`` for frequencies that are positive but round to 0%.
     ratio_label_position : float, default=0.35
         Where to write :math:`\\rho/\\rho_N` along each edge, as a fraction of the way from the
         resident to the invader. Values other than 0.5 keep the labels of edges that cross at
         their midpoints (e.g. diameters of a circular layout) apart.
-    label_position : {"outside", "inside"}, default="outside"
-        ``"outside"`` writes each strategy's name, with its stationary frequency on the line below,
-        on the side of the node facing away from the centre of the diagram. ``"inside"`` writes the
-        name inside the node (in black or white, whichever contrasts with the node colour) and the
-        frequency outside.
+    name_position, frequency_position : {"outside", "inside"}
+        Where to write each strategy's name (default ``"outside"``) and stationary frequency
+        (default ``"inside"``). Outside labels go on the side of the node facing away from the
+        centre of the diagram, the name above the frequency when both are outside. Text inside a
+        node is black or white, whichever contrasts with the node colour; when both are inside,
+        the name is written above the frequency.
     label_offsets : dict, optional
         Per-strategy placement of the outside labels, keyed by strategy index or label, as an
         ``(dx, dy)`` offset in points from the node centre. Overrides the automatic placement.
@@ -536,6 +548,16 @@ def draw_invasion_diagram(graph: nx.DiGraph,
     nx.draw_networkx_nodes(graph, pos, nodelist=nodes, node_size=sizes, node_color=_node_colors(graph, colors),
                            ax=ax, **{"edgecolors": "white", "linewidths": 1.5, **(node_kwargs or {})})
 
+    for position, option in ((name_position, "name_position"), (frequency_position, "frequency_position")):
+        if position not in ("outside", "inside"):
+            raise ValueError(f"{option} must be 'outside' or 'inside'")
+    if frequency_format is None:
+        format_frequency = _format_percentage
+    elif callable(frequency_format):
+        format_frequency = frequency_format
+    else:
+        format_frequency = frequency_format.format
+
     node_colors = _node_colors(graph, colors)
     halo = [patheffects.withStroke(linewidth=3, foreground="white")]
     name_style = {"fontsize": 11, "fontweight": "bold", "color": "#222222", "path_effects": halo,
@@ -548,10 +570,9 @@ def draw_invasion_diagram(graph: nx.DiGraph,
         x, y = pos[i]
         name = graph.nodes[i]["label"]
         frequency = graph.nodes[i]["frequency"]
-        frequency_text = (frequency_format.format(frequency)
-                          if show_frequencies and np.isfinite(frequency) else None)
+        frequency_text = format_frequency(frequency) if show_frequencies and np.isfinite(frequency) else None
 
-        # Direction away from the centre of the diagram; labels go on that side of the node.
+        # Direction away from the centre of the diagram; outside labels go on that side of the node.
         direction = np.asarray(pos[i], dtype=np.float64) - centre
         norm = np.linalg.norm(direction)
         direction = direction / norm if norm > 1e-12 else np.array([0., -1.])
@@ -561,36 +582,49 @@ def draw_invasion_diagram(graph: nx.DiGraph,
             custom = label_offsets.get(i, label_offsets.get(name))
             if custom is not None:
                 offset = np.asarray(custom, dtype=np.float64)
-        ha = "left" if offset[0] > 0.3 * np.linalg.norm(offset) else (
-            "right" if offset[0] < -0.3 * np.linalg.norm(offset) else "center")
-        above = offset[1] > 0.3 * np.linalg.norm(offset)
-        below = offset[1] < -0.3 * np.linalg.norm(offset)
+        length = np.linalg.norm(offset)
+        ha = "left" if offset[0] > 0.3 * length else "right" if offset[0] < -0.3 * length else "center"
+        above, below = offset[1] > 0.3 * length, offset[1] < -0.3 * length
 
-        def place(text, dy, va, style):
+        def outside(text, dy, va, style):
             ax.annotate(text, xy=(x, y), xytext=(offset[0], offset[1] + dy), textcoords="offset points",
                         ha=ha, va=va, zorder=5, **style)
 
-        if label_position == "inside":
-            ax.annotate(name, xy=(x, y), ha="center", va="center", zorder=5,
-                        **{**name_style, "color": _contrasting_text_color(node_color), "path_effects": [],
-                           **(label_kwargs or {})})
-            if frequency_text is not None:
-                place(frequency_text, 0., "bottom" if above else "top" if below else "center", frequency_style)
-        elif label_position == "outside":
-            # Name above frequency, as one block on the outer side of the node.
-            if frequency_text is None:
-                place(name, 0., "bottom" if above else "top" if below else "center", name_style)
-            elif above:
-                place(frequency_text, 0., "bottom", frequency_style)
-                place(name, line_height, "bottom", name_style)
+        def inside(text, dy, style, user_kwargs):
+            # Contrasting colour and no outline, unless the user set them explicitly.
+            user_kwargs = user_kwargs or {}
+            ax.annotate(text, xy=(x, y), xytext=(0., dy), textcoords="offset points", ha="center", va="center",
+                        zorder=5, **{**style,
+                                     "color": user_kwargs.get("color", _contrasting_text_color(node_color)),
+                                     "path_effects": user_kwargs.get("path_effects", [])})
+
+        labels_here = ((name, name_style, label_kwargs, name_position),
+                       (frequency_text, frequency_style, frequency_label_kwargs, frequency_position))
+        outside_texts = [(text, style) for text, style, _, where in labels_here
+                         if text is not None and where == "outside"]
+        inside_texts = [(text, style, user) for text, style, user, where in labels_here
+                        if text is not None and where == "inside"]
+
+        # Inside: one line centred, or two lines (name above frequency) around the centre.
+        spacing = 0.8 * line_height
+        for k, (text, style, user) in enumerate(inside_texts):
+            inside(text, (len(inside_texts) - 1) / 2 * spacing - k * spacing, style, user)
+
+        # Outside: one line, or a two-line block (name above frequency) on the outer side.
+        if len(outside_texts) == 1:
+            text, style = outside_texts[0]
+            outside(text, 0., "bottom" if above else "top" if below else "center", style)
+        elif len(outside_texts) == 2:
+            (first, first_style), (second, second_style) = outside_texts
+            if above:
+                outside(second, 0., "bottom", second_style)
+                outside(first, line_height, "bottom", first_style)
             elif below:
-                place(name, 0., "top", name_style)
-                place(frequency_text, -line_height, "top", frequency_style)
+                outside(first, 0., "top", first_style)
+                outside(second, -line_height, "top", second_style)
             else:
-                place(name, 0., "bottom", name_style)
-                place(frequency_text, 0., "top", frequency_style)
-        else:
-            raise ValueError("label_position must be 'outside' or 'inside'")
+                outside(first, 0., "bottom", first_style)
+                outside(second, 0., "top", second_style)
 
     ax.set_aspect("equal")
     ax.margins(0.2)
