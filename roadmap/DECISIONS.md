@@ -14,8 +14,9 @@ may still change significantly. Affects all milestones.
 
 ## 2026-11-17: Track progress in `roadmap/`, not a GitHub Project board
 Planning and progress live in Markdown in this folder. No GitHub Projects
-board. GitHub labels and issues are used: one tracking issue per workstream,
-plus the existing issues updated and linked (PM-07, PM-08, PM-10).
+board and no per-workstream tracking issues; that level of detail isn't needed
+yet. GitHub labels and milestones are used, and the existing issues were
+updated and linked (PM-07, PM-08). PM-10 dropped.
 
 ## 2026-11-17: GPU/JAX only for ensembles and synchronous rules
 Asynchronous single-chain network dynamics don't map well to GPUs. A

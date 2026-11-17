@@ -12,10 +12,10 @@ Goal: make it easy and predictable for others to report issues and contribute.
 | PM-04 | Add `CODEOWNERS`, `SECURITY.md`, `SUPPORT.md` | todo | P1 | S | 0.2 | — | — |
 | PM-05 | Rewrite `CONTRIBUTING.md` (dev setup, build, tests, style, sign-off) | todo | P1 | M | 0.2 | REL-01 | — |
 | PM-06 | Add `RELEASING.md` (versioning, tagging, PyPI, conda) | todo | P1 | S | 0.2 | — | — |
-| PM-07 | Label scheme on GitHub (`type:`, `area:`, `priority:`, `status:`) | ready | P1 | S | 0.2 | — | — |
-| PM-08 | Update the 6 outdated GitHub issues (#67, #68, #72, #81, #82, #84) and link them to workstreams | ready | P1 | S | 0.2 | PM-07 | — |
+| PM-07 | Label scheme on GitHub (`type:`, `area:`, `priority:`, `status:`) + milestones v0.2.0–v0.4.0 | done | P1 | S | 0.2 | — | — |
+| PM-08 | Update the 6 outdated GitHub issues (#67, #68, #72, #81, #82, #84) and link them to workstreams | done | P1 | S | 0.2 | PM-07 | — |
 | PM-09 | Branch protection on `master` with required checks | dropped | P2 | S | 0.2 | REL-07 | — |
-| PM-10 | One tracking issue per workstream, linking its roadmap file | ready | P1 | S | 0.2 | PM-07 | — |
+| PM-10 | One tracking issue per workstream, linking its roadmap file | dropped | P1 | S | 0.2 | PM-07 | — |
 
 ## Notes
 
@@ -26,10 +26,11 @@ Goal: make it easy and predictable for others to report issues and contribute.
 - **PM-03**: the checklist covers tests added, docs/docstrings, a CHANGELOG
   entry under *Unreleased*, regenerated stubs if the bindings changed, and the
   roadmap task ID.
-- **PM-07..10**: there is no GitHub Project board (see `DECISIONS.md`). This
-  folder is the source of truth. GitHub issues mirror it at workstream level
-  and give the community somewhere to discuss. A task's `Ref` column holds its
-  issue number once one exists.
+- **PM-07..10**: this folder is the source of truth. There is no GitHub Project
+  board and there are no tracking issues (see `DECISIONS.md`). Existing GitHub
+  issues are linked from the `Ref` column of the task they belong to.
+- **PM-08**: #81, #82 and #67 were closed as already resolved. #84 maps to the
+  DOC workstream, #72 to CI-04 and #68 to CI-02; all three are in milestone v0.4.0.
 - **PM-09**: dropped. Work is merged directly into `master` without PRs, so
   required PR checks would only get in the way. CI on push to `master`
   (REL-07) is the safety net.
