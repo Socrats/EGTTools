@@ -20,18 +20,6 @@ local_scheme = "no-local-version"
 # (e.g. conda-forge builds from a PyPI tarball).
 fallback_version = "0.0.0"
 
-[tool.scikit-build]
-experimental = true
-cmake.version = ">=3.27"
-wheel.py-api = "cp310"
-wheel.expand-macos-universal-tags = true
-cmake.args = [
-    "-DUSE_OPENMP=ON",
-    "-G", "Ninja"
-]
-build.verbose = true
-logging.level = "INFO"
-
 [project]
 name = "egttools"
 dynamic = ["version"]
@@ -160,11 +148,9 @@ test-requires = "pytest"
 test-command = "pytest {project}/tests"
 
 [tool.pytest.ini_options]
-addopts = """
-    --ignore build_tools
-    --ignore docs
-    --ignore pybind11
-    --disable-pytest-warnings
-    -rxXs
-"""
+testpaths = ["tests"]
+addopts = "-rxXs"
+markers = [
+    "slow: marks tests as slow (run with -m slow)",
+]
 doctest_optionflags = ["NORMALIZE_WHITESPACE", "ELLIPSIS"]
