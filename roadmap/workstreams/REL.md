@@ -10,8 +10,8 @@ and the known numerical bugs fixed. PyPI is still at 0.1.14.2.
 | REL-01 | Clean up `pyproject.toml` configuration | done | P0 | S | 0.2 | — | merge `83d6789` |
 | REL-02 | Move non-test scripts out of `tests/` | done | P1 | S | 0.2 | — | merge `5c43eaf` |
 | REL-03 | Fix `calculate_stationary_distribution` (+ `_non_hermitian`) | done | P0 | M | 0.2 | — | merge `233473c` |
-| REL-04 | Fix fractional-state cast in simplex gradient plotting | ready | P1 | M | 0.2 | REL-10 | — |
-| REL-05 | Diagnose and fix failing wheel jobs (sdist, win_amd64, win_arm64) | review | P0 | M | 0.2 | — | merges `4aee21d`, `754c5f6`; awaiting CI |
+| REL-04 | Fix fractional-state cast in simplex gradient plotting | done | P1 | M | 0.2 | REL-10 | merge `3050629` |
+| REL-05 | Diagnose and fix failing wheel jobs (sdist, win_amd64, win_arm64) | review | P0 | M | 0.2 | — | merges `4aee21d`, `754c5f6`, `75b426a`, `fc50406`; awaiting version check |
 | REL-06 | Support Python 3.11–3.14 (add cp314, drop 3.10) | done | P1 | S | 0.2 | — | merge `8f5b901` |
 | REL-07 | Add a fast PR test workflow (pytest + CTest) | todo | P0 | M | 0.2 | — | — |
 | REL-08 | Write CHANGELOG for 0.2.0 | todo | P0 | M | 0.2 | REL-01..07 | — |
@@ -51,6 +51,8 @@ and the known numerical bugs fixed. PyPI is still at 0.1.14.2.
   The same code is in the `_without_roots` variant.
   *Decision:* option A, i.e. interpolate the exact lattice gradient (Definition 5.1)
   linearly between lattice states, and use valid lattice states for the arrows.
+  *Done:* exact per-triangle roots; `calculate_stability` rewritten (it inverted stable
+  vertices and never found stable edge points, which also affected replicator plots).
 - **REL-05**: *Causes found:* `ssize_t` (POSIX-only) in `structure.cpp` broke MSVC
   since May; `check-manifest` failed on untracked-in-sdist files. Also fixed: CI
   shallow clone gave version `0.0.1.dev1` (now `fetch-depth: 0`), and `include *.md`
@@ -61,7 +63,8 @@ and the known numerical bugs fixed. PyPI is still at 0.1.14.2.
   This is a prerequisite for branch protection (`PM-09`).
 - **REL-05** (cont.): fetching tags exposed that CMake's `project(VERSION)` rejected
   the `v0.1.14-patch2` tag; it now uses the numeric prefix. `v0.1.15` exists only
-  locally (never pushed).
+  locally (never pushed). Wheels stayed `0.0.0` until `setup.py`, whose explicit
+  setuptools-scm arguments override `pyproject.toml`, got the same `tag_regex`.
 - **REL-10**: spec in `docs/theory/pairwise_comparison.md`, tests in
   `tests/test_pairwise_comparison_equations.py`. Fixed: off-by-one waiting time in
   homogeneous states across all MC estimators (bias ≈ 1/(1−μ) on monomorphic

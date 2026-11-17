@@ -2,6 +2,8 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-17 · REL-04 · Merged (`3050629`): lattice interpolation of the exact gradient, exact roots, stability rewrite.
+- 2026-11-17 · REL-05 · Merged (`fc50406`): `setup.py` tag_regex and container safe.directory; CI green on all platforms, wheels still `0.0.0` before this.
 - 2026-11-17 · CI-08, API-05, DOC-12, REL-11 · Added from findings (uv evaluation, silent deprecated stub, more theory pages, ImitationMultipleGames).
 - 2026-11-17 · REL-06 · Merged (`8f5b901`): Python 3.11–3.14, cp314 wheels, conda numpy pairing.
 - 2026-11-17 · REL-05 · Merged (`754c5f6`): CMake accepts suffixed tags; first CI run after fetching tags failed on `v0.1.14-patch2`.
