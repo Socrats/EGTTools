@@ -2,6 +2,9 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-17 · REL-04 · Investigated: roots, stability and arrows of the pairwise-comparison simplex plot use truncated/invalid states.
+- 2026-11-17 · REL-02 · Merged (`5c43eaf`).
+- 2026-11-17 · REL-05 · Merged (`4aee21d`): Windows `ssize_t`, check-manifest, CI version detection, explicit MANIFEST Markdown list. Waiting for CI.
 - 2026-11-17 · REL-03 · Merged (`233473c`): Schur-vector bug fixed (wrong in ~1% of random chains), sparse input no longer densified (50k-state chain: 0.09 s), `csr_array` support; 21 new tests, 560 pass.
 - 2026-11-17 · PM-10 · Dropped: no tracking issues; roadmap folder is enough for now.
 - 2026-11-17 · PM-08 · Closed #81, #82, #67 as resolved; commented on #84, #72, #68 and put them in v0.4.0.

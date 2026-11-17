@@ -8,10 +8,10 @@ and the known numerical bugs fixed. PyPI is still at 0.1.14.2.
 | ID | Task | Status | Pri | Size | MS | Deps | Ref |
 |----|------|--------|-----|------|----|------|-----|
 | REL-01 | Clean up `pyproject.toml` configuration | done | P0 | S | 0.2 | — | merge `83d6789` |
-| REL-02 | Move non-test scripts out of `tests/` | todo | P1 | S | 0.2 | — | — |
+| REL-02 | Move non-test scripts out of `tests/` | done | P1 | S | 0.2 | — | merge `5c43eaf` |
 | REL-03 | Fix `calculate_stationary_distribution` (+ `_non_hermitian`) | done | P0 | M | 0.2 | — | merge `233473c` |
-| REL-04 | Fix fractional-state cast in simplex gradient plotting | todo | P1 | S | 0.2 | — | — |
-| REL-05 | Diagnose and fix failing wheel jobs (sdist, win_amd64, win_arm64) | todo | P0 | M | 0.2 | — | — |
+| REL-04 | Fix fractional-state cast in simplex gradient plotting | doing | P1 | M | 0.2 | — | — |
+| REL-05 | Diagnose and fix failing wheel jobs (sdist, win_amd64, win_arm64) | review | P0 | M | 0.2 | — | merge `4aee21d`, awaiting CI |
 | REL-06 | Add CPython 3.14 wheels | todo | P1 | S | 0.2 | REL-05 | — |
 | REL-07 | Add a fast PR test workflow (pytest + CTest) | todo | P0 | M | 0.2 | — | — |
 | REL-08 | Write CHANGELOG for 0.2.0 | todo | P0 | M | 0.2 | REL-01..07 | — |
@@ -25,9 +25,8 @@ and the known numerical bugs fixed. PyPI is still at 0.1.14.2.
   it. Merge `pytest.ini` into `[tool.pytest.ini_options]`. Today `pytest.ini`
   takes precedence, so the `addopts` in `pyproject.toml` never apply. Keep the
   `slow` marker.
-- **REL-02**: `tests/somthing.py`, `tests/check_run.py` and
-  `tests/glibc_memory_violation.py` are scripts, not tests. Move them to
-  `scripts/` or delete them.
+- **REL-02**: *Done:* the two glibc reproducers moved to `scripts/diagnostics/`;
+  `tests/somthing.py` untracked again (committed by accident in `96f818a`).
 - **REL-03**: `utils.calculate_stationary_distribution` converts sparse input
   to dense and runs a full `np.linalg.eig` (O(n³)).
   `calculate_stationary_distribution_non_hermitian` takes a column of the Schur
@@ -43,8 +42,15 @@ and the known numerical bugs fixed. PyPI is still at 0.1.14.2.
   `calculate_gradient_of_selection*`. NumPy warns "invalid value encountered in
   cast", which suggests truncation to integers. First confirm whether the
   plotted field is affected, then fix it.
-- **REL-05**: Wheels workflow red on `master` since 2026-08-12; logs have expired.
-  Re-run, read logs, fix.
+  *Findings:* both plotted outputs are affected. `scipy.optimize.root` evaluates the
+  gradient at continuous points that get truncated to integers, so roots,
+  stability and the returned trajectory function are unreliable. The arrow field
+  uses `floor`, which yields states summing to Z−1 or Z−2 at most grid points.
+  The same code is in the `_without_roots` variant.
+- **REL-05**: *Causes found:* `ssize_t` (POSIX-only) in `structure.cpp` broke MSVC
+  since May; `check-manifest` failed on untracked-in-sdist files. Also fixed: CI
+  shallow clone gave version `0.0.1.dev1` (now `fetch-depth: 0`), and `include *.md`
+  could pull local Markdown files into a locally built sdist.
 - **REL-07**: the current tests run only inside cibuildwheel. Add a separate
   workflow on `push` (all branches) and `pull_request` that builds once (Linux, one Python), runs pytest
   (skipping `slow`), and runs the C++ tests registered in `tests/CMakeLists.txt`.
