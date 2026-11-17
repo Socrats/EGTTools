@@ -27,7 +27,8 @@ from .helpers import (
     barycentric_to_xy_coordinates,
     xy_to_barycentric_coordinates,
     calculate_stability,
-    find_roots_in_discrete_barycentric_coordinates,
+    find_roots_of_lattice_gradient,
+    lattice_gradient_interpolator,
 )
 from .. import calculate_nb_states
 from ..analytical import PairwiseComparison, replicator_equation, replicator_equation_n_player
@@ -345,6 +346,49 @@ def plot_replicator_dynamics_in_simplex(
     return simplex, lambda u, t: gradient_function(u), roots, roots_xy, stability
 
 
+def _pairwise_comparison_gradient_field(
+        evolver: PairwiseComparison,
+        population_size: int,
+        beta: float,
+        mu: Optional[float],
+):
+    """
+    Exact gradient of selection at every population state, extended continuously.
+
+    Returns the interpolating function (gradient per update, see Definition 5.1 of the
+    pairwise comparison theory page), the lattice of exact gradients, and the scaled
+    function used for roots, stability and trajectories. The scaled function takes and
+    returns counts; its extra term ``(Z - sum(u)) / 3`` is zero on the simplex and makes
+    the 3-dimensional root problem non-singular.
+    """
+    if mu is None:
+        exact = lambda n: evolver.calculate_gradient_of_selection(state=n, beta=beta)
+    else:
+        exact = lambda n: evolver.calculate_gradient_of_selection_with_mutation(state=n, beta=beta, mu=mu)
+    interpolate, lattice = lattice_gradient_interpolator(exact, population_size)
+
+    def scaled(u):
+        u = np.asarray(u, dtype=np.float64)
+        return population_size * interpolate(u) + (population_size - u.sum()) / 3.
+
+    return interpolate, lattice, scaled
+
+
+def _gradient_arrows(simplex: Simplex2D, interpolate, population_size: int):
+    """Gradient at each grid point of the simplex plot, in xy coordinates."""
+    v = np.asarray(xy_to_barycentric_coordinates(simplex.X, simplex.Y, simplex.corners))
+    result = np.zeros(shape=(v.shape[1], v.shape[2], 3), dtype=np.float64)
+    for i in range(v.shape[1]):
+        for j in range(v.shape[2]):
+            if np.all(v[:, i, j] >= -1e-12):  # grid point inside the simplex
+                result[i, j, :] = interpolate(v[:, i, j] * population_size)
+    result = result.swapaxes(0, 1).swapaxes(0, 2)
+    xy_results = vectorized_barycentric_to_xy_coordinates(result, simplex.corners)
+    ux = xy_results[:, :, 0].astype(np.float64)
+    uy = xy_results[:, :, 1].astype(np.float64)
+    simplex.apply_simplex_boundaries_to_gradients(ux, uy)
+
+
 def plot_pairwise_comparison_rule_dynamics_in_simplex(
         population_size: int,
         beta: float,
@@ -402,41 +446,20 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex(
     )
     simplex.add_edges_with_random_drift(random_drift)
 
-    v = np.asarray(xy_to_barycentric_coordinates(simplex.X, simplex.Y, simplex.corners))
-    v_int = np.floor(v * population_size).astype(np.int64)
-
     evolver = PairwiseComparison(population_size=population_size, game=game)
-    result = np.zeros(shape=(v_int.shape[1], v_int.shape[2], 3), dtype=np.float64)
+    interpolate, lattice, gradient_fn2 = _pairwise_comparison_gradient_field(evolver, population_size, beta, mu)
+    _gradient_arrows(simplex, interpolate, population_size)
 
-    if mu is None:
-        gradient_fn = lambda u: evolver.calculate_gradient_of_selection(state=u, beta=beta)
-        gradient_fn2 = lambda u: population_size * evolver.calculate_gradient_of_selection(state=u, beta=beta)
-    else:
-        gradient_fn = lambda u: evolver.calculate_gradient_of_selection_with_mutation(state=u, beta=beta, mu=mu)
-        gradient_fn2 = lambda u: population_size * evolver.calculate_gradient_of_selection_with_mutation(state=u, beta=beta, mu=mu)
-
-    for i in range(v_int.shape[1]):
-        for j in range(v_int.shape[2]):
-            if not (v_int[:, i, j] < 0).any() and v_int[:, i, j].sum() <= population_size:
-                result[i, j, :] = gradient_fn(v_int[:, i, j])
-
-    result = result.swapaxes(0, 1).swapaxes(0, 2)
-    xy_results = vectorized_barycentric_to_xy_coordinates(result, simplex.corners)
-
-    ux = xy_results[:, :, 0].astype(np.float64)
-    uy = xy_results[:, :, 1].astype(np.float64)
-
-    simplex.apply_simplex_boundaries_to_gradients(ux, uy)
-
-    roots = find_roots_in_discrete_barycentric_coordinates(
-        gradient_fn2,
-        population_size,
-        nb_interior_points=calculate_nb_states(population_size, 3),
-        atol=1e-1,
-    )
+    roots = find_roots_of_lattice_gradient(lattice)
+    # Edges with neutral drift are drawn separately; drop roots inside them, keep vertices.
+    roots = [x for x in roots
+             if not any(np.isclose(x[3 - np.sum(edge)], 0., atol=atol) and np.count_nonzero(x > atol) == 2
+                        for edge in random_drift)]
     roots_xy = [barycentric_to_xy_coordinates(x, simplex.corners) for x in roots]
 
-    stability = calculate_stability(roots, gradient_fn2, return_mode=stability_mode)
+    # calculate_stability works in barycentric coordinates (fractions), gradient_fn2 in counts.
+    stability = calculate_stability(roots, lambda x: gradient_fn2(np.asarray(x) * population_size),
+                                    return_mode=stability_mode)
 
     return simplex, lambda u, t: gradient_fn2(u), roots, roots_xy, stability, game, evolver
 
@@ -482,30 +505,8 @@ def plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots(
     simplex = Simplex2D(discrete=True, size=population_size, nb_points=population_size + 1)
     simplex.add_axis(figsize, ax)
 
-    v = np.asarray(xy_to_barycentric_coordinates(simplex.X, simplex.Y, simplex.corners))
-    v_int = np.floor(v * population_size).astype(np.int64)
-
     evolver = PairwiseComparison(population_size=population_size, game=game)
-    result = np.zeros(shape=(v_int.shape[1], v_int.shape[2], 3), dtype=np.float64)
-
-    if mu is None:
-        gradient_fn = lambda u: evolver.calculate_gradient_of_selection(state=u, beta=beta)
-        gradient_fn2 = lambda u: population_size * evolver.calculate_gradient_of_selection(state=u, beta=beta)
-    else:
-        gradient_fn = lambda u: evolver.calculate_gradient_of_selection_with_mutation(state=u, beta=beta, mu=mu)
-        gradient_fn2 = lambda u: population_size * evolver.calculate_gradient_of_selection_with_mutation(state=u, beta=beta, mu=mu)
-
-    for i in range(v_int.shape[1]):
-        for j in range(v_int.shape[2]):
-            if not (v_int[:, i, j] < 0).any() and v_int[:, i, j].sum() <= population_size:
-                result[i, j, :] = gradient_fn(v_int[:, i, j])
-
-    result = result.swapaxes(0, 1).swapaxes(0, 2)
-    xy_results = vectorized_barycentric_to_xy_coordinates(result, simplex.corners)
-
-    ux = xy_results[:, :, 0].astype(np.float64)
-    uy = xy_results[:, :, 1].astype(np.float64)
-
-    simplex.apply_simplex_boundaries_to_gradients(ux, uy)
+    interpolate, lattice, gradient_fn2 = _pairwise_comparison_gradient_field(evolver, population_size, beta, mu)
+    _gradient_arrows(simplex, interpolate, population_size)
 
     return simplex, lambda u, t: gradient_fn2(u), game, evolver

@@ -39,8 +39,25 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   individuals instead of the other Z−1, and its mutation term only added probability
   (gradient components did not sum to zero).
 
+- `egttools.plotting.helpers.calculate_stability` misclassified equilibria: it ignored the
+  direction of each perturbation, so stable vertices were reported as unstable, stable edge
+  points could never be reported as stable, and unstable interior points were reported as
+  saddles. It now checks, for every feasible direction, whether the flow returns to the
+  equilibrium. This changes the stability markers in `plot_replicator_dynamics_in_simplex`
+  and `plot_pairwise_comparison_rule_dynamics_in_simplex`.
+- `plot_pairwise_comparison_rule_dynamics_in_simplex{,_without_roots}` evaluated the gradient
+  of selection at invalid population states: grid points were rounded down to states with
+  fewer than Z individuals, and the root finder passed fractional states that were truncated
+  to integers. The exact gradient is now evaluated at every population state and interpolated
+  linearly between them; equilibria are the exact zeros of that interpolation, found
+  deterministically, and stability is evaluated in the coordinates `calculate_stability`
+  expects.
+
 ### Added
 
+- `egttools.plotting.helpers.lattice_gradient_interpolator` and
+  `find_roots_of_lattice_gradient`, which extend a finite-population gradient continuously and
+  find its zeros exactly.
 - Documentation page specifying the pairwise comparison process (state space, fitness,
   update rule, transition probabilities, gradient of selection) with references, and tests
   that check every implementation against it.
