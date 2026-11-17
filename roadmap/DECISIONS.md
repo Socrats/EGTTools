@@ -3,6 +3,11 @@
 Newest first. Each entry gives the date, the decision, the reasoning, and the
 affected task IDs.
 
+## 2026-11-17: Branch-and-merge workflow, no pull requests
+There is a single maintainer, so each task is developed on its own branch and
+merged into `master` with `--no-ff`. No PRs. Branch protection (PM-09) is
+dropped. CI runs on every push to `master` instead (REL-07).
+
 ## 2026-11-17: Versioning stays at 0.x
 Releases go v0.2.0 → v0.3.0 → v0.4.0. No 1.0 is planned yet, because the API
 may still change significantly. Affects all milestones.
