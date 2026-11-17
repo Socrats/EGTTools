@@ -7,7 +7,7 @@ and the known numerical bugs fixed. PyPI is still at 0.1.14.2.
 
 | ID | Task | Status | Pri | Size | MS | Deps | Ref |
 |----|------|--------|-----|------|----|------|-----|
-| REL-01 | Clean up `pyproject.toml` configuration | review | P0 | S | 0.2 | — | branch `rel-01-pyproject-cleanup` |
+| REL-01 | Clean up `pyproject.toml` configuration | done | P0 | S | 0.2 | — | merge `83d6789` |
 | REL-02 | Move non-test scripts out of `tests/` | todo | P1 | S | 0.2 | — | — |
 | REL-03 | Fix `calculate_stationary_distribution` (+ `_non_hermitian`) | todo | P0 | M | 0.2 | — | — |
 | REL-04 | Fix fractional-state cast in simplex gradient plotting | todo | P1 | S | 0.2 | — | — |
