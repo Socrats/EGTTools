@@ -366,6 +366,34 @@ def invasion_graph(fixation_probabilities: np.ndarray,
     return graph
 
 
+#: Named presets for :func:`draw_invasion_diagram` (``style=``). Each maps parameter names to values;
+#: explicit arguments to ``draw_invasion_diagram`` take precedence.
+INVASION_DIAGRAM_STYLES: Dict[str, Dict] = {
+    "simple": dict(node_size=2000., min_node_size=600., scale_nodes_by_frequency=False,
+                   scale_edges_by_ratio=False, name_position="outside", frequency_position="inside",
+                   frequency_format="{:.2f}"),
+    "proportional": dict(node_size=4500., min_node_size=600., scale_nodes_by_frequency=True,
+                         scale_edges_by_ratio=True, name_position="outside", frequency_position="inside",
+                         frequency_format="percent"),
+    "classic": dict(node_size=2000., min_node_size=600., scale_nodes_by_frequency=False,
+                    scale_edges_by_ratio=False, name_position="outside", frequency_position="outside",
+                    frequency_format="{:.2f}"),
+    "compact": dict(node_size=2200., min_node_size=600., scale_nodes_by_frequency=False,
+                    scale_edges_by_ratio=False, name_position="inside", frequency_position="inside",
+                    frequency_format="percent", label_kwargs={"fontsize": 8},
+                    frequency_label_kwargs={"fontsize": 8}),
+}
+
+
+def _invasion_style(style: Union[str, Dict]) -> Dict:
+    """Resolves ``style`` to a complete preset (a dict fills in from ``"simple"``)."""
+    if isinstance(style, dict):
+        return {**INVASION_DIAGRAM_STYLES["simple"], **style}
+    if style not in INVASION_DIAGRAM_STYLES:
+        raise ValueError(f"unknown style {style!r}; available: {', '.join(INVASION_DIAGRAM_STYLES)}")
+    return INVASION_DIAGRAM_STYLES[style]
+
+
 def _format_percentage(frequency: float) -> str:
     """Whole percentage, with "<1%" for positive frequencies that would round to 0%."""
     if 0. < frequency < 0.005:
@@ -382,10 +410,15 @@ def _contrasting_text_color(color) -> str:
 
 def _node_colors(graph: nx.DiGraph, colors) -> List:
     nodes = list(graph.nodes)
+    nb_colors = max(nodes, default=0) + 1  # one colour per strategy index, so filtering keeps colours
     if colors is None:
+        colors = "colorblind"
+    if isinstance(colors, str):
         from seaborn import color_palette
-        palette = color_palette("colorblind", max(nodes, default=0) + 1)
+        palette = color_palette(colors, nb_colors)  # seaborn palettes and matplotlib colormap names
         return [palette[i] for i in nodes]
+    if isinstance(colors, mcolors.Colormap):
+        return [colors(i / max(nb_colors - 1, 1)) for i in nodes]
     if isinstance(colors, dict):
         return [colors[i] if i in colors else colors[graph.nodes[i]["label"]] for i in nodes]
     return [colors[i] for i in nodes]  # indexed by strategy, so filtered graphs keep their colours
@@ -393,12 +426,14 @@ def _node_colors(graph: nx.DiGraph, colors) -> List:
 
 def draw_invasion_diagram(graph: nx.DiGraph,
                           ax: Optional[plt.Axes] = None,
+                          style: Union[str, Dict] = "simple",
                           layout: Union[str, Dict[int, Tuple[float, float]]] = "circular",
-                          colors: Optional[Union[Sequence, Dict]] = None,
-                          node_size: float = 2000.,
-                          scale_nodes_by_frequency: bool = False,
+                          colors: Optional[Union[str, mcolors.Colormap, Sequence, Dict]] = None,
+                          node_size: Optional[float] = None,
+                          scale_nodes_by_frequency: Optional[bool] = None,
+                          min_node_size: Optional[float] = None,
                           edge_width: float = 1.5,
-                          scale_edges_by_ratio: bool = False,
+                          scale_edges_by_ratio: Optional[bool] = None,
                           min_ratio: float = 1.,
                           curvature: float = 0.2,
                           show_ratios: bool = True,
@@ -406,8 +441,8 @@ def draw_invasion_diagram(graph: nx.DiGraph,
                           ratio_format: str = r"{:.2f}$\rho_N$",
                           frequency_format: Union[str, Callable[[float], str], None] = None,
                           ratio_label_position: float = 0.35,
-                          name_position: str = "outside",
-                          frequency_position: str = "inside",
+                          name_position: Optional[str] = None,
+                          frequency_position: Optional[str] = None,
                           label_offsets: Optional[Dict] = None,
                           label_padding: float = 4.,
                           node_kwargs: Optional[Dict] = None,
@@ -421,8 +456,9 @@ def draw_invasion_diagram(graph: nx.DiGraph,
 
     Selection edges are arrows from the resident to the strategy that invades it, labelled with
     :math:`\\rho/\\rho_N`; pairs that invade each other are drawn as two curved arrows with
-    separate labels. Neutral pairs are drawn as dashed lines without arrow heads. The stationary
-    frequency of each strategy is written next to its node, away from the centre of the diagram.
+    separate labels. Neutral pairs are drawn as dashed lines without arrow heads. The look is
+    chosen with ``style`` (see :data:`INVASION_DIAGRAM_STYLES`) and every element can be adjusted
+    with the parameters below.
 
     Parameters
     ----------
@@ -430,21 +466,38 @@ def draw_invasion_diagram(graph: nx.DiGraph,
         Graph returned by :func:`invasion_graph`.
     ax : matplotlib.axes.Axes, optional
         Axes to draw on; a new 6x6 inch figure is created if omitted.
+    style : str or dict, default="simple"
+        Named preset from :data:`INVASION_DIAGRAM_STYLES`, or a dict with the same keys. It sets
+        the parameters below that are left as ``None`` (node sizes and scaling, edge scaling,
+        label positions, frequency format and label font sizes); explicit arguments always win.
+
+        - ``"simple"``: equal nodes, stationary frequency inside each node (``0.47``), name outside.
+        - ``"proportional"``: node area grows with the stationary frequency and arrow width with
+          :math:`\\log_{10}(\\rho/\\rho_N)`; frequency inside as a percentage, name outside.
+        - ``"classic"``: equal nodes, name and frequency outside the node.
+        - ``"compact"``: equal nodes with name and percentage inside, smaller fonts; suited to
+          diagrams with many strategies.
     layout : str or dict, default="circular"
         ``"circular"``, ``"shell"``, ``"spring"`` (seeded, so reproducible) or a dict mapping
         each node (strategy index) to an ``(x, y)`` position.
-    colors : sequence or dict, optional
-        Node colours, either a sequence indexed by strategy index (covering all strategies, so
-        colours stay the same when strategies are filtered out) or a dict keyed by strategy index
-        or label. Defaults to seaborn's colorblind palette.
-    node_size : float, default=2000
-        Node area in points^2 (the largest node, if ``scale_nodes_by_frequency``).
-    scale_nodes_by_frequency : bool, default=False
-        Make node areas proportional to the stationary frequency (with a minimum of 15%).
+    colors : str, matplotlib.colors.Colormap, sequence or dict, optional
+        Node colours: a palette name (any seaborn palette or matplotlib colormap name, e.g.
+        ``"Set2"`` or ``"viridis"``), a matplotlib colormap, a sequence of colours indexed by
+        strategy index, or a dict keyed by strategy index or label. Palettes and sequences are
+        indexed by strategy, so colours stay the same when strategies are filtered out.
+        Defaults to seaborn's ``"colorblind"`` palette.
+    node_size : float, optional
+        Node area in points^2 (the largest node, if ``scale_nodes_by_frequency``). Set by ``style``.
+    min_node_size : float, optional
+        Smallest node area in points^2 when ``scale_nodes_by_frequency`` is set; chosen by the
+        styles so that a percentage still fits inside the node.
+    scale_nodes_by_frequency : bool, optional
+        Make node areas grow linearly with the stationary frequency, from ``min_node_size`` to
+        ``node_size``. Ignored if the graph has no stationary distribution. Set by ``style``.
     edge_width : float, default=1.5
         Line width of the edges.
-    scale_edges_by_ratio : bool, default=False
-        Scale selection edges by :math:`1 + \\log_{10}(\\rho/\\rho_N)`.
+    scale_edges_by_ratio : bool, optional
+        Set by ``style``. Scale the width of selection edges by :math:`1 + \\log_{10}(\\rho/\\rho_N)`.
     min_ratio : float, default=1
         Hide selection edges with :math:`\\rho/\\rho_N` below this value (declutters large diagrams).
     curvature : float, default=0.2
@@ -455,15 +508,14 @@ def draw_invasion_diagram(graph: nx.DiGraph,
     ratio_format : str
         Format string for :math:`\\rho/\\rho_N`.
     frequency_format : str or callable, optional
-        Format string or function for the stationary frequencies. Defaults to whole percentages,
-        with ``"<1%"`` for frequencies that are positive but round to 0%.
+        Format string or function for the stationary frequencies, or ``"percent"`` for whole
+        percentages (``"<1%"`` for frequencies that are positive but round to 0%). Set by ``style``.
     ratio_label_position : float, default=0.35
         Where to write :math:`\\rho/\\rho_N` along each edge, as a fraction of the way from the
         resident to the invader. Values other than 0.5 keep the labels of edges that cross at
         their midpoints (e.g. diameters of a circular layout) apart.
-    name_position, frequency_position : {"outside", "inside"}
-        Where to write each strategy's name (default ``"outside"``) and stationary frequency
-        (default ``"inside"``). Outside labels go on the side of the node facing away from the
+    name_position, frequency_position : {"outside", "inside"}, optional
+        Where to write each strategy's name and stationary frequency (set by ``style``). Outside labels go on the side of the node facing away from the
         centre of the diagram, the name above the frequency when both are outside. Text inside a
         node is black or white, whichever contrasts with the node colour; when both are inside,
         the name is written above the frequency.
@@ -497,6 +549,18 @@ def draw_invasion_diagram(graph: nx.DiGraph,
     >>> graph = egt.plotting.invasion_graph(fixation_probabilities, Z, sd, labels=["R", "P", "S"])
     >>> ax = egt.plotting.draw_invasion_diagram(graph)
     """
+    preset = _invasion_style(style)
+    node_size = preset["node_size"] if node_size is None else node_size
+    min_node_size = preset["min_node_size"] if min_node_size is None else min_node_size
+    scale_nodes_by_frequency = (preset["scale_nodes_by_frequency"] if scale_nodes_by_frequency is None
+                                else scale_nodes_by_frequency)
+    scale_edges_by_ratio = preset["scale_edges_by_ratio"] if scale_edges_by_ratio is None else scale_edges_by_ratio
+    name_position = preset["name_position"] if name_position is None else name_position
+    frequency_position = preset["frequency_position"] if frequency_position is None else frequency_position
+    frequency_format = preset["frequency_format"] if frequency_format is None else frequency_format
+    label_kwargs = {**preset.get("label_kwargs", {}), **(label_kwargs or {})}
+    frequency_label_kwargs = {**preset.get("frequency_label_kwargs", {}), **(frequency_label_kwargs or {})}
+
     if ax is None:
         _, ax = plt.subplots(figsize=(6, 6))
     nodes = list(graph.nodes)
@@ -513,8 +577,11 @@ def draw_invasion_diagram(graph: nx.DiGraph,
         raise ValueError("layout must be 'circular', 'shell', 'spring' or a dict of positions")
 
     frequencies = np.array([graph.nodes[i]["frequency"] for i in nodes], dtype=np.float64)
-    if scale_nodes_by_frequency and nodes and np.nanmax(frequencies) > 0:
-        sizes = [node_size * max(f / np.nanmax(frequencies), 0.15) if np.isfinite(f) else node_size
+    if (scale_nodes_by_frequency and nodes and np.any(np.isfinite(frequencies))
+            and np.nanmax(frequencies) > 0):
+        # Area grows linearly with the stationary frequency, from min_node_size to node_size.
+        largest = np.nanmax(frequencies)
+        sizes = [min_node_size + (node_size - min_node_size) * (f / largest) if np.isfinite(f) else node_size
                  for f in frequencies]
     else:
         sizes = [node_size] * len(nodes)
@@ -551,7 +618,7 @@ def draw_invasion_diagram(graph: nx.DiGraph,
     for position, option in ((name_position, "name_position"), (frequency_position, "frequency_position")):
         if position not in ("outside", "inside"):
             raise ValueError(f"{option} must be 'outside' or 'inside'")
-    if frequency_format is None:
+    if frequency_format == "percent":
         format_frequency = _format_percentage
     elif callable(frequency_format):
         format_frequency = frequency_format
