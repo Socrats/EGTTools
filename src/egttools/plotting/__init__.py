@@ -7,6 +7,7 @@ from .indicators import (
     plot_gradients,
     draw_invasion_diagram,
     invasion_graph,
+    INVASION_DIAGRAM_STYLES,
 )
 from .network_plots import (
     plot_network_state,
@@ -27,6 +28,6 @@ from .simplified import (
     plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots
 )
 
-__all__ = ['plot_gradient', 'plot_gradients', 'draw_invasion_diagram', 'invasion_graph', 'Simplex2D',
+__all__ = ['plot_gradient', 'plot_gradients', 'draw_invasion_diagram', 'invasion_graph', 'INVASION_DIAGRAM_STYLES', 'Simplex2D',
            'plot_replicator_dynamics_in_simplex', 'plot_pairwise_comparison_rule_dynamics_in_simplex',
            'plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots']

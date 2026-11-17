@@ -126,7 +126,7 @@ def test_label_positions(name_position, frequency_position):
     _, ax = plt.subplots()
     egt.plotting.draw_invasion_diagram(graph, ax=ax, name_position=name_position,
                                        frequency_position=frequency_position, show_ratios=False,
-                                       label_offsets={"L": (0., -40.)})
+                                       frequency_format="percent", label_offsets={"L": (0., -40.)})
     texts = {t.get_text(): t for t in ax.texts}
     assert {"H", "D", "L"} <= set(texts)
     percentages = {f"{f:.0%}" if f >= 0.005 or f == 0 else "<1%" for f in sd}
@@ -165,3 +165,90 @@ def test_contrasting_text_color():
     from egttools.plotting.indicators import _contrasting_text_color
     assert _contrasting_text_color("navy") == "white"
     assert _contrasting_text_color("yellow") != "white"
+
+
+def node_sizes(ax):
+    return np.asarray(ax.collections[-1].get_sizes())
+
+
+@pytest.fixture
+def three_strategy_graph():
+    fixation, sd = sml([[0., 3., 1.], [1., 2., 1.], [-1., -1., 0.]])
+    return egt.plotting.invasion_graph(fixation, Z, sd, ["H", "D", "L"]), sd
+
+
+def test_default_style_is_simple(three_strategy_graph):
+    graph, sd = three_strategy_graph
+    _, ax = plt.subplots()
+    egt.plotting.draw_invasion_diagram(graph, ax=ax)
+    assert np.all(node_sizes(ax) == 2000.)                          # equal nodes
+    assert {f"{f:.2f}" for f in sd} <= {t.get_text() for t in ax.texts}  # plain frequencies
+    plt.close("all")
+
+
+def test_proportional_style_scales_nodes_with_a_minimum(three_strategy_graph):
+    graph, sd = three_strategy_graph
+    _, ax = plt.subplots()
+    egt.plotting.draw_invasion_diagram(graph, ax=ax, style="proportional")
+    sizes = node_sizes(ax)
+    assert sizes.max() == pytest.approx(4500.)
+    assert sizes.min() >= 600.
+    assert np.all(np.diff(sizes[np.argsort(sd)]) >= 0)            # larger frequency, larger node
+    assert any(t.get_text().endswith("%") for t in ax.texts)
+    plt.close("all")
+
+
+def test_explicit_arguments_override_the_style(three_strategy_graph):
+    graph, _ = three_strategy_graph
+    _, ax = plt.subplots()
+    egt.plotting.draw_invasion_diagram(graph, ax=ax, style="proportional", scale_nodes_by_frequency=False,
+                                       node_size=1000.)
+    assert np.all(node_sizes(ax) == 1000.)
+    _, ax = plt.subplots()
+    egt.plotting.draw_invasion_diagram(graph, ax=ax, style={"node_size": 1234., "frequency_format": "percent"})
+    assert np.all(node_sizes(ax) == 1234.)
+    plt.close("all")
+
+
+@pytest.mark.parametrize("style", sorted(egt.plotting.INVASION_DIAGRAM_STYLES))
+def test_every_named_style_draws(three_strategy_graph, style):
+    graph, _ = three_strategy_graph
+    _, ax = plt.subplots()
+    egt.plotting.draw_invasion_diagram(graph, ax=ax, style=style)
+    plt.close("all")
+
+
+def test_unknown_style():
+    graph = egt.plotting.invasion_graph(ratio_matrix(3., .2), Z)
+    with pytest.raises(ValueError, match="available"):
+        egt.plotting.draw_invasion_diagram(graph, style="fancy")
+    plt.close("all")
+
+
+def test_scaling_is_skipped_without_stationary_distribution():
+    graph = egt.plotting.invasion_graph(ratio_matrix(3., .2), Z)
+    _, ax = plt.subplots()
+    egt.plotting.draw_invasion_diagram(graph, ax=ax, style="proportional")
+    assert np.all(node_sizes(ax) == 4500.)
+    plt.close("all")
+
+
+@pytest.mark.parametrize("palette", ["Set2", "viridis", plt.get_cmap("plasma")])
+def test_palette_names_and_colormaps(three_strategy_graph, palette):
+    graph, _ = three_strategy_graph
+    _, ax = plt.subplots()
+    egt.plotting.draw_invasion_diagram(graph, ax=ax, colors=palette)
+    facecolors = ax.collections[-1].get_facecolors()
+    assert len({tuple(np.round(c, 4)) for c in facecolors}) == 3     # three distinct colours
+    plt.close("all")
+
+
+def test_palette_colours_follow_strategies_when_filtered():
+    fixation, sd = sml([[0., 3., 1.], [1., 2., 1.], [-1., -1., 0.]])
+    full = egt.plotting.invasion_graph(fixation, Z, sd)
+    filtered = egt.plotting.invasion_graph(fixation, Z, sd, min_frequency=1e-3)
+    _, (ax1, ax2) = plt.subplots(1, 2)
+    egt.plotting.draw_invasion_diagram(full, ax=ax1, colors="Set2")
+    egt.plotting.draw_invasion_diagram(filtered, ax=ax2, colors="Set2")
+    np.testing.assert_allclose(ax1.collections[-1].get_facecolors()[:2], ax2.collections[-1].get_facecolors())
+    plt.close("all")

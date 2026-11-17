@@ -83,10 +83,15 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   `draw_invasion_diagram(invasion_graph(fp, Z, sd, labels), ...)`; `min_strategy_frequency`
   becomes `invasion_graph(..., min_frequency=...)`, and `atol` becomes
   `invasion_graph(..., drift_tolerance=...)` (default 0.005, so ratios shown as 1.00 count as
-  drift). New drawing options: `layout` (named layouts or positions), `colors` as a sequence
-  over all strategies or a dict by index or label, `name_position` and `frequency_position`
-  (by default names outside the nodes and stationary frequencies inside, as percentages),
-  `label_offsets`, `frequency_format` (string or function), `scale_nodes_by_frequency`, `scale_edges_by_ratio`,
+  drift). New drawing options: `layout` (named layouts or positions), `colors` as a palette name
+  (seaborn or matplotlib), a colormap, a sequence over all strategies or a dict by index or
+  label, named presets via `style`
+  (`"simple"`, the default: equal nodes with the stationary frequency inside and the name
+  outside; `"proportional"`: node area and arrow width grow with the stationary frequency and
+  ρ/ρ_N, frequencies as percentages; `"classic"`; `"compact"`; listed in
+  `egttools.plotting.INVASION_DIAGRAM_STYLES`, and a dict can be passed as a custom style),
+  `name_position`, `frequency_position`, `label_offsets`, `frequency_format` (string, function
+  or `"percent"`), `min_node_size`, `scale_nodes_by_frequency`, `scale_edges_by_ratio`,
   `min_ratio`, and keyword dicts for nodes, edges and every text element. Pairs that invade
   each other are drawn as two curved arrows with separate labels.
 - Supported Python versions are now 3.11–3.14: wheels are built for CPython 3.14, and
