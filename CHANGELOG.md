@@ -53,8 +53,19 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   deterministically, and stability is evaluated in the coordinates `calculate_stability`
   expects.
 
+- `draw_invasion_diagram` classified each direction of a pair separately with a very strict
+  tolerance, so nearly neutral pairs were drawn as a "1.00ρ_N" selection arrow over a hidden
+  drift line; pairs that invade each other were drawn as one double-headed line with
+  overlapping labels; and custom `colors` failed when `min_strategy_frequency` removed
+  strategies. See *Changed* for the new interface.
+- Example notebooks used `egt.Random._seed`, which no longer exists; they now use
+  `egt.Random.current_seed()`.
+
 ### Added
 
+- `egttools.plotting.invasion_graph`, which builds the invasion graph of the small-mutation
+  limit as a `networkx.DiGraph`, classifying each pair of strategies once as selection (one
+  or both directions with ρ/ρ_N > 1 + tolerance) or drift.
 - `egttools.plotting.helpers.lattice_gradient_interpolator` and
   `find_roots_of_lattice_gradient`, which extend a finite-population gradient continuously and
   find its zeros exactly.
@@ -64,6 +75,19 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Breaking:** `draw_invasion_diagram(graph, ax=None, ...)` now draws a graph built by
+  `invasion_graph` and returns the matplotlib axes. The old signature mixed classification
+  with drawing, needed the neutral fixation probability passed by hand (`drift`), and keyed
+  nodes by label (merging strategies with equal names). Migration:
+  `draw_invasion_diagram(labels, 1/Z, fp, sd, ...)` becomes
+  `draw_invasion_diagram(invasion_graph(fp, Z, sd, labels), ...)`; `min_strategy_frequency`
+  becomes `invasion_graph(..., min_frequency=...)`, and `atol` becomes
+  `invasion_graph(..., drift_tolerance=...)` (default 0.005, so ratios shown as 1.00 count as
+  drift). New drawing options: `layout` (named layouts or positions), `colors` as a sequence
+  over all strategies or a dict by index or label, `label_position` (`"outside"` or
+  `"inside"`), `label_offsets`, `scale_nodes_by_frequency`, `scale_edges_by_ratio`,
+  `min_ratio`, and keyword dicts for nodes, edges and every text element. Pairs that invade
+  each other are drawn as two curved arrows with separate labels.
 - Supported Python versions are now 3.11–3.14: wheels are built for CPython 3.14, and
   Python 3.10 (end of life in October 2026) is no longer supported.
 - Both functions now warn when a sparse chain is reducible (no unique stationary
