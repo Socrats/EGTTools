@@ -17,6 +17,11 @@ jobs:
     name: Build and test (Linux, Python 3.12)
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    permissions:
+      # The coverage step stores the badge and report in the python-coverage-comment-action-data
+      # branch (pushes to master) and comments on pull requests.
+      contents: write
+      pull-requests: write
     env:
       VCPKG_PATH: ${{ github.workspace }}
       EGTTOOLS_EXTRA_CMAKE_ARGS: -DUSE_OPENMP=ON -DBUILD_NUMERICAL_TESTS=ON
@@ -64,7 +69,7 @@ jobs:
           # Build backend requirements (see [build-system] in pyproject.toml); cmake < 4 because the
           # pinned vcpkg submodule still uses cmake_minimum_required < 3.5.
           python -m pip install "setuptools>=44" wheel "scikit-build>=0.13.1" "cmake>=3.27,<4" ninja \
-            "setuptools-scm>=7" pytest
+            "setuptools-scm>=7" pytest coverage
           # Runtime dependencies, read from pyproject.toml so they stay in sync.
           python -c "import tomllib; print('\n'.join(tomllib.load(open('pyproject.toml', 'rb'))['project']['dependencies']))" \
             > runtime-requirements.txt
@@ -78,5 +83,13 @@ jobs:
         # PythonTests is the pytest suite, run separately below.
         run: ctest --test-dir "$(ls -d _skbuild/*/cmake-build)/tests" -E PythonTests --output-on-failure --timeout 600
 
-      - name: Run Python tests
-        run: python -m pytest tests -m "not slow" -p no:cacheprovider -ra
+      - name: Run Python tests (with coverage)
+        # Coverage settings are in [tool.coverage] in pyproject.toml.
+        run: python -m coverage run -m pytest tests -m "not slow" -p no:cacheprovider -ra
+
+      - name: Coverage badge and pull request comment
+        # Keeps the README badge and an HTML report up to date in the
+        # python-coverage-comment-action-data branch; no external service involved.
+        uses: py-cov-action/python-coverage-comment-action@07249dd712cd2464873eb8a59a24f97fd281e76f # v4.6
+        with:
+          GITHUB_TOKEN: ${{ github.token }}

@@ -7,6 +7,8 @@
 [![Docs](https://img.shields.io/badge/docs-ReadTheDocs-green)](https://egttools.readthedocs.io/)
 [![Live Docs](https://img.shields.io/badge/docs-latest-blue)](https://efernandez.eu/EGTTools/)
 [![Build Status](https://github.com/Socrats/EGTTools/actions/workflows/wheels.yml/badge.svg?branch=master)](https://github.com/Socrats/EGTTools/actions/workflows/wheels.yml)
+[![Tests](https://github.com/Socrats/EGTTools/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/Socrats/EGTTools/actions/workflows/tests.yml)
+[![Coverage](https://raw.githubusercontent.com/Socrats/EGTTools/python-coverage-comment-action-data/badge.svg)](https://github.com/Socrats/EGTTools/tree/python-coverage-comment-action-data)
 [![Gitter](https://badges.gitter.im/EGTTools/community.svg)](https://gitter.im/EGTTools/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Socrats/EGTTools/HEAD?labpath=docs%2Fexamples)
 [![DOI](https://zenodo.org/badge/242180332.svg)](https://zenodo.org/badge/latestdoi/242180332)
