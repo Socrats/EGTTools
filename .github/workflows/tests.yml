@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # Full history and tags: setuptools-scm derives the version from them.
           fetch-depth: 0
@@ -37,7 +37,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
           cache: pip
@@ -47,7 +47,7 @@ jobs:
 
       - name: Setup cache for vcpkg
         id: cache-vcpkg
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ./vcpkg_installed
@@ -95,7 +95,7 @@ jobs:
           python -m coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload coverage data
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-data
           path: .coverage
@@ -116,12 +116,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       - name: Download coverage data
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: coverage-data
 
