@@ -18,6 +18,8 @@
 
 #include "methods.hpp"
 
+#include <functional>
+
 using namespace egttools;
 using PairwiseComparison = FinitePopulations::PairwiseComparisonNumerical<>;
 

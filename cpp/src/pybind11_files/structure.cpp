@@ -17,6 +17,8 @@
 */
 #include "structure.hpp"
 
+#include <functional>
+
 // =========================================================================
 // Helper: bind all common NetworkMCEstimator methods to a py::class_<T>.
 // This is a free template function so it compiles before init_structure.
