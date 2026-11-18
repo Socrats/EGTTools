@@ -159,6 +159,8 @@ test-command = "pytest {project}/tests"
 # Python code coverage of the package (the compiled extension is not measured).
 source = ["src/egttools"]
 relative_files = true
+# Generated at build time (setuptools-scm), so absent from a plain checkout.
+omit = ["src/egttools/_version.py"]
 
 [tool.coverage.report]
 skip_empty = true
