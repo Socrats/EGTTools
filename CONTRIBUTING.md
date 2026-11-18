@@ -45,7 +45,7 @@ Notes:
 ## Running the tests
 
 ```bash
-python -m pytest tests -m "not slow"   # fast suite, also run on every push
+python -m pytest tests -m "not slow"   # fast suite, run by CI on pull requests and on master
 python -m pytest tests -m slow         # long-running tests
 ctest --test-dir _skbuild/<platform>/cmake-build/tests -E PythonTests   # C++ test programs
 ```

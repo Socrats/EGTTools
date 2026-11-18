@@ -23,5 +23,6 @@ them smoke tests. Coverage is not measured, and the C++ tests don't run in CI.
 - **TEST-01**: Python coverage runs in the Tests workflow (REL-14, badge via
   python-coverage-comment-action, no external service): 65% line coverage on 2026-11-18,
   lowest in plotting/barplots.py, games/opinion_game.py, behaviors/CRD and games/nonlinear_games.py.
-  C++ coverage (gcov/llvm-cov) still to do. Pull requests from forks need the action's second
-  `workflow_run` workflow to get a comment (their token is read-only).
+  C++ coverage (gcov/llvm-cov) still to do. The build/test job is read-only; the badge is
+  updated by a separate job with `contents: write`, only on pushes to master. Pull requests
+  get the coverage table in the run summary, without PR comments.

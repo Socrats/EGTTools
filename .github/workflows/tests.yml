@@ -1,10 +1,12 @@
 name: Tests
 
-# Fast feedback on every push and pull request: one build on Linux, then the Python
-# test suite and the C++ test programs. The full wheel matrix runs in wheels.yml.
+# Fast feedback on pull requests and on every change to master: one build on Linux, then the
+# C++ test programs and the Python test suite (with coverage). Run it manually on any branch
+# from the Actions tab. The full wheel matrix runs in wheels.yml.
 
 on:
   push:
+    branches: [master]
   pull_request:
   workflow_dispatch:
 
@@ -12,16 +14,15 @@ concurrency:
   group: tests-${{ github.ref }}
   cancel-in-progress: true
 
+# Read-only by default; only the badge job below gets write access.
+permissions:
+  contents: read
+
 jobs:
   linux:
     name: Build and test (Linux, Python 3.12)
     runs-on: ubuntu-24.04
     timeout-minutes: 60
-    permissions:
-      # The coverage step stores the badge and report in the python-coverage-comment-action-data
-      # branch (pushes to master) and comments on pull requests.
-      contents: write
-      pull-requests: write
     env:
       VCPKG_PATH: ${{ github.workspace }}
       EGTTOOLS_EXTRA_CMAKE_ARGS: -DUSE_OPENMP=ON -DBUILD_NUMERICAL_TESTS=ON
@@ -33,6 +34,7 @@ jobs:
           # Full history and tags: setuptools-scm derives the version from them.
           fetch-depth: 0
           submodules: recursive
+          persist-credentials: false
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -87,9 +89,43 @@ jobs:
         # Coverage settings are in [tool.coverage] in pyproject.toml.
         run: python -m coverage run -m pytest tests -m "not slow" -p no:cacheprovider -ra
 
-      - name: Coverage badge and pull request comment
-        # Keeps the README badge and an HTML report up to date in the
-        # python-coverage-comment-action-data branch; no external service involved.
+      - name: Coverage summary
+        run: |
+          python -m coverage report
+          python -m coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data
+          path: .coverage
+          include-hidden-files: true
+          retention-days: 7
+
+  coverage-badge:
+    # Updates the README coverage badge and the HTML report in the
+    # python-coverage-comment-action-data branch. Only after changes reach master, and in a
+    # separate job: the third-party action never runs alongside the build, and is the only
+    # code that receives a token able to push.
+    name: Update coverage badge
+    needs: linux
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Download coverage data
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-data
+
+      - name: Update badge and report
         uses: py-cov-action/python-coverage-comment-action@07249dd712cd2464873eb8a59a24f97fd281e76f # v4.6
         with:
           GITHUB_TOKEN: ${{ github.token }}

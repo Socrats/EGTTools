@@ -2,6 +2,7 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-18 · REL-14 · Tests run on PRs, master and manually; badge in a separate write job on master only; no PR comments.
 - 2026-11-18 · REL-14 · Coverage in Tests workflow + README badges (Tests, Coverage); 65% Python line coverage locally.
 - 2026-11-18 · REL-13 · 37 files removed, 6 updated, memcheck images merged, presets fixed; build, manifest and tests verified.
 - 2026-11-18 · API-05 · `PairwiseComparisonNumerical.run` (the only such stub) raises NotImplementedError; notebook updated.
