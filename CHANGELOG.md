@@ -101,6 +101,10 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   or `"percent"`), `min_node_size`, `scale_nodes_by_frequency`, `scale_edges_by_ratio`,
   `min_ratio`, and keyword dicts for nodes, edges and every text element. Pairs that invade
   each other are drawn as two curved arrows with separate labels.
+- `PairwiseComparisonNumerical.run`, removed earlier, now raises `NotImplementedError` naming its
+  replacements (`run_with_mutation`, `run_without_mutation`) instead of emitting a
+  `DeprecationWarning` and returning `None`. Code that called it got no result before and now
+  fails with a clear message; an example notebook still using it was updated.
 - Supported Python versions are now 3.11–3.14: wheels are built for CPython 3.14, and
   Python 3.10 (end of life in October 2026) is no longer supported.
 - Both functions now warn when a sparse chain is reducible (no unique stationary
