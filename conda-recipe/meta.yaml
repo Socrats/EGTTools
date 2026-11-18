@@ -1,5 +1,5 @@
 {% set name = "egttools" %}
-{% set version = "0.1.15" %}
+{% set version = environ.get("EGTTOOLS_VERSION", "0.0.0") %}  {# set by the conda workflow from the git tag #}
 
 {# Resolve variant flags from conda_build_config.yaml.
    arpack_variant / mpi_variant are "" (base) or a non-empty string (enabled). #}
@@ -42,12 +42,7 @@ build:
     # Optional feature flags — values rendered by Jinja2 at recipe-parse time.
     - EGTTOOLS_ENABLE_ARPACK={{ "ON" if use_arpack else "OFF" }}
     - EGTTOOLS_ENABLE_PETSC={{ "ON" if use_mpi else "OFF" }}
-  script:
-    # Append our feature flags to CMAKE_ARGS so scikit-build forwards them.
-    # SKIP_VCPKG prevents vcpkg from interfering in the conda build environment.
-    - export CMAKE_ARGS="${CMAKE_ARGS:-} -DEGTTOOLS_ENABLE_ARPACK=${EGTTOOLS_ENABLE_ARPACK} -DEGTTOOLS_ENABLE_PETSC=${EGTTOOLS_ENABLE_PETSC} -DSKIP_VCPKG=ON"  # [unix]
-    - set "CMAKE_ARGS=%CMAKE_ARGS% -DEGTTOOLS_ENABLE_ARPACK=%EGTTOOLS_ENABLE_ARPACK% -DEGTTOOLS_ENABLE_PETSC=%EGTTOOLS_ENABLE_PETSC% -DSKIP_VCPKG=ON"  # [win]
-    - {{ PYTHON }} -m pip install . --no-build-isolation --no-deps -vv
+  # The build itself is in build.sh (unix) and bld.bat (windows).
 
 requirements:
   build:
