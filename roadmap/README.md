@@ -96,6 +96,7 @@ tasks are independent unless the `Deps` column says otherwise.
 
 1. **Safety nets first.**
    - TEST-06: helpers for statistical tests (MC estimate vs exact value within k·SE, fixed seeds).
+   - TEST-10: C++ tests that check results in Release builds (stopgap before TEST-09).
    - TEST-09: Catch2 for the C++ tests, so new C++ code gets real unit tests.
    - MEM-01, MEM-02: sanitizer build and CI job, so new C++ code is checked for memory errors from the start.
    - SOL-10's test chains (known stationary distributions), reusable by MC-09.
@@ -138,6 +139,6 @@ Update this table when tasks change. Recount a milestone (here 0.2) from the rep
 | Milestone | Done / total |
 |-----------|-------------|
 | v0.2.0 | 22 / 22 |
-| v0.3.0 | 1 / 46 |
+| v0.3.0 | 1 / 47 |
 | v0.4.0 | 0 / 32 |
 | later  | 0 / 2 |
