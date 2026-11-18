@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and ideas
+    url: https://github.com/Socrats/EGTTools/discussions
+    about: Ask how to use EGTtools or discuss ideas in GitHub Discussions.
+  - name: Documentation
+    url: https://egttools.readthedocs.io/
+    about: Installation guide, tutorials, examples and API reference.
+  - name: Security vulnerability
+    url: https://github.com/Socrats/EGTTools/security/advisories/new
+    about: Report security issues privately, not as public issues.

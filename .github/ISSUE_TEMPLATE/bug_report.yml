@@ -1,0 +1,69 @@
+name: Bug report
+description: EGTtools crashes, gives a wrong result, or does not behave as documented.
+labels: ["type: bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a problem. Please search the [existing issues](https://github.com/Socrats/EGTTools/issues) first, and use [Discussions](https://github.com/Socrats/EGTTools/discussions) for usage questions.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: reproducer
+    attributes:
+      label: Minimal example
+      description: The smallest piece of code that reproduces the problem (it should run on its own).
+      render: python
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+      description: What you expected instead. For numerical results, say how you know the expected value (paper, exact solution, another implementation).
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error message or output
+      description: Full traceback or output, if any.
+      render: shell
+  - type: input
+    id: version
+    attributes:
+      label: EGTtools version
+      description: Output of `python -c "import egttools; print(egttools.__version__)"`.
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: Installation method
+      options:
+        - pip (PyPI wheel)
+        - conda
+        - built from source
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: "3.12"
