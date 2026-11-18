@@ -65,6 +65,9 @@ requirements:
     - libblas
     - liblapack
     - liblapacke
+    # On Linux the extension links libopenblas.so.0 (libblas.so points to it), so it is a direct
+    # dependency; listing it pins it through its run_exports.
+    - libopenblas  # [linux]
     - llvm-openmp  # [osx]
     - libgomp      # [linux]
 {% if use_arpack %}
@@ -85,6 +88,7 @@ requirements:
     - plotly >=5.0.0
     - libblas
     - liblapack
+    - libopenblas  # [linux]
     - llvm-openmp  # [osx]
     - libgomp      # [linux]
 {% if use_arpack %}
