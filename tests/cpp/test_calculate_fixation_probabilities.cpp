@@ -66,22 +66,20 @@ int main() {
 //    }
 //    std::cout << "]" << std::endl;
 
-    auto strategies = egttools::FinitePopulations::CRDStrategyVector();
-
+    // The game stores raw pointers, so the strategies must outlive it: keep them in a container
+    // whose elements never move (reserve the full size before taking any address).
+    using Strategy = egttools::FinitePopulations::behaviors::CRD::CRDMemoryOnePlayer;
+    std::vector<Strategy> strategy_storage;
+    strategy_storage.reserve(max_combinations + 2);
     for (size_t i = 0; i < max_combinations; ++i) {
         auto result = combine(values, 3, 10);
-        auto strategy = egttools::FinitePopulations::behaviors::CRD::CRDMemoryOnePlayer(personal_threshold,
-                                                                                        2,
-                                                                                        result[0],
-                                                                                        result[1],
-                                                                                        result[2]);
-        strategies.push_back(&strategy);
+        strategy_storage.emplace_back(personal_threshold, 2, result[0], result[1], result[2]);
     }
+    strategy_storage.emplace_back(personal_threshold, 0, 0, 0, 0);// always 0
+    strategy_storage.emplace_back(personal_threshold, 4, 4, 4, 4);// always 4
 
-    auto always0 = egttools::FinitePopulations::behaviors::CRD::CRDMemoryOnePlayer(personal_threshold, 0, 0, 0, 0);
-    strategies.push_back(&always0);
-    auto always4 = egttools::FinitePopulations::behaviors::CRD::CRDMemoryOnePlayer(personal_threshold, 4, 4, 4, 4);
-    strategies.push_back(&always4);
+    auto strategies = egttools::FinitePopulations::CRDStrategyVector();
+    for (auto &strategy: strategy_storage) strategies.push_back(&strategy);
 
 
     auto game = egttools::FinitePopulations::CRDGame(endowment, target, nb_rounds, group_size, risk, 1.0, strategies);
