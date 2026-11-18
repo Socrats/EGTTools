@@ -2,6 +2,7 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-18 · REL-13 · 37 files removed, 6 updated, memcheck images merged, presets fixed; build, manifest and tests verified.
 - 2026-11-18 · API-05 · `PairwiseComparisonNumerical.run` (the only such stub) raises NotImplementedError; notebook updated.
 - 2026-11-18 · REL-13, REL-14 · Added before the release: tracked-file audit, coverage badge.
 - 2026-11-18 · PM-02..06 · Issue forms, PR template, CODEOWNERS, SECURITY, SUPPORT, CONTRIBUTING rewrite, RELEASING.
