@@ -7,116 +7,141 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Fixed
+First release since 0.1.14. Several fixes change numerical results; read
+*Changes to numerical results* first if you have results computed with earlier versions.
 
-- `egttools.utils.calculate_stationary_distribution_non_hermitian` could return a wrong
-  distribution: it used a Schur vector as the eigenvector, which is only valid when the
-  eigenvalue 1 comes first in the Schur form. The Schur form is now reordered so that it does.
-- `egttools.utils.calculate_stationary_distribution{,_non_hermitian}` no longer convert sparse
-  input to a dense matrix. Sparse input is solved with a sparse direct solver, so large state
-  spaces no longer need O(n²) memory and O(n³) time.
-- Both functions failed on `scipy.sparse` array types (e.g. `csr_array`); all sparse
-  matrix and array types are now accepted.
+### Changes to numerical results
 
-- Monte Carlo simulation of the pairwise comparison process (`PairwiseComparisonNumerical`)
-  spent one update too many in homogeneous populations before each mutation. As a result,
-  `estimate_stationary_distribution`, `estimate_stationary_distribution_sparse` and
-  `estimate_stationary_indicators` overweighted monomorphic states (by a factor of about
-  1/(1-μ)), `estimate_strategy_distribution` skipped the state reached by each such mutation,
-  and `run_with_mutation` mutated at rate μ/(1+μ) in homogeneous states. Waiting times that
-  run past the end of a simulation window no longer trigger a mutation, which affected the
-  final state returned by `evolve` and the start of the counting phase. Results obtained with
-  these methods change, most visibly for larger μ.
-- `run_with_mutation` with a transient period could write one row past the end of its
-  output matrix.
-- `PairwiseComparison.calculate_gradient_of_selection` scaled the gradient by 2/k for k ≥ 3
-  strategies, and `calculate_gradient_of_selection_with_mutation` weighted mutation and
-  selection inconsistently (wrong for every k when μ > 0). Both now return the expected
-  change in strategy counts per update, consistent with `calculate_transition_matrix`.
-  Directions and roots without mutation are unchanged; magnitudes for k ≥ 3 and anything
-  computed with μ > 0 change.
-- `StochDynamics.full_gradient_selection{,_without_mutation}` drew the role model from all Z
-  individuals instead of the other Z−1, and its mutation term only added probability
-  (gradient components did not sum to zero).
-
-- `egttools.plotting.helpers.calculate_stability` misclassified equilibria: it ignored the
-  direction of each perturbation, so stable vertices were reported as unstable, stable edge
-  points could never be reported as stable, and unstable interior points were reported as
-  saddles. It now checks, for every feasible direction, whether the flow returns to the
-  equilibrium. This changes the stability markers in `plot_replicator_dynamics_in_simplex`
-  and `plot_pairwise_comparison_rule_dynamics_in_simplex`.
-- `plot_pairwise_comparison_rule_dynamics_in_simplex{,_without_roots}` evaluated the gradient
-  of selection at invalid population states: grid points were rounded down to states with
-  fewer than Z individuals, and the root finder passed fractional states that were truncated
-  to integers. The exact gradient is now evaluated at every population state and interpolated
-  linearly between them; equilibria are the exact zeros of that interpolation, found
-  deterministically, and stability is evaluated in the coordinates `calculate_stability`
-  expects.
-
-- `draw_invasion_diagram` classified each direction of a pair separately with a very strict
-  tolerance, so nearly neutral pairs were drawn as a "1.00ρ_N" selection arrow over a hidden
-  drift line; pairs that invade each other were drawn as one double-headed line with
-  overlapping labels; and custom `colors` failed when `min_strategy_frequency` removed
-  strategies. See *Changed* for the new interface.
-- Example notebooks used `egt.Random._seed`, which no longer exists; they now use
-  `egt.Random.current_seed()`.
+- **Monte Carlo estimates of the pairwise comparison process.** In homogeneous populations the
+  simulation waited one update too long before each mutation. `estimate_stationary_distribution`,
+  `estimate_stationary_distribution_sparse` and `estimate_stationary_indicators` overweighted
+  monomorphic states by a factor of about 1/(1−μ), `estimate_strategy_distribution` skipped the
+  state reached by each such mutation, and `run_with_mutation` mutated at rate μ/(1+μ) in
+  homogeneous states. Waiting times that run past the end of a simulation window no longer
+  trigger a mutation, which affected the final state of `evolve` and the start of the counting
+  phase. The effect grows with μ.
+- **Gradient of selection.** `PairwiseComparison.calculate_gradient_of_selection` was scaled by
+  2/k for k ≥ 3 strategies, and `calculate_gradient_of_selection_with_mutation` weighted mutation
+  and selection inconsistently (wrong for every k when μ > 0). Both now return the expected change
+  in strategy counts per update, consistent with `calculate_transition_matrix`. Without mutation,
+  directions and roots are unchanged. `StochDynamics.full_gradient_selection{,_without_mutation}`
+  drew the role model from all Z individuals instead of the other Z−1, and its mutation term did
+  not conserve the population size.
+- **Fixation probabilities at strong selection.** The product accumulation could exceed an
+  early-exit threshold in non-monotone fitness landscapes (e.g. coordination games at β ≥ 5) and
+  return ρ = 0 for strategies with non-zero fixation probability, which collapsed small-mutation
+  stationary distributions to uniform. Fixation probabilities are now computed in log space
+  (`PairwiseComparison` and `StochDynamics`).
+- **Expected indicators.** The `calculate_expected_*` and `calculate_strategies_distribution`
+  bindings only used the first state when the stationary distribution was passed as a column
+  (nb_states × 1) sparse matrix; both orientations are now accepted.
+- **`AbstractNPlayerStateGame`.** Fitness used the wrong state index for populations larger than
+  the group, mapping most states to state 0.
+- **Network gradient of selection with `LinearProportional`.** `estimate_agos` returned zeros for
+  this synchronous rule; it now estimates the gradient from the observed one-generation change.
+- **`calculate_stationary_distribution_non_hermitian`** could return a wrong distribution: it used
+  a Schur vector as the eigenvector, which is only valid when eigenvalue 1 comes first in the
+  Schur form.
+- **Simplex plots.** `calculate_stability` ignored the direction of each perturbation, so stable
+  vertices were reported as unstable, stable edge points never as stable, and unstable interior
+  points as saddles; this affected the stability markers of `plot_replicator_dynamics_in_simplex`
+  and `plot_pairwise_comparison_rule_dynamics_in_simplex`. The pairwise comparison plots also
+  evaluated the gradient at invalid states (rounded down to fewer than Z individuals, or
+  fractional states truncated to integers); they now interpolate the exact gradient between
+  population states and find equilibria as its exact zeros.
 
 ### Added
 
-- Colormap support in the gradient and simplex plots: `plot_gradients` and `plot_gradient`
-  take `cmap` to colour the gradient by its value (norm centred on 0, so diverging colormaps
-  separate positive and negative selection); the `Simplex2D` trajectory methods
-  (`draw_trajectories`, `draw_trajectory_from_points`, `draw_trajectory_from_roots`,
-  `draw_trajectory_from_vector`, `draw_scatter_shadow`) take `cmap` to colour trajectories along
-  time; and the `Simplex3D` `colorscale` parameters also accept matplotlib colormap names and
-  objects.
-- `egttools.plotting.invasion_graph`, which builds the invasion graph of the small-mutation
-  limit as a `networkx.DiGraph`, classifying each pair of strategies once as selection (one
-  or both directions with ρ/ρ_N > 1 + tolerance) or drift.
-- `egttools.plotting.helpers.lattice_gradient_interpolator` and
-  `find_roots_of_lattice_gradient`, which extend a finite-population gradient continuously and
-  find its zeros exactly.
-- Documentation page specifying the pairwise comparison process (state space, fitness,
-  update rule, transition probabilities, gradient of selection) with references, and tests
-  that check every implementation against it.
+- **Monte Carlo estimation** (`PairwiseComparisonNumerical`): `estimate_stationary_indicators`
+  for expected values of state or group indicators (evaluated directly on the population state
+  when a precomputed matrix would be too large, `precompute_limit`),
+  `estimate_mean_absorption_time`, `estimate_absorption_probabilities`, a working
+  `estimate_gradient_of_selection`, optional early stopping (`tolerance`, `check_every`), biased
+  mutation (`set_mutation_matrix`, `set_mutation_weights`), `change_game`, a per-instance `seed`,
+  and a warning when μ is too small for the simulated window.
+- **Estimator wrappers** `PairwiseComparisonEstimator` and `NetworkEstimator`: result objects
+  (`FixationResult`, `StationaryDistributionResult`, `AGoSResult`, …) with confidence intervals,
+  chunked runs with standard errors, an optional progress bar, and `checkpoint_path` to resume
+  long runs. `egttools.Random.get_state` / `set_state` capture the full generator state.
+- **Stationary distributions and fixation**: the matrix-free
+  `PairwiseComparisonTransitionOperator` with scipy `LinearOperator` wrappers
+  (`egttools.numerical.linear_operator`, `stationary_distribution_from_sparse`); native power
+  iteration (`compute_stationary_distribution`) and ARPACK (`compute_stationary_arpack`, built
+  with `EGTTOOLS_ENABLE_ARPACK`); an MPI-distributed PETSc/SLEPc solver
+  (`egttools.numerical.mpi`, built with `EGTTOOLS_ENABLE_PETSC`);
+  `calculate_log_fixation_probability`, a high-precision (Boost) fixation probability, and
+  log-space small-mutation matrices (`calculate_transition_and_log_fixation_matrix_sml`, and the
+  `StochDynamics` equivalents); `egttools.utils.calculate_spectral_gap`; and the
+  `calculate_expected_*` indicator and hypergeometric utilities.
+- **Games**: `AbstractNPlayerStateGame` for payoffs that depend on the population state, and
+  `AbstractReplicatorGame` for infinite populations.
+- **Games on networks**: update rules (pairwise comparison, birth–death, death–birth,
+  time-dependent pairwise comparison, linear proportional), Monte Carlo estimators for fixation,
+  strategy distributions and the average gradient of selection, co-evolutionary networks with
+  random and homophilic rewiring, `LocalRedistributionGame`, network games subclassable in
+  Python, a parallel parameter sweep (`run_network_sweep`), and `egttools.plotting.network_plots`.
+- **Multi-level selection**: `MLSTraulsen` and `MLSGarcia`.
+- **Plotting**: `Simplex3D` for four-strategy simplices (plotly); discrete stationary
+  distributions in `Simplex2D`; mutation in the pairwise comparison simplex plots (`mu`);
+  `invasion_graph` and named invasion-diagram styles (`INVASION_DIAGRAM_STYLES`);
+  `lattice_gradient_interpolator` and `find_roots_of_lattice_gradient`; and colormaps (`cmap`)
+  in the gradient plots and the `Simplex2D` trajectory methods, with matplotlib colormaps also
+  accepted by `Simplex3D`.
+- **Build information**: `is_arpack_enabled`, `is_petsc_enabled` and `is_boost_enabled`, and a
+  runtime section in `show_build_info`.
+- **Packaging and documentation**: conda packages (channel `socrats`, with ARPACK and MPI
+  variants), type stubs and `py.typed`, a theory page specifying the pairwise comparison process
+  with tests that check every implementation against it, and community files (issue forms, pull
+  request template, `SECURITY.md`, `SUPPORT.md`, `RELEASING.md`, a rewritten `CONTRIBUTING.md`).
 
 ### Changed
 
-- Repository clean-up: removed unused build scripts and lock files copied from other projects
-  (`build_tools/`), the obsolete `install_dependencies.sh`, `setup.cfg` (duplicated
-  `pyproject.toml` with outdated values), unused CMake modules (`res/`), a broken root
-  `Dockerfile`, and an unused GitHub Pages workflow. `environment.yml` and `requirements.txt`
-  now match the current dependencies, `CMakePresets.json` works (Debug/Release build and test
-  presets), the Valgrind images are merged into `docker/memcheck/`, and the MPI image moved to
-  `docker/mpi/`.
-- **Breaking:** `draw_invasion_diagram(graph, ax=None, ...)` now draws a graph built by
-  `invasion_graph` and returns the matplotlib axes. The old signature mixed classification
-  with drawing, needed the neutral fixation probability passed by hand (`drift`), and keyed
-  nodes by label (merging strategies with equal names). Migration:
-  `draw_invasion_diagram(labels, 1/Z, fp, sd, ...)` becomes
-  `draw_invasion_diagram(invasion_graph(fp, Z, sd, labels), ...)`; `min_strategy_frequency`
-  becomes `invasion_graph(..., min_frequency=...)`, and `atol` becomes
+- **Breaking:** `draw_invasion_diagram(graph, ax=None, ...)` draws a graph built by
+  `invasion_graph` and returns the matplotlib axes. The old signature mixed classification with
+  drawing, needed the neutral fixation probability passed by hand (`drift`) and keyed nodes by
+  label (merging strategies with equal names). Migration: `draw_invasion_diagram(labels, 1/Z, fp,
+  sd, ...)` becomes `draw_invasion_diagram(invasion_graph(fp, Z, sd, labels), ...)`;
+  `min_strategy_frequency` becomes `invasion_graph(..., min_frequency=...)` and `atol` becomes
   `invasion_graph(..., drift_tolerance=...)` (default 0.005, so ratios shown as 1.00 count as
-  drift). New drawing options: `layout` (named layouts or positions), `colors` as a palette name
-  (seaborn or matplotlib), a colormap, a sequence over all strategies or a dict by index or
-  label, named presets via `style`
-  (`"simple"`, the default: equal nodes with the stationary frequency inside and the name
-  outside; `"proportional"`: node area and arrow width grow with the stationary frequency and
-  ρ/ρ_N, frequencies as percentages; `"classic"`; `"compact"`; listed in
-  `egttools.plotting.INVASION_DIAGRAM_STYLES`, and a dict can be passed as a custom style),
-  `name_position`, `frequency_position`, `label_offsets`, `frequency_format` (string, function
-  or `"percent"`), `min_node_size`, `scale_nodes_by_frequency`, `scale_edges_by_ratio`,
-  `min_ratio`, and keyword dicts for nodes, edges and every text element. Pairs that invade
-  each other are drawn as two curved arrows with separate labels.
-- `PairwiseComparisonNumerical.run`, removed earlier, now raises `NotImplementedError` naming its
-  replacements (`run_with_mutation`, `run_without_mutation`) instead of emitting a
-  `DeprecationWarning` and returning `None`. Code that called it got no result before and now
-  fails with a clear message; an example notebook still using it was updated.
-- Supported Python versions are now 3.11–3.14: wheels are built for CPython 3.14, and
-  Python 3.10 (end of life in October 2026) is no longer supported.
-- Both functions now warn when a sparse chain is reducible (no unique stationary
-  distribution), and `calculate_stationary_distribution_non_hermitian` warns when
-  eigenvalue 1 is not simple.
+  drift). Each pair of strategies is classified once (selection, drift or none); pairs that invade
+  each other are drawn as two curved arrows. New options include `style` (`"simple"` by default,
+  `"proportional"`, `"classic"`, `"compact"`, or a dict), `layout`, `colors` (palette name,
+  colormap, sequence or dict), label placement (`name_position`, `frequency_position`,
+  `label_offsets`), `frequency_format`, node and edge scaling, `min_ratio`, and keyword dicts for
+  every element.
+- `PairwiseComparisonNumerical.run`, removed earlier, now raises `NotImplementedError` naming
+  `run_with_mutation` and `run_without_mutation`, instead of warning and returning `None`.
+- Python 3.11–3.14 are supported; Python 3.10 (end of life in October 2026) is no longer
+  supported. Wheels are built for Linux x86_64, macOS arm64 (macOS 15 or later) and Windows
+  x86_64 and arm64; macOS x86_64 wheels are no longer built.
+- Versions are derived from git tags (setuptools-scm).
+- `calculate_transition_matrix` is parallelised with OpenMP, and game fitness computations share
+  faster hypergeometric helpers.
+- `calculate_stationary_distribution{,_non_hermitian}` keep sparse input sparse (solved with a
+  sparse direct solver instead of a dense eigendecomposition), accept `scipy.sparse` arrays, and
+  warn when the chain has no unique stationary distribution.
+- Repository clean-up: unused build scripts, `setup.cfg`, an obsolete installation script and a
+  broken `Dockerfile` were removed; `environment.yml`, `requirements.txt` and
+  `CMakePresets.json` were updated; Docker images now live in `docker/memcheck/` and
+  `docker/mpi/`.
+
+### Fixed
+
+- Crash when a Python game passed to `PairwiseComparison` was garbage-collected (wrong
+  `keep_alive` in the bindings).
+- Deadlock on Python 3.13 when building transition matrices for games subclassed in Python.
+- `PairwiseComparisonNumerical`: `change_game` had no effect; `run` without mutation wrote
+  incomplete rows after fixation; two out-of-bounds row writes in the `run` methods with a
+  transient period; an integer overflow in `evolve` for very small μ; a race condition in the
+  seed generator.
+- `ThreadSafeLRUCache` with size 0 aborted instead of acting as disabled.
+- `plot_pairwise_comparison_rule_dynamics_in_simplex` could crash on states with negative
+  entries.
+- `Simplex3D.draw_streamlines` ignored `cone_scale`.
+- Example notebooks used removed APIs (`egt.Random._seed`, `PairwiseComparisonNumerical.run`).
+- Builds: Windows wheels (a POSIX-only type), wheels labelled `0.0.0`, source distributions
+  missing files, OpenMP builds with GCC 14 and Apple Clang 21, and ARPACK detection on HPC
+  (EasyBuild) systems.
 
 ## [0.1.14] - 20-07-2025
 
