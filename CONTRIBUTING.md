@@ -1,43 +1,100 @@
-Contribution Guidelines
-=======================
+# Contributing to EGTtools
 
-If you are interested in contributing to EGTtools, please follow the following guidelines:
+EGTtools aims to make evolutionary game theory methods and models reproducible and available to a
+wider audience. Contributions of every size are welcome.
 
-What can you do?
------------------
-EGTtools is aiming at making Evolutionary Game Theory (EGT) methods and models 
-both reproducible and available to a wider audience. You can help to make
-this possible in a variaty of ways:
+## Ways to contribute
 
-- Create feature requests for implemnetementing interesting methods. Or
-  signal papers whose model(s) should be added to EGTtools.
-- Identify possible bugs.
-- Write more documentation and examples (this is in urgent need of improvement, since I don't have
-  that much time for it myself).
-- Write more tests (we need to significantly improve the test coverage).
-- Implement the algorithms, methods or models yourself.
-- Improve the CI automation for publishing new releases and PyPi packages for more OS(s) and architechtures.
+- **Report a bug or a wrong result**, using the [issue forms](https://github.com/Socrats/EGTTools/issues/new/choose).
+- **Propose a method or model**, ideally with the paper that defines it.
+- **Improve the documentation and examples**.
+- **Add tests**, in particular tests that check results against exact or published values.
+- **Implement methods, models or fixes**.
+- **Improve the build and CI** for more platforms and architectures.
 
-How to Contribute
------------------
+For anything larger than a small fix, open an issue or a discussion first, so we can agree on the
+approach before you invest time in it.
 
-Just create a new branch, do your improvements and open a pull request! All
-contributions should aim to be at least at the level of documentation and
-quality of the project in its current state.
+## Development setup
 
-All code contribution should try to be consistent with the code style of
-existing code. There is no official style guide (although the Google one is
-close to what I usually do), so just try to get close and worst case I'll just
-point out some minor things to change.
+Clone the repository with its submodules (pybind11 and vcpkg):
 
-Signing Commits
----------------
+```bash
+git clone --recurse-submodules https://github.com/Socrats/EGTTools.git
+cd EGTTools
+```
 
-In order to avoid copyright problems, all commits in your pull requests should
-be signed by you. To sign a commit it is sufficient to call `git commit` with
-the `-s`, which will add a signed off line to the commit message (this message
-can also be included by hand if need be). The signoff certifies that you have
-read and accepted the following:
+Create an environment with Python ≥ 3.11 and build the C++ extension in place:
+
+```bash
+pip install numpy scipy matplotlib seaborn networkx plotly pytest \
+    scikit-build "cmake>=3.27,<4" ninja setuptools-scm
+python setup.py build_ext --inplace
+```
+
+The tests use the in-place build automatically. The C++ dependencies come from the bundled vcpkg;
+see [Build from source](https://egttools.readthedocs.io/en/latest/installation.html#build-from-source)
+for alternatives (e.g. conda) and platform notes.
+
+Notes:
+
+- After changing a C++ file, rebuild with the same command. On macOS (Apple Silicon), re-sign the
+  extension after each rebuild: `find src -name "*.so" | xargs codesign --sign - --force`.
+- If a build fails after updating your compiler or SDK, delete `_skbuild/` and rebuild.
+
+## Running the tests
+
+```bash
+python -m pytest tests -m "not slow"   # fast suite, also run on every push
+python -m pytest tests -m slow         # long-running tests
+ctest --test-dir _skbuild/<platform>/cmake-build/tests -E PythonTests   # C++ test programs
+```
+
+## Writing correct numerical code
+
+Results computed with EGTtools end up in papers, so correctness is the first requirement:
+
+- **Specify what you implement.** Processes and indicators are defined in `docs/theory/`, with
+  numbered definitions and references (see `docs/theory/pairwise_comparison.md`). A new method
+  should state which definition it implements, or add one.
+- **Test against independent results.** Compare with a direct transcription of the equations,
+  exact solutions, or published values; check Monte Carlo estimates against exact results within
+  a few standard errors and with fixed seeds (`tests/test_pairwise_comparison_equations.py` shows
+  the pattern).
+- **Document behaviour changes.** If results change, explain why in the CHANGELOG.
+
+## Style
+
+- Python: [PEP 8](https://peps.python.org/pep-0008/), formatted with `black` and `isort`
+  (see `.pre-commit-config.yaml`; run `pre-commit install` to apply them on commit).
+  Docstrings follow the [numpydoc](https://numpydoc.readthedocs.io/) format.
+- C++: C++17, formatted with the repository's `.clang-format`.
+- Prefer clear names and small functions over comments that explain unclear code.
+
+## Changelog, stubs and documentation
+
+- Add an entry under *Unreleased* in `CHANGELOG.md` for every user-visible change.
+- If you change the C++ bindings, regenerate the type stubs:
+  `pybind11-stubgen egttools.numerical.numerical_ -o src`.
+- Update the docstrings and, where relevant, the user guide and examples in `docs/`.
+
+## Compatibility
+
+EGTtools is still at version 0.x. Backward compatibility is the default, but when justified (a cleaner design or better performance) there will backward breaks. They however must be marked as breaking in the
+CHANGELOG with migration instructions, and must update every example and test that uses the old
+behaviour.
+
+## Pull requests
+
+1. Fork the repository and create a branch for your change.
+2. Keep the pull request focused on one change, with tests.
+3. Make sure the test workflow passes; the pull request template lists the remaining checks.
+
+## Signing off commits
+
+To avoid copyright problems, every commit in a pull request must be signed off by its author.
+Use `git commit -s`, which adds a `Signed-off-by` line to the commit message. The sign-off
+certifies that you have read and accepted the Developer Certificate of Origin:
 
 > Developer Certificate of Origin
 > Version 1.1
@@ -82,6 +139,15 @@ order to attest that you have the rights to submit the code in your patches.
 The code still remains yours (or of whoever it was originally). This is pretty
 much all the extra that is needed.
 
-Attribution
------------
-These guidenlines were adapted from https://github.com/Svalorzen/AI-Toolbox/blob/master/CONTRIBUTING.md
+The code remains yours (or that of whoever wrote it); the sign-off only certifies that you have the
+right to contribute it.
+
+## Code of conduct
+
+This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md). By participating, you agree to
+uphold it.
+
+## Attribution
+
+These guidelines were originally adapted from the
+[AI-Toolbox contributing guidelines](https://github.com/Svalorzen/AI-Toolbox/blob/master/CONTRIBUTING.md).

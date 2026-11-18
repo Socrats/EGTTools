@@ -1,0 +1,21 @@
+name: Documentation
+description: Something in the documentation is wrong, unclear or missing.
+labels: ["type: docs"]
+body:
+  - type: input
+    id: location
+    attributes:
+      label: Page or docstring
+      description: Link to the documentation page, or the name of the function or class.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong, unclear or missing?
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested improvement

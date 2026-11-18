@@ -2,6 +2,8 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-18 · PM-02..06 · Issue forms, PR template, CODEOWNERS, SECURITY, SUPPORT, CONTRIBUTING rewrite, RELEASING.
+- 2026-11-18 · REL-07 · Done: first Tests run green (21 C++ programs, 649 Python tests).
 - 2026-11-18 · TEST-09 · Added: C++ tests are standalone programs without assertions or a framework.
 - 2026-11-18 · REL-07 · Test workflow written and merged locally; awaiting first CI run. Fixed dangling pointer in testFixations.
 - 2026-11-17 · REL-05 · Done: CI run 44120013268 green on all platforms; wheels versioned `0.1.15.dev168` (cp311–cp314).

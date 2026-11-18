@@ -1,0 +1,41 @@
+name: Performance problem
+description: Something is much slower or uses much more memory than expected.
+labels: ["type: perf"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What is slow or uses too much memory?
+    validations:
+      required: true
+  - type: textarea
+    id: reproducer
+    attributes:
+      label: Minimal example
+      description: Code that shows the problem, ideally with timing (e.g. `time.perf_counter`).
+      render: python
+    validations:
+      required: true
+  - type: textarea
+    id: scale
+    attributes:
+      label: Problem size
+      description: Population size, number of strategies, group size, number of runs or generations, and the measured time or memory.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected performance
+      description: What you expected and why (e.g. another implementation, an earlier version).
+  - type: input
+    id: version
+    attributes:
+      label: EGTtools version
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Operating system, CPU and Python version
+      placeholder: "macOS 15, Apple M3, Python 3.12"

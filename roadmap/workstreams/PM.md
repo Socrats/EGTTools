@@ -7,11 +7,11 @@ Goal: make it easy and predictable for others to report issues and contribute.
 | ID | Task | Status | Pri | Size | MS | Deps | Ref |
 |----|------|--------|-----|------|----|------|-----|
 | PM-01 | Create `roadmap/` tracking folder and schema | done | P0 | S | 0.2 | — | merge `00a2874` |
-| PM-02 | Replace markdown issue templates with YAML issue forms + `config.yml` | todo | P1 | S | 0.2 | — | — |
-| PM-03 | Add pull request template with checklist | todo | P1 | S | 0.2 | — | — |
-| PM-04 | Add `CODEOWNERS`, `SECURITY.md`, `SUPPORT.md` | todo | P1 | S | 0.2 | — | — |
-| PM-05 | Rewrite `CONTRIBUTING.md` (dev setup, build, tests, style, sign-off) | todo | P1 | M | 0.2 | REL-01 | — |
-| PM-06 | Add `RELEASING.md` (versioning, tagging, PyPI, conda) | todo | P1 | S | 0.2 | — | — |
+| PM-02 | Replace markdown issue templates with YAML issue forms + `config.yml` | done | P1 | S | 0.2 | — | branch `pm-community-files` |
+| PM-03 | Add pull request template with checklist | done | P1 | S | 0.2 | — | branch `pm-community-files` |
+| PM-04 | Add `CODEOWNERS`, `SECURITY.md`, `SUPPORT.md` | done | P1 | S | 0.2 | — | branch `pm-community-files` |
+| PM-05 | Rewrite `CONTRIBUTING.md` (dev setup, build, tests, style, sign-off) | done | P1 | M | 0.2 | REL-01 | branch `pm-community-files` |
+| PM-06 | Add `RELEASING.md` (versioning, tagging, PyPI, conda) | done | P1 | S | 0.2 | — | branch `pm-community-files` |
 | PM-07 | Label scheme on GitHub (`type:`, `area:`, `priority:`, `status:`) + milestones v0.2.0–v0.4.0 | done | P1 | S | 0.2 | — | — |
 | PM-08 | Update the 6 outdated GitHub issues (#67, #68, #72, #81, #82, #84) and link them to workstreams | done | P1 | S | 0.2 | PM-07 | — |
 | PM-09 | Branch protection on `master` with required checks | dropped | P2 | S | 0.2 | REL-07 | — |

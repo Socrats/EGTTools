@@ -13,7 +13,7 @@ and the known numerical bugs fixed. PyPI is still at 0.1.14.2.
 | REL-04 | Fix fractional-state cast in simplex gradient plotting | done | P1 | M | 0.2 | REL-10 | merge `3050629` |
 | REL-05 | Diagnose and fix failing wheel jobs (sdist, win_amd64, win_arm64) | done | P0 | M | 0.2 | — | merges `4aee21d`, `754c5f6`, `75b426a`, `fc50406` |
 | REL-06 | Support Python 3.11–3.14 (add cp314, drop 3.10) | done | P1 | S | 0.2 | — | merge `8f5b901` |
-| REL-07 | Add a fast PR test workflow (pytest + CTest) | review | P0 | M | 0.2 | — | branch `rel-07-test-workflow`; first CI run pending push |
+| REL-07 | Add a fast PR test workflow (pytest + CTest) | done | P0 | M | 0.2 | — | merge `f1b6c6d`; CI run 44254345025 green |
 | REL-08 | Write CHANGELOG for 0.2.0 | todo | P0 | M | 0.2 | REL-01..07 | — |
 | REL-09 | Tag `v0.2.0`, publish GitHub release and PyPI | todo | P0 | S | 0.2 | REL-08 | — |
 | REL-10 | Specify the pairwise comparison process and verify every implementation against it | done | P0 | L | 0.2 | — | merge `50d98c4` |

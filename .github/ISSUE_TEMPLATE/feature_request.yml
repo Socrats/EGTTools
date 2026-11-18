@@ -1,0 +1,39 @@
+name: Feature request
+description: Propose a new method, model, game or improvement.
+labels: ["type: feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please check the [documentation](https://egttools.readthedocs.io/) and the [existing issues](https://github.com/Socrats/EGTTools/issues) first.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like to do?
+      description: The problem or research question behind the request.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How you imagine it working, e.g. the function or class you would call.
+    validations:
+      required: true
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Papers or existing implementations that define the method or model.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: dropdown
+    id: contribute
+    attributes:
+      label: Would you like to implement it?
+      options:
+        - "Yes"
+        - "Yes, with some guidance"
+        - "No"
