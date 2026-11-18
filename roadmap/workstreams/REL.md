@@ -13,7 +13,7 @@ and the known numerical bugs fixed. PyPI is still at 0.1.14.2.
 | REL-04 | Fix fractional-state cast in simplex gradient plotting | done | P1 | M | 0.2 | REL-10 | merge `3050629` |
 | REL-05 | Diagnose and fix failing wheel jobs (sdist, win_amd64, win_arm64) | done | P0 | M | 0.2 | — | merges `4aee21d`, `754c5f6`, `75b426a`, `fc50406` |
 | REL-06 | Support Python 3.11–3.14 (add cp314, drop 3.10) | done | P1 | S | 0.2 | — | merge `8f5b901` |
-| REL-07 | Add a fast PR test workflow (pytest + CTest) | todo | P0 | M | 0.2 | — | — |
+| REL-07 | Add a fast PR test workflow (pytest + CTest) | review | P0 | M | 0.2 | — | branch `rel-07-test-workflow`; first CI run pending push |
 | REL-08 | Write CHANGELOG for 0.2.0 | todo | P0 | M | 0.2 | REL-01..07 | — |
 | REL-09 | Tag `v0.2.0`, publish GitHub release and PyPI | todo | P0 | S | 0.2 | REL-08 | — |
 | REL-10 | Specify the pairwise comparison process and verify every implementation against it | done | P0 | L | 0.2 | — | merge `50d98c4` |
@@ -62,6 +62,10 @@ and the known numerical bugs fixed. PyPI is still at 0.1.14.2.
   workflow on `push` (all branches) and `pull_request` that builds once (Linux, one Python), runs pytest
   (skipping `slow`), and runs the C++ tests registered in `tests/CMakeLists.txt`.
   This is a prerequisite for branch protection (`PM-09`).
+  *Done locally:* `.github/workflows/tests.yml` (one `build_ext --inplace`, then CTest and
+  pytest). The C++ programs only check for crashes until TEST-09; one of them had a
+  dangling pointer (bus error), fixed. Wheel builds still compile the C++ tests
+  (`BUILD_NUMERICAL_TESTS` defaults to ON); turning that off in wheels.yml would speed them up (CI-07).
 - **REL-05** (cont.): fetching tags exposed that CMake's `project(VERSION)` rejected
   the `v0.1.14-patch2` tag; it now uses the numeric prefix. `v0.1.15` exists only
   locally (never pushed). Wheels stayed `0.0.0` until `setup.py`, whose explicit
