@@ -2595,13 +2595,18 @@ numpy.ndarray
 )pbdoc"
         );
 
-        pair_comp.def("run", [](pybind11::object &self, py::args args) -> void {
-            PyErr_WarnEx(
-                PyExc_DeprecationWarning,
-                "DEPRECATED. Use run_without_mutation or run_with_mutation instead.",
-                1
-            );
-        });
+        // `run` was removed because its overloads were ambiguous. Raise instead of returning None,
+        // so old code fails loudly with the name of the replacement.
+        pair_comp.def("run", [](const pybind11::object &, const py::args &, const py::kwargs &) -> py::object {
+            PyErr_SetString(PyExc_NotImplementedError,
+                            "PairwiseComparisonNumerical.run was removed. Use "
+                            "run_with_mutation(nb_generations, beta, mu, init_state) or "
+                            "run_without_mutation(nb_generations, beta, init_state) "
+                            "(both also accept a transient period after nb_generations).");
+            throw py::error_already_set();
+        }, R"pbdoc(
+Removed. Raises NotImplementedError; use ``run_with_mutation`` or ``run_without_mutation``.
+)pbdoc");
 
         options.enable_function_signatures();
     } {

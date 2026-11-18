@@ -648,3 +648,10 @@ class TestToleranceEarlyStopping:
         assert result.shape[0] == pc.nb_strategies
         assert np.all(result >= 0.0)
         assert abs(result.sum() - 1.0) < 0.15
+
+
+def test_removed_run_method_raises_with_replacement_names():
+    game = egt.games.Matrix2PlayerGameHolder(2, np.array([[1., 0.], [0., 1.]]))
+    evolver = egt.numerical.PairwiseComparisonNumerical(10, game, 100)
+    with pytest.raises(NotImplementedError, match="run_with_mutation"):
+        evolver.run(100, 1., 0.1, np.array([5, 5], dtype=np.uint64))
