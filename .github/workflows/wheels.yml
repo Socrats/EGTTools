@@ -297,6 +297,11 @@ jobs:
     needs: [ build_sdist, build_wheels ]
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -310,12 +315,34 @@ jobs:
 
       - name: Get release name
         id: get_version
-        run: echo "version=${GITHUB_REF##refs/tags/v}" >> $GITHUB_OUTPUT
+        run: |
+          echo "version=${GITHUB_REF##refs/tags/v}" >> $GITHUB_OUTPUT
+          # Release candidates (vX.Y.ZrcN) and other pre-releases are marked as such.
+          if [[ "${GITHUB_REF##refs/tags/v}" =~ (a|b|rc)[0-9]+$ ]]; then
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Release notes from the CHANGELOG
+        # The section "## [X.Y.Z]" for tags vX.Y.Z and vX.Y.ZrcN.
+        run: |
+          python3 - "${GITHUB_REF##refs/tags/v}" <<'EOF'
+          import re, sys
+          version = re.sub(r"(a|b|rc)[0-9]+$", "", sys.argv[1])
+          text = open("CHANGELOG.md", encoding="utf-8").read()
+          match = re.search(r"^## \[" + re.escape(version) + r"\][^\n]*\n(.*?)(?=^## \[|\Z)", text, re.S | re.M)
+          notes = match.group(1).strip() if match else f"See CHANGELOG.md for version {version}."
+          open("release-notes.md", "w", encoding="utf-8").write(notes + "\n")
+          print(notes[:500])
+          EOF
 
       - name: Upload sdist and wheels to release
         uses: ncipollo/release-action@v1.21.0
         with:
           name: ${{ steps.get_version.outputs.version }}
           draft: true
+          prerelease: ${{ steps.get_version.outputs.prerelease }}
+          bodyFile: release-notes.md
           artifacts: wheelhouse/*
           token: ${{ secrets.GITHUB_TOKEN }}

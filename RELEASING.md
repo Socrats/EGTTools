@@ -28,10 +28,12 @@ This checklist describes how a version of EGTtools is released. It is written fo
    ```
 
 2. The tag triggers the **Wheels** workflow, which builds the sdist and the wheels for every
-   platform and creates a **draft** GitHub release with them attached. The **Conda Build**
-   workflow also runs for the tag.
-3. Review the draft release (version, files, release notes taken from the CHANGELOG) and publish it.
-4. Run the **Publish to Pypi** workflow manually: first with `testpypi`, check that
+   platform and creates a **draft** GitHub release with them attached. Its notes are the
+   `[X.Y.Z]` section of the CHANGELOG, and tags such as `vX.Y.ZrcN` are marked as pre-releases.
+   The **Conda Build** workflow also runs for the tag.
+3. Review the draft release (version, files, notes) and publish it.
+4. Run the **Publish to Pypi** workflow manually with the version (e.g. `0.2.0rc1` or `0.2.0`);
+   it uploads the files of the published release `v<version>`. First with `testpypi`, check that
    `pip install -i https://test.pypi.org/simple/ egttools==X.Y.Z` works, then with `pypi`.
 5. Upload the conda packages by running **Conda Build** manually with *upload* enabled.
 6. Check that Read the Docs built the documentation for the new version.

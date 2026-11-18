@@ -7,6 +7,8 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-18
+
 First release since 0.1.14. Several fixes change numerical results; read
 *Changes to numerical results* first if you have results computed with earlier versions.
 
