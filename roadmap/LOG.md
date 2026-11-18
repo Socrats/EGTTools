@@ -2,6 +2,7 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-18 · DOC-15 · Added: improve the README and update its examples.
 - 2026-11-18 · REL-08 · Changelog for the release written and reviewed.
 - 2026-11-18 · REL-14 · Done: badge job green, coverage badge live.
 - 2026-11-18 · TEST-05, MEM-04, CI-06 · Housekeeping: statuses and descriptions brought up to date.
