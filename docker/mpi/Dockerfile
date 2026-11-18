@@ -1,10 +1,10 @@
-# Dockerfile.mpi — EGTtools built with PETSc/SLEPc/ARPACK for MPI-based benchmarks.
+# docker/mpi/Dockerfile — EGTtools built with PETSc/SLEPc/ARPACK for MPI-based benchmarks.
 #
 # Provides the `numerical_mpi_` pybind11 extension (PairwisePetscOperator) and
 # the `numerical_` extension with compute_stationary_arpack (HAS_ARPACK=True).
 #
 # Build:
-#   docker build -f Dockerfile.mpi -t egttools-mpi .
+#   docker build -f docker/mpi/Dockerfile -t egttools-mpi .
 #
 # Run tests:
 #   docker run --rm egttools-mpi pytest tests/test_mpi_operator.py

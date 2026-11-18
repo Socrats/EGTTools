@@ -142,3 +142,6 @@ instance/
 celerybeat-schedule
 *.sage.py
 scripts/reproduce_pinheiro2012.py
+
+# Editor settings (personal)
+.vscode/

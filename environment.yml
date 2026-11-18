@@ -1,16 +1,29 @@
+# Conda environment for developing EGTtools (building from source and running the tests).
+#   conda env create -f environment.yml
+#   conda activate egttools
+#   SKIP_VCPKG=ON pip install -e . --no-build-isolation   # or: python setup.py build_ext --inplace
 name: egttools
 channels:
   - conda-forge
 dependencies:
-  - python>=3.8
-  - cmake>=3.25
+  - python>=3.11
+  # runtime dependencies (see [project.dependencies] in pyproject.toml)
+  - numpy>=1.26.3
+  - scipy>=1.12.0
+  - matplotlib>=3.8.2
+  - seaborn>=0.13.2
+  - networkx>=3.2.1
+  - plotly>=5.0.0
+  # C++ build dependencies
+  - cmake>=3.27,<4
   - ninja
-  - openblas
-  - libomp
+  - eigen
+  - boost-cpp
+  - libblas
+  - liblapack
+  - pybind11
+  - scikit-build>=0.13.1
+  - setuptools-scm>=7
+  # tests
+  - pytest
   - pip
-  - numpy>=1.7.*
-  - scipy>=1.5.*
-  - matplotlib>=3.3.*
-  - networkx
-  - seaborn
-  - nomkl
