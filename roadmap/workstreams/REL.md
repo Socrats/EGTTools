@@ -16,7 +16,7 @@ and the known numerical bugs fixed. PyPI is still at 0.1.14.2.
 | REL-07 | Add a fast PR test workflow (pytest + CTest) | done | P0 | M | 0.2 | — | merge `722f53a`; CI run 44254345025 green |
 | REL-13 | Audit tracked files: remove unnecessary ones, update outdated ones (Dockerfiles, env/lock files, setup.cfg, .vscode, …) | done | P1 | M | 0.2 | — | branch `rel-13-tracked-files` |
 | REL-14 | Measure test coverage in the Tests workflow and show a coverage badge in the README | done | P1 | S | 0.2 | REL-07 | CI run 44267469778: badge live |
-| REL-08 | Write CHANGELOG for 0.2.0 | todo | P0 | M | 0.2 | REL-01..07, REL-13, REL-14 | — |
+| REL-08 | Write CHANGELOG for 0.2.0 | done | P0 | M | 0.2 | REL-01..07, REL-13, REL-14 | branch `rel-08-changelog` |
 | REL-09 | Tag `v0.2.0`, publish GitHub release and PyPI | todo | P0 | S | 0.2 | REL-08 | — |
 | REL-10 | Specify the pairwise comparison process and verify every implementation against it | done | P0 | L | 0.2 | — | merge `2c77957` |
 | REL-11 | Apply the homogeneous-state fix to `ImitationMultipleGames` (not exposed to Python) | todo | P3 | S | later | REL-10 | — |

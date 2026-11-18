@@ -2,6 +2,7 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-18 · REL-08 · Changelog for the release written and reviewed.
 - 2026-11-18 · REL-14 · Done: badge job green, coverage badge live.
 - 2026-11-18 · TEST-05, MEM-04, CI-06 · Housekeeping: statuses and descriptions brought up to date.
 - 2026-11-18 · — · History of master rewritten from 2026-04-11 to remove a tracked local file; commit IDs in this roadmap updated to the new history.
