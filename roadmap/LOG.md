@@ -2,6 +2,8 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-17 · REL-05 · Done: CI run 44120013268 green on all platforms; wheels versioned `0.1.15.dev168` (cp311–cp314).
+- 2026-11-17 · — · Merged `plot-colormaps`: cmap for gradient plots, Simplex2D trajectories, Simplex3D colorscales; API-07 added.
 - 2026-11-17 · REL-12 · Merged (`affebca`): named invasion-diagram styles (simple default, proportional, classic, compact), palette names/colormaps, absolute minimum node size.
 - 2026-11-17 · API-06, DOC-13, DOC-14 · Added: transposed SML transition matrix in StochDynamics, Sphinx warnings, notebooks not executed in CI.
 - 2026-11-17 · REL-12 · Merged (`a9b355e`): invasion_graph + redesigned draw_invasion_diagram; near-neutral drift, mutual invasions, colours/filter, labels.
