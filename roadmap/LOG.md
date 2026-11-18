@@ -2,6 +2,7 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-18 · REL-09 · Done: `v0.2.0` tagged on `c046ef89` (same commit as rc3, tested from TestPyPI: 651 passed), released on GitHub and PyPI.
 - 2026-11-18 · CI-08 · Extended to conda-lock for the environments we create.
 - 2026-11-18 · CI-09 · Added: move CI to Ubuntu 26.04 after the release; actions moved to Node 24 (branch `ci-node24-runners`).
 - 2026-11-18 · DOC-15 · Added: improve the README and update its examples.
