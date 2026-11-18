@@ -2,6 +2,8 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-18 · REL-14 · Done: badge job green, coverage badge live.
+- 2026-11-18 · TEST-05, MEM-04, CI-06 · Housekeeping: statuses and descriptions brought up to date.
 - 2026-11-18 · — · History of master rewritten from 2026-04-11 to remove a tracked local file; commit IDs in this roadmap updated to the new history.
 - 2026-11-18 · REL-14 · First run: tests green, badge job failed on the missing generated `_version.py`; omitted from coverage.
 - 2026-11-18 · REL-14 · Tests run on PRs, master and manually; badge in a separate write job on master only; no PR comments.
