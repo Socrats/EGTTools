@@ -18,6 +18,8 @@
 
 #include <egttools/utils/CalculateExpectedIndicators.h>
 
+#include <functional>
+
 egttools::Vector egttools::utils::calculate_strategies_distribution(size_t pop_size,
                                                                     size_t nb_strategies,
                                                                     SparseMatrix2D &stationary_distribution) {

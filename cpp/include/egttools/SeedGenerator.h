@@ -21,6 +21,8 @@
 #define EGTTOOLS_SEEDGENERATOR_H
 
 #include <algorithm>
+#include <functional>
+#include <iterator>
 #include <mutex>
 #include <random>
 #include <string>
