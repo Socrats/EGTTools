@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "setuptools>=44",
+    "setuptools>=77",
     "wheel",
     "scikit-build>=0.13.1",
     "cmake>=3.18",
@@ -29,7 +29,8 @@ dynamic = ["version"]
 description = "Efficient Python library for Evolutionary Game Theory (EGT)"
 readme = "README.md"
 requires-python = ">=3.11"
-license = {text = "GPL-3.0-or-later"}
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
 authors = [
     { name = "Elias F. Domingos", email = "elias.fernandez.domingos@vub.be" },
 ]
