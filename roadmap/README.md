@@ -89,6 +89,41 @@ implementation, the solver module is in place, sanitizer CI runs, and
 coverage is measured.
 Workstreams: `MC`, `NET`, `SOL`, `MEM`, and the 0.3 tasks in `TEST`.
 
+### v0.3.0 execution plan
+
+Work in this order: each phase builds on the tests or code of the previous one. Within a phase,
+tasks are independent unless the `Deps` column says otherwise.
+
+1. **Safety nets first.**
+   - TEST-06: helpers for statistical tests (MC estimate vs exact value within k·SE, fixed seeds).
+   - TEST-09: Catch2 for the C++ tests, so new C++ code gets real unit tests.
+   - MEM-01, MEM-02: sanitizer build and CI job, so new C++ code is checked for memory errors from the start.
+   - SOL-10's test chains (known stationary distributions), reusable by MC-09.
+2. **Specify, then verify existing behaviour.** For each process, write its theory page
+   (DOC-12) before changing code, following `docs/theory/pairwise_comparison.md`:
+   numbered definitions with references, and tests that transcribe them directly.
+   - NET-01: network reference tests (see *Reference data* below).
+   - MC-09: Monte Carlo vs exact chains, and the fixation/SML page for MC-07.
+3. **Correctness fixes**: NET-02, NET-03, NET-05, NET-04; MC-07; API-06.
+4. **Monte Carlo redesign**: MC-01 → MC-02 → MC-03 → MC-04, then MC-05, MC-06, MC-10, MC-08.
+5. **Solvers**: SOL-01 and SOL-09 (interface and diagnostics) → SOL-02, SOL-03 + SOL-04, SOL-05,
+   SOL-06 → SOL-07, SOL-08 → SOL-11.
+6. **Network engine decision**: NET-06 (benchmark) → NET-07 if numba wins; record it in DECISIONS.md.
+7. **Remaining safety and coverage**: MEM-03..07, TEST-01 (C++ coverage), TEST-02..04, DOC-14.
+
+**Verification standard.** A task that changes or adds a numerical method is done only when:
+- its definition is written down (theory page or docstring with equations and references);
+- it is tested against an independent result (direct transcription of the equations, an exact
+  solution, a published value, or reference data);
+- Monte Carlo tests use fixed seeds, compare within k standard errors, and are shown to fail on a
+  deliberately wrong variant (so they have power);
+- any change in numerical results is listed in the CHANGELOG under its own heading.
+
+**Reference data.** Tests must not depend on code outside this repository. When a method is
+checked against an independent implementation, generate its outputs once (inputs, seeds,
+parameters, values) and commit them as test data under `tests/data/`, together with a short
+description of how they were produced.
+
 ### v0.4.0: documentation, build modernisation, API cleanup
 Exit criteria: complete user guide, scikit-build-core build, a tracked
 benchmark suite, the module rename with deprecation shims, and a coverage floor.
