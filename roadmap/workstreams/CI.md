@@ -13,7 +13,7 @@ structural work.
 | CI-03 | PyPI trusted publishing from the release workflow (drop API tokens) | todo | P1 | S | 0.4 | — | — |
 | CI-04 | Build the conda recipe in CI on PRs touching packaging | todo | P2 | M | 0.4 | — | #72 |
 | CI-05 | Decide on extra wheel targets: Linux aarch64, macOS x86_64 | todo | P2 | S | 0.4 | REL-05 | — |
-| CI-06 | Consolidate docs workflows (`docs.yml`, `jekyll-gh-pages.yml`, RTD trigger) | todo | P2 | M | 0.4 | — | — |
+| CI-06 | Consolidate docs hosting: Read the Docs vs GitHub Pages (`docs.yml`, RTD trigger); Jekyll workflow already removed | todo | P2 | M | 0.4 | — | — |
 | CI-07 | Concurrency groups and path filters so docs-only changes skip wheel builds | todo | P2 | S | 0.4 | — | — |
 | CI-08 | Evaluate uv for the development workflow (uv.lock for dev/test/docs tools, `uv build` front end) | todo | P2 | M | 0.4 | CI-02 | — |
 
