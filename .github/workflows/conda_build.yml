@@ -23,7 +23,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: ubuntu-latest
+          - runner: ubuntu-24.04
             platform: linux-64
 
           # GitHub's macos-15 runners are arm64 (Apple Silicon).
@@ -40,7 +40,7 @@ jobs:
       # submodules needed for pybind11 (not required for conda build which uses
       # system pybind11, but present for correctness).
       # -----------------------------------------------------------------------
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: recursive
@@ -98,7 +98,7 @@ jobs:
       # Save packages as workflow artifacts (always, even without upload).
       # -----------------------------------------------------------------------
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: conda-packages-${{ matrix.platform }}
           path: |

@@ -9,11 +9,11 @@ on:
 
 jobs:
   build-docs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install GitHub CLI
         run: sudo apt-get update && sudo apt-get install -y gh
@@ -49,7 +49,7 @@ jobs:
           gh run download "$WHEEL_RUN_ID" -n rtd-wheel -D ./wheelhouse
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -69,7 +69,7 @@ jobs:
           sphinx-build -b html -n --keep-going docs docs/build/html
 
       - name: Upload docs as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: html-docs
           path: docs/build/html
@@ -77,15 +77,15 @@ jobs:
   deploy-docs:
     name: Deploy to GitHub Pages
     needs: build-docs
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_run'
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Download built HTML docs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: html-docs
           path: public
