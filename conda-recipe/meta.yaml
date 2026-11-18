@@ -56,7 +56,7 @@ requirements:
     - python
     - pip
     - scikit-build >=0.13.1
-    - setuptools >=44
+    - setuptools >=77
     - wheel
     - pybind11 >=2.10
     - numpy >=1.26.3
