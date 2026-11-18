@@ -24,6 +24,8 @@ Found and fixed so far: out-of-bounds row write in `run_with_mutation` with a tr
 - **MEM-05**: there are 17 explicit policy annotations in
   `cpp/src/pybind11_files`. Check each returned reference for a lifetime that
   can outlive its owner.
+- **MEM-04**: `docker/memcheck/` (from REL-13) runs Valgrind on the C++ test programs (`cpp`,
+  default) or the Python suite (`python`). Written without Docker available locally: not yet built.
 - **MEM-06**: covers the trajectory-storing paths and estimators that run for
   many generations. Assert that peak memory does not grow with
   `nb_generations`.

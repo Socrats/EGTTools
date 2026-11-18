@@ -14,7 +14,7 @@ and the known numerical bugs fixed. PyPI is still at 0.1.14.2.
 | REL-05 | Diagnose and fix failing wheel jobs (sdist, win_amd64, win_arm64) | done | P0 | M | 0.2 | — | merges `4aee21d`, `754c5f6`, `75b426a`, `fc50406` |
 | REL-06 | Support Python 3.11–3.14 (add cp314, drop 3.10) | done | P1 | S | 0.2 | — | merge `8f5b901` |
 | REL-07 | Add a fast PR test workflow (pytest + CTest) | done | P0 | M | 0.2 | — | merge `f1b6c6d`; CI run 44254345025 green |
-| REL-13 | Audit tracked files: remove unnecessary ones, update outdated ones (Dockerfiles, env/lock files, setup.cfg, .vscode, …) | todo | P1 | M | 0.2 | — | — |
+| REL-13 | Audit tracked files: remove unnecessary ones, update outdated ones (Dockerfiles, env/lock files, setup.cfg, .vscode, …) | done | P1 | M | 0.2 | — | branch `rel-13-tracked-files` |
 | REL-14 | Measure test coverage in the Tests workflow and show a coverage badge in the README | todo | P1 | S | 0.2 | REL-07 | — |
 | REL-08 | Write CHANGELOG for 0.2.0 | todo | P0 | M | 0.2 | REL-01..07, REL-13, REL-14 | — |
 | REL-09 | Tag `v0.2.0`, publish GitHub release and PyPI | todo | P0 | S | 0.2 | REL-08 | — |

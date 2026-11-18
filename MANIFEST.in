@@ -4,7 +4,6 @@ include LICENSE
 
 include MANIFEST.in
 include pyproject.toml
-include setup.cfg
 include setup.py
 include .clang-format
 include environment.yml
@@ -15,7 +14,6 @@ include conda-recipe/bld.bat
 include conda-recipe/build.sh
 include conda-recipe/meta.yaml
 include conda-recipe/conda_build_config.yaml
-include install_dependencies.sh
 
 # Scripts
 recursive-include scripts *.sh
@@ -53,7 +51,6 @@ prune vcpkg_installed
 include .gitmodules
 
 graft cmake
-graft res
 
 graft docs
 prune docs/_build
@@ -73,7 +70,6 @@ global-exclude .DS_Store
 global-exclude .ipynb_checkpoints/*
 global-exclude *.so
 exclude .dockerignore
-exclude Dockerfile
 exclude pybind11/.git
 exclude build_tools
 recursive-exclude build_tools *

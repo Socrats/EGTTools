@@ -82,6 +82,13 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Repository clean-up: removed unused build scripts and lock files copied from other projects
+  (`build_tools/`), the obsolete `install_dependencies.sh`, `setup.cfg` (duplicated
+  `pyproject.toml` with outdated values), unused CMake modules (`res/`), a broken root
+  `Dockerfile`, and an unused GitHub Pages workflow. `environment.yml` and `requirements.txt`
+  now match the current dependencies, `CMakePresets.json` works (Debug/Release build and test
+  presets), the Valgrind images are merged into `docker/memcheck/`, and the MPI image moved to
+  `docker/mpi/`.
 - **Breaking:** `draw_invasion_diagram(graph, ax=None, ...)` now draws a graph built by
   `invasion_graph` and returns the matplotlib axes. The old signature mixed classification
   with drawing, needed the neutral fixation probability passed by hand (`drift`), and keyed
