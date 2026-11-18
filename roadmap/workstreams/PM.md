@@ -6,7 +6,7 @@ Goal: make it easy and predictable for others to report issues and contribute.
 
 | ID | Task | Status | Pri | Size | MS | Deps | Ref |
 |----|------|--------|-----|------|----|------|-----|
-| PM-01 | Create `roadmap/` tracking folder and schema | done | P0 | S | 0.2 | — | merge `00a2874` |
+| PM-01 | Create `roadmap/` tracking folder and schema | done | P0 | S | 0.2 | — | merge `8a06d9e` |
 | PM-02 | Replace markdown issue templates with YAML issue forms + `config.yml` | done | P1 | S | 0.2 | — | branch `pm-community-files` |
 | PM-03 | Add pull request template with checklist | done | P1 | S | 0.2 | — | branch `pm-community-files` |
 | PM-04 | Add `CODEOWNERS`, `SECURITY.md`, `SUPPORT.md` | done | P1 | S | 0.2 | — | branch `pm-community-files` |

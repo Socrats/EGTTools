@@ -7,20 +7,20 @@ and the known numerical bugs fixed. PyPI is still at 0.1.14.2.
 
 | ID | Task | Status | Pri | Size | MS | Deps | Ref |
 |----|------|--------|-----|------|----|------|-----|
-| REL-01 | Clean up `pyproject.toml` configuration | done | P0 | S | 0.2 | — | merge `83d6789` |
-| REL-02 | Move non-test scripts out of `tests/` | done | P1 | S | 0.2 | — | merge `5c43eaf` |
-| REL-03 | Fix `calculate_stationary_distribution` (+ `_non_hermitian`) | done | P0 | M | 0.2 | — | merge `233473c` |
-| REL-04 | Fix fractional-state cast in simplex gradient plotting | done | P1 | M | 0.2 | REL-10 | merge `3050629` |
-| REL-05 | Diagnose and fix failing wheel jobs (sdist, win_amd64, win_arm64) | done | P0 | M | 0.2 | — | merges `4aee21d`, `754c5f6`, `75b426a`, `fc50406` |
-| REL-06 | Support Python 3.11–3.14 (add cp314, drop 3.10) | done | P1 | S | 0.2 | — | merge `8f5b901` |
-| REL-07 | Add a fast PR test workflow (pytest + CTest) | done | P0 | M | 0.2 | — | merge `f1b6c6d`; CI run 44254345025 green |
+| REL-01 | Clean up `pyproject.toml` configuration | done | P0 | S | 0.2 | — | merge `7e88feb` |
+| REL-02 | Move non-test scripts out of `tests/` | done | P1 | S | 0.2 | — | merge `518fd9f` |
+| REL-03 | Fix `calculate_stationary_distribution` (+ `_non_hermitian`) | done | P0 | M | 0.2 | — | merge `dfb67b1` |
+| REL-04 | Fix fractional-state cast in simplex gradient plotting | done | P1 | M | 0.2 | REL-10 | merge `5fd3308` |
+| REL-05 | Diagnose and fix failing wheel jobs (sdist, win_amd64, win_arm64) | done | P0 | M | 0.2 | — | merges `f1b09e5`, `9e9689f`, `68fd40c`, `15f0870` |
+| REL-06 | Support Python 3.11–3.14 (add cp314, drop 3.10) | done | P1 | S | 0.2 | — | merge `59f21a6` |
+| REL-07 | Add a fast PR test workflow (pytest + CTest) | done | P0 | M | 0.2 | — | merge `722f53a`; CI run 44254345025 green |
 | REL-13 | Audit tracked files: remove unnecessary ones, update outdated ones (Dockerfiles, env/lock files, setup.cfg, .vscode, …) | done | P1 | M | 0.2 | — | branch `rel-13-tracked-files` |
 | REL-14 | Measure test coverage in the Tests workflow and show a coverage badge in the README | review | P1 | S | 0.2 | REL-07 | branch `rel-14-coverage-badge`; badge appears after first run on master |
 | REL-08 | Write CHANGELOG for 0.2.0 | todo | P0 | M | 0.2 | REL-01..07, REL-13, REL-14 | — |
 | REL-09 | Tag `v0.2.0`, publish GitHub release and PyPI | todo | P0 | S | 0.2 | REL-08 | — |
-| REL-10 | Specify the pairwise comparison process and verify every implementation against it | done | P0 | L | 0.2 | — | merge `50d98c4` |
+| REL-10 | Specify the pairwise comparison process and verify every implementation against it | done | P0 | L | 0.2 | — | merge `2c77957` |
 | REL-11 | Apply the homogeneous-state fix to `ImitationMultipleGames` (not exposed to Python) | todo | P3 | S | later | REL-10 | — |
-| REL-12 | Invasion diagrams: per-pair drift/selection classification, curved mutual invasions, labels, flexible API | done | P1 | M | 0.2 | — | merge `a9b355e` |
+| REL-12 | Invasion diagrams: per-pair drift/selection classification, curved mutual invasions, labels, flexible API | done | P1 | M | 0.2 | — | merge `0670508` |
 
 ## Notes
 
@@ -31,7 +31,7 @@ and the known numerical bugs fixed. PyPI is still at 0.1.14.2.
   takes precedence, so the `addopts` in `pyproject.toml` never apply. Keep the
   `slow` marker.
 - **REL-02**: *Done:* the two glibc reproducers moved to `scripts/diagnostics/`;
-  `tests/somthing.py` untracked again (committed by accident in `96f818a`).
+  `tests/somthing.py` untracked again (committed by accident in `bafa927`).
 - **REL-03**: `utils.calculate_stationary_distribution` converts sparse input
   to dense and runs a full `np.linalg.eig` (O(n³)).
   `calculate_stationary_distribution_non_hermitian` takes a column of the Schur
