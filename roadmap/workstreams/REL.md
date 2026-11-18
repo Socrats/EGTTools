@@ -11,7 +11,7 @@ and the known numerical bugs fixed. PyPI is still at 0.1.14.2.
 | REL-02 | Move non-test scripts out of `tests/` | done | P1 | S | 0.2 | — | merge `5c43eaf` |
 | REL-03 | Fix `calculate_stationary_distribution` (+ `_non_hermitian`) | done | P0 | M | 0.2 | — | merge `233473c` |
 | REL-04 | Fix fractional-state cast in simplex gradient plotting | done | P1 | M | 0.2 | REL-10 | merge `3050629` |
-| REL-05 | Diagnose and fix failing wheel jobs (sdist, win_amd64, win_arm64) | review | P0 | M | 0.2 | — | merges `4aee21d`, `754c5f6`, `75b426a`, `fc50406`; awaiting version check |
+| REL-05 | Diagnose and fix failing wheel jobs (sdist, win_amd64, win_arm64) | done | P0 | M | 0.2 | — | merges `4aee21d`, `754c5f6`, `75b426a`, `fc50406` |
 | REL-06 | Support Python 3.11–3.14 (add cp314, drop 3.10) | done | P1 | S | 0.2 | — | merge `8f5b901` |
 | REL-07 | Add a fast PR test workflow (pytest + CTest) | todo | P0 | M | 0.2 | — | — |
 | REL-08 | Write CHANGELOG for 0.2.0 | todo | P0 | M | 0.2 | REL-01..07 | — |
