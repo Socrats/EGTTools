@@ -2,6 +2,7 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-18 · REL-13, REL-14 · Added before the release: tracked-file audit, coverage badge.
 - 2026-11-18 · PM-02..06 · Issue forms, PR template, CODEOWNERS, SECURITY, SUPPORT, CONTRIBUTING rewrite, RELEASING.
 - 2026-11-18 · REL-07 · Done: first Tests run green (21 C++ programs, 649 Python tests).
 - 2026-11-18 · TEST-09 · Added: C++ tests are standalone programs without assertions or a framework.
