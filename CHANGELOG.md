@@ -22,6 +22,9 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   precondition checks. A new test fails if assertions are compiled out.
 - `test_binomial_coefficient_with_time` compares against exact reference values instead of
   printing them.
+- `test_timing_uncertainty` uses a fixed seed and a tolerance of 4 standard errors, and checks that
+  a wrong parameter is rejected; its former tolerance (about 2 standard errors, unseeded) failed in
+  about 4% of runs once assertions were enabled.
 
 ## [0.2.0] - 2026-11-19
 
