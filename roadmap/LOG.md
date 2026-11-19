@@ -2,6 +2,7 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-19 · MEM-09 · Merged (`897e6f2b`): Tests green.
 - 2026-11-19 · API-11 · Added: audit of the pybind11 bindings' types (float counts silently truncated, uint64 counts returned, unclear TypeErrors for bad values).
 - 2026-11-19 · API-09/API-10/MEM-11 · Added: real signatures in the stubs; rename the two pairwise-comparison classes (0.4); validation audit of the other classes.
 - 2026-11-19 · MEM-09 · Review (branch `mem-09-input-validation`): 62 validation tests (an out-of-range index used to crash the interpreter); 756 Python, 25/25 C++.

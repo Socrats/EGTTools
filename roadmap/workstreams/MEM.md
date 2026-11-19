@@ -15,7 +15,7 @@ changes. Today nothing checks for them in CI.
 | MEM-06 | Memory-growth regression tests on long-running estimators (pytest-memray limits) | todo | P1 | S | 0.3 | — | — |
 | MEM-07 | Document how to run sanitizer builds locally (Linux and macOS) | todo | P2 | S | 0.3 | MEM-01 | — |
 | MEM-08 | State counts in 64-bit: `starsBars` deduced as `int` overflows (UB) in `PairwiseComparison` and other constructors; mark counts that do not fit as too large | done | P0 | S | 0.3 | MEM-01 | `0fb0fcbe` |
-| MEM-09 | Validate strategy indices and state vectors at the user-facing entry points of `PairwiseComparison` and `PairwiseComparisonNumerical` | review | P0 | M | 0.3 | — | branch `mem-09-input-validation` |
+| MEM-09 | Validate strategy indices and state vectors at the user-facing entry points of `PairwiseComparison` and `PairwiseComparisonNumerical` | done | P0 | M | 0.3 | — | `897e6f2b` |
 | MEM-10 | Consistent 64-bit types: audit `Types.h` and every size, count and index type (no `int`/`long` for sizes; `long` is 32-bit on Windows) | todo | P1 | L | 0.3 | MEM-08 | — |
 | MEM-11 | Input-validation audit of the other user-facing classes (games, network structures, `StochDynamics`, MLS, utilities), following the MEM-09 rule | todo | P1 | M | 0.3 | MEM-09 | — |
 
