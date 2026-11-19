@@ -17,6 +17,7 @@ abruptly.
 | API-08 | Assess the random-number and seeding design against NumPy and JAX; decide the target design and file the migration tasks | todo | P1 | M | 0.3 | — | — |
 | API-09 | Real signatures in the `.pyi` stubs: stop disabling pybind11 function signatures, regenerate the stubs, check them in CI | todo | P1 | M | 0.3 | — | — |
 | API-10 | Rename `PairwiseComparison` and `PairwiseComparisonNumerical` to names that say exact vs approximate (estimators), with deprecation aliases | todo | P1 | M | 0.4 | API-01 | — |
+| API-11 | Audit the pybind11 bindings' declared types: argument types and conversions, returned dtypes, Eigen `Ref` vs copies, overloads, defaults, argument names, GIL release | todo | P1 | L | 0.3 | MEM-10 | — |
 
 ## Notes
 
@@ -56,3 +57,17 @@ abruptly.
   (`PairwiseComparison`) vs approximate methods and estimators (`PairwiseComparisonNumerical`). Names to
   be decided in the task; old names stay as deprecated aliases for at least two minor releases (API-02,
   API-03).
+- **API-11**: complements MEM-05 (ownership: return value policies, `keep_alive`), MEM-10 (C++
+  types) and API-09 (stubs). Found 2026-11-19:
+  - A negative value for a `size_t` parameter, or a value above 2^31 for an `int` one, raises
+    "incompatible constructor arguments" (`TypeError`), which blames the type, not the value.
+    Decide per argument: 64-bit signed types (MEM-10) and a `ValueError` with the valid range.
+  - Population states accept floats and truncate them silently: `[3.5, 3.5, 4.0]` with Z = 10 is
+    accepted as `[3, 3, 4]`. Count arrays should not convert from floats (`py::arg().noconvert()` or
+    an explicit dtype check).
+  - Counts are returned as `uint64` arrays (e.g. `sample_simplex`), so `state - 1` wraps around in
+    NumPy (the TEST-13 helper bug). Return signed 64-bit counts, consistent with MEM-10.
+  Also check: Eigen `Ref<const T>` arguments whose storage order differs from NumPy's default
+  (silent copies of large matrices), overload order and ambiguity, Python defaults matching the C++
+  ones, `py::arg` names matching the docstrings, and `py::call_guard<py::gil_scoped_release>` on long
+  computations that do not call back into Python (PERF-04). One test per finding.
