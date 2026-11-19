@@ -106,7 +106,9 @@ tasks are independent unless the `Deps` column says otherwise.
    numbered definitions with references, and tests that transcribe them directly.
    - NET-01: network reference tests (see *Reference data* below).
    - MC-09: Monte Carlo vs exact chains, and the fixation/SML page for MC-07.
-   - PERF-04: parallelisation design and test plan, before the MC redesign adds parallel code.
+   - API-08: assessment of the random-number and seeding design against NumPy and JAX.
+   - PERF-04: parallelisation design and test plan, before the MC redesign adds parallel code;
+     uses API-08's stream scheme for per-run seeding.
    - PERF-05: efficiency audit of `PairwiseComparison` and `PairwiseComparisonNumerical`
      (and the rest of the library); its findings feed phases 3 and 4.
 3. **Correctness fixes**: NET-02, NET-03, NET-05, NET-04; MC-07; API-06; PERF-06
@@ -144,6 +146,6 @@ Update this table when tasks change. Recount a milestone (here 0.2) from the rep
 | Milestone | Done / total |
 |-----------|-------------|
 | v0.2.0 | 22 / 22 |
-| v0.3.0 | 1 / 52 |
+| v0.3.0 | 1 / 53 |
 | v0.4.0 | 0 / 30 |
 | later  | 0 / 3 |
