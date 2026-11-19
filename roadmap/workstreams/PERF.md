@@ -71,7 +71,9 @@ reproducible.
   `math.comb` (64-bit tables), GMP `mpz_bin_uiui` (Goetgheluck's prime factorisation for
   large n). Benchmarks (2026-11-19, Apple M-series): `cpp_int` is 1.5–2.2× slower than
   fixed-width 128-bit arithmetic for the same binomials; an overflow check per iteration
-  costs nothing measurable.
+  costs nothing measurable. Lesson from MEM-08: keep checked kernels small and move rare paths
+  (gcd steps, error formatting, throws) out of line, or the compiler stops inlining them into hot
+  loops (+15-20% on transition matrices, back to +1-4% out of line).
 - **PERF-06**: run each parallel method with 1, 2 and N threads and a fixed seed;
   compare results exactly or within k·SE as PERF-04 specifies. TSan with OpenMP needs
   an OpenMP runtime built with TSan support (or the Archer tool) to avoid false

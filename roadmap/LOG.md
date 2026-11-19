@@ -2,6 +2,7 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-19 · MEM-08 · Review (branch `mem-08-state-counts`): exact 64-bit state counts and checked integer binomials; exact fitness-cache keys (edge keys for fixation). 25/25 C++, 694 Python, 27/27 under ASan+UBSan; transition matrix within 1-4% of master, fixation/SML 28% faster.
 - 2026-11-19 · TEST-12 · Added: numerical-stability audit; `BirthDeath`/`DeathBirth` exponentiate fitness without subtracting the maximum.
 - 2026-11-19 · MEM-08 · Design agreed: exact gcd-reduced binomial with overflow check, optional state counts, `OverflowError` on use.
 - 2026-11-19 · MEM-08/09/10 · Added: state-count overflow (found by the first sanitizer run), missing input validation in `PairwiseComparison`, consistent 64-bit types.
