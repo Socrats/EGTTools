@@ -20,7 +20,7 @@ Scope covers standard methods only: direct, ARPACK, Krylov
 | SOL-07 | Optional GPU (CuPy) power iteration, as an extra | todo | P2 | M | 0.3 | SOL-05 | — |
 | SOL-08 | Expose existing PETSc/SLEPc operator through the same API (`egttools[mpi]`) | todo | P2 | M | 0.3 | SOL-01 | — |
 | SOL-09 | Result diagnostics: residual ‖πP − π‖, iterations, converged flag, wall time | todo | P0 | S | 0.3 | SOL-01 | — |
-| SOL-10 | Tests per method on chains with known stationary distribution | todo | P0 | M | 0.3 | SOL-02..05 | — |
+| SOL-10 | Tests per method on chains with known stationary distribution | todo | P0 | M | 0.3 | TEST-11, SOL-02..05 | — |
 | SOL-11 | Per-method reference documentation | todo | P1 | M | 0.3 | SOL-10 | — |
 
 ## Notes
@@ -32,5 +32,7 @@ Scope covers standard methods only: direct, ARPACK, Krylov
 - **SOL-06**: Python `LinearOperator` callbacks are 15–90× slower than an
   explicit CSR matrix with ARPACK at moderate sizes. The matrix-free path must
   stay in native code.
+- **SOL-10**: the chains themselves are TEST-11 (phase 1); this task applies them to
+  every solver method.
 - **SOL-11**: document what each method does, its parameters, and its cost per
   iteration. Defaults are documented as defaults only.

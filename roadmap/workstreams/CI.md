@@ -17,6 +17,7 @@ structural work.
 | CI-07 | Concurrency groups and path filters so docs-only changes skip wheel builds | todo | P2 | S | 0.4 | — | — |
 | CI-08 | Reproducible environments: evaluate uv (uv.lock for dev/test/docs tools, `uv build` front end) and conda-lock (CI build/test and development conda environments) | todo | P2 | M | 0.4 | CI-02 | — |
 | CI-09 | Move the Ubuntu jobs from `ubuntu-24.04` to `ubuntu-26.04` (GCC 15, CMake 4 preinstalled) and fix what breaks | todo | P1 | M | 0.3 | — | — |
+| CI-10 | Audit the CMake build (all `CMakeLists.txt`, `cmake/Modules`, presets) and file improvement tasks | todo | P1 | M | 0.3 | TEST-10, MEM-01 | — |
 
 ## Notes
 
@@ -33,6 +34,18 @@ structural work.
   under GCC 15/libstdc++ (like the missing `<functional>` found by conda) and CMake 4 as the
   system default; vcpkg still needs CMake < 4 until CI-01. Linux wheels build in manylinux,
   so only the Tests, sdist, docs and CodeQL jobs change.
+- **CI-10**: covers the top-level `CMakeLists.txt` (447 lines), `cpp/src` and its
+  subdirectories, `tests/`, `docs/`, the custom modules (`FindEigen3`, `FindLpSolve`,
+  `EnableOpenMP`, `InstallOpenMP`, `EnableBLASLapack`, `InstallBLASLAPACK`, `AddBuildInfo`)
+  and `CMakePresets.json`. Check: target-based usage (no global flags or directory-wide
+  include paths), build types and compile definitions, warnings, OpenMP and BLAS/LAPACK
+  detection on every platform (several OpenMP paths are compiled out under MSVC), LTO,
+  find modules that vcpkg or CMake already provide, duplicated source lists (the test
+  library repeats `cpp/src` sources), the `if (NOT SKBUILD)` install guards, and what
+  CI-02 (scikit-build-core) will need. Deliverable: a findings list in the notes and
+  one task per fix, each marked as 0.3 (affects correctness or the safety nets) or
+  folded into CI-02. Runs after TEST-10 and MEM-01, which change the test and sanitizer
+  CMake code.
 - **CI-02**: removes the need to keep `setup.py` `package_data` and
   `[tool.setuptools.package-data]` in sync by hand, and the `if (NOT SKBUILD)`
   guards around `install()`.

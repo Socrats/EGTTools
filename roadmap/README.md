@@ -94,18 +94,23 @@ Workstreams: `MC`, `NET`, `SOL`, `MEM`, and the 0.3 tasks in `TEST`.
 Work in this order: each phase builds on the tests or code of the previous one. Within a phase,
 tasks are independent unless the `Deps` column says otherwise.
 
-1. **Safety nets first.**
-   - TEST-06: helpers for statistical tests (MC estimate vs exact value within k·SE, fixed seeds).
+1. **Safety nets first**, in this order:
    - TEST-10: C++ tests that check results in Release builds (stopgap before TEST-09).
-   - TEST-09: Catch2 for the C++ tests, so new C++ code gets real unit tests.
    - MEM-01, MEM-02: sanitizer build and CI job, so new C++ code is checked for memory errors from the start.
-   - SOL-10's test chains (known stationary distributions), reusable by MC-09.
+   - TEST-06: helpers for statistical tests (MC estimate vs exact value within k·SE, fixed seeds).
+   - TEST-11: shared test chains with known stationary distributions, used by SOL-10 and MC-09.
+   - CI-10: audit of the CMake build; fixes that affect correctness or the safety nets stay in 0.3.
+   - TEST-09: Catch2 for the C++ tests, starting with the programs that check nothing.
 2. **Specify, then verify existing behaviour.** For each process, write its theory page
    (DOC-12) before changing code, following `docs/theory/pairwise_comparison.md`:
    numbered definitions with references, and tests that transcribe them directly.
    - NET-01: network reference tests (see *Reference data* below).
    - MC-09: Monte Carlo vs exact chains, and the fixation/SML page for MC-07.
-3. **Correctness fixes**: NET-02, NET-03, NET-05, NET-04; MC-07; API-06.
+   - PERF-04: parallelisation design and test plan, before the MC redesign adds parallel code.
+   - PERF-05: efficiency audit of `PairwiseComparison` and `PairwiseComparisonNumerical`
+     (and the rest of the library); its findings feed phases 3 and 4.
+3. **Correctness fixes**: NET-02, NET-03, NET-05, NET-04; MC-07; API-06; PERF-06
+   (thread-count invariance tests and ThreadSanitizer job) with the seeding fix it requires.
 4. **Monte Carlo redesign**: MC-01 → MC-02 → MC-03 → MC-04, then MC-05, MC-06, MC-10, MC-08.
 5. **Solvers**: SOL-01 and SOL-09 (interface and diagnostics) → SOL-02, SOL-03 + SOL-04, SOL-05,
    SOL-06 → SOL-07, SOL-08 → SOL-11.
@@ -139,6 +144,6 @@ Update this table when tasks change. Recount a milestone (here 0.2) from the rep
 | Milestone | Done / total |
 |-----------|-------------|
 | v0.2.0 | 22 / 22 |
-| v0.3.0 | 1 / 47 |
-| v0.4.0 | 0 / 32 |
-| later  | 0 / 2 |
+| v0.3.0 | 1 / 52 |
+| v0.4.0 | 0 / 30 |
+| later  | 0 / 3 |
