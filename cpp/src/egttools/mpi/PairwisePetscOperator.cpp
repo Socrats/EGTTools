@@ -22,6 +22,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -63,8 +64,14 @@ PairwisePetscOperator::PairwisePetscOperator(
     if (!initialized)
         SlepcInitializeNoArguments();
 
-    nb_states_ = static_cast<PetscInt>(
-        egttools::starsBars(population_size, game.nb_strategies()));
+    // Throws std::overflow_error (naming Z and S) if the number of states does not fit in int64_t.
+    const int64_t total_states = egttools::checked_nb_states(static_cast<int64_t>(population_size),
+                                                             static_cast<int64_t>(game.nb_strategies()));
+    // PetscInt is 32-bit unless PETSc was configured with --with-64-bit-indices.
+    if (total_states > static_cast<int64_t>(std::numeric_limits<PetscInt>::max()))
+        throw std::overflow_error("the number of states (" + std::to_string(total_states) +
+                                  ") exceeds the range of PetscInt; configure PETSc with --with-64-bit-indices");
+    nb_states_ = static_cast<PetscInt>(total_states);
 
     inv_Z_              = 1.0 / static_cast<double>(pop_size_);
     inv_Zm1_            = 1.0 / static_cast<double>(pop_size_ - 1);

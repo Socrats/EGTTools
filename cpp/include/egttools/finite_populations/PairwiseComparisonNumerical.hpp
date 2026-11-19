@@ -451,7 +451,10 @@ namespace egttools::FinitePopulations {
         void set_mutation_weights(const Eigen::Ref<const Vector> &mutation_weights);
 
     private:
-        size_t _nb_strategies, _pop_size, _cache_size, _nb_states;
+        size_t _nb_strategies, _pop_size, _cache_size;
+        // Number of states C(Z + S - 1, S - 1); empty if it does not fit in int64_t. Use nb_states(),
+        // which throws std::overflow_error in that case. _state_sampler is valid only when it is set.
+        std::optional<int64_t> _nb_states;
         egttools::FinitePopulations::AbstractGame *_game;
 
         // Random distributions
@@ -565,8 +568,8 @@ namespace egttools::FinitePopulations {
         _nb_strategies = game.nb_strategies();
         _pop_sampler = std::uniform_int_distribution<size_t>(0, _pop_size - 1);
         _real_rand = std::uniform_real_distribution<double>(0.0, 1.0);
-        _nb_states = egttools::starsBars(_pop_size, _nb_strategies);
-        _state_sampler = std::uniform_int_distribution<size_t>(0, _nb_states - 1);
+        _nb_states = egttools::nb_states_if_representable(static_cast<int64_t>(_pop_size), static_cast<int64_t>(_nb_strategies));
+        if (_nb_states) _state_sampler = std::uniform_int_distribution<size_t>(0, static_cast<size_t>(*_nb_states) - 1);
         // Uniform mutation by default: every off-diagonal entry equal.
         set_mutation_matrix(Matrix2D::Ones(static_cast<int64_t>(_nb_strategies),
                                            static_cast<int64_t>(_nb_strategies)));
@@ -1127,6 +1130,9 @@ namespace egttools::FinitePopulations {
         double mu,
         const double tolerance,
         const size_t check_every) -> Vector {
+        // Needs the full state space: throws std::overflow_error (before any parallel region)
+        // if the number of states does not fit in int64_t.
+        static_cast<void>(nb_states());
         if (mu <= 0) {
             throw std::invalid_argument(
                 "mu must be > 0. If you want to run a simulation without mutation, "
@@ -1234,7 +1240,7 @@ namespace egttools::FinitePopulations {
         };
 
         // First we initialise the container for the stationary distribution
-        VectorXui sdist = VectorXui::Zero(_nb_states);
+        VectorXui sdist = VectorXui::Zero(nb_states());
 
         if (tolerance <= 0.0) {
             // Original behavior: run all nb_runs without convergence checks
@@ -1244,7 +1250,7 @@ namespace egttools::FinitePopulations {
 
         // Tolerance-based early stopping: process runs in batches, check L∞ convergence after each
         const size_t batch_size = (check_every > 0) ? check_every : std::max<size_t>(1, nb_runs / 10);
-        Vector prev_estimate = Vector::Zero(_nb_states);
+        Vector prev_estimate = Vector::Zero(nb_states());
         size_t runs_done = 0;
 
         while (runs_done < nb_runs) {
@@ -1275,6 +1281,9 @@ namespace egttools::FinitePopulations {
         double mu,
         const double tolerance,
         const size_t check_every) -> SparseMatrix2D {
+        // Needs the full state space: throws std::overflow_error (before any parallel region)
+        // if the number of states does not fit in int64_t.
+        static_cast<void>(nb_states());
         if (mu <= 0) {
             throw std::invalid_argument(
                 "mu must be > 0. If you want to run a simulation without mutation, "
@@ -1381,7 +1390,7 @@ namespace egttools::FinitePopulations {
         };
 
         // First we initialise the container for the stationary distribution
-        auto sdist = SparseMatrix2DXui(1, _nb_states);
+        auto sdist = SparseMatrix2DXui(1, nb_states());
 
         if (tolerance <= 0.0) {
             // Original behavior: run all nb_runs without convergence checks
@@ -1391,7 +1400,7 @@ namespace egttools::FinitePopulations {
 
         // Tolerance-based early stopping
         const size_t batch_size = (check_every > 0) ? check_every : std::max<size_t>(1, nb_runs / 10);
-        Vector prev_estimate = Vector::Zero(_nb_states);
+        Vector prev_estimate = Vector::Zero(nb_states());
         size_t runs_done = 0;
 
         while (runs_done < nb_runs) {
@@ -1419,6 +1428,9 @@ namespace egttools::FinitePopulations {
         double mu,
         const double tolerance,
         const size_t check_every) -> Vector {
+        // Needs the full state space: throws std::overflow_error (before any parallel region)
+        // if the number of states does not fit in int64_t.
+        static_cast<void>(nb_states());
         // Here we are going to estimate the strategy distribution directly, without the stationary distribution.
         // To do that, we need to keep count of the average frequency of each strategy in the population during the simulation.
 
@@ -1557,6 +1569,9 @@ namespace egttools::FinitePopulations {
         const Eigen::Ref<const Matrix2D> &indicator_values,
         const double tolerance,
         const size_t check_every) -> Matrix2D {
+        // Needs the full state space: throws std::overflow_error (before any parallel region)
+        // if the number of states does not fit in int64_t.
+        static_cast<void>(nb_states());
         if (mu <= 0) {
             throw std::invalid_argument(
                 "mu must be > 0. If you want to run a simulation without mutation, "
@@ -1569,7 +1584,7 @@ namespace egttools::FinitePopulations {
         if (nb_generations < 1) throw std::invalid_argument("nb_generations must be >= 1!");
 
         const int64_t nb_indicators = indicator_values.cols();
-        if (static_cast<size_t>(indicator_values.rows()) != _nb_states)
+        if (indicator_values.rows() != nb_states())
             throw std::invalid_argument(
                 "indicator_values must have nb_states rows (one per population state).");
 
@@ -1696,6 +1711,9 @@ namespace egttools::FinitePopulations {
         const std::vector<std::function<double(const std::vector<size_t> &)>> &indicators,
         const double tolerance,
         const size_t check_every) -> Matrix2D {
+        // Needs the full state space: throws std::overflow_error (before any parallel region)
+        // if the number of states does not fit in int64_t.
+        static_cast<void>(nb_states());
         if (mu <= 0) {
             throw std::invalid_argument(
                 "mu must be > 0. If you want to run a simulation without mutation, "
@@ -2072,7 +2090,9 @@ namespace egttools::FinitePopulations {
 
     template<class Cache>
     int64_t PairwiseComparisonNumerical<Cache>::nb_states() const {
-        return _nb_states;
+        // An empty count means it does not fit in int64_t: recomputing throws an overflow_error naming Z and S.
+        return _nb_states ? *_nb_states
+                          : egttools::checked_nb_states(static_cast<int64_t>(_pop_size), static_cast<int64_t>(_nb_strategies));
     }
 
     template<class Cache>
@@ -2131,8 +2151,8 @@ namespace egttools::FinitePopulations {
     template<class Cache>
     void PairwiseComparisonNumerical<Cache>::set_population_size(const size_t pop_size) {
         _pop_size = pop_size;
-        _nb_states = egttools::starsBars(_pop_size, _nb_strategies);
-        _state_sampler = std::uniform_int_distribution<size_t>(0, _nb_states - 1);
+        _nb_states = egttools::nb_states_if_representable(static_cast<int64_t>(_pop_size), static_cast<int64_t>(_nb_strategies));
+        if (_nb_states) _state_sampler = std::uniform_int_distribution<size_t>(0, static_cast<size_t>(*_nb_states) - 1);
         _pop_sampler = std::uniform_int_distribution<size_t>(0, _pop_size - 1);
     }
 

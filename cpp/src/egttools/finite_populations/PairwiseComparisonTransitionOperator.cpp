@@ -48,8 +48,10 @@ namespace egttools::FinitePopulations {
         if (mu < 0.0 || mu > 1.0)
             throw std::invalid_argument("mu must be in [0, 1]");
 
-        nb_states_ = static_cast<int64_t>(
-            egttools::starsBars(population_size, game.nb_strategies()));
+        // The operator enumerates every state: throws std::overflow_error (naming Z and S) if the
+        // number of states does not fit in int64_t.
+        nb_states_ = egttools::checked_nb_states(static_cast<int64_t>(population_size),
+                                                 static_cast<int64_t>(game.nb_strategies()));
 
         inv_Z_   = 1.0 / static_cast<double>(pop_size_);
         inv_Zm1_ = 1.0 / static_cast<double>(pop_size_ - 1);
