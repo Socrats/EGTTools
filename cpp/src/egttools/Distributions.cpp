@@ -17,24 +17,47 @@
 */
 #include <egttools/Distributions.h>
 
+#include <limits>
+#include <stdexcept>
+#include <string>
+
 #if (HAS_BOOST)
 uint_type_ egttools::binomial_precision(size_t n, size_t k) {
-    if ((k > n) || (n == ULONG_MAX))
+    if (k > n)
         return 0;
 
     // Since C(n, k) = C(n, n-k)
-    size_t n_terms = std::min(k, n - k);
+    const size_t n_terms = std::min(k, n - k);
 
+    // After step i, res = C(n, i + 1), so every division is exact. No n + 1 is formed,
+    // so n = SIZE_MAX (e.g. a negative int converted to size_t) cannot wrap around.
+    //
+    // Fast path: fixed-width 128-bit arithmetic while res < 2^64. Both res and n - i are
+    // then below 2^64, so res * (n - i) < 2^128 cannot overflow.
     uint_type_ res = 1;
-    size_t m = n + 1;
+    const uint_type_ fast_limit = uint_type_(1) << 64;
+    size_t i = 0;
+    for (; i < n_terms && res < fast_limit; ++i) {
+        res *= n - i;
+        res /= i + 1;
+    }
+    if (i == n_terms)
+        return res;
 
-    // Calculate value of [n * (n-1) * ... * (n-k+1)] / [k * (k-1) * ... * 1]
-    for (uint_type_ i = 1; i < n_terms + 1; ++i) {
-        res *= m - i;
-        res /= i;
+    // Results of 2^64 or more: finish in arbitrary precision. C(n, i) increases for
+    // i <= n / 2, so once it exceeds the 128-bit maximum the result does too: throw
+    // instead of wrapping around. As C(n, i) >= 2^i here, this loop runs at most ~129 times.
+    const boost::multiprecision::cpp_int max_value(std::numeric_limits<uint_type_>::max());
+    boost::multiprecision::cpp_int big(res);
+    for (; i < n_terms; ++i) {
+        big *= n - i;
+        big /= i + 1;
+        if (big > max_value)
+            throw std::overflow_error("binomial_precision: C(" + std::to_string(n) + ", " + std::to_string(k) +
+                                      ") does not fit in a 128-bit unsigned integer");
     }
 
-    return res;
+    return static_cast<uint_type_>(big);
 }
 #endif
 

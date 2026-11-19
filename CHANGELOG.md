@@ -7,6 +7,22 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changes to numerical results
+
+- **`egttools::binomial_precision` (C++ API).** The intermediate product overflowed 128 bits from
+  n = 126 on, so results were wrong even when C(n, k) fits (e.g. C(126, 63)), and results that do
+  not fit wrapped around silently. It is now exact for every result below 2^128 and throws
+  `std::overflow_error` above. It runs in fixed-width arithmetic while the value is below 2^64 and
+  switches to arbitrary precision only for larger results. No Python function uses it.
+
+### Testing
+
+- The C++ tests now check their results in Release builds: `NDEBUG` is undefined for the test
+  programs and the test copy of the library, so `assert()` runs, including the library's own
+  precondition checks. A new test fails if assertions are compiled out.
+- `test_binomial_coefficient_with_time` compares against exact reference values instead of
+  printing them.
+
 ## [0.2.0] - 2026-11-19
 
 First release since 0.1.14. Several fixes change numerical results; read
