@@ -49,6 +49,16 @@ faster for games with many strategies.
   inside a Python subclass `__init__`. The pybind11 virtual dispatch to `play()`
   fails before construction finishes. Override with a vectorised Python body
   instead.
+- **MC-04/MC-05 constants** (decided 2026-11-19): keep the protocol (pilot τ_int, burn-in, batch means,
+  dispersed starts, agreement between starts, `converged` flag), but take every constant from the
+  literature instead of engineered values, and expose each as a parameter:
+  window c = 5 and reliability n > 50 τ (Sokal; emcee); burn-in 20 τ_exp (Janke 2008); batch size
+  ⌊√n⌋ with overlapping batch means (Flegal & Jones 2010, Sec. 4.3); agreement between starts:
+  rank-normalised split-R̂ < 1.01 (Vehtari et al. 2021) instead of a reduced χ² < 4; stopping: ESS ≥
+  minESS(p, α, ε) (Vats, Flegal & Jones 2019) or fixed-width (Jones et al. 2006) instead of 5-200
+  blocks; starts: overdispersed (Gelman & Rubin 1992), at least 4 chains (to verify in Vehtari et al.).
+  Open: τ_exp itself (Janke's rule) versus the max τ_int used as a proxy. No a-priori run length
+  from the spectral gap (EMCUtils paper).
 - **MC-09**: phase 2 tests the current estimators against exact chains (TEST-11), using
   the batch-means standard error from the TEST-06 helpers. The tests are extended to the
   new estimators as MC-03 and MC-04 land, and they must keep passing through the redesign.

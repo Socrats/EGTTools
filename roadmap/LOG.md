@@ -2,6 +2,7 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-19 · TEST-06 · Review (branch `test-06-stats-helpers`): statistical test helpers with literature-based constants; MC-04/05 constants decided (DECISIONS.md).
 - 2026-11-19 · API-09 · Merged (`8535760b`): Tests green; the CI stub check matched the committed (macOS-generated) stubs on Linux.
 - 2026-11-19 · API-09 · Review (branch `api-09-stub-signatures`): real signatures in stubs and docstrings, numbered overloads in the docs, CI stub check; `TimingUncertainty` sampling usable from Python with `seed`.
 - 2026-11-19 · MEM-02 · Merged (`722c9a38`): 25/25 C++ tests under ASan+UBSan with leak detection on Linux/clang, canaries pass.
