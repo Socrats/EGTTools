@@ -57,3 +57,9 @@ cannot be exact; and an opt-in high-precision mode the user can choose. Arbitrar
 types (`cpp_int`, `cpp_dec_float`) are too slow for default paths. Established algorithms
 (netlib, Boost.Math, CPython, GMP) are followed rather than reinvented. Applied first to
 `binomial_precision` (TEST-10) and to the combinatorics module (PERF-07).
+
+## 2026-11-19: 64-bit sizes, counts and indices
+Sizes, counts and indices use 64-bit types everywhere, defined once in `Types.h`. On current
+CPUs 32-bit integers bring no benefit here and caused overflows (MEM-08). `long` is not used for
+them because it is 32-bit on Windows. 32-bit types are allowed only where a GPU kernel needs them.
+Public entry points validate strategy indices and state vectors (MEM-09). Tracked as MEM-10.
