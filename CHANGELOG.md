@@ -7,12 +7,7 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Changed
-
-- Package metadata declares the license as an SPDX expression (`GPL-3.0-or-later`, with
-  `license-files`), which newer setuptools requires; building now needs setuptools ≥ 77.
-
-## [0.2.0] - 2026-11-18
+## [0.2.0] - 2026-11-19
 
 First release since 0.1.14. Several fixes change numerical results; read
 *Changes to numerical results* first if you have results computed with earlier versions.
@@ -131,6 +126,8 @@ First release since 0.1.14. Several fixes change numerical results; read
   broken `Dockerfile` were removed; `environment.yml`, `requirements.txt` and
   `CMakePresets.json` were updated; Docker images now live in `docker/memcheck/` and
   `docker/mpi/`.
+- Package metadata declares the license as an SPDX expression (`GPL-3.0-or-later`, with
+  `license-files`), which newer setuptools requires; building now needs setuptools ≥ 77.
 
 ### Fixed
 
