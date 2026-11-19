@@ -7,6 +7,23 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Invalid arguments from Python are rejected instead of giving garbage or crashing.**
+  `PairwiseComparison.calculate_fixation_probability` (also with `high_precision=True`) and
+  `calculate_log_fixation_probability` accepted strategy indices outside `[0, nb_strategies)`
+  (returning, e.g., 1.0, or crashing the interpreter with a segmentation fault) and an invader equal
+  to the resident; `calculate_gradient_of_selection` and `calculate_gradient_of_selection_with_mutation`
+  accepted states of the wrong length or not summing to Z (reading past the end of the vector).
+  `PairwiseComparisonNumerical` accepted negative strategy indices, and states whose entries wrap
+  around in unsigned arithmetic to sum to Z. All now raise.
+
+### Changed
+
+- An out-of-range strategy index raises `IndexError`; other invalid arguments (equal invader and
+  resident, malformed states) raise `ValueError`. `PairwiseComparisonNumerical.estimate_fixation_probability`
+  used to raise `ValueError` for an out-of-range index.
+
 ### Changes to numerical results
 
 - **`egttools::binomial_precision` (C++ API).** The intermediate product overflowed 128 bits from

@@ -1410,6 +1410,12 @@ Returns
 numpy.ndarray
     One-dimensional array of shape `(nb_strategies,)` containing the mutation-free
     gradient of selection.
+
+Raises
+------
+ValueError
+    If ``state`` does not have one entry per strategy, each between 0 and the population
+    size, summing to the population size.
 )pbdoc"
                 )
                 .def(
@@ -1470,6 +1476,12 @@ Returns
 numpy.ndarray
     One-dimensional array of shape `(nb_strategies,)` containing the gradient
     with mutation.
+
+Raises
+------
+ValueError
+    If ``state`` does not have one entry per strategy, each between 0 and the population
+    size, summing to the population size.
 )pbdoc"
                 )
                 .def(
@@ -1522,6 +1534,13 @@ Returns
 -------
 float
     Probability that one invader fixates in a population of residents.
+
+Raises
+------
+IndexError
+    If a strategy index is not in ``[0, nb_strategies)``.
+ValueError
+    If the invading and resident strategies are the same.
 )pbdoc"
                 )
                 .def(
@@ -1552,6 +1571,13 @@ Returns
 -------
 float
     :math:`\log\rho(\text{invader} \to \text{resident})`, always finite.
+
+Raises
+------
+IndexError
+    If a strategy index is not in ``[0, nb_strategies)``.
+ValueError
+    If the invading and resident strategies are the same.
 )pbdoc"
                 )
                 .def(
@@ -1769,6 +1795,13 @@ numpy.ndarray
                     py::call_guard<py::gil_scoped_release>(),
                     R"pbdoc(
 Estimate the fixation probability of an invading strategy in a resident population.
+
+Raises
+------
+IndexError
+    If a strategy index is not in ``[0, nb_strategies)``.
+ValueError
+    If the invading and resident strategies are the same.
 )pbdoc"
                 )
                 .def(

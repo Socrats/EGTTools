@@ -7,7 +7,7 @@ abruptly.
 
 | ID | Task | Status | Pri | Size | MS | Deps | Ref |
 |----|------|--------|-----|------|----|------|-----|
-| API-01 | Rename `analytical` → `exact`, `numerical` → `inexact`; class names unchanged | todo | P1 | L | 0.4 | — | — |
+| API-01 | Rename `analytical` → `exact`, `numerical` → `inexact`; class renames are API-10 | todo | P1 | L | 0.4 | — | — |
 | API-02 | Deprecation shims for old module paths (`DeprecationWarning`, removal ≥ 2 minor releases later) | todo | P1 | M | 0.4 | API-01 | — |
 | API-03 | Deprecation policy written down in `CONTRIBUTING.md` | todo | P1 | S | 0.4 | — | — |
 | API-04 | Review hard dependencies (seaborn, plotly) and move plotting extras to optional | todo | P2 | S | 0.4 | — | — |
@@ -15,6 +15,9 @@ abruptly.
 | API-06 | One transition-matrix orientation: `StochDynamics.transition_and_fixation_matrix` returns it transposed (column-stochastic), the C++ SML version row-stochastic | todo | P1 | S | 0.3 | — | — |
 | API-07 | Vector-quality 3D simplex plots: add a matplotlib (mplot3d) backend to `Simplex3D`, sharing its geometry code; keep plotly for interactive figures | todo | P2 | M | 0.4 | — | — |
 | API-08 | Assess the random-number and seeding design against NumPy and JAX; decide the target design and file the migration tasks | todo | P1 | M | 0.3 | — | — |
+| API-09 | Real signatures in the `.pyi` stubs: stop disabling pybind11 function signatures, regenerate the stubs, check them in CI | todo | P1 | M | 0.3 | — | — |
+| API-10 | Rename `PairwiseComparison` and `PairwiseComparisonNumerical` to names that say exact vs approximate (estimators), with deprecation aliases | todo | P1 | M | 0.4 | API-01 | — |
+| API-11 | Audit the pybind11 bindings' declared types: argument types and conversions, returned dtypes, Eigen `Ref` vs copies, overloads, defaults, argument names, GIL release | todo | P1 | L | 0.3 | MEM-10 | — |
 
 ## Notes
 
@@ -44,3 +47,27 @@ abruptly.
   matplotlib's mplot3d writes true vector output and covers what `Simplex3D` draws (edges,
   streamlines, arrows, points); its limitation is per-artist depth sorting. PyVista/VTK
   (`save_graphic`) is the alternative if lit surfaces are needed.
+- **API-09**: `options.disable_function_signatures()` in `methods.cpp` (4 blocks) and
+  `distributions.cpp` removes the signature line from the docstrings, so `pybind11-stubgen` writes
+  `*args, **kwargs` (and wrong `@staticmethod`s) for most methods. Re-enable signatures, check that the
+  Sphinx pages still render (autodoc reads the same first line), regenerate the stubs
+  (`pybind11-stubgen egttools.numerical.numerical_ -o src`, CONTRIBUTING.md), and add a CI step that
+  regenerates them and fails on a diff.
+- **API-10**: both classes are numerical methods; the distinction is exact methods
+  (`PairwiseComparison`) vs approximate methods and estimators (`PairwiseComparisonNumerical`). Names to
+  be decided in the task; old names stay as deprecated aliases for at least two minor releases (API-02,
+  API-03).
+- **API-11**: complements MEM-05 (ownership: return value policies, `keep_alive`), MEM-10 (C++
+  types) and API-09 (stubs). Found 2026-11-19:
+  - A negative value for a `size_t` parameter, or a value above 2^31 for an `int` one, raises
+    "incompatible constructor arguments" (`TypeError`), which blames the type, not the value.
+    Decide per argument: 64-bit signed types (MEM-10) and a `ValueError` with the valid range.
+  - Population states accept floats and truncate them silently: `[3.5, 3.5, 4.0]` with Z = 10 is
+    accepted as `[3, 3, 4]`. Count arrays should not convert from floats (`py::arg().noconvert()` or
+    an explicit dtype check).
+  - Counts are returned as `uint64` arrays (e.g. `sample_simplex`), so `state - 1` wraps around in
+    NumPy (the TEST-13 helper bug). Return signed 64-bit counts, consistent with MEM-10.
+  Also check: Eigen `Ref<const T>` arguments whose storage order differs from NumPy's default
+  (silent copies of large matrices), overload order and ambiguity, Python defaults matching the C++
+  ones, `py::arg` names matching the docstrings, and `py::call_guard<py::gil_scoped_release>` on long
+  computations that do not call back into Python (PERF-04). One test per finding.

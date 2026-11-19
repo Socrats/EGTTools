@@ -15,8 +15,9 @@ changes. Today nothing checks for them in CI.
 | MEM-06 | Memory-growth regression tests on long-running estimators (pytest-memray limits) | todo | P1 | S | 0.3 | — | — |
 | MEM-07 | Document how to run sanitizer builds locally (Linux and macOS) | todo | P2 | S | 0.3 | MEM-01 | — |
 | MEM-08 | State counts in 64-bit: `starsBars` deduced as `int` overflows (UB) in `PairwiseComparison` and other constructors; mark counts that do not fit as too large | done | P0 | S | 0.3 | MEM-01 | `0fb0fcbe` |
-| MEM-09 | Validate strategy indices and state vectors at public entry points (`PairwiseComparison` first, then audit); raise `ValueError` | todo | P0 | M | 0.3 | — | — |
+| MEM-09 | Validate strategy indices and state vectors at the user-facing entry points of `PairwiseComparison` and `PairwiseComparisonNumerical` | review | P0 | M | 0.3 | — | branch `mem-09-input-validation` |
 | MEM-10 | Consistent 64-bit types: audit `Types.h` and every size, count and index type (no `int`/`long` for sizes; `long` is 32-bit on Windows) | todo | P1 | L | 0.3 | MEM-08 | — |
+| MEM-11 | Input-validation audit of the other user-facing classes (games, network structures, `StochDynamics`, MLS, utilities), following the MEM-09 rule | todo | P1 | M | 0.3 | MEM-09 | — |
 
 Found and fixed so far: out-of-bounds row write in `run_with_mutation` with a transient (REL-10).
 Found by the first sanitizer run (MEM-01, 2026-11-19): signed overflow in the state count of
@@ -67,6 +68,17 @@ Found by the first sanitizer run (MEM-01, 2026-11-19): signed overflow in the st
   `PairwiseComparisonNumerical` already raises `ValueError` for invalid indices. Validate at the
   public entry points only (O(S) per call, never inside internal loops); add tests with invalid
   inputs for each check; then audit the other classes that take indices or states.
+  Design (agreed 2026-11-19): only user-facing entry points validate; kernels the library calls in
+  inner loops (e.g. a game's `calculate_fitness`) document their preconditions and are validated in
+  their Python bindings, so internal calls pay nothing. Out-of-range index → `std::out_of_range`
+  (Python `IndexError`); everything else → `std::invalid_argument` (`ValueError`). Shared helpers in
+  `finite_populations/Validation.hpp`: `validate_strategy_index`, `validate_invader_resident`,
+  `validate_population_state` (bounds each entry by Z before summing, so unsigned wrap-around cannot
+  reach Z). Done for `PairwiseComparison` (fixation ×3, gradients ×2) and `PairwiseComparisonNumerical`
+  (fixation and gradient indices, now also negative; all state checks via the helper).
+  `tests/test_input_validation.py` (62 tests); on master an out-of-range index crashed the interpreter.
+- **MEM-11**: list every user-facing method that takes strategy indices, states or counts, and
+  apply the MEM-09 rule (validate in the method, or in the Python binding for inner-loop kernels).
 - **MEM-10**: `Types.h` is mostly 64-bit already (`VectorXui` = `size_t`, `VectorXi` = `int64_t`),
   but `Table2D`, `SparseTable2D`, `SparseMatrix2DXi` and the sparse index type use `long`, which is
   32-bit on Windows (76 more uses of `long` elsewhere); `VectorXi` and `VectorXli` are identical.

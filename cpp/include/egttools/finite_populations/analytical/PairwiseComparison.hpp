@@ -219,6 +219,8 @@ namespace egttools::FinitePopulations::analytical {
          * @param beta Intensity of selection @f$\beta@f$.
          * @param state Population state @f$x@f$, given as strategy counts.
          * @return Vector of size @f$n@f$ containing the selection gradient at the given state.
+         * @throws std::invalid_argument if `state` does not have one entry per strategy, each between 0
+         *         and Z, summing to Z
          */
         Vector calculate_gradient_of_selection(double beta, const Eigen::Ref<const VectorXui> &state) const;
 
@@ -257,6 +259,8 @@ namespace egttools::FinitePopulations::analytical {
         * @param mu Mutation probability @f$\mu@f$.
         * @param state Population state @f$x@f$, given as strategy counts.
         * @return Vector of size @f$n@f$ containing the gradient with mutation at the given state.
+         * @throws std::invalid_argument if `state` does not have one entry per strategy, each between 0
+         *         and Z, summing to Z
         */
         Vector calculate_gradient_of_selection_with_mutation(double beta,
                                                              double mu,
@@ -277,6 +281,8 @@ namespace egttools::FinitePopulations::analytical {
          * @param index_resident_strategy Index of the resident strategy.
          * @param beta Intensity of selection @f$\beta@f$.
          * @return Fixation probability of one invader in a resident population.
+         * @throws std::out_of_range if a strategy index is not in [0, nb_strategies)
+         * @throws std::invalid_argument if the invading and resident strategies are equal
          */
         double calculate_fixation_probability(int index_invading_strategy, int index_resident_strategy, double beta);
 
@@ -327,6 +333,8 @@ namespace egttools::FinitePopulations::analytical {
          * @param index_resident_strategy Index of the resident strategy.
          * @param beta Intensity of selection @f$\beta@f$.
          * @return @f$\log \rho(\text{invader} \to \text{resident})@f$ as a finite double.
+         * @throws std::out_of_range if a strategy index is not in [0, nb_strategies)
+         * @throws std::invalid_argument if the invading and resident strategies are equal
          */
         double calculate_log_fixation_probability(int index_invading_strategy, int index_resident_strategy,
                                                   double beta);
@@ -345,6 +353,8 @@ namespace egttools::FinitePopulations::analytical {
          * @param index_resident_strategy Index of the resident strategy.
          * @param beta Intensity of selection @f$\beta@f$.
          * @return Fixation probability (double precision), computed via Boost arithmetic.
+         * @throws std::out_of_range if a strategy index is not in [0, nb_strategies)
+         * @throws std::invalid_argument if the invading and resident strategies are equal
          */
         double calculate_fixation_probability_boost(int index_invading_strategy, int index_resident_strategy,
                                                     double beta);
