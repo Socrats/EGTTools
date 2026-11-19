@@ -98,6 +98,8 @@ tasks are independent unless the `Deps` column says otherwise.
 1. **Safety nets first**, in this order:
    - TEST-10: C++ tests that check results in Release builds (stopgap before TEST-09).
    - MEM-01, MEM-02: sanitizer build and CI job, so new C++ code is checked for memory errors from the start.
+     MEM-08 (state-count overflow found by the first sanitizer run) and MEM-09 (input validation) come
+     before MEM-02, whose job would otherwise fail.
    - TEST-06: helpers for statistical tests (MC estimate vs exact value within k·SE, fixed seeds).
    - TEST-11: shared test chains with known stationary distributions, used by SOL-10 and MC-09.
    - CI-10: audit of the CMake build; fixes that affect correctness or the safety nets stay in 0.3.
@@ -112,9 +114,11 @@ tasks are independent unless the `Deps` column says otherwise.
      uses API-08's stream scheme for per-run seeding.
    - PERF-05: efficiency audit of `PairwiseComparison` and `PairwiseComparisonNumerical`
      (and the rest of the library); its findings feed phases 3 and 4.
+   - TEST-12: numerical-stability audit of the library, alongside PERF-05.
 3. **Correctness fixes**: NET-02, NET-03, NET-05, NET-04; MC-07; API-06; PERF-06
    (thread-count invariance tests and ThreadSanitizer job) with the seeding fix it requires;
-   PERF-07 (combinatorics with tiered precision, including the `ln_factorial` data race).
+   PERF-07 (combinatorics with tiered precision, including the `ln_factorial` data race); MEM-10
+   (consistent 64-bit types), before the MC redesign rewrites much of the same code.
 4. **Monte Carlo redesign**: MC-01 → MC-02 → MC-03 → MC-04, then MC-05, MC-06, MC-10, MC-08.
 5. **Solvers**: SOL-01 and SOL-09 (interface and diagnostics) → SOL-02, SOL-03 + SOL-04, SOL-05,
    SOL-06 → SOL-07, SOL-08 → SOL-11.
@@ -148,6 +152,6 @@ Update this table when tasks change. Recount a milestone (here 0.2) from the rep
 | Milestone | Done / total |
 |-----------|-------------|
 | v0.2.0 | 22 / 22 |
-| v0.3.0 | 3 / 55 |
+| v0.3.0 | 3 / 59 |
 | v0.4.0 | 0 / 30 |
 | later  | 0 / 3 |

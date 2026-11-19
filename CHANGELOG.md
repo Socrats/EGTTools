@@ -25,6 +25,11 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 - `test_timing_uncertainty` uses a fixed seed and a tolerance of 4 standard errors, and checks that
   a wrong parameter is rejected; its former tolerance (about 2 standard errors, unseeded) failed in
   about 4% of runs once assertions were enabled.
+- New CMake option `EGTTOOLS_SANITIZE` (e.g. `-DEGTTOOLS_SANITIZE="address;undefined"`, or
+  `thread`) builds the library, the extension and the C++ tests with the compiler's sanitizers,
+  for development and CI only. Undefined behaviour aborts the program, so it fails the test that
+  triggers it. In such builds, `testSanitizerCanary` checks that each enabled sanitizer reports a
+  deliberate error.
 
 ## [0.2.0] - 2026-11-19
 

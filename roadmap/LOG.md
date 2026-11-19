@@ -3,6 +3,10 @@
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
 - 2026-11-19 · TEST-10 · Follow-up (branch `test-10-fix-flaky-timing`): `test_timing_uncertainty` failed in CI; unseeded with a ±2 SE tolerance (3.8% false failures measured). Now a fixed seed, 4 SE, and a power check.
+- 2026-11-19 · TEST-12 · Added: numerical-stability audit; `BirthDeath`/`DeathBirth` exponentiate fitness without subtracting the maximum.
+- 2026-11-19 · MEM-08 · Design agreed: exact gcd-reduced binomial with overflow check, optional state counts, `OverflowError` on use.
+- 2026-11-19 · MEM-08/09/10 · Added: state-count overflow (found by the first sanitizer run), missing input validation in `PairwiseComparison`, consistent 64-bit types.
+- 2026-11-19 · MEM-01 · Review (branch `mem-01-sanitize-option`): ASan/UBSan/TSan canaries pass on macOS; the first sanitizer run found a signed overflow in `PairwiseComparison` (MEM-08).
 - 2026-11-19 · CI-11 · Merged (`301a8b0d`): its own push triggered the Tests run on the branch (green).
 - 2026-11-19 · TEST-10 · Merged (`1512fc95`): Tests green on Linux (22/22 C++ incl. the guard), wheels green on macOS, manylinux and both Windows targets.
 - 2026-11-19 · CI-11 · Review (branch `ci-11-tests-all-branches`): Tests runs on every branch push except the generated-data branches.

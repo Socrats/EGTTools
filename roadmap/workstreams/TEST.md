@@ -19,6 +19,7 @@ them smoke tests. Coverage is not measured, and the C++ tests don't run in CI.
 | TEST-09 | Migrate the C++ tests to Catch2 v3 (vcpkg): real assertions, one test per behaviour, CTest discovery | todo | P1 | L | 0.3 | REL-07 | — |
 | TEST-10 | Make the C++ tests check results in Release builds (they use `assert`, removed by `NDEBUG`); fix the unused-variable warnings | done | P0 | S | 0.3 | — | `1512fc95` |
 | TEST-11 | Shared test chains with known stationary distributions (Python test helper module), used by SOL-10 and MC-09 | todo | P0 | S | 0.3 | — | — |
+| TEST-12 | Numerical-stability audit of the library (overflow, cancellation, log-space computation); tests at extreme parameters; one task per fix | todo | P1 | L | 0.3 | TEST-06 | — |
 
 ## Notes
 
@@ -47,3 +48,13 @@ them smoke tests. Coverage is not measured, and the C++ tests don't run in CI.
   add a doubly stochastic chain (uniform distribution), the two-state chain, and the
   neutral Moran chain with mutation. Split out of SOL-10 so phase 1 does not depend on
   the solvers.
+- **TEST-12**: every place that exponentiates fitness or payoffs, sums probabilities, or divides
+  by small differences. Found 2026-11-19: the analytical fixation probability is already computed
+  in log space (streaming log-sum-exp in `calculate_log_phi_`, plus a stable log-fixation method);
+  `fermi()` (`Utils.cpp`) is correct in IEEE arithmetic (overflow gives 0, never NaN) but raises
+  overflow in hot loops; the network update rules `BirthDeath` and `DeathBirth` normalise
+  `exp(β·f)` without subtracting the maximum, so β·f above ~709 gives `inf` weights and NaN or
+  invalid sampling (fix: subtract max β·f first); `sed_analytical.py` clips an overflowing
+  `np.exp`. Check also the hypergeometric log-space PDFs (PERF-07), the stationary-distribution
+  helpers and the gradients. Tests use extreme β, payoffs and population sizes and compare with
+  a high-precision reference. No fast-math flags are used; keep it that way (DECISIONS.md).
