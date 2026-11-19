@@ -104,6 +104,80 @@ jobs:
           include-hidden-files: true
           retention-days: 7
 
+  sanitizers:
+    # The C++ test programs built with AddressSanitizer (+ LeakSanitizer on Linux) and
+    # UndefinedBehaviorSanitizer (EGTTOOLS_SANITIZE, cmake/Modules/EnableSanitizers.cmake), with
+    # clang and its OpenMP runtime. Only the test programs are built, not the Python extension.
+    # testSanitizerCanary_* checks that the build is instrumented.
+    name: C++ tests under ASan + UBSan (Linux, clang)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      CC: clang
+      CXX: clang++
+      ASAN_OPTIONS: detect_leaks=1:strict_string_checks=1:detect_stack_use_after_return=1
+      UBSAN_OPTIONS: print_stacktrace=1
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          # Full history and tags: CMake derives the project version from them.
+          fetch-depth: 0
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install system packages (OpenMP, BLAS/LAPACK)
+        run: bash build_tools/github/install_blas_openmp.sh
+
+      - name: Setup cache for vcpkg
+        id: cache-vcpkg
+        uses: actions/cache@v6
+        with:
+          path: |
+            ./vcpkg_installed
+            ./vcpkg/buildtrees
+            ./vcpkg/downloads
+            ./vcpkg/packages
+          key: sanitizers-${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            sanitizers-${{ runner.os }}-vcpkg-
+
+      - name: Bootstrap vcpkg
+        run: ./vcpkg/bootstrap-vcpkg.sh --disableMetrics
+
+      - name: Install dependencies with vcpkg
+        if: steps.cache-vcpkg.outputs.cache-hit != 'true'
+        run: ./vcpkg/vcpkg install --x-binarycaching
+
+      - name: Install build tools
+        # cmake < 4 because the pinned vcpkg submodule still uses cmake_minimum_required < 3.5.
+        run: python -m pip install "cmake>=3.27,<4" ninja
+
+      - name: Configure (sanitizer build)
+        run: |
+          cmake -S . -B build-sanitize -G Ninja \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_TOOLCHAIN_FILE="$PWD/vcpkg/scripts/buildsystems/vcpkg.cmake" \
+            -DVCPKG_INSTALLED_DIR="$PWD/vcpkg_installed" -DVCPKG_MANIFEST_INSTALL=OFF \
+            -DPython_EXECUTABLE="$(which python)" \
+            -DUSE_OPENMP=ON -DBUILD_NUMERICAL_TESTS=ON \
+            "-DEGTTOOLS_SANITIZE=address;undefined"
+
+      - name: Build the C++ test programs
+        run: |
+          targets="$(grep -oE 'add_egttools_test\((test[A-Za-z_]+)' tests/CMakeLists.txt | sed 's/add_egttools_test(//' | sort -u) testSanitizerCanary"
+          cmake --build build-sanitize --parallel --target $targets
+
+      - name: Run the C++ tests
+        run: ctest --test-dir build-sanitize/tests -E PythonTests --output-on-failure --timeout 900
+
   coverage-badge:
     # Updates the README coverage badge and the HTML report in the
     # python-coverage-comment-action-data branch. Only after changes reach master, and in a
