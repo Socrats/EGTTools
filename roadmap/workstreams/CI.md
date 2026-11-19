@@ -18,6 +18,7 @@ structural work.
 | CI-08 | Reproducible environments: evaluate uv (uv.lock for dev/test/docs tools, `uv build` front end) and conda-lock (CI build/test and development conda environments) | todo | P2 | M | 0.4 | CI-02 | — |
 | CI-09 | Move the Ubuntu jobs from `ubuntu-24.04` to `ubuntu-26.04` (GCC 15, CMake 4 preinstalled) and fix what breaks | todo | P1 | M | 0.3 | — | — |
 | CI-10 | Audit the CMake build (all `CMakeLists.txt`, `cmake/Modules`, presets) and file improvement tasks | todo | P1 | M | 0.3 | TEST-10, MEM-01 | — |
+| CI-11 | Run the Tests workflow on pushes to every branch, so each task branch is tested when pushed | review | P1 | S | 0.3 | — | branch `ci-11-tests-all-branches` |
 
 ## Notes
 
@@ -47,6 +48,9 @@ structural work.
   folded into CI-02. Runs after TEST-10 and MEM-01, which change the test and sanitizer
   CMake code. Also decide what to do with `cpp/src/egttools.cpp` (about 2,300 lines, not
   referenced by any CMake file, so not compiled).
+- **CI-11**: replaces a shared test branch, which would mix tasks in one run. The wheel matrix
+  (all platforms, MSVC included) stays on master and tags; start it by hand on a task branch that
+  changes the build (CMake, compiler flags, dependencies) before merging.
 - **CI-02**: removes the need to keep `setup.py` `package_data` and
   `[tool.setuptools.package-data]` in sync by hand, and the `if (NOT SKBUILD)`
   guards around `install()`.

@@ -2,6 +2,7 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-19 · CI-11 · Review (branch `ci-11-tests-all-branches`): Tests runs on every branch push except the generated-data branches.
 - 2026-11-19 · TEST-10 · Review (branch `test-10-release-asserts`): asserts kept in Release test builds, guard test added, 24/24 C++ tests and 662 Python tests pass. Making the binomial test real exposed a 128-bit overflow in `binomial_precision` (wrong from n = 126), fixed with a tiered fast/exact path.
 - 2026-11-19 · PERF-07 · Added: combinatorics with tiered precision; `ln_factorial` table growth is a data race under OpenMP, `binomialCoeff<size_t>` overflows from n = 63.
 - 2026-11-19 · API-08 · Added: assessment of the random-number and seeding design against NumPy and JAX; PERF-04 depends on it.
