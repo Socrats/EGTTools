@@ -2,6 +2,7 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-19 · CI-11 · Review (branch `ci-11-tests-all-branches`): Tests runs on every branch push except the generated-data branches.
 - 2026-11-19 · API-08 · Added: assessment of the random-number and seeding design against NumPy and JAX; PERF-04 depends on it.
 - 2026-11-19 · PERF-02 · Dropped: superseded by PERF-05.
 - 2026-11-19 · PERF-04 · Moved to 0.3 and widened to a parallelisation design and test plan; PERF-05 (efficiency audit) and PERF-06 (parallel tests, TSan) added.

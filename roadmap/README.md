@@ -46,7 +46,8 @@ bindings changed.
 1. Pick a `ready` task with all deps `done`. Set it to `doing`.
 2. Create a branch from `master` named `<id>-<slug>` (e.g. `rel-03-stationary-dist`).
    Use one branch per task.
-3. When tests pass, set the task to `review` with the branch in `Ref`.
+3. Push the branch: the Tests workflow runs on it. If the task changes the build, also start the
+   Wheels workflow on the branch by hand. When tests pass, set the task to `review` with the branch in `Ref`.
 4. Merge into `master` with `git merge --no-ff <branch>`, so each task stays
    visible as one merge in the history. Then set the task to `done` with the
    merge commit in `Ref`, and delete the branch.
@@ -146,6 +147,6 @@ Update this table when tasks change. Recount a milestone (here 0.2) from the rep
 | Milestone | Done / total |
 |-----------|-------------|
 | v0.2.0 | 22 / 22 |
-| v0.3.0 | 1 / 53 |
+| v0.3.0 | 1 / 54 |
 | v0.4.0 | 0 / 30 |
 | later  | 0 / 3 |

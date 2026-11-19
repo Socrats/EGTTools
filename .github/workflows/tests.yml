@@ -1,12 +1,14 @@
 name: Tests
 
-# Fast feedback on pull requests and on every change to master: one build on Linux, then the
-# C++ test programs and the Python test suite (with coverage). Run it manually on any branch
-# from the Actions tab. The full wheel matrix runs in wheels.yml.
+# Fast feedback on every push to any branch and on pull requests: one build on Linux, then the
+# C++ test programs and the Python test suite (with coverage). Each task branch is tested as
+# soon as it is pushed; a newer push to the same branch cancels the older run. The full wheel
+# matrix (wheels.yml) runs on master, on tags, and by hand on a branch that changes the build.
 
 on:
   push:
-    branches: [master]
+    # Every branch except the ones that only hold generated data. Tag pushes do not trigger it.
+    branches-ignore: [gh-pages, python-coverage-comment-action-data]
   pull_request:
   workflow_dispatch:
 
