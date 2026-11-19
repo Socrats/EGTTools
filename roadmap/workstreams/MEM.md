@@ -8,7 +8,7 @@ changes. Today nothing checks for them in CI.
 | ID | Task | Status | Pri | Size | MS | Deps | Ref |
 |----|------|--------|-----|------|----|------|-----|
 | MEM-01 | CMake option `EGTTOOLS_SANITIZE=address;undefined` | done | P0 | S | 0.3 | — | `07f312c8` |
-| MEM-02 | CI job: C++ tests under ASan + UBSan (Linux, clang) | review | P0 | M | 0.3 | MEM-01, TEST-05, MEM-08 | branch `mem-02-sanitizer-ci` |
+| MEM-02 | CI job: C++ tests under ASan + UBSan (Linux, clang) | done | P0 | M | 0.3 | MEM-01, TEST-05, MEM-08 | `722c9a38` |
 | MEM-03 | CI job: Python test suite against an ASan build (`LD_PRELOAD` the runtime, leak check on exit) | todo | P1 | M | 0.3 | MEM-01 | — |
 | MEM-04 | Scheduled (nightly/weekly) valgrind memcheck run on long MC tests | doing | P2 | M | 0.3 | MEM-02 | `docker/memcheck/` (not yet built) |
 | MEM-05 | Audit pybind11 ownership: `return_value_policy::reference` and `keep_alive` uses | todo | P1 | M | 0.3 | — | — |
