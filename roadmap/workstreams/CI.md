@@ -18,7 +18,7 @@ structural work.
 | CI-08 | Reproducible environments: evaluate uv (uv.lock for dev/test/docs tools, `uv build` front end) and conda-lock (CI build/test and development conda environments) | todo | P2 | M | 0.4 | CI-02 | — |
 | CI-09 | Move the Ubuntu jobs from `ubuntu-24.04` to `ubuntu-26.04` (GCC 15, CMake 4 preinstalled) and fix what breaks | todo | P1 | M | 0.3 | — | — |
 | CI-10 | Audit the CMake build (all `CMakeLists.txt`, `cmake/Modules`, presets) and file improvement tasks | todo | P1 | M | 0.3 | TEST-10, MEM-01 | — |
-| CI-11 | Run the Tests workflow on pushes to every branch, so each task branch is tested when pushed | review | P1 | S | 0.3 | — | branch `ci-11-tests-all-branches` |
+| CI-11 | Run the Tests workflow on pushes to every branch, so each task branch is tested when pushed | done | P1 | S | 0.3 | — | `301a8b0d` |
 
 ## Notes
 
