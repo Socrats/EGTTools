@@ -30,6 +30,12 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
+      - name: Restore annotated tags
+        # On a tag push, actions/checkout re-fetches the pushed tag as a lightweight tag.
+        # When a release candidate is tagged on the same commit, git describe then prefers
+        # the annotated rc tag, and setuptools-scm builds the final release as the rc.
+        run: git fetch --force --tags origin
+
       - name: Make sure submodules are updated
         run: |
           git submodule sync --recursive
@@ -143,6 +149,12 @@ jobs:
           # Full history and tags: setuptools-scm derives the version from them.
           fetch-depth: 0
           submodules: recursive
+
+      - name: Restore annotated tags
+        # On a tag push, actions/checkout re-fetches the pushed tag as a lightweight tag.
+        # When a release candidate is tagged on the same commit, git describe then prefers
+        # the annotated rc tag, and setuptools-scm builds the final release as the rc.
+        run: git fetch --force --tags origin
 
       - name: Make sure submodules are updated
         run: |
@@ -322,6 +334,15 @@ jobs:
             echo "prerelease=true" >> $GITHUB_OUTPUT
           else
             echo "prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check that every artefact carries the tag's version
+        run: |
+          version="${GITHUB_REF##refs/tags/v}"
+          ls wheelhouse
+          bad=$(ls wheelhouse | grep -v -e "^egttools-${version}-" -e "^egttools-${version}\.tar\.gz$" || true)
+          if [ -n "$bad" ]; then
+            echo "::error::Artefacts not built as version ${version}:"; echo "$bad"; exit 1
           fi
 
       - name: Release notes from the CHANGELOG
