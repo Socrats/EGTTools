@@ -50,6 +50,7 @@ function(add_egttools_test target_name source_file)
     endif ()
 
     add_test(NAME ${target_name} COMMAND ${target_name})
+    set_property(GLOBAL APPEND PROPERTY EGTTOOLS_CPP_TEST_TARGETS ${target_name})
 endfunction()
 
 # ------------------------------------------------------------------------------
@@ -164,6 +165,7 @@ endif ()
 
 if (EGTTOOLS_SANITIZE)
     add_executable(testSanitizerCanary cpp/test_sanitizer_canary.cpp)
+    set_property(GLOBAL APPEND PROPERTY EGTTOOLS_CPP_TEST_TARGETS testSanitizerCanary)
     find_package(Threads REQUIRED)
     target_link_libraries(testSanitizerCanary PRIVATE Threads::Threads)
 
@@ -181,6 +183,15 @@ if (EGTTOOLS_SANITIZE)
         endif ()
     endforeach ()
 endif ()
+
+# ------------------------------------------------------------------------------
+# egttools_cpp_tests: builds every C++ test program registered on this platform
+# ------------------------------------------------------------------------------
+# Lets CI (and developers) build only the C++ tests, without the Python extension:
+#   cmake --build <build-dir> --target egttools_cpp_tests
+
+get_property(_egttools_cpp_test_targets GLOBAL PROPERTY EGTTOOLS_CPP_TEST_TARGETS)
+add_custom_target(egttools_cpp_tests DEPENDS ${_egttools_cpp_test_targets})
 
 # ------------------------------------------------------------------------------
 # Pytest integration via CTest

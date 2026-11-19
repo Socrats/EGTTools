@@ -70,6 +70,9 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   for development and CI only. Undefined behaviour aborts the program, so it fails the test that
   triggers it. In such builds, `testSanitizerCanary` checks that each enabled sanitizer reports a
   deliberate error.
+- CI runs the C++ tests under AddressSanitizer (with leak detection) and
+  UndefinedBehaviorSanitizer on Linux with clang. The CMake target `egttools_cpp_tests` builds
+  every C++ test program registered on the platform.
 - `scripts/memguard.py` runs a command and kills it if its memory (the whole process tree)
   exceeds a limit, for test runs that may allocate without bound.
 
