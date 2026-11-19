@@ -76,8 +76,8 @@ jobs:
         with:
           miniforge-version: latest
           use-mamba: true
-          activate-environment: ""
-          auto-activate-base: true
+          activate-environment: base
+          auto-activate: true
           channels: conda-forge
           channel-priority: strict
 
