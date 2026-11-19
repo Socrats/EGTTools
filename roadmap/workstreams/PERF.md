@@ -14,6 +14,7 @@ reproducible.
 | PERF-04 | Parallelisation design and test plan: thread safety, per-run RNG streams, reproducibility across thread counts, scheduling, false sharing, MSVC | todo | P1 | M | 0.3 | API-08 | — |
 | PERF-05 | Efficiency audit of the library, focused on `PairwiseComparison` and `PairwiseComparisonNumerical`; file one task per fix | todo | P1 | L | 0.3 | TEST-06, TEST-11 | — |
 | PERF-06 | Implement the PERF-04 test plan: thread-count invariance tests and a ThreadSanitizer CI job | todo | P1 | M | 0.3 | PERF-04, MEM-01 | — |
+| PERF-07 | Combinatorics and special functions with tiered precision: fast precomputed tables with checks, higher precision only when needed or requested, documented error bounds, thread safety | todo | P1 | L | 0.3 | — | — |
 
 ## Notes
 
@@ -44,6 +45,32 @@ reproducible.
   matrices, the MC estimators, and pybind11 call and copy overhead. Every optimisation
   is a separate task, and the existing tests must pass unchanged unless the CHANGELOG
   lists a change in numerical results.
+- **PERF-07**: applies the tiered-precision rule (DECISIONS.md, 2026-11-19) to
+  `Distributions.h/.cpp`: binomial coefficients, `starsBars`, log factorials and the
+  hypergeometric PDF. Three tiers: (1) fast path from precomputed constants or fixed-width
+  arithmetic with cheap checks; (2) automatic switch to higher precision only when a check
+  shows the fast path cannot be exact (as `binomial_precision` now does above 2^64);
+  (3) an opt-in high-precision mode chosen by the user. Known issues (2026-11-19):
+  - `ln_factorial` extends the shared `static std::vector ln_factorials` (about 400
+    precomputed values) with `push_back` for larger n. Called from OpenMP loops with
+    Z above the table size, that is a data race (reallocation during reads). Fill the table
+    up to the needed size before parallel regions, or use a thread-safe fixed table plus a
+    Stirling series with a stated error bound. `std::lgamma` is not a drop-in fix: it is not
+    guaranteed thread-safe (`signgam`).
+  - `binomialCoeff<size_t>` (used by `starsBars` for state counts and in the state-indexing
+    loops in `finite_populations/Utils.cpp`) overflows in the intermediate product from n = 63,
+    silently. Candidates: CPython `math.comb`'s 64-bit tables (odd part of n! mod 2^64, its
+    inverse and the power of two; exact for n ≤ 67, no division) or a Pascal table per model
+    for state indexing, with an overflow check beyond the table.
+  - Log-space probabilities (`multivariateHypergeometricPDF`) have relative error of about
+    |ln P|·ε; document it and expose it where results are reported.
+  Prior art to follow rather than reinvent: netlib MATH77 `DBINOM` (factorial table,
+  log-gamma above N = 150, checked against Pascal's triangle), Boost.Math
+  `binomial_coefficient` (factorial table up to 170, then the beta function), CPython
+  `math.comb` (64-bit tables), GMP `mpz_bin_uiui` (Goetgheluck's prime factorisation for
+  large n). Benchmarks (2026-11-19, Apple M-series): `cpp_int` is 1.5–2.2× slower than
+  fixed-width 128-bit arithmetic for the same binomials; an overflow check per iteration
+  costs nothing measurable.
 - **PERF-06**: run each parallel method with 1, 2 and N threads and a fixed seed;
   compare results exactly or within k·SE as PERF-04 specifies. TSan with OpenMP needs
   an OpenMP runtime built with TSan support (or the Archer tool) to avoid false

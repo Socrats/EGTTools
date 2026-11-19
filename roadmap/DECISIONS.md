@@ -47,3 +47,13 @@ parallelisation design and test plan (PERF-04, moved from 0.4) implemented by PE
 The audits run before the MC redesign, so their findings shape the new code instead of
 optimising code that will be replaced. A fixed seed must give the same results regardless
 of the thread count, within the tolerance PERF-04 sets per method.
+
+## 2026-11-19: Efficiency with exactness or a reliable error measure
+EGTtools is used for scientific research, so it must stay efficient while its results are
+exact or come with an error measure that can be trusted. Numerical kernels follow three
+tiers: a fast path built on precomputed constants or fixed-width arithmetic, with cheap
+checks; an automatic switch to higher precision only when a check shows the fast path
+cannot be exact; and an opt-in high-precision mode the user can choose. Arbitrary-precision
+types (`cpp_int`, `cpp_dec_float`) are too slow for default paths. Established algorithms
+(netlib, Boost.Math, CPython, GMP) are followed rather than reinvented. Applied first to
+`binomial_precision` (TEST-10) and to the combinatorics module (PERF-07).
