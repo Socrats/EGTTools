@@ -7,7 +7,11 @@
 
 #include <egttools/Distributions.h>
 
+#include <egttools/SeedGenerator.h>
 #include <egttools/utils/TimingUncertainty.hpp>
+
+#include <optional>
+#include <random>
 
 #include "egttools_common.hpp"
 

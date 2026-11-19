@@ -2,16 +2,20 @@
 The `egttools.numerical.behaviors.CRD` submodule contains the strategies for collective-risk dilemma games.
 """
 from __future__ import annotations
-__all__: list[str] = ['AbstractCRDStrategy', 'CRDMemoryOnePlayer']
+import typing
+__all__ = ['AbstractCRDStrategy', 'CRDMemoryOnePlayer']
 class AbstractCRDStrategy:
     """
     
                 Abstract base class for strategies in collective-risk dilemma games.
             
     """
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
     def __init__(self) -> None:
         ...
-    def get_action(self, time_step: int, group_contributions_prev: int) -> int:
+    def get_action(self, time_step: typing.SupportsInt | typing.SupportsIndex, group_contributions_prev: typing.SupportsInt | typing.SupportsIndex) -> int:
         """
                         Return the action chosen by the strategy.
         
@@ -39,7 +43,10 @@ class CRDMemoryOnePlayer(AbstractCRDStrategy):
     """
     Memory-one strategy for collective-risk dilemma games.
     """
-    def __init__(self, personal_threshold: int, initial_action: int, action_above: int, action_equal: int, action_below: int) -> None:
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
+    def __init__(self, personal_threshold: typing.SupportsInt | typing.SupportsIndex, initial_action: typing.SupportsInt | typing.SupportsIndex, action_above: typing.SupportsInt | typing.SupportsIndex, action_equal: typing.SupportsInt | typing.SupportsIndex, action_below: typing.SupportsInt | typing.SupportsIndex) -> None:
         """
                         Construct a memory-one strategy for a collective-risk dilemma.
         
@@ -73,7 +80,7 @@ class CRDMemoryOnePlayer(AbstractCRDStrategy):
         """
     def __str__(self) -> str:
         ...
-    def get_action(self, time_step: int, group_contributions_prev: int) -> int:
+    def get_action(self, time_step: typing.SupportsInt | typing.SupportsIndex, group_contributions_prev: typing.SupportsInt | typing.SupportsIndex) -> int:
         """
                         Return the action chosen by the strategy.
         

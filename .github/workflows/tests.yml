@@ -91,6 +91,20 @@ jobs:
         # Coverage settings are in [tool.coverage] in pyproject.toml.
         run: python -m coverage run -m pytest tests -m "not slow" -p no:cacheprovider -ra
 
+      - name: Check that the type stubs are up to date
+        # Regenerates the .pyi stubs from the extension just built; fails if they differ from the
+        # committed ones (regenerate them with the command below and commit the result).
+        env:
+          PYTHONPATH: src
+        run: |
+          python -m pip install "pybind11-stubgen==2.5.1"
+          pybind11-stubgen egttools.numerical.numerical_ -o src
+          if ! git diff --exit-code --stat -- 'src/**/*.pyi'; then
+            echo "::error::The .pyi stubs are out of date. Run: pip install pybind11-stubgen==2.5.1 && pybind11-stubgen egttools.numerical.numerical_ -o src"
+            git diff -- 'src/**/*.pyi' | head -100
+            exit 1
+          fi
+
       - name: Coverage summary
         run: |
           python -m coverage report

@@ -2,15 +2,21 @@
 The `egttools.numerical.DataStructures` submodule contains helper data structures.
 """
 from __future__ import annotations
+import collections.abc
 import numpy
-__all__: list[str] = ['DataTable']
+import numpy.typing
+import typing
+__all__ = ['DataTable']
 class DataTable:
     """
     
                 Store tabular data together with column headers and column types.
             
     """
-    def __init__(self, nb_rows: int, nb_columns: int, headers: list[str], column_types: list[str]) -> None:
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
+    def __init__(self, nb_rows: typing.SupportsInt | typing.SupportsIndex, nb_columns: typing.SupportsInt | typing.SupportsIndex, headers: collections.abc.Sequence[str], column_types: collections.abc.Sequence[str]) -> None:
         """
                         Create a data table.
         
@@ -51,10 +57,10 @@ class DataTable:
                             Type label for each column.
         """
     @column_types.setter
-    def column_types(self, arg0: list[str]) -> None:
+    def column_types(self, arg0: collections.abc.Sequence[str]) -> None:
         ...
     @property
-    def data(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def data(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
                         Table contents.
         
@@ -64,7 +70,7 @@ class DataTable:
                             Two-dimensional array storing the table values.
         """
     @data.setter
-    def data(self, arg0: numpy.ndarray[numpy.float64[m, n]]) -> None:
+    def data(self, arg0: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, n]"]) -> None:
         ...
     @property
     def headers(self) -> list[str]:
@@ -77,7 +83,7 @@ class DataTable:
                             Header for each column.
         """
     @headers.setter
-    def headers(self, arg0: list[str]) -> None:
+    def headers(self, arg0: collections.abc.Sequence[str]) -> None:
         ...
     @property
     def rows(self) -> int:

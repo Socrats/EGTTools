@@ -15,10 +15,12 @@ egttools.analytical.PairwiseComparison
 egttools.plotting
 """
 from __future__ import annotations
+import collections.abc
 import egttools.numerical.numerical_.distributions
 import numpy
+import numpy.typing
 import typing
-__all__: list[str] = ['AbstractGame', 'AbstractNPlayerGame', 'AbstractReplicatorGame', 'AbstractSpatialGame', 'CRDGame', 'CRDGameTU', 'Matrix2PlayerGameHolder', 'MatrixNPlayerGameHolder', 'NPlayerStagHunt', 'NormalFormGame', 'NormalFormNetworkGame', 'OneShotCRD', 'OneShotCRDNetworkGame']
+__all__ = ['AbstractGame', 'AbstractNPlayerGame', 'AbstractNPlayerStateGame', 'AbstractReplicatorGame', 'AbstractSpatialGame', 'CRDGame', 'CRDGameTU', 'LocalRedistributionGame', 'Matrix2PlayerGameHolder', 'MatrixNPlayerGameHolder', 'NPlayerStagHunt', 'NormalFormGame', 'NormalFormNetworkGame', 'OneShotCRD', 'OneShotCRDNetworkGame']
 class AbstractGame:
     """
     
@@ -28,6 +30,9 @@ class AbstractGame:
     evolutionary dynamics models. All concrete games must inherit from this class
     and implement its methods.
     """
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
     def __init__(self) -> None:
         ...
     def __str__(self) -> str:
@@ -39,7 +44,7 @@ class AbstractGame:
         str
             A string describing the game instance.
         """
-    def calculate_fitness(self, strategy_index: int, pop_size: int, strategies: numpy.ndarray[numpy.uint64[m, 1]]) -> float:
+    def calculate_fitness(self, strategy_index: typing.SupportsInt | typing.SupportsIndex, pop_size: typing.SupportsInt | typing.SupportsIndex, strategies: typing.Annotated[numpy.typing.NDArray[numpy.uint64], "[m, 1]"]) -> float:
         """
         Computes the fitness of a given strategy in a population.
         
@@ -57,7 +62,7 @@ class AbstractGame:
         float
             The computed fitness of the specified strategy.
         """
-    def calculate_payoffs(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def calculate_payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
         Calculates and stores all payoffs internally for all possible group compositions.
         
@@ -72,7 +77,7 @@ class AbstractGame:
         int
             The total number of strategies.
         """
-    def payoff(self, strategy: int, group_composition: list[int]) -> float:
+    def payoff(self, strategy: typing.SupportsInt | typing.SupportsIndex, group_composition: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex]) -> float:
         """
         Returns the expected payoff of a specific strategy in a group.
         
@@ -88,7 +93,7 @@ class AbstractGame:
         float
             Expected payoff of the strategy in the given group context.
         """
-    def payoffs(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
         Returns the current payoff matrix of the game.
         
@@ -97,7 +102,7 @@ class AbstractGame:
         numpy.ndarray
             The stored payoff matrix used in the game.
         """
-    def play(self, group_composition: list[int], game_payoffs: list[float]) -> None:
+    def play(self, group_composition: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], game_payoffs: collections.abc.Sequence[typing.SupportsFloat | typing.SupportsIndex]) -> None:
         """
         Computes the payoff of each strategy for a given group composition.
         
@@ -135,7 +140,10 @@ class AbstractGame:
             A label identifying the game type.
         """
 class AbstractNPlayerGame(AbstractGame):
-    def __init__(self, nb_strategies: int, group_size: int) -> None:
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
+    def __init__(self, nb_strategies: typing.SupportsInt | typing.SupportsIndex, group_size: typing.SupportsInt | typing.SupportsIndex) -> None:
         """
         Abstract N-player game.
         
@@ -151,7 +159,7 @@ class AbstractNPlayerGame(AbstractGame):
         """
     def __str__(self) -> str:
         ...
-    def calculate_fitness(self, strategy_index: int, pop_size: int, strategies: numpy.ndarray[numpy.uint64[m, 1]]) -> float:
+    def calculate_fitness(self, strategy_index: typing.SupportsInt | typing.SupportsIndex, pop_size: typing.SupportsInt | typing.SupportsIndex, strategies: typing.Annotated[numpy.typing.NDArray[numpy.uint64], "[m, 1]"]) -> float:
         """
         Computes the fitness of a given strategy in a population state.
         
@@ -169,7 +177,7 @@ class AbstractNPlayerGame(AbstractGame):
         float
             Fitness of the focal strategy in the given state.
         """
-    def calculate_payoffs(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def calculate_payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
         Computes and returns the full payoff matrix.
         
@@ -185,7 +193,7 @@ class AbstractNPlayerGame(AbstractGame):
         ...
     def nb_strategies(self) -> int:
         ...
-    def payoff(self, strategy: int, group_composition: list[int]) -> float:
+    def payoff(self, strategy: typing.SupportsInt | typing.SupportsIndex, group_composition: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex]) -> float:
         """
         Returns the payoff of a strategy in a given group context.
         
@@ -201,7 +209,7 @@ class AbstractNPlayerGame(AbstractGame):
         float
             The corresponding payoff.
         """
-    def payoffs(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
         Returns the payoff matrix.
         
@@ -210,7 +218,7 @@ class AbstractNPlayerGame(AbstractGame):
         numpy.ndarray
             Matrix of shape (nb_strategies, nb_group_configurations).
         """
-    def play(self, group_composition: list[int], game_payoffs: list[float]) -> None:
+    def play(self, group_composition: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], game_payoffs: collections.abc.Sequence[typing.SupportsFloat | typing.SupportsIndex]) -> None:
         """
         Executes the game for a given group composition and fills the payoff vector.
         
@@ -232,7 +240,7 @@ class AbstractNPlayerGame(AbstractGame):
         """
     def type(self) -> str:
         ...
-    def update_payoff(self, strategy_index: int, group_configuration_index: int, value: float) -> None:
+    def update_payoff(self, strategy_index: typing.SupportsInt | typing.SupportsIndex, group_configuration_index: typing.SupportsInt | typing.SupportsIndex, value: typing.SupportsFloat | typing.SupportsIndex) -> None:
         """
         Updates an entry in the payoff matrix.
         
@@ -245,6 +253,145 @@ class AbstractNPlayerGame(AbstractGame):
         value : float
             The new payoff value.
         """
+class AbstractNPlayerStateGame(AbstractNPlayerGame):
+    """
+    
+    Abstract base class for N-player games with state-dependent payoffs.
+    
+    Use this class when payoffs cannot be precomputed at initialization because they
+    depend on the current population state (e.g., games with variable risk functions
+    whose value changes with population composition).
+    
+    Subclasses must implement `get_payoffs_for_player`, which is called *once* per
+    `calculate_fitness` invocation. The C++ base class then runs the full
+    hypergeometric sampling loop in C++, reducing the number of Python call-throughs
+    from O(nb_group_configurations) to exactly 1 per fitness evaluation.
+    
+    Parameters
+    ----------
+    nb_strategies : int
+        Number of strategies in the game.
+    group_size : int
+        Number of players per interacting group.
+    
+    Abstract Methods
+    ----------------
+    get_payoffs_for_player(player_type, state_index, state) -> np.ndarray
+        Returns a 1-D array of length `nb_group_configurations` with the expected
+        payoff for `player_type` under each possible group configuration, given that
+        the full population state (including the focal player) has linear index
+        `state_index`.
+    
+    play(group_composition, game_payoffs)
+        Fills `game_payoffs` in-place for a concrete group sample.
+    
+    calculate_payoffs() -> np.ndarray
+        Optionally pre-computes and stores the payoff matrix for inspection.
+        Not used by `calculate_fitness`.
+    
+    Notes
+    -----
+    The `state_index` passed to `get_payoffs_for_player` is computed by
+    `egttools.calculate_state(group_size, full_state)`, where `full_state` is
+    `state` with `state[player_type] + 1`.
+    
+    Example
+    -------
+    >>> import numpy as np
+    >>> import egttools as egt
+    >>>
+    >>> class MyGame(egt.games.AbstractNPlayerStateGame):
+    ...     def __init__(self, nb_strategies, group_size, risk_func, payoff_func):
+    ...         super().__init__(nb_strategies, group_size)
+    ...         self._configs = [egt.sample_simplex(i, group_size, nb_strategies)
+    ...                          for i in range(self.nb_group_configurations)]
+    ...         self.risk_func = risk_func
+    ...         self.payoff_func = payoff_func
+    ...
+    ...     def get_payoffs_for_player(self, player_type, state_index, state):
+    ...         risk = self.risk_func(state_index)
+    ...         return np.array([self.payoff_func(risk, gc)[player_type]
+    ...                          for gc in self._configs])
+    ...
+    ...     def play(self, group_composition, game_payoffs): ...
+    ...     def calculate_payoffs(self): return self.payoffs()
+    ...     def payoffs(self): return np.zeros((self.nb_strategies, self.nb_group_configurations))
+    ...     def payoff(self, strategy, group_composition): return 0.0
+    ...     def save_payoffs(self, file_name): pass
+    ...     def __str__(self): return "MyGame"
+    ...     def type(self): return "MyGame"
+    """
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
+    def __init__(self, nb_strategies: typing.SupportsInt | typing.SupportsIndex, group_size: typing.SupportsInt | typing.SupportsIndex) -> None:
+        ...
+    def __str__(self) -> str:
+        ...
+    def calculate_fitness(self, player_type: typing.SupportsInt | typing.SupportsIndex, pop_size: typing.SupportsInt | typing.SupportsIndex, strategies: typing.Annotated[numpy.typing.NDArray[numpy.uint64], "[m, 1]"]) -> float:
+        """
+        Computes the fitness of `player_type` in a population with state `strategies`.
+        
+        Calls `get_payoffs_for_player` once to obtain the full payoff row, then
+        evaluates the hypergeometric expectation in C++.
+        
+        Parameters
+        ----------
+        player_type : int
+            Index of the focal player's strategy.
+        pop_size : int
+            Total population size (excluding the focal player).
+        strategies : np.ndarray
+            Strategy counts in the population, excluding the focal player.
+        
+        Returns
+        -------
+        float
+            Expected fitness of `player_type`.
+        """
+    def calculate_payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
+        ...
+    def get_payoffs_for_player(self, player_type: typing.SupportsInt | typing.SupportsIndex, state_index: typing.SupportsInt | typing.SupportsIndex, state: typing.Annotated[numpy.typing.NDArray[numpy.uint64], "[m, 1]"]) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"]:
+        """
+        Returns the payoff row for `player_type` across all group configurations.
+        
+        This method is called once per `calculate_fitness` invocation. Implement it
+        in your Python subclass to return the payoffs that depend on the current
+        population state.
+        
+        Parameters
+        ----------
+        player_type : int
+            Index of the focal player's strategy.
+        state_index : int
+            Linear index of the full population state (including the focal player),
+            as returned by `egttools.calculate_state(group_size, full_state)`.
+        state : np.ndarray
+            Population state vector *excluding* the focal player (same as the
+            `strategies` argument passed to `calculate_fitness`).
+        
+        Returns
+        -------
+        np.ndarray
+            1-D array of length `nb_group_configurations` with the payoff for
+            `player_type` in each possible group composition drawn from `state`.
+        """
+    def group_size(self) -> int:
+        ...
+    def nb_group_configurations(self) -> int:
+        ...
+    def nb_strategies(self) -> int:
+        ...
+    def payoff(self, strategy: typing.SupportsInt | typing.SupportsIndex, group_composition: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex]) -> float:
+        ...
+    def payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
+        ...
+    def play(self, group_composition: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], game_payoffs: collections.abc.Sequence[typing.SupportsFloat | typing.SupportsIndex]) -> None:
+        ...
+    def save_payoffs(self, file_name: str) -> None:
+        ...
+    def type(self) -> str:
+        ...
 class AbstractReplicatorGame:
     """
     
@@ -256,6 +403,9 @@ class AbstractReplicatorGame:
     a given population state, and access to the corresponding payoff table when
     available.
     """
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
     def __init__(self) -> None:
         ...
     def __str__(self) -> str:
@@ -267,7 +417,7 @@ class AbstractReplicatorGame:
         str
             A short description of the game.
         """
-    def calculate_fitness(self, frequencies: numpy.ndarray[numpy.float64[m, 1]]) -> numpy.ndarray[numpy.float64[m, 1]]:
+    def calculate_fitness(self, frequencies: typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"]) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"]:
         """
         Returns the expected fitness of all strategies at a given population state.
         
@@ -281,7 +431,7 @@ class AbstractReplicatorGame:
         numpy.ndarray
             One-dimensional array containing the expected fitness of each strategy.
         """
-    def calculate_payoffs(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def calculate_payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
         Computes or refreshes the payoff table of the game.
         
@@ -311,7 +461,7 @@ class AbstractReplicatorGame:
         int
             The total number of strategies.
         """
-    def payoffs(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
         Returns the currently stored payoff table of the game.
         
@@ -333,6 +483,9 @@ class AbstractReplicatorGame:
             A label identifying the game type.
         """
 class AbstractSpatialGame:
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
     def __init__(self) -> None:
         """
         Abstract base class for spatially structured games.
@@ -342,7 +495,7 @@ class AbstractSpatialGame:
         """
     def __str__(self) -> str:
         ...
-    def calculate_fitness(self, strategy_index: int, state: numpy.ndarray[numpy.uint64[m, 1]]) -> float:
+    def calculate_fitness(self, strategy_index: typing.SupportsInt | typing.SupportsIndex, state: typing.Annotated[numpy.typing.ArrayLike, numpy.uint64, "[m, 1]"]) -> float:
         """
         Calculates the fitness of a strategy in a local interaction context.
         
@@ -363,7 +516,10 @@ class AbstractSpatialGame:
     def type(self) -> str:
         ...
 class CRDGame(AbstractGame):
-    def __init__(self, endowment: int, threshold: int, nb_rounds: int, group_size: int, risk: float, enhancement_factor: float, strategies: list) -> None:
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
+    def __init__(self, endowment: typing.SupportsInt | typing.SupportsIndex, threshold: typing.SupportsInt | typing.SupportsIndex, nb_rounds: typing.SupportsInt | typing.SupportsIndex, group_size: typing.SupportsInt | typing.SupportsIndex, risk: typing.SupportsFloat | typing.SupportsIndex, enhancement_factor: typing.SupportsFloat | typing.SupportsIndex, strategies: list) -> None:
         """
         Collective risk dilemma game.
         
@@ -386,7 +542,7 @@ class CRDGame(AbstractGame):
         """
     def __str__(self) -> str:
         ...
-    def calculate_fitness(self, player_strategy: int, pop_size: int, population_state: numpy.ndarray[numpy.uint64[m, 1]]) -> float:
+    def calculate_fitness(self, player_strategy: typing.SupportsInt | typing.SupportsIndex, pop_size: typing.SupportsInt | typing.SupportsIndex, population_state: typing.Annotated[numpy.typing.NDArray[numpy.uint64], "[m, 1]"]) -> float:
         """
         Calculates the fitness of a strategy in a given population state.
         
@@ -403,11 +559,11 @@ class CRDGame(AbstractGame):
         -------
         float
         """
-    def calculate_group_achievement(self, population_size: int, stationary_distribution: numpy.ndarray[numpy.float64[m, 1]]) -> float:
+    def calculate_group_achievement(self, population_size: typing.SupportsInt | typing.SupportsIndex, stationary_distribution: typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"]) -> float:
         """
         Calculates group achievement given a stationary distribution.
         """
-    def calculate_payoffs(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def calculate_payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
         Computes the expected payoffs for each strategy under all group configurations.
         
@@ -415,21 +571,21 @@ class CRDGame(AbstractGame):
         -------
         numpy.ndarray
         """
-    def calculate_polarization(self, population_size: int, population_state: numpy.ndarray[numpy.float64[m, 1]]) -> numpy.ndarray[numpy.float64[3, 1]]:
+    def calculate_polarization(self, population_size: typing.SupportsInt | typing.SupportsIndex, population_state: typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"]) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
         """
         Computes contribution polarization relative to the fair contribution.
         """
-    def calculate_polarization_success(self, population_size: int, population_state: numpy.ndarray[numpy.float64[m, 1]]) -> numpy.ndarray[numpy.float64[3, 1]]:
+    def calculate_polarization_success(self, population_size: typing.SupportsInt | typing.SupportsIndex, population_state: typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"]) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
         """
         Computes contribution polarization among successful groups.
         """
-    def calculate_population_group_achievement(self, population_size: int, population_state: numpy.ndarray[numpy.uint64[m, 1]]) -> float:
+    def calculate_population_group_achievement(self, population_size: typing.SupportsInt | typing.SupportsIndex, population_state: typing.Annotated[numpy.typing.NDArray[numpy.uint64], "[m, 1]"]) -> float:
         """
         Calculates group achievement for the population at a given state.
         """
     def nb_strategies(self) -> int:
         ...
-    def payoff(self, strategy: int, group_composition: list[int]) -> float:
+    def payoff(self, strategy: typing.SupportsInt | typing.SupportsIndex, group_composition: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex]) -> float:
         """
         Returns the payoff of a strategy in a given group composition.
         
@@ -444,11 +600,11 @@ class CRDGame(AbstractGame):
         -------
         float
         """
-    def payoffs(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
         Returns the payoff matrix for all strategies and group configurations.
         """
-    def play(self, arg0: list[int], arg1: list[float]) -> None:
+    def play(self, arg0: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], arg1: collections.abc.Sequence[typing.SupportsFloat | typing.SupportsIndex]) -> None:
         """
         Plays a single round of the CRD game for the specified group composition.
         
@@ -497,7 +653,10 @@ class CRDGame(AbstractGame):
     def target(self) -> int:
         ...
 class CRDGameTU(AbstractGame):
-    def __init__(self, endowment: int, threshold: int, nb_rounds: int, group_size: int, risk: float, tu: egttools.numerical.numerical_.distributions.TimingUncertainty, strategies: list) -> None:
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
+    def __init__(self, endowment: typing.SupportsInt | typing.SupportsIndex, threshold: typing.SupportsInt | typing.SupportsIndex, nb_rounds: typing.SupportsInt | typing.SupportsIndex, group_size: typing.SupportsInt | typing.SupportsIndex, risk: typing.SupportsFloat | typing.SupportsIndex, tu: egttools.numerical.numerical_.distributions.TimingUncertainty, strategies: list) -> None:
         """
         Collective risk dilemma with timing uncertainty.
         
@@ -520,7 +679,7 @@ class CRDGameTU(AbstractGame):
         """
     def __str__(self) -> str:
         ...
-    def calculate_fitness(self, player_strategy: int, pop_size: int, population_state: numpy.ndarray[numpy.uint64[m, 1]]) -> float:
+    def calculate_fitness(self, player_strategy: typing.SupportsInt | typing.SupportsIndex, pop_size: typing.SupportsInt | typing.SupportsIndex, population_state: typing.Annotated[numpy.typing.NDArray[numpy.uint64], "[m, 1]"]) -> float:
         """
         Computes the fitness of a strategy in a given population state.
         
@@ -537,11 +696,11 @@ class CRDGameTU(AbstractGame):
         -------
         float
         """
-    def calculate_group_achievement(self, population_size: int, stationary_distribution: numpy.ndarray[numpy.float64[m, 1]]) -> float:
+    def calculate_group_achievement(self, population_size: typing.SupportsInt | typing.SupportsIndex, stationary_distribution: typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"]) -> float:
         """
         Calculates group achievement based on a stationary distribution.
         """
-    def calculate_payoffs(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def calculate_payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
         Computes the expected payoffs for each strategy across all group configurations.
         
@@ -550,21 +709,21 @@ class CRDGameTU(AbstractGame):
         numpy.ndarray
             Matrix of expected payoffs.
         """
-    def calculate_polarization(self, population_size: int, population_state: numpy.ndarray[numpy.float64[m, 1]]) -> numpy.ndarray[numpy.float64[3, 1]]:
+    def calculate_polarization(self, population_size: typing.SupportsInt | typing.SupportsIndex, population_state: typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"]) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
         """
         Computes contribution polarization in a given population state.
         """
-    def calculate_polarization_success(self, population_size: int, population_state: numpy.ndarray[numpy.float64[m, 1]]) -> numpy.ndarray[numpy.float64[3, 1]]:
+    def calculate_polarization_success(self, population_size: typing.SupportsInt | typing.SupportsIndex, population_state: typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"]) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
         """
         Computes contribution polarization among successful groups.
         """
-    def calculate_population_group_achievement(self, population_size: int, population_state: numpy.ndarray[numpy.uint64[m, 1]]) -> float:
+    def calculate_population_group_achievement(self, population_size: typing.SupportsInt | typing.SupportsIndex, population_state: typing.Annotated[numpy.typing.NDArray[numpy.uint64], "[m, 1]"]) -> float:
         """
         Calculates group achievement for a given population state.
         """
     def nb_strategies(self) -> int:
         ...
-    def payoff(self, strategy: int, group_composition: list[int]) -> float:
+    def payoff(self, strategy: typing.SupportsInt | typing.SupportsIndex, group_composition: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex]) -> float:
         """
         Returns the payoff of a strategy given a group composition.
         
@@ -579,11 +738,11 @@ class CRDGameTU(AbstractGame):
         -------
         float
         """
-    def payoffs(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
         Returns the matrix of expected payoffs.
         """
-    def play(self, arg0: list[int], arg1: list[float]) -> None:
+    def play(self, arg0: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], arg1: collections.abc.Sequence[typing.SupportsFloat | typing.SupportsIndex]) -> None:
         """
         Executes one iteration of the CRD game using a specific group composition.
         
@@ -628,8 +787,48 @@ class CRDGameTU(AbstractGame):
     @property
     def target(self) -> int:
         ...
+class LocalRedistributionGame(AbstractSpatialGame):
+    """
+    
+    Payoff post-processing wrapper implementing local wealth redistribution.
+    
+    Wraps any ``AbstractSpatialGame`` and applies a redistribution step after fitness
+    evaluation: a fraction ``redistribution_rate`` (alpha) of the excess payoff held by a
+    richer focal node (relative to its neighbourhood average) is shared with poorer neighbours.
+    
+    This implements a mean-field approximation of the redistribution mechanism from
+    Pinheiro & Santos (2018).
+    
+    Parameters
+    ----------
+    base_game : egttools.games.AbstractSpatialGame
+        Underlying game.  The caller is responsible for keeping the game alive
+        as long as the wrapper is in use.
+    redistribution_rate : float
+        Fraction alpha in [0, 1] of excess payoff redistributed to poorer neighbours.
+    """
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
+    def __init__(self, base_game: AbstractSpatialGame, redistribution_rate: typing.SupportsFloat | typing.SupportsIndex) -> None:
+        ...
+    def __str__(self) -> str:
+        ...
+    def calculate_fitness(self, strategy_index: typing.SupportsInt | typing.SupportsIndex, state: typing.Annotated[numpy.typing.ArrayLike, numpy.uint64, "[m, 1]"]) -> float:
+        """
+        Compute redistributed fitness of the focal strategy given its neighbourhood state.
+        """
+    def nb_strategies(self) -> int:
+        ...
+    def redistribution_rate(self) -> float:
+        ...
+    def type(self) -> str:
+        ...
 class Matrix2PlayerGameHolder(AbstractGame):
-    def __init__(self, nb_strategies: int, payoff_matrix: numpy.ndarray[numpy.float64[m, n], numpy.ndarray.flags.c_contiguous]) -> None:
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
+    def __init__(self, nb_strategies: typing.SupportsInt | typing.SupportsIndex, payoff_matrix: typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]", "flags.c_contiguous"]) -> None:
         """
         Matrix-based 2-player game holder.
         
@@ -642,7 +841,7 @@ class Matrix2PlayerGameHolder(AbstractGame):
         """
     def __str__(self) -> str:
         ...
-    def calculate_fitness(self, player_strategy: int, pop_size: int, population_state: numpy.ndarray[numpy.uint64[m, 1]]) -> float:
+    def calculate_fitness(self, player_strategy: typing.SupportsInt | typing.SupportsIndex, pop_size: typing.SupportsInt | typing.SupportsIndex, population_state: typing.Annotated[numpy.typing.NDArray[numpy.uint64], "[m, 1]"]) -> float:
         """
         Computes the fitness of a strategy given the population configuration.
         
@@ -659,7 +858,7 @@ class Matrix2PlayerGameHolder(AbstractGame):
         -------
         float
         """
-    def calculate_payoffs(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def calculate_payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
         Returns the stored payoff matrix.
         
@@ -670,15 +869,15 @@ class Matrix2PlayerGameHolder(AbstractGame):
         """
     def nb_strategies(self) -> int:
         ...
-    def payoff(self, strategy: int, strategy_pair: list[int]) -> float:
+    def payoff(self, strategy: typing.SupportsInt | typing.SupportsIndex, strategy_pair: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex]) -> float:
         """
         Returns the payoff for a given strategy pair.
         """
-    def payoffs(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
         Returns the expected payoff matrix.
         """
-    def play(self, arg0: list[int], arg1: list[float]) -> None:
+    def play(self, arg0: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], arg1: collections.abc.Sequence[typing.SupportsFloat | typing.SupportsIndex]) -> None:
         """
         Executes a match given a group composition and stores the resulting payoffs.
         
@@ -695,12 +894,15 @@ class Matrix2PlayerGameHolder(AbstractGame):
         """
     def type(self) -> str:
         ...
-    def update_payoff_matrix(self, payoff_matrix: numpy.ndarray[numpy.float64[m, n]]) -> None:
+    def update_payoff_matrix(self, payoff_matrix: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, n]"]) -> None:
         """
         Replaces the internal payoff matrix with a new one.
         """
 class MatrixNPlayerGameHolder(AbstractGame):
-    def __init__(self, nb_strategies: int, group_size: int, payoff_matrix: numpy.ndarray[numpy.float64[m, n], numpy.ndarray.flags.c_contiguous]) -> None:
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
+    def __init__(self, nb_strategies: typing.SupportsInt | typing.SupportsIndex, group_size: typing.SupportsInt | typing.SupportsIndex, payoff_matrix: typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]", "flags.c_contiguous"]) -> None:
         """
         Matrix-based N-player game holder.
         
@@ -715,7 +917,7 @@ class MatrixNPlayerGameHolder(AbstractGame):
         """
     def __str__(self) -> str:
         ...
-    def calculate_fitness(self, player_strategy: int, pop_size: int, population_state: numpy.ndarray[numpy.uint64[m, 1]]) -> float:
+    def calculate_fitness(self, player_strategy: typing.SupportsInt | typing.SupportsIndex, pop_size: typing.SupportsInt | typing.SupportsIndex, population_state: typing.Annotated[numpy.typing.NDArray[numpy.uint64], "[m, 1]"]) -> float:
         """
         Computes the fitness of a strategy based on the current population state.
         
@@ -733,7 +935,7 @@ class MatrixNPlayerGameHolder(AbstractGame):
         float
             Fitness of the focal strategy.
         """
-    def calculate_payoffs(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def calculate_payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
         Returns the internal matrix of precomputed payoffs.
         
@@ -747,15 +949,15 @@ class MatrixNPlayerGameHolder(AbstractGame):
         ...
     def nb_strategies(self) -> int:
         ...
-    def payoff(self, strategy: int, strategy_pair: list[int]) -> float:
+    def payoff(self, strategy: typing.SupportsInt | typing.SupportsIndex, strategy_pair: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex]) -> float:
         """
         Returns the payoff for a strategy given a specific group configuration.
         """
-    def payoffs(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
         Returns the full payoff matrix.
         """
-    def play(self, arg0: list[int], arg1: list[float]) -> None:
+    def play(self, arg0: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], arg1: collections.abc.Sequence[typing.SupportsFloat | typing.SupportsIndex]) -> None:
         """
         Simulates the game based on a predefined payoff matrix.
         
@@ -772,12 +974,15 @@ class MatrixNPlayerGameHolder(AbstractGame):
         """
     def type(self) -> str:
         ...
-    def update_payoff_matrix(self, payoff_matrix: numpy.ndarray[numpy.float64[m, n]]) -> None:
+    def update_payoff_matrix(self, payoff_matrix: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, n]"]) -> None:
         """
         Replaces the stored payoff matrix with a new one.
         """
 class NPlayerStagHunt(AbstractGame):
-    def __init__(self, group_size: int, cooperation_threshold: int, enhancement_factor: float, cost: float) -> None:
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
+    def __init__(self, group_size: typing.SupportsInt | typing.SupportsIndex, cooperation_threshold: typing.SupportsInt | typing.SupportsIndex, enhancement_factor: typing.SupportsFloat | typing.SupportsIndex, cost: typing.SupportsFloat | typing.SupportsIndex) -> None:
         """
         N-player stag hunt.
         
@@ -794,7 +999,7 @@ class NPlayerStagHunt(AbstractGame):
         """
     def __str__(self) -> str:
         ...
-    def calculate_fitness(self, player_strategy: int, pop_size: int, population_state: numpy.ndarray[numpy.uint64[m, 1]]) -> float:
+    def calculate_fitness(self, player_strategy: typing.SupportsInt | typing.SupportsIndex, pop_size: typing.SupportsInt | typing.SupportsIndex, population_state: typing.Annotated[numpy.typing.NDArray[numpy.uint64], "[m, 1]"]) -> float:
         """
         Computes the fitness of a strategy given a population state.
         
@@ -811,15 +1016,15 @@ class NPlayerStagHunt(AbstractGame):
         -------
         float
         """
-    def calculate_group_achievement(self, population_size: int, stationary_distribution: numpy.ndarray[numpy.float64[m, 1]]) -> float:
+    def calculate_group_achievement(self, population_size: typing.SupportsInt | typing.SupportsIndex, stationary_distribution: typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"]) -> float:
         """
         Computes the expected collective success weighted by a stationary distribution.
         """
-    def calculate_payoffs(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def calculate_payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
         Computes and stores the expected payoff matrix for all strategy-group combinations.
         """
-    def calculate_population_group_achievement(self, population_size: int, population_state: numpy.ndarray[numpy.uint64[m, 1]]) -> float:
+    def calculate_population_group_achievement(self, population_size: typing.SupportsInt | typing.SupportsIndex, population_state: typing.Annotated[numpy.typing.NDArray[numpy.uint64], "[m, 1]"]) -> float:
         """
         Estimates the likelihood that a random group from the population meets the cooperation threshold.
         """
@@ -827,15 +1032,15 @@ class NPlayerStagHunt(AbstractGame):
         ...
     def nb_strategies(self) -> int:
         ...
-    def payoff(self, strategy: int, strategy_pair: list[int]) -> float:
+    def payoff(self, strategy: typing.SupportsInt | typing.SupportsIndex, strategy_pair: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex]) -> float:
         """
         Returns the payoff of a strategy given a group composition.
         """
-    def payoffs(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
         Returns the expected payoff matrix for all strategy combinations.
         """
-    def play(self, arg0: list[int], arg1: list[float]) -> None:
+    def play(self, arg0: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], arg1: collections.abc.Sequence[typing.SupportsFloat | typing.SupportsIndex]) -> None:
         """
         Simulates the game and fills in the payoff vector for a given group composition.
         
@@ -864,14 +1069,17 @@ class NPlayerStagHunt(AbstractGame):
     def enhancement_factor(self) -> float:
         ...
     @property
-    def group_achievement_per_group(self) -> numpy.ndarray[numpy.int64[m, 1]]:
+    def group_achievement_per_group(self) -> typing.Annotated[numpy.typing.NDArray[numpy.int64], "[m, 1]"]:
         ...
     @property
     def group_size(self) -> int:
         ...
 class NormalFormGame(AbstractGame):
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
     @typing.overload
-    def __init__(self, nb_rounds: int, payoff_matrix: numpy.ndarray[numpy.float64[m, n], numpy.ndarray.flags.c_contiguous]) -> None:
+    def __init__(self, nb_rounds: typing.SupportsInt | typing.SupportsIndex, payoff_matrix: typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]", "flags.c_contiguous"]) -> None:
         """
         Normal-form game with repeated pairwise interactions.
         
@@ -883,7 +1091,7 @@ class NormalFormGame(AbstractGame):
             Payoff matrix where entry (i, j) gives the payoff of strategy i against j.
         """
     @typing.overload
-    def __init__(self, nb_rounds: int, payoff_matrix: numpy.ndarray[numpy.float64[m, n], numpy.ndarray.flags.c_contiguous], strategies: list) -> None:
+    def __init__(self, nb_rounds: typing.SupportsInt | typing.SupportsIndex, payoff_matrix: typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]", "flags.c_contiguous"], strategies: list) -> None:
         """
         Normal-form game initialized with custom strategy classes.
         
@@ -898,7 +1106,7 @@ class NormalFormGame(AbstractGame):
         """
     def __str__(self) -> str:
         ...
-    def calculate_fitness(self, player_strategy: int, population_size: int, population_state: numpy.ndarray[numpy.uint64[m, 1]]) -> float:
+    def calculate_fitness(self, player_strategy: typing.SupportsInt | typing.SupportsIndex, population_size: typing.SupportsInt | typing.SupportsIndex, population_state: typing.Annotated[numpy.typing.NDArray[numpy.uint64], "[m, 1]"]) -> float:
         """
         Computes the fitness of a strategy in a given population state.
         
@@ -916,7 +1124,7 @@ class NormalFormGame(AbstractGame):
         float
             Fitness of the focal strategy.
         """
-    def calculate_payoffs(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def calculate_payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
         Calculates the expected payoff matrix for all strategy pairs.
         
@@ -925,13 +1133,13 @@ class NormalFormGame(AbstractGame):
         numpy.ndarray
             Matrix of expected payoffs between strategies.
         """
-    def expected_payoffs(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def expected_payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
         Returns the matrix of expected payoffs between strategies.
         """
     def nb_strategies(self) -> int:
         ...
-    def payoff(self, strategy: int, strategy_pair: list[int]) -> float:
+    def payoff(self, strategy: typing.SupportsInt | typing.SupportsIndex, strategy_pair: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex]) -> float:
         """
         Returns the payoff for a given strategy in a specific match-up.
         
@@ -946,7 +1154,7 @@ class NormalFormGame(AbstractGame):
         -------
         float
         """
-    def payoffs(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
         Returns the payoff matrix.
         
@@ -955,7 +1163,7 @@ class NormalFormGame(AbstractGame):
         numpy.ndarray
             Matrix of expected payoffs between strategies.
         """
-    def play(self, group_composition: list[int], game_payoffs: list[float]) -> None:
+    def play(self, group_composition: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], game_payoffs: collections.abc.Sequence[typing.SupportsFloat | typing.SupportsIndex]) -> None:
         """
         Executes a game round and stores the resulting payoffs.
         
@@ -989,8 +1197,11 @@ class NormalFormGame(AbstractGame):
         List of strategies participating in the game.
         """
 class NormalFormNetworkGame(AbstractSpatialGame):
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
     @typing.overload
-    def __init__(self, nb_rounds: int, payoff_matrix: numpy.ndarray[numpy.float64[m, n], numpy.ndarray.flags.c_contiguous]) -> None:
+    def __init__(self, nb_rounds: typing.SupportsInt | typing.SupportsIndex, payoff_matrix: typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]", "flags.c_contiguous"]) -> None:
         """
         Normal-form network game.
         
@@ -1002,7 +1213,7 @@ class NormalFormNetworkGame(AbstractSpatialGame):
             Payoff matrix specifying the outcomes for all strategy pairs.
         """
     @typing.overload
-    def __init__(self, nb_rounds: int, payoff_matrix: numpy.ndarray[numpy.float64[m, n], numpy.ndarray.flags.c_contiguous], strategies: list) -> None:
+    def __init__(self, nb_rounds: typing.SupportsInt | typing.SupportsIndex, payoff_matrix: typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]", "flags.c_contiguous"], strategies: list) -> None:
         """
         Normal-form game with custom strategy list.
         
@@ -1017,7 +1228,7 @@ class NormalFormNetworkGame(AbstractSpatialGame):
         """
     def __str__(self) -> str:
         ...
-    def calculate_cooperation_level_neighborhood(self, strategy_index: int, state: numpy.ndarray[numpy.uint64[m, 1]]) -> float:
+    def calculate_cooperation_level_neighborhood(self, strategy_index: typing.SupportsInt | typing.SupportsIndex, state: typing.Annotated[numpy.typing.NDArray[numpy.uint64], "[m, 1]"]) -> float:
         """
         Calculates the level of cooperation in a given neighborhood.
         
@@ -1033,7 +1244,7 @@ class NormalFormNetworkGame(AbstractSpatialGame):
         float
             Level of cooperation.
         """
-    def calculate_fitness(self, strategy_index: int, state: numpy.ndarray[numpy.uint64[m, 1]]) -> float:
+    def calculate_fitness(self, strategy_index: typing.SupportsInt | typing.SupportsIndex, state: typing.Annotated[numpy.typing.ArrayLike, numpy.uint64, "[m, 1]"]) -> float:
         """
         Computes fitness of a strategy given a neighborhood configuration.
         
@@ -1053,7 +1264,7 @@ class NormalFormNetworkGame(AbstractSpatialGame):
         """
         Recalculates the expected payoff matrix based on current strategies.
         """
-    def expected_payoffs(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def expected_payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
         Returns the expected payoffs for each strategy.
         """
@@ -1068,7 +1279,10 @@ class NormalFormNetworkGame(AbstractSpatialGame):
     def type(self) -> str:
         ...
 class OneShotCRD(AbstractGame):
-    def __init__(self, endowment: float, cost: float, risk: float, group_size: int, min_nb_cooperators: int) -> None:
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
+    def __init__(self, endowment: typing.SupportsFloat | typing.SupportsIndex, cost: typing.SupportsFloat | typing.SupportsIndex, risk: typing.SupportsFloat | typing.SupportsIndex, group_size: typing.SupportsInt | typing.SupportsIndex, min_nb_cooperators: typing.SupportsInt | typing.SupportsIndex) -> None:
         """
         One-shot collective risk dilemma.
         
@@ -1087,7 +1301,7 @@ class OneShotCRD(AbstractGame):
         """
     def __str__(self) -> str:
         ...
-    def calculate_fitness(self, player_strategy: int, pop_size: int, population_state: numpy.ndarray[numpy.uint64[m, 1]]) -> float:
+    def calculate_fitness(self, player_strategy: typing.SupportsInt | typing.SupportsIndex, pop_size: typing.SupportsInt | typing.SupportsIndex, population_state: typing.Annotated[numpy.typing.NDArray[numpy.uint64], "[m, 1]"]) -> float:
         """
         Calculates the fitness of a strategy given a population state.
         
@@ -1104,29 +1318,29 @@ class OneShotCRD(AbstractGame):
         -------
         float
         """
-    def calculate_group_achievement(self, population_size: int, stationary_distribution: numpy.ndarray[numpy.float64[m, 1]]) -> float:
+    def calculate_group_achievement(self, population_size: typing.SupportsInt | typing.SupportsIndex, stationary_distribution: typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"]) -> float:
         """
         Computes group achievement from a stationary distribution.
         """
-    def calculate_payoffs(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def calculate_payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
         Updates the payoff matrix and cooperation level matrix for all strategy pairs.
         """
-    def calculate_population_group_achievement(self, population_size: int, population_state: numpy.ndarray[numpy.uint64[m, 1]]) -> float:
+    def calculate_population_group_achievement(self, population_size: typing.SupportsInt | typing.SupportsIndex, population_state: typing.Annotated[numpy.typing.NDArray[numpy.uint64], "[m, 1]"]) -> float:
         """
         Computes the group achievement for the given population state.
         """
     def nb_strategies(self) -> int:
         ...
-    def payoff(self, strategy: int, strategy_pair: list[int]) -> float:
+    def payoff(self, strategy: typing.SupportsInt | typing.SupportsIndex, strategy_pair: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex]) -> float:
         """
         Returns the payoff for a given strategy and group composition.
         """
-    def payoffs(self) -> numpy.ndarray[numpy.float64[m, n]]:
+    def payoffs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
         """
         Returns the expected payoff matrix.
         """
-    def play(self, arg0: list[int], arg1: list[float]) -> None:
+    def play(self, arg0: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], arg1: collections.abc.Sequence[typing.SupportsFloat | typing.SupportsIndex]) -> None:
         """
         Executes a one-shot CRD round and updates payoffs for the given group composition.
         
@@ -1150,7 +1364,7 @@ class OneShotCRD(AbstractGame):
     def endowment(self) -> float:
         ...
     @property
-    def group_achievement_per_group(self) -> numpy.ndarray[numpy.int64[m, 1]]:
+    def group_achievement_per_group(self) -> typing.Annotated[numpy.typing.NDArray[numpy.int64], "[m, 1]"]:
         ...
     @property
     def group_size(self) -> int:
@@ -1165,7 +1379,10 @@ class OneShotCRD(AbstractGame):
     def risk(self) -> float:
         ...
 class OneShotCRDNetworkGame(AbstractSpatialGame):
-    def __init__(self, endowment: float, cost: float, risk: float, min_nb_cooperators: int) -> None:
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
+    def __init__(self, endowment: typing.SupportsFloat | typing.SupportsIndex, cost: typing.SupportsFloat | typing.SupportsIndex, risk: typing.SupportsFloat | typing.SupportsIndex, min_nb_cooperators: typing.SupportsInt | typing.SupportsIndex) -> None:
         """
         One-shot collective risk dilemma in networks.
         
@@ -1182,7 +1399,7 @@ class OneShotCRDNetworkGame(AbstractSpatialGame):
         """
     def __str__(self) -> str:
         ...
-    def calculate_fitness(self, strategy_index: int, state: numpy.ndarray[numpy.uint64[m, 1]]) -> float:
+    def calculate_fitness(self, strategy_index: typing.SupportsInt | typing.SupportsIndex, state: typing.Annotated[numpy.typing.ArrayLike, numpy.uint64, "[m, 1]"]) -> float:
         """
         Computes the fitness of a strategy in a local neighborhood.
         

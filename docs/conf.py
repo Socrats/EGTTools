@@ -134,6 +134,7 @@ nitpick_ignore = [
     ('py:class', 'numpy.int64'),
     ('py:class', 'numpy.float64'),
     ('py:class', 'numpy.complex128'),
+    ('py:class', 'array_like'),  # NumPy docstring convention for anything convertible to an array
     ('py:obj', 'List'),
     ('py:class', 'm'),
     ('py:class', 'n'),

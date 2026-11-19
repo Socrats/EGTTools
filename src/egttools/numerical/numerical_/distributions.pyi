@@ -2,9 +2,11 @@
 The `egttools.numerical.distributions` submodule contains functions and classes for probability distributions and timing uncertainty.
 """
 from __future__ import annotations
+import collections.abc
 import numpy
+import numpy.typing
 import typing
-__all__: list[str] = ['TimingUncertainty', 'binom', 'comb', 'multinomial_pmf', 'multivariate_hypergeometric_pdf']
+__all__ = ['TimingUncertainty', 'binom', 'comb', 'multinomial_pmf', 'multivariate_hypergeometric_pdf']
 class TimingUncertainty:
     """
     
@@ -27,12 +29,12 @@ class TimingUncertainty:
                 
     """
     @staticmethod
-    def __init__(*args, **kwargs):
+    def _pybind11_conduit_v1_(*args, **kwargs):
         ...
-    @staticmethod
-    def calculate_end(*args, **kwargs):
+    def __init__(self, p: typing.SupportsFloat | typing.SupportsIndex, max_rounds: typing.SupportsInt | typing.SupportsIndex = 0) -> None:
+        ...
+    def calculate_end(self, min_rounds: typing.SupportsInt | typing.SupportsIndex, seed: typing.SupportsInt | typing.SupportsIndex | None = None) -> int:
         """
-        
                             Sample the final round, truncated by `max_rounds`.
         
                             The returned round lies in the interval
@@ -42,19 +44,18 @@ class TimingUncertainty:
                             ----------
                             min_rounds : int
                                 Minimum number of rounds.
-                            random_generator : object
-                                Random number generator used internally.
+                            seed : int, optional
+                                Seed for this draw. If ``None`` (default), a seed is taken from the library's
+                                global seed generator, so the results are reproducible after
+                                :func:`egttools.Random.init_with_seed`.
         
                             Returns
                             -------
                             int
                                 Sampled final round.
-                        
         """
-    @staticmethod
-    def calculate_full_end(*args, **kwargs):
+    def calculate_full_end(self, min_rounds: typing.SupportsInt | typing.SupportsIndex, seed: typing.SupportsInt | typing.SupportsIndex | None = None) -> int:
         """
-        
                             Sample the final round without truncation.
         
                             The returned round is at least `min_rounds`.
@@ -63,29 +64,30 @@ class TimingUncertainty:
                             ----------
                             min_rounds : int
                                 Minimum number of rounds.
-                            random_generator : object
-                                Random number generator used internally.
+                            seed : int, optional
+                                Seed for this draw. If ``None`` (default), a seed is taken from the library's
+                                global seed generator, so the results are reproducible after
+                                :func:`egttools.Random.init_with_seed`.
         
                             Returns
                             -------
                             int
                                 Sampled final round.
-                        
         """
     @property
-    def max_rounds(*args, **kwargs):
+    def max_rounds(self) -> int:
         """
         Maximum allowed number of rounds. A value of 0 means no maximum.
         """
     @max_rounds.setter
-    def max_rounds(*args, **kwargs):
+    def max_rounds(self, arg1: typing.SupportsInt | typing.SupportsIndex) -> None:
         ...
     @property
-    def p(*args, **kwargs):
+    def p(self) -> float:
         """
         Probability that the game ends after the minimum number of rounds.
         """
-def binom(n: int, k: int) -> float:
+def binom(n: typing.SupportsInt | typing.SupportsIndex, k: typing.SupportsInt | typing.SupportsIndex) -> float:
     """
                 Calculate the binomial coefficient C(n, k).
     
@@ -109,7 +111,7 @@ def binom(n: int, k: int) -> float:
                 egttools.distributions.multivariate_hypergeometric_pdf
                 egttools.distributions.comb
     """
-def comb(n: int, k: int) -> typing.Any:
+def comb(n: typing.SupportsInt | typing.SupportsIndex, k: typing.SupportsInt | typing.SupportsIndex) -> typing.Any:
     """
                 Calculate the binomial coefficient C(n, k).
     
@@ -132,7 +134,7 @@ def comb(n: int, k: int) -> typing.Any:
                 egttools.distributions.multivariate_hypergeometric_pdf
                 egttools.distributions.binom
     """
-def multinomial_pmf(x: numpy.ndarray[numpy.uint64[m, 1]], n: int, p: numpy.ndarray[numpy.float64[m, 1]]) -> float:
+def multinomial_pmf(x: typing.Annotated[numpy.typing.NDArray[numpy.uint64], "[m, 1]"], n: typing.SupportsInt | typing.SupportsIndex, p: typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"]) -> float:
     """
                 Calculate the probability mass function of a multinomial distribution.
     
@@ -166,7 +168,7 @@ def multinomial_pmf(x: numpy.ndarray[numpy.uint64[m, 1]], n: int, p: numpy.ndarr
                 >>> multinomial_pmf(np.array([2, 1]), 3, np.array([0.5, 0.5]))
     """
 @typing.overload
-def multivariate_hypergeometric_pdf(m: int, k: int, n: int, sample_counts: list[int], population_counts: numpy.ndarray[numpy.uint64[m, 1]]) -> float:
+def multivariate_hypergeometric_pdf(m: typing.SupportsInt | typing.SupportsIndex, k: typing.SupportsInt | typing.SupportsIndex, n: typing.SupportsInt | typing.SupportsIndex, sample_counts: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], population_counts: typing.Annotated[numpy.typing.NDArray[numpy.uint64], "[m, 1]"]) -> float:
     """
                 Calculate the probability mass function of a multivariate hypergeometric distribution.
     
@@ -197,7 +199,7 @@ def multivariate_hypergeometric_pdf(m: int, k: int, n: int, sample_counts: list[
                 egttools.distributions.comb
     """
 @typing.overload
-def multivariate_hypergeometric_pdf(m: int, k: int, n: int, sample_counts: numpy.ndarray[numpy.uint64[m, 1]], population_counts: numpy.ndarray[numpy.uint64[m, 1]]) -> float:
+def multivariate_hypergeometric_pdf(m: typing.SupportsInt | typing.SupportsIndex, k: typing.SupportsInt | typing.SupportsIndex, n: typing.SupportsInt | typing.SupportsIndex, sample_counts: typing.Annotated[numpy.typing.NDArray[numpy.uint64], "[m, 1]"], population_counts: typing.Annotated[numpy.typing.NDArray[numpy.uint64], "[m, 1]"]) -> float:
     """
                 Calculate the probability mass function of a multivariate hypergeometric distribution.
     
