@@ -17,6 +17,7 @@
 */
 
 #include <egttools/finite_populations/analytical/PairwiseComparison.hpp>
+#include <egttools/finite_populations/Validation.hpp>
 #include <algorithm>
 #include <atomic>
 #include <cmath>
@@ -408,6 +409,7 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_transitio
 
 egttools::Vector egttools::FinitePopulations::analytical::PairwiseComparison::calculate_gradient_of_selection(
     const double beta, const Eigen::Ref<const VectorXui> &state) const {
+    validate_population_state(state, nb_strategies_, population_size_);
     // Definition 5.1 (mu = 0) of docs/theory/pairwise_comparison.md:
     //   G_i = sum_{j != i} [T_{j->i} - T_{i->j}]
     //       = sum_{j != i} n_i n_j / (Z (Z - 1)) tanh(beta/2 (f_i - f_j)).
@@ -446,6 +448,7 @@ egttools::FinitePopulations::analytical::PairwiseComparison::calculate_gradient_
     if (beta < 0.0) {
         throw std::invalid_argument("beta must be >= 0");
     }
+    validate_population_state(state, nb_strategies_, population_size_);
     if (mu < 0.0 || mu > 1.0) {
         throw std::invalid_argument("mu must be in [0,1]");
     }
@@ -528,6 +531,7 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_lo
 // ---------------------------------------------------------------------------
 double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability(
     int index_invading_strategy, int index_resident_strategy, double beta) {
+    validate_invader_resident(index_invading_strategy, index_resident_strategy, nb_strategies_);
     const double log_phi = calculate_log_phi_(index_invading_strategy, index_resident_strategy, beta);
     // 1/(1+exp(log_phi)): exp returns +∞ for large log_phi → result is 0.0, which is correct
     return 1.0 / (1.0 + std::exp(log_phi));
@@ -538,6 +542,7 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fi
 // ---------------------------------------------------------------------------
 double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_log_fixation_probability(
     int index_invading_strategy, int index_resident_strategy, double beta) {
+    validate_invader_resident(index_invading_strategy, index_resident_strategy, nb_strategies_);
     const double log_phi = calculate_log_phi_(index_invading_strategy, index_resident_strategy, beta);
 
     if (log_phi == -std::numeric_limits<double>::infinity()) return 0.0;  // ρ = 1
@@ -556,6 +561,7 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_lo
 #if (HAS_BOOST)
 double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability_boost(
     int index_invading_strategy, int index_resident_strategy, double beta) {
+    validate_invader_resident(index_invading_strategy, index_resident_strategy, nb_strategies_);
     using Scalar = cpp_dec_float_50;
     using boost::multiprecision::exp;
     using boost::multiprecision::log;

@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <egttools/finite_populations/Utils.hpp>
+#include <egttools/finite_populations/Validation.hpp>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <egttools/utils/ThreadSafeLRUCache.hpp>
 #include <functional>
@@ -187,7 +188,8 @@ namespace egttools::FinitePopulations {
          * @param resident : index of the resident strategy
          * @param beta : intensity of selection (Fermi parameter)
          * @return a vector of length pop_size + 1 with the gradient at each state (0 at boundaries)
-         * @throws std::invalid_argument if invader or resident are out of range or equal
+         * @throws std::out_of_range if invader or resident is not in [0, nb_strategies)
+         * @throws std::invalid_argument if invader and resident are equal
          */
         Vector estimate_gradient_of_selection(size_t runs, int invader, int resident, double beta);
 
@@ -936,11 +938,7 @@ namespace egttools::FinitePopulations {
                                                                       const size_t runs,
                                                                       const size_t nb_generations,
                                                                       const double beta) {
-        if (invader >= static_cast<int>(_nb_strategies) || resident >= static_cast<int>(_nb_strategies))
-            throw std::invalid_argument(
-                "you must specify a valid index for invader and resident [0, " + std::to_string(_nb_strategies) +
-                ")");
-        if (invader == resident) throw std::invalid_argument("mutant must be different from resident");
+        validate_invader_resident(invader, resident, static_cast<int64_t>(_nb_strategies));
 
         long int r2m = 0; // resident to mutant count
         long int r2r = 0; // resident to resident count
@@ -976,12 +974,7 @@ namespace egttools::FinitePopulations {
     Vector PairwiseComparisonNumerical<Cache>::estimate_gradient_of_selection(const size_t runs, const int invader,
                                                                               const int resident,
                                                                               const double beta) {
-        if (invader >= static_cast<int>(_nb_strategies) || resident >= static_cast<int>(_nb_strategies) ||
-            invader < 0 || resident < 0)
-            throw std::invalid_argument(
-                "invader and resident must be valid strategy indices in [0, " + std::to_string(_nb_strategies) + ")");
-        if (invader == resident)
-            throw std::invalid_argument("invader and resident must be different strategies");
+        validate_invader_resident(invader, resident, static_cast<int64_t>(_nb_strategies));
 
         // T+[k] = number of trials (out of runs) where the invader count increased at state k
         // T-[k] = number of trials where it decreased
@@ -1028,10 +1021,8 @@ namespace egttools::FinitePopulations {
         const size_t nb_runs) {
         if (beta < 0) throw std::invalid_argument("beta must be >= 0!");
         if (nb_runs < 1) throw std::invalid_argument("nb_runs must be >= 1!");
-        if (static_cast<size_t>(init_state.size()) != _nb_strategies)
-            throw std::invalid_argument("init_state must have nb_strategies elements");
-        if (static_cast<size_t>(init_state.sum()) != _pop_size)
-            throw std::invalid_argument("init_state elements must sum to pop_size");
+        validate_population_state(init_state, static_cast<int64_t>(_nb_strategies), static_cast<int64_t>(_pop_size),
+                                  "init_state");
 
         // If already absorbed, return 0 immediately
         for (int j = 0; j < static_cast<int>(_nb_strategies); ++j)
@@ -1082,10 +1073,8 @@ namespace egttools::FinitePopulations {
         const size_t nb_runs) {
         if (beta < 0) throw std::invalid_argument("beta must be >= 0!");
         if (nb_runs < 1) throw std::invalid_argument("nb_runs must be >= 1!");
-        if (static_cast<size_t>(init_state.size()) != _nb_strategies)
-            throw std::invalid_argument("init_state must have nb_strategies elements");
-        if (static_cast<size_t>(init_state.sum()) != _pop_size)
-            throw std::invalid_argument("init_state elements must sum to pop_size");
+        validate_population_state(init_state, static_cast<int64_t>(_nb_strategies), static_cast<int64_t>(_pop_size),
+                                  "init_state");
 
         // If already absorbed, return a one-hot vector for the fixed strategy
         for (int j = 0; j < static_cast<int>(_nb_strategies); ++j) {
@@ -2171,12 +2160,8 @@ namespace egttools::FinitePopulations {
                                                             const Eigen::Ref<const VectorXui> &init_state) const {
         if (nb_generations <= 0)
             throw std::invalid_argument("nb_generations must be > 0");
-        if (init_state.size() != static_cast<int64_t>(_nb_strategies))
-            throw std::invalid_argument(
-                "init_state length must equal nb_strategies (" + std::to_string(_nb_strategies) + ")");
-        if (static_cast<size_t>(init_state.sum()) != _pop_size)
-            throw std::invalid_argument(
-                "init_state entries must sum to pop_size Z=" + std::to_string(_pop_size));
+        validate_population_state(init_state, static_cast<int64_t>(_nb_strategies), static_cast<int64_t>(_pop_size),
+                                  "init_state");
     }
 
     template<class Cache>
