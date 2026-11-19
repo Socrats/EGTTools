@@ -23,6 +23,8 @@
 #include <egttools/Types.h>
 
 #include <egttools/utils/ThreadSafeLRUCache.hpp>
+#include <cstdint>
+#include <optional>
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <tuple>
 
@@ -39,6 +41,17 @@ namespace egttools::FinitePopulations::analytical {
     using cpp_dec_float_50  = boost::multiprecision::number<boost::multiprecision::cpp_dec_float<50>>;
     using cpp_dec_float_100 = boost::multiprecision::cpp_dec_float_100;
 #endif
+    /**
+     * @brief Key of the fitness cache: the fitness of one strategy in one population state.
+     *
+     * Two disjoint ranges, both exact (no truncation, no collisions):
+     *  - full states (methods that enumerate every state): state_index * S + strategy, below 2^63;
+     *  - edge states (only two strategies present; fixation probabilities, edge fitnesses):
+     *    2^63 | (edge_code * S + strategy), where the edge code identifies the pair of strategies
+     *    and the count of the lower-indexed one. The edge methods therefore never need the global
+     *    state index, which does not fit in 64 bits for many strategies.
+     * A plain 64-bit key keeps cache lookups as fast as an integer hash.
+     */
     using FitnessCacheKey = std::uint64_t;
     using Cache = egttools::Utils::ThreadSafeLRUCache<FitnessCacheKey, double>;
 
@@ -404,7 +417,9 @@ namespace egttools::FinitePopulations::analytical {
     private:
         int population_size_, nb_strategies_;
         size_t cache_size_;
-        int64_t nb_states_;
+        // Number of states C(Z + S - 1, S - 1); empty if it does not fit in int64_t. Use nb_states(),
+        // which throws std::overflow_error in that case.
+        std::optional<int64_t> nb_states_;
         AbstractGame &game_;
 
         Cache cache_;
@@ -466,12 +481,30 @@ namespace egttools::FinitePopulations::analytical {
          *
          * @param strategy_index Index of the focal strategy.
          * @param state Current population state.
-         * @param state_index Integer index associated with the population state.
+         * @param key Cache key of (state, strategy_index): full_state_key_() or edge_key_().
          * @return Fitness of the focal strategy in the given state.
          */
         inline double calculate_fitness_(int strategy_index,
                                          const VectorXui &state,
-                                         int64_t state_index);
+                                         const FitnessCacheKey &key);
+
+        /// Cache key of a state identified by its global index (see FitnessCacheKey). Callers must
+        /// first call check_full_state_keys_(), which guarantees the key is exact.
+        [[nodiscard]] FitnessCacheKey full_state_key_(int64_t state_index, int strategy_index) const;
+
+        /// Throws std::overflow_error unless nb_states() * S + S fits below 2^63 (exact full-state keys).
+        void check_full_state_keys_() const;
+
+        /**
+         * @brief Cache key of the edge state with `count_first` individuals of `first` and the rest
+         * of `second` (first != second), for the focal strategy `strategy_index`.
+         *
+         * The edge code is (lo * S + hi) * (Z + 1) + count of lo, with lo < hi the two strategies,
+         * so it is the same whichever of the two strategies is passed first.
+         *
+         * @throws std::overflow_error if S^3 (Z + 1) does not fit below 2^63.
+         */
+        [[nodiscard]] FitnessCacheKey edge_key_(int first, int second, int count_first, int strategy_index) const;
 
         /**
          * @brief Core streaming log-sum-exp loop shared by all fixation-probability variants.

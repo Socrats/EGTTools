@@ -26,9 +26,23 @@
 #include <egttools/Types.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <egttools/math.hpp>
+#include <limits>
+#include <numeric>
+#include <optional>
 #include <random>
 #include <stdexcept>
+#include <string>
+#include <type_traits>
+
+#if defined(__GNUC__) || defined(__clang__)
+#define EGTTOOLS_NOINLINE_COLD __attribute__((noinline, cold))
+#elif defined(_MSC_VER)
+#define EGTTOOLS_NOINLINE_COLD __declspec(noinline)
+#else
+#define EGTTOOLS_NOINLINE_COLD
+#endif
 
 #if (HAS_BOOST)
 #include <boost/multiprecision/cpp_dec_float.hpp>
@@ -548,14 +562,51 @@ namespace egttools {
         return static_cast<Output>(ln_factorial(n) - ln_factorial(k) - ln_factorial(n - k));
     }
 
+    namespace detail {
+        /**
+         * @brief Slow path of binomialCoeff for integer outputs: continues from res = C(n, i) with
+         * gcd-reduced steps (exact overflow check), and throws std::overflow_error if C(n, k) does not
+         * fit below max_value. Kept out of line so the fast loop in binomialCoeff stays inlinable.
+         */
+        EGTTOOLS_NOINLINE_COLD inline std::uint64_t binomial_finish_reduced(const std::uint64_t n,
+                                                                           const std::uint64_t n_terms,
+                                                                           std::uint64_t i, std::uint64_t res,
+                                                                           const std::uint64_t max_value) {
+            for (; i < n_terms; ++i) {
+                const std::uint64_t factor = n - i;
+                const std::uint64_t g = std::gcd(res, i + 1);
+                const std::uint64_t reduced = res / g;
+                const std::uint64_t reduced_factor = factor / ((i + 1) / g);// exact division
+                if (reduced > max_value / reduced_factor)
+                    throw std::overflow_error("binomialCoeff: C(" + std::to_string(n) + ", " + std::to_string(n_terms) +
+                                              ") does not fit in the output integer type");
+                res = reduced * reduced_factor;
+            }
+            return res;
+        }
+    }// namespace detail
+
     /**
-    * @brief Calculates the binomial coefficient C(n, k)
+    * @brief Calculates the binomial coefficient C(n, k).
+    *
+    * Integer output types (e.g. int, int64_t, size_t): the result is exact, or
+    * std::overflow_error is thrown if C(n, k) does not fit in Output. Each step computes
+    * C(n, i + 1) = C(n, i) (n - i) / (i + 1). While the product C(n, i) (n - i) fits in Output,
+    * the step is a plain multiply-divide (the fast path, as fast as an unchecked loop). Past that,
+    * the step first divides out g = gcd(C(n, i), i + 1): then (i + 1) / g divides (n - i), and
+    * the product (C(n, i) / g) ((n - i) / ((i + 1) / g)) equals C(n, i + 1), so its overflow
+    * check is exact. It fails only if C(n, i + 1) does not fit, and since C(n, i) increases for
+    * i <= n / 2, the result does not fit either. No wider type is needed, and the loop runs at
+    * most ~64 times before it finishes or throws (C(n, i) >= 2^i), whatever n is.
+    *
+    * Other output types (double, boost::multiprecision::cpp_int, ...) use the unchecked loop.
     *
     * @tparam Output : Output type
     * @tparam Input : Input type
     * @param n size of the fixed set
     * @param k size of the unordered subset
-    * @return C(n, k)
+    * @return C(n, k); 0 if k > n or if n or k is negative
+    * @throws std::overflow_error for integer Output types when C(n, k) does not fit in Output
     */
     template<typename Output, typename Input>
     Output binomialCoeff(Input n, Input k) {
@@ -565,15 +616,82 @@ namespace egttools {
         // Since C(n, k) = C(n, n-k)
         if (k > n - k) k = n - k;
 
-        Output res = 1;
+        if constexpr (std::is_integral_v<Output> && std::is_integral_v<Input>) {
+            using Unsigned = std::uint64_t;
+            const auto un = static_cast<Unsigned>(n);
+            const auto n_terms = static_cast<Unsigned>(k);
+            const auto max_value = static_cast<Unsigned>(std::numeric_limits<Output>::max());
 
-        // Calculate value of [n * (n-1) * ... * (n-k+1)] / [k * (k-1) * ... * 1]
-        for (Input i = 0; i < k; ++i) {
-            res *= static_cast<Output>(n - i);
-            res /= static_cast<Output>(i + 1);
+            Unsigned res = 1;// C(n, i)
+            for (Unsigned i = 0; i < n_terms; ++i) {
+                const Unsigned factor = un - i;
+                // Fast path: res * factor <= max_value, and the division is exact.
+#if defined(__GNUC__) || defined(__clang__)
+                // A multiply with an overflow flag: no extra division in the common case.
+                if (Unsigned product; !__builtin_mul_overflow(res, factor, &product) && product <= max_value) {
+                    res = product / (i + 1);
+                    continue;
+                }
+#else
+                if (res <= max_value / factor) {
+                    res = res * factor / (i + 1);
+                    continue;
+                }
+#endif
+                // Rare: finish out of line, so this function stays small enough to inline in hot loops.
+                return static_cast<Output>(detail::binomial_finish_reduced(un, n_terms, i, res, max_value));
+            }
+            return static_cast<Output>(res);
+        } else {
+            Output res = 1;
+
+            // Calculate value of [n * (n-1) * ... * (n-k+1)] / [k * (k-1) * ... * 1]
+            for (Input i = 0; i < k; ++i) {
+                res *= static_cast<Output>(n - i);
+                res /= static_cast<Output>(i + 1);
+            }
+
+            return res;
         }
+    }
 
-        return res;
+    /**
+     * @brief Number of states of a population: C(Z + S - 1, S - 1), the ways to divide
+     * Z individuals among S strategies.
+     *
+     * @param population_size Z (>= 0)
+     * @param nb_strategies S (>= 1)
+     * @return the exact number of states
+     * @throws std::invalid_argument for negative Z or S < 1
+     * @throws std::overflow_error if the count does not fit in int64_t (the message names Z and S)
+     */
+    inline int64_t checked_nb_states(const int64_t population_size, const int64_t nb_strategies) {
+        if (population_size < 0 || nb_strategies < 1)
+            throw std::invalid_argument("the number of states needs a population size >= 0 and at least 1 strategy");
+        try {
+            return binomialCoeff<int64_t, int64_t>(population_size + nb_strategies - 1, nb_strategies - 1);
+        } catch (const std::overflow_error &) {
+            throw std::overflow_error("the number of population states C(Z + S - 1, S - 1) for Z = " +
+                                      std::to_string(population_size) + " and S = " + std::to_string(nb_strategies) +
+                                      " does not fit in a 64-bit integer; methods that enumerate every state "
+                                      "cannot be used for this population");
+        }
+    }
+
+    /**
+     * @brief Number of states C(Z + S - 1, S - 1), or std::nullopt if it does not fit in int64_t.
+     *
+     * For classes whose constructor must work for any valid population (methods such as fixation
+     * probabilities never need the count): store the result, and call checked_nb_states() again
+     * where the count is needed, so the caller gets an overflow_error naming Z and S.
+     */
+    inline std::optional<int64_t> nb_states_if_representable(const int64_t population_size,
+                                                             const int64_t nb_strategies) {
+        try {
+            return checked_nb_states(population_size, nb_strategies);
+        } catch (const std::overflow_error &) {
+            return std::nullopt;
+        }
     }
 
 #if (HAS_BOOST)

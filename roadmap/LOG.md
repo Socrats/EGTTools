@@ -2,6 +2,7 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-19 · MEM-08 · Review (branch `mem-08-state-counts`): exact 64-bit state counts and checked integer binomials; exact fitness-cache keys (edge keys for fixation). 25/25 C++, 694 Python, 27/27 under ASan+UBSan; transition matrix within 1-4% of master, fixation/SML 28% faster.
 - 2026-11-19 · TEST-10 · Follow-up (branch `test-10-fix-flaky-timing`): `test_timing_uncertainty` failed in CI; unseeded with a ±2 SE tolerance (3.8% false failures measured). Now a fixed seed, 4 SE, and a power check.
 - 2026-11-19 · TEST-12 · Added: numerical-stability audit; `BirthDeath`/`DeathBirth` exponentiate fitness without subtracting the maximum.
 - 2026-11-19 · MEM-08 · Design agreed: exact gcd-reduced binomial with overflow check, optional state counts, `OverflowError` on use.

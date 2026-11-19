@@ -19,6 +19,7 @@
 #ifndef EGTTOOLS_FINITEPOPULATIONS_IMITATIONMULTIPLEGAMES_HPP
 #define EGTTOOLS_FINITEPOPULATIONS_IMITATIONMULTIPLEGAMES_HPP
 
+#include <optional>
 #include <egttools/SeedGenerator.h>
 #include <egttools/Types.h>
 
@@ -110,7 +111,10 @@ namespace egttools::FinitePopulations {
         void change_game(size_t game_index, egttools::FinitePopulations::AbstractGame &game);
 
     private:
-        size_t _nb_strategies, _pop_size, _cache_size, _nb_states;
+        size_t _nb_strategies, _pop_size, _cache_size;
+        // Number of states C(Z + S - 1, S - 1); empty if it does not fit in int64_t.
+        // _state_sampler is valid only when it is set.
+        std::optional<int64_t> _nb_states;
         std::vector<egttools::FinitePopulations::AbstractGame> &_games;
 
         // Random distributions
@@ -208,8 +212,8 @@ namespace egttools::FinitePopulations {
         _pop_sampler = std::uniform_int_distribution<size_t>(0, _pop_size - 1);
         _strategy_sampler = std::uniform_int_distribution<size_t>(0, _nb_strategies - 1);
         _real_rand = std::uniform_real_distribution<double>(0.0, 1.0);
-        _nb_states = egttools::starsBars(_pop_size, _nb_strategies);
-        _state_sampler = std::uniform_int_distribution<size_t>(0, _nb_states - 1);
+        _nb_states = egttools::nb_states_if_representable(static_cast<int64_t>(_pop_size), static_cast<int64_t>(_nb_strategies));
+        if (_nb_states) _state_sampler = std::uniform_int_distribution<size_t>(0, static_cast<size_t>(*_nb_states) - 1);
     }
 
     template<class Cache>
@@ -293,8 +297,11 @@ namespace egttools::FinitePopulations {
     ImitationMultipleGames<Cache>::estimate_stationary_distribution_sparse(size_t nb_runs, size_t nb_generations, size_t transitory, double beta,
                                                                            double mu) {
         // First we initialise the container for the stationary distribution
-        auto sdist = SparseMatrix2DXui(1, _nb_states);
-        //        sdist.reserve(VectorXi::Constant(_nb_states, std::min(10000, static_cast<int>(_nb_states))));
+        // Needs the full state space: throws std::overflow_error if the number of states does not fit in int64_t.
+        const int64_t total_states = _nb_states ? *_nb_states
+                                                : egttools::checked_nb_states(static_cast<int64_t>(_pop_size),
+                                                                              static_cast<int64_t>(_nb_strategies));
+        auto sdist = SparseMatrix2DXui(1, total_states);
         // Distribution number of generations for a mutation to happen
         std::geometric_distribution<size_t> geometric(mu);
 
@@ -653,8 +660,8 @@ namespace egttools::FinitePopulations {
     template<class Cache>
     void ImitationMultipleGames<Cache>::set_population_size(size_t pop_size) {
         _pop_size = pop_size;
-        _nb_states = egttools::starsBars(_pop_size, _nb_strategies);
-        _state_sampler = std::uniform_int_distribution<size_t>(0, _nb_states - 1);
+        _nb_states = egttools::nb_states_if_representable(static_cast<int64_t>(_pop_size), static_cast<int64_t>(_nb_strategies));
+        if (_nb_states) _state_sampler = std::uniform_int_distribution<size_t>(0, static_cast<size_t>(*_nb_states) - 1);
         _pop_sampler = std::uniform_int_distribution<size_t>(0, _pop_size - 1);
     }
 

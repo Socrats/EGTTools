@@ -17,17 +17,47 @@
 */
 
 #include <egttools/finite_populations/analytical/PairwiseComparison.hpp>
+#include <algorithm>
 #include <atomic>
 #include <cmath>
 #include <limits>
+#include <stdexcept>
 
 namespace {
-    inline std::uint64_t make_fitness_cache_key(const int64_t state_index,
-                                                const int strategy_index) {
-        return (static_cast<std::uint64_t>(state_index) << 32) |
-               static_cast<std::uint32_t>(strategy_index);
-    }
+    constexpr std::uint64_t kEdgeKeyFlag = std::uint64_t{1} << 63;// marks the edge-state key range
+    constexpr std::uint64_t kKeyLimit = kEdgeKeyFlag;             // both ranges stay below 2^63
 } // namespace
+
+void egttools::FinitePopulations::analytical::PairwiseComparison::check_full_state_keys_() const {
+    const auto total_states = static_cast<std::uint64_t>(nb_states());// throws if the count does not fit
+    const auto nb_strategies = static_cast<std::uint64_t>(nb_strategies_);
+    if (total_states > (kKeyLimit - nb_strategies) / nb_strategies)
+        throw std::overflow_error("fitness cache: nb_states * S does not fit below 2^63");
+}
+
+egttools::FinitePopulations::analytical::FitnessCacheKey
+egttools::FinitePopulations::analytical::PairwiseComparison::full_state_key_(const int64_t state_index,
+                                                                             const int strategy_index) const {
+    // Exact after check_full_state_keys_(): state_index < nb_states, so the key is below 2^63.
+    return static_cast<std::uint64_t>(state_index) * static_cast<std::uint64_t>(nb_strategies_) +
+           static_cast<std::uint64_t>(strategy_index);
+}
+
+egttools::FinitePopulations::analytical::FitnessCacheKey
+egttools::FinitePopulations::analytical::PairwiseComparison::edge_key_(const int first, const int second,
+                                                                       const int count_first,
+                                                                       const int strategy_index) const {
+    const auto lo = static_cast<std::uint64_t>(std::min(first, second));
+    const auto hi = static_cast<std::uint64_t>(std::max(first, second));
+    const auto count_lo = static_cast<std::uint64_t>(first < second ? count_first : population_size_ - count_first);
+    const auto nb_strategies = static_cast<std::uint64_t>(nb_strategies_);
+    const auto nb_counts = static_cast<std::uint64_t>(population_size_) + 1;
+    // edge_code * S + strategy < S^3 (Z + 1) must stay below 2^63.
+    if (nb_strategies * nb_strategies > kKeyLimit / nb_counts / nb_strategies)
+        throw std::overflow_error("fitness cache: S^3 (Z + 1) does not fit below 2^63");
+    const std::uint64_t edge_code = (lo * nb_strategies + hi) * nb_counts + count_lo;
+    return kEdgeKeyFlag | (edge_code * nb_strategies + static_cast<std::uint64_t>(strategy_index));
+}
 
 egttools::FinitePopulations::analytical::PairwiseComparison::PairwiseComparison(int population_size,
     AbstractGame &game) : population_size_(population_size),
@@ -40,7 +70,7 @@ egttools::FinitePopulations::analytical::PairwiseComparison::PairwiseComparison(
     }
 
     nb_strategies_ = static_cast<int>(game.nb_strategies());
-    nb_states_ = egttools::starsBars(population_size_, nb_strategies_);
+    nb_states_ = egttools::nb_states_if_representable(population_size_, nb_strategies_);
 }
 
 egttools::FinitePopulations::analytical::PairwiseComparison::PairwiseComparison(int population_size,
@@ -54,7 +84,7 @@ egttools::FinitePopulations::analytical::PairwiseComparison::PairwiseComparison(
     }
 
     nb_strategies_ = static_cast<int>(game.nb_strategies());
-    nb_states_ = egttools::starsBars(population_size_, nb_strategies_);
+    nb_states_ = egttools::nb_states_if_representable(population_size_, nb_strategies_);
 }
 
 void egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_edge_fitnesses() {
@@ -66,7 +96,8 @@ void egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_
 #endif
     for (int i = 0; i < nb_strategies_; ++i) {
         VectorXui population_state = VectorXui::Zero(nb_strategies_);
-        for (int j = i; j < nb_strategies_; ++j) {
+        // Only edges between two different strategies (j > i): with j == i the state would not sum to Z.
+        for (int j = i + 1; j < nb_strategies_; ++j) {
             for (int z = 1; z < population_size_; ++z) {
                 population_state(i) = z;
                 population_state(j) = population_size_ - z;
@@ -88,17 +119,11 @@ void egttools::FinitePopulations::analytical::PairwiseComparison::pre_calculate_
     // Now we add the to cache
     VectorXui population_state = VectorXui::Zero(nb_strategies_);
     for (int i = 0; i < nb_strategies_; ++i) {
-        for (int j = i; j < nb_strategies_; ++j) {
+        for (int j = i + 1; j < nb_strategies_; ++j) {
             for (int z = 1; z < population_size_; ++z) {
-                population_state(i) = z;
-                population_state(j) = population_size_ - z;
-                // add fitness value to cache
-                const int64_t state_index =
-                        static_cast<int64_t>(calculate_state(
-                            population_size_, population_state));
-
-                const auto key1 = make_fitness_cache_key(state_index, i);
-                const auto key2 = make_fitness_cache_key(state_index, j);
+                // Edge state: z individuals of i and population_size_ - z of j.
+                const auto key1 = edge_key_(i, j, z, i);
+                const auto key2 = edge_key_(i, j, z, j);
 
                 cache_.put(key1, fitnesses(i, j * nb_elements + (z - 1)));
                 cache_.put(key2, fitnesses(j, i * nb_elements + (population_size_ - z - 1)));
@@ -115,13 +140,15 @@ egttools::FinitePopulations::analytical::PairwiseComparison::compute_fitness_mat
     // This method calls game_.calculate_fitness() — which may call into Python —
     // and is therefore intentionally serial: the caller must hold the Python GIL
     // if the game has Python callbacks.
-    Matrix2D fitness = Matrix2D::Zero(nb_strategies_, nb_states_);
+    const int64_t total_states = nb_states();// throws std::overflow_error if the count does not fit
+    check_full_state_keys_();
+    Matrix2D fitness = Matrix2D::Zero(nb_strategies_, total_states);
     VectorXui state(nb_strategies_);
-    for (int64_t s = 0; s < nb_states_; ++s) {
+    for (int64_t s = 0; s < total_states; ++s) {
         sample_simplex(s, population_size_, nb_strategies_, state);
         for (int i = 0; i < nb_strategies_; ++i) {
             if (state(i) > 0) {
-                fitness(i, s) = calculate_fitness_(i, state, s);
+                fitness(i, s) = calculate_fitness_(i, state, full_state_key_(s, i));
             }
         }
     }
@@ -137,7 +164,7 @@ egttools::FinitePopulations::analytical::PairwiseComparison::assemble_transition
     using Triplet = Eigen::Triplet<double>;
     const double row_tol = 1e-10;
 
-    const int64_t S = nb_states_;
+    const int64_t S = nb_states();// throws std::overflow_error if the count does not fit
     const int k = nb_strategies_;
     const int N = population_size_;
 
@@ -471,12 +498,14 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_lo
         population_state(index_invading_strategy) = i;
         population_state(index_resident_strategy) = population_size_ - i;
 
-        const int64_t state_index =
-                static_cast<int64_t>(egttools::FinitePopulations::calculate_state(
-                    population_size_, population_state));
-
-        const auto f_inv = calculate_fitness_(index_invading_strategy, population_state, state_index);
-        const auto f_res = calculate_fitness_(index_resident_strategy, population_state, state_index);
+        // Edge state (i invaders, population_size_ - i residents): keyed by its edge code, so no
+        // global state index is needed (it may not fit in 64 bits for many strategies).
+        const auto f_inv = calculate_fitness_(index_invading_strategy, population_state,
+                                              edge_key_(index_invading_strategy, index_resident_strategy, i,
+                                                        index_invading_strategy));
+        const auto f_res = calculate_fitness_(index_resident_strategy, population_state,
+                                              edge_key_(index_invading_strategy, index_resident_strategy, i,
+                                                        index_resident_strategy));
 
         // log(p- / p+) = beta * (f_resident - f_invading): always finite
         log_prod += beta * (f_res - f_inv);
@@ -541,12 +570,14 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fi
         population_state(index_invading_strategy) = i;
         population_state(index_resident_strategy) = population_size_ - i;
 
-        const int64_t state_index =
-                static_cast<int64_t>(egttools::FinitePopulations::calculate_state(
-                    population_size_, population_state));
-
-        const auto f_inv = calculate_fitness_(index_invading_strategy, population_state, state_index);
-        const auto f_res = calculate_fitness_(index_resident_strategy, population_state, state_index);
+        // Edge state (i invaders, population_size_ - i residents): keyed by its edge code, so no
+        // global state index is needed (it may not fit in 64 bits for many strategies).
+        const auto f_inv = calculate_fitness_(index_invading_strategy, population_state,
+                                              edge_key_(index_invading_strategy, index_resident_strategy, i,
+                                                        index_invading_strategy));
+        const auto f_res = calculate_fitness_(index_resident_strategy, population_state,
+                                              edge_key_(index_invading_strategy, index_resident_strategy, i,
+                                                        index_resident_strategy));
 
         log_prod += Scalar(beta) * (Scalar(f_res) - Scalar(f_inv));
 
@@ -642,7 +673,7 @@ void egttools::FinitePopulations::analytical::PairwiseComparison::update_populat
     }
 
     population_size_ = population_size;
-    nb_states_ = starsBars(population_size_, nb_strategies_);
+    nb_states_ = egttools::nb_states_if_representable(population_size_, nb_strategies_);
 }
 
 int egttools::FinitePopulations::analytical::PairwiseComparison::nb_strategies() const {
@@ -650,7 +681,8 @@ int egttools::FinitePopulations::analytical::PairwiseComparison::nb_strategies()
 }
 
 int64_t egttools::FinitePopulations::analytical::PairwiseComparison::nb_states() const {
-    return nb_states_;
+    // An empty count means it does not fit in int64_t: recomputing throws an overflow_error naming Z and S.
+    return nb_states_ ? *nb_states_ : egttools::checked_nb_states(population_size_, nb_strategies_);
 }
 
 int egttools::FinitePopulations::analytical::PairwiseComparison::population_size() const {
@@ -700,8 +732,7 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_lo
 double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fitness_(
     const int strategy_index,
     const VectorXui &state,
-    const int64_t state_index) {
-    const auto key = make_fitness_cache_key(state_index, strategy_index);
+    const FitnessCacheKey &key) {
 
     if (const auto value = cache_.get(key); value) {
         return *value;

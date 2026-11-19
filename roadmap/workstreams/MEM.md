@@ -14,7 +14,7 @@ changes. Today nothing checks for them in CI.
 | MEM-05 | Audit pybind11 ownership: `return_value_policy::reference` and `keep_alive` uses | todo | P1 | M | 0.3 | — | — |
 | MEM-06 | Memory-growth regression tests on long-running estimators (pytest-memray limits) | todo | P1 | S | 0.3 | — | — |
 | MEM-07 | Document how to run sanitizer builds locally (Linux and macOS) | todo | P2 | S | 0.3 | MEM-01 | — |
-| MEM-08 | State counts in 64-bit: `starsBars` deduced as `int` overflows (UB) in `PairwiseComparison` and other constructors; mark counts that do not fit as too large | todo | P0 | S | 0.3 | MEM-01 | — |
+| MEM-08 | State counts in 64-bit: `starsBars` deduced as `int` overflows (UB) in `PairwiseComparison` and other constructors; mark counts that do not fit as too large | review | P0 | S | 0.3 | MEM-01 | branch `mem-08-state-counts` |
 | MEM-09 | Validate strategy indices and state vectors at public entry points (`PairwiseComparison` first, then audit); raise `ValueError` | todo | P0 | M | 0.3 | — | — |
 | MEM-10 | Consistent 64-bit types: audit `Types.h` and every size, count and index type (no `int`/`long` for sizes; `long` is 32-bit on Windows) | todo | P1 | L | 0.3 | MEM-08 | — |
 
@@ -37,20 +37,30 @@ Found by the first sanitizer run (MEM-01, 2026-11-19): signed overflow in the st
   constructor although fixation probabilities never use it. The `size_t` call sites
   (`PairwiseComparisonNumerical`, `ImitationMultipleGames`, the transition operator,
   `NetworkEvolver`, the PETSc operator) overflow silently above 2^64.
-  Design (agreed 2026-11-19):
-  - Primitive: an exact binomial with an overflow check, without Boost. Each step
-    res·(n−i)/(i+1) first divides out g = gcd(res, i+1); then (i+1)/g divides (n−i), and the
-    product equals C(n, i+1), so it overflows only if C(n, i+1) does not fit, and then neither
-    does the result (C(n, i) increases up to n/2). Throws `std::overflow_error`. PERF-07 reuses it.
-  - Classes store the count as `std::optional<int64_t>`; `nb_states()` and every method that
-    needs the full state space go through one accessor that throws `std::overflow_error`
-    (Python `OverflowError`) naming Z and S. Methods that do not need it (fixation, edges) work.
-  - `egttools.calculate_nb_states` raises `OverflowError` the same way.
-  - Tests first, shown to fail on master: the checked binomial against exact values, the largest
-    C(n, k) that fits in `int64` and the next one (throws), `SIZE_MAX` arguments; `nb_states` of
-    every class at the sizes that failed vs `math.comb`; Z = 100, S = 29: construction and
-    fixation work, `nb_states` and transition-matrix methods raise `OverflowError`;
-    `testFixations` passes under ASan + UBSan.
+  Done (2026-11-19), with two changes to the first design, both measured:
+  - The exact overflow check went into `binomialCoeff` itself for integer outputs (one function for
+    every caller), not into a separate `checked_binomial`. Fast path: a multiply with an overflow
+    flag (`__builtin_mul_overflow`; one division on MSVC); past the limit, a gcd-reduced exact step
+    in an out-of-line cold function (`detail::binomial_finish_reduced`) that throws
+    `std::overflow_error`. Inlined with the slow path, the check made the transition matrix
+    15-20% slower (it calls `calculate_state` for every neighbour); out of line, +1-4% (noise level).
+  - Fitness-cache keys stay 64-bit (a 16-byte key struct was measurably slower): full states
+    `index * S + strategy` (checked once to stay below 2^63), edge states `2^63 | (edge_code * S +
+    strategy)` with edge_code = (lo * S + hi) * (Z + 1) + count of lo. Fixation probabilities and
+    edge fitnesses never compute global indices any more (the index of an edge state with 29
+    strategies is ~1e28): fixation and SML about 28% faster. The old `index << 32` keys did not
+    collide in any configuration checked (Z ≤ 1000, S ≤ 29, simulated exactly in Python).
+  - Counts are `std::optional<int64_t>` (`nb_states_if_representable`); `nb_states()` and every
+    state-space method throw `std::overflow_error` (Python `OverflowError`) naming Z and S, before
+    any OpenMP region. `PairwiseComparisonTransitionOperator` and the PETSc operator throw at
+    construction (PETSc also checks the `PetscInt` range). `egttools.calculate_nb_states` was
+    already exact (`cpp_int`) and is unchanged.
+  - `pre_calculate_edge_fitnesses` skips j == i (states that do not sum to Z).
+  Tests: `tests/cpp/test_binomial_coeff_overflow.cpp` (against Pascal's triangle up to n = 80, int64
+  and uint64 boundaries, SIZE_MAX), `tests/test_state_counts.py` (32 tests: counts vs `math.comb`,
+  OverflowError cases, fixation with 29 strategies vs a cache-free reference). Confirmed to fail on
+  master first, under `scripts/memguard.py` (an unguarded run of the transition-matrix test
+  allocated over 100 GB).
 - **MEM-09**: with 4 strategies and Z = 100, `calculate_fixation_probability(7, 0, β)` returns 1.0
   and `(-1, 0, β)` returns 1.7e-15; `calculate_gradient_of_selection` accepts states that do not sum
   to Z, a length-2 state (reads past the vector: ±2.2e7) and a length-5 state (extra entry ignored).

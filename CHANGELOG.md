@@ -14,6 +14,29 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   not fit wrapped around silently. It is now exact for every result below 2^128 and throws
   `std::overflow_error` above. It runs in fixed-width arithmetic while the value is below 2^64 and
   switches to arbitrary precision only for larger results. No Python function uses it.
+- **Number of population states.** `PairwiseComparison` computed C(Z + S - 1, S - 1) in 32-bit
+  `int`, so `nb_states()` was wrong (negative) from 6 strategies at Z = 136, 8 at Z = 52 and 10 at
+  Z = 31, although the true count fits. Every class now computes the count exactly in 64 bits. When
+  it does not fit in a signed 64-bit integer, the class still constructs and the methods that do not
+  enumerate states (fixation probabilities, edge fitnesses) work; `nb_states` and the methods that
+  need every state (transition matrices, stationary-distribution estimates,
+  `PairwiseComparisonTransitionOperator`) raise `OverflowError` naming Z and S, instead of using a
+  wrapped count (the transition matrix could try to allocate without bound).
+  `egttools.calculate_nb_states` is unchanged: it already returned exact integers of any size.
+- **Integer binomial coefficients (C++ API).** `egttools::binomialCoeff` with an integer output type
+  is now exact or throws `std::overflow_error`; it used to wrap around silently in the intermediate
+  product (for 64-bit outputs from n = 63). Floating-point and arbitrary-precision outputs are
+  unchanged. The common case stays as fast as before; a slower exact step runs only near the limit.
+- **Fitness cache of `PairwiseComparison`.** Fixation probabilities and edge fitnesses identified each
+  state by its global index, packed into a 64-bit key with `index << 32`. With many strategies that
+  index does not fit in 64 bits (e.g. 29 strategies, Z = 100: about 1e28 states) and was computed
+  with wrap-around, and the shift discarded the upper 32 bits of any index. Edge states now have
+  their own exact keys (pair of strategies and count), and full-state keys are exact
+  (`index * S + strategy`). In every configuration we checked (up to 29 strategies) the old keys did
+  not collide, so earlier fixation probabilities were correct there, but this was not guaranteed for
+  very large state spaces; recompute such results if in doubt. Fixation probabilities and SML
+  matrices are about 28% faster, as they no longer compute global indices.
+  `pre_calculate_edge_fitnesses` no longer evaluates fitness in states that do not sum to Z.
 
 ### Testing
 
@@ -30,6 +53,8 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   for development and CI only. Undefined behaviour aborts the program, so it fails the test that
   triggers it. In such builds, `testSanitizerCanary` checks that each enabled sanitizer reports a
   deliberate error.
+- `scripts/memguard.py` runs a command and kills it if its memory (the whole process tree)
+  exceeds a limit, for test runs that may allocate without bound.
 
 ## [0.2.0] - 2026-11-19
 
