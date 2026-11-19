@@ -2,6 +2,7 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-19 · API-09 · Review (branch `api-09-stub-signatures`): real signatures in stubs and docstrings, numbered overloads in the docs, CI stub check; `TimingUncertainty` sampling usable from Python with `seed`.
 - 2026-11-19 · MEM-09 · Merged (`897e6f2b`): Tests green.
 - 2026-11-19 · API-11 · Added: audit of the pybind11 bindings' types (float counts silently truncated, uint64 counts returned, unclear TypeErrors for bad values).
 - 2026-11-19 · API-09/API-10/MEM-11 · Added: real signatures in the stubs; rename the two pairwise-comparison classes (0.4); validation audit of the other classes.
