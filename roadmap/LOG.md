@@ -2,8 +2,9 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-19 · REL-09 · Done: `v0.2.0` tagged on `924cf857` and released on GitHub, PyPI and conda. Same code as rc3 (tested from TestPyPI: 651 passed); only CI, packaging metadata and the roadmap changed.
+- 2026-11-19 · REL-09 · First `v0.2.0` tag (on the rc3 commit) built every artefact as 0.2.0rc3: actions/checkout turns the pushed tag into a lightweight tag, and `git describe` prefers the annotated rc tag on the same commit. Release and tag deleted; the workflows now restore annotated tags and check artefact versions.
 - 2026-11-18 · TEST-10 · Added: the C++ tests rely on `assert`, which Release builds remove.
-- 2026-11-18 · REL-09 · Done: `v0.2.0` tagged on `c046ef89` (same commit as rc3, tested from TestPyPI: 651 passed), released on GitHub and PyPI.
 - 2026-11-18 · CI-08 · Extended to conda-lock for the environments we create.
 - 2026-11-18 · CI-09 · Added: move CI to Ubuntu 26.04 after the release; actions moved to Node 24 (branch `ci-node24-runners`).
 - 2026-11-18 · DOC-15 · Added: improve the README and update its examples.
