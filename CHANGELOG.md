@@ -20,6 +20,14 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Function signatures in docstrings and type stubs.** The bindings no longer disable pybind11's
+  function signatures, so every docstring starts with the real signature and the `.pyi` stubs list
+  real parameters and types (with one `@overload` per variant) instead of `*args, **kwargs`. The stubs
+  were regenerated with a pinned `pybind11-stubgen` (2.5.1), and CI fails if they are out of date. In
+  the documentation, overloaded functions show their overloads numbered, each with its signature.
+- `TimingUncertainty.calculate_end` and `calculate_full_end` take an optional `seed` instead of a C++
+  random-number engine, which could not be created from Python, so these methods were not usable
+  before. With `seed=None` they draw from the global seed generator (`egttools.Random.init_with_seed`).
 - An out-of-range strategy index raises `IndexError`; other invalid arguments (equal invader and
   resident, malformed states) raise `ValueError`. `PairwiseComparisonNumerical.estimate_fixation_probability`
   used to raise `ValueError` for an out-of-range index.

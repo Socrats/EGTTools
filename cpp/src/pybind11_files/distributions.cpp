@@ -21,8 +21,6 @@ void init_distributions(py::module_ &mDistributions) {
     mDistributions.doc() =
             "The `egttools.numerical.distributions` submodule contains functions and classes "
             "for probability distributions and timing uncertainty."; {
-        py::options options;
-        options.disable_function_signatures();
 
         py::class_<egttools::utils::TimingUncertainty<> >(
                     mDistributions,
@@ -53,7 +51,11 @@ void init_distributions(py::module_ &mDistributions) {
                 )
                 .def(
                     "calculate_end",
-                    &egttools::utils::TimingUncertainty<>::calculate_end,
+                    [](egttools::utils::TimingUncertainty<> &self, const int min_rounds,
+                       const std::optional<unsigned long int> seed) {
+                        std::mt19937_64 generator(seed ? *seed : egttools::Random::SeedGenerator::getInstance().getSeed());
+                        return self.calculate_end(min_rounds, generator);
+                    },
                     R"pbdoc(
                     Sample the final round, truncated by `max_rounds`.
 
@@ -64,8 +66,10 @@ void init_distributions(py::module_ &mDistributions) {
                     ----------
                     min_rounds : int
                         Minimum number of rounds.
-                    random_generator : object
-                        Random number generator used internally.
+                    seed : int, optional
+                        Seed for this draw. If ``None`` (default), a seed is taken from the library's
+                        global seed generator, so the results are reproducible after
+                        :func:`egttools.Random.init_with_seed`.
 
                     Returns
                     -------
@@ -73,11 +77,15 @@ void init_distributions(py::module_ &mDistributions) {
                         Sampled final round.
                 )pbdoc",
                     py::arg("min_rounds"),
-                    py::arg("random_generator")
+                    py::arg("seed") = py::none()
                 )
                 .def(
                     "calculate_full_end",
-                    &egttools::utils::TimingUncertainty<>::calculate_full_end,
+                    [](egttools::utils::TimingUncertainty<> &self, const int min_rounds,
+                       const std::optional<unsigned long int> seed) {
+                        std::mt19937_64 generator(seed ? *seed : egttools::Random::SeedGenerator::getInstance().getSeed());
+                        return self.calculate_full_end(min_rounds, generator);
+                    },
                     R"pbdoc(
                     Sample the final round without truncation.
 
@@ -87,8 +95,10 @@ void init_distributions(py::module_ &mDistributions) {
                     ----------
                     min_rounds : int
                         Minimum number of rounds.
-                    random_generator : object
-                        Random number generator used internally.
+                    seed : int, optional
+                        Seed for this draw. If ``None`` (default), a seed is taken from the library's
+                        global seed generator, so the results are reproducible after
+                        :func:`egttools.Random.init_with_seed`.
 
                     Returns
                     -------
@@ -96,7 +106,7 @@ void init_distributions(py::module_ &mDistributions) {
                         Sampled final round.
                 )pbdoc",
                     py::arg("min_rounds"),
-                    py::arg("random_generator")
+                    py::arg("seed") = py::none()
                 )
                 .def_property_readonly(
                     "p",

@@ -2,10 +2,11 @@
 The `egttools.numerical.behaviors` submodule contains the available strategies to evolve.
 """
 from __future__ import annotations
+import typing
 from . import CRD
 from . import NormalForm
-__all__: list[str] = ['CRD', 'NormalForm', 'call_get_action']
-def call_get_action(strategies: list, time_step: int, prev_action: int) -> str:
+__all__ = ['CRD', 'NormalForm', 'call_get_action']
+def call_get_action(strategies: list, time_step: typing.SupportsInt | typing.SupportsIndex, prev_action: typing.SupportsInt | typing.SupportsIndex) -> str:
     """
                 Return a string representation of the actions chosen by a list of strategies.
     

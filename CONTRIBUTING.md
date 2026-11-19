@@ -74,8 +74,11 @@ Results computed with EGTtools end up in papers, so correctness is the first req
 ## Changelog, stubs and documentation
 
 - Add an entry under *Unreleased* in `CHANGELOG.md` for every user-visible change.
-- If you change the C++ bindings, regenerate the type stubs:
-  `pybind11-stubgen egttools.numerical.numerical_ -o src`.
+- If you change the C++ bindings, rebuild the extension and regenerate the type stubs with the
+  pinned generator: `pip install pybind11-stubgen==2.5.1`, then
+  `pybind11-stubgen egttools.numerical.numerical_ -o src`. CI fails if the committed stubs differ.
+  Keep function signatures enabled in the bindings (no `disable_function_signatures()`): the
+  stubs and the docs read them from the docstrings.
 - Update the docstrings and, where relevant, the user guide and examples in `docs/`.
 
 ## Compatibility

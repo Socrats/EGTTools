@@ -46,8 +46,6 @@ namespace egttools {
 } // namespace egttools
 
 void init_methods(py::module_ &m) { {
-        py::options options;
-        options.disable_function_signatures();
 
         m.def(
             "calculate_state",
@@ -1713,10 +1711,7 @@ egttools.games.AbstractGame
 )pbdoc"
                 );
 
-        options.enable_function_signatures();
     } {
-        py::options options;
-        options.disable_function_signatures();
 
         auto pair_comp = py::class_<PairwiseComparison>(
                     m,
@@ -2643,10 +2638,7 @@ numpy.ndarray
 Removed. Raises NotImplementedError; use ``run_with_mutation`` or ``run_without_mutation``.
 )pbdoc");
 
-        options.enable_function_signatures();
     } {
-        py::options options;
-        options.disable_function_signatures();
 
         py::class_<FinitePopulations::evolvers::GeneralPopulationEvolver>(
                     m,
@@ -2699,7 +2691,6 @@ Return the structure used by the evolver.
                 );
 
 
-        options.enable_function_signatures();
     }
 
     // -------------------------------------------------------------------------
@@ -2708,8 +2699,6 @@ Return the structure used by the evolver.
     {
         using TransitionOperator = FinitePopulations::PairwiseComparisonTransitionOperator;
 
-        py::options options;
-        options.disable_function_signatures();
 
         py::class_<TransitionOperator>(
             m,

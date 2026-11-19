@@ -2,17 +2,21 @@
 The `egttools.numerical.behaviors.NormalForm` submodule contains the strategies for normal-form games.
 """
 from __future__ import annotations
+import typing
 from . import TwoActions
-__all__: list[str] = ['AbstractNFGStrategy', 'TwoActions']
+__all__ = ['AbstractNFGStrategy', 'TwoActions']
 class AbstractNFGStrategy:
     """
     
                 Abstract base class for strategies in repeated two-action normal-form games.
             
     """
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
     def __init__(self) -> None:
         ...
-    def get_action(self, time_step: int, action_prev: int) -> int:
+    def get_action(self, time_step: typing.SupportsInt | typing.SupportsIndex, action_prev: typing.SupportsInt | typing.SupportsIndex) -> int:
         """
                         Return the action chosen by the strategy.
         

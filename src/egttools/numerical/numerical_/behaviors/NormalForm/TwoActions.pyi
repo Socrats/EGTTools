@@ -3,12 +3,16 @@ The `egttools.numerical.behaviors.NormalForm.TwoActions` submodule contains the 
 """
 from __future__ import annotations
 import egttools.numerical.numerical_.behaviors.NormalForm
-__all__: list[str] = ['ActionInertia', 'Cooperator', 'Defector', 'GRIM', 'GenerousTFT', 'GradualTFT', 'ImperfectTFT', 'Pavlov', 'Random', 'SuspiciousTFT', 'TFT', 'TFTT', 'TTFT']
+import typing
+__all__ = ['ActionInertia', 'Cooperator', 'Defector', 'GRIM', 'GenerousTFT', 'GradualTFT', 'ImperfectTFT', 'Pavlov', 'Random', 'SuspiciousTFT', 'TFT', 'TFTT', 'TTFT']
 class ActionInertia(egttools.numerical.numerical_.behaviors.NormalForm.AbstractNFGStrategy):
     """
     Strategy that tends to repeat its previous action.
     """
-    def __init__(self, epsilon: float, p: float) -> None:
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
+    def __init__(self, epsilon: typing.SupportsFloat | typing.SupportsIndex, p: typing.SupportsFloat | typing.SupportsIndex) -> None:
         """
                         Construct an ActionInertia strategy.
         
@@ -22,7 +26,7 @@ class ActionInertia(egttools.numerical.numerical_.behaviors.NormalForm.AbstractN
                         p : float
                             Probability of cooperation in the first round.
         """
-    def get_action(self, time_step: int, action_prev: int) -> int:
+    def get_action(self, time_step: typing.SupportsInt | typing.SupportsIndex, action_prev: typing.SupportsInt | typing.SupportsIndex) -> int:
         """
                         Return the action chosen by the strategy.
         
@@ -50,9 +54,12 @@ class Cooperator(egttools.numerical.numerical_.behaviors.NormalForm.AbstractNFGS
     """
     Strategy that always cooperates.
     """
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
     def __init__(self) -> None:
         ...
-    def get_action(self, time_step: int, action_prev: int) -> int:
+    def get_action(self, time_step: typing.SupportsInt | typing.SupportsIndex, action_prev: typing.SupportsInt | typing.SupportsIndex) -> int:
         """
                         Return the action chosen by the strategy.
         
@@ -80,9 +87,12 @@ class Defector(egttools.numerical.numerical_.behaviors.NormalForm.AbstractNFGStr
     """
     Strategy that always defects.
     """
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
     def __init__(self) -> None:
         ...
-    def get_action(self, time_step: int, action_prev: int) -> int:
+    def get_action(self, time_step: typing.SupportsInt | typing.SupportsIndex, action_prev: typing.SupportsInt | typing.SupportsIndex) -> int:
         """
                         Return the action chosen by the strategy.
         
@@ -110,9 +120,12 @@ class GRIM(egttools.numerical.numerical_.behaviors.NormalForm.AbstractNFGStrateg
     """
     Grim Trigger: cooperate until the opponent defects once, then defect forever.
     """
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
     def __init__(self) -> None:
         ...
-    def get_action(self, time_step: int, action_prev: int) -> int:
+    def get_action(self, time_step: typing.SupportsInt | typing.SupportsIndex, action_prev: typing.SupportsInt | typing.SupportsIndex) -> int:
         """
                         Return the action chosen by the strategy.
         
@@ -140,7 +153,10 @@ class GenerousTFT(egttools.numerical.numerical_.behaviors.NormalForm.AbstractNFG
     """
     Generous Tit for Tat.
     """
-    def __init__(self, R: float, P: float, T: float, S: float) -> None:
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
+    def __init__(self, R: typing.SupportsFloat | typing.SupportsIndex, P: typing.SupportsFloat | typing.SupportsIndex, T: typing.SupportsFloat | typing.SupportsIndex, S: typing.SupportsFloat | typing.SupportsIndex) -> None:
         """
                         Construct a Generous Tit for Tat strategy.
         
@@ -161,7 +177,7 @@ class GenerousTFT(egttools.numerical.numerical_.behaviors.NormalForm.AbstractNFG
                         S : float
                             Sucker's payoff.
         """
-    def get_action(self, time_step: int, action_prev: int) -> int:
+    def get_action(self, time_step: typing.SupportsInt | typing.SupportsIndex, action_prev: typing.SupportsInt | typing.SupportsIndex) -> int:
         """
                         Return the action chosen by the strategy.
         
@@ -189,6 +205,9 @@ class GradualTFT(egttools.numerical.numerical_.behaviors.NormalForm.AbstractNFGS
     """
     Gradual Tit for Tat.
     """
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
     def __init__(self) -> None:
         """
                         Tit for Tat with two modifications:
@@ -196,7 +215,7 @@ class GradualTFT(egttools.numerical.numerical_.behaviors.NormalForm.AbstractNFGS
                         1. The number of punishing defections increases with each additional defection by the opponent.
                         2. After each punishment phase, the strategy apologizes by cooperating in the following two rounds.
         """
-    def get_action(self, time_step: int, action_prev: int) -> int:
+    def get_action(self, time_step: typing.SupportsInt | typing.SupportsIndex, action_prev: typing.SupportsInt | typing.SupportsIndex) -> int:
         """
                         Return the action chosen by the strategy.
         
@@ -224,7 +243,10 @@ class ImperfectTFT(egttools.numerical.numerical_.behaviors.NormalForm.AbstractNF
     """
     Tit for Tat with implementation errors.
     """
-    def __init__(self, error_probability: float) -> None:
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
+    def __init__(self, error_probability: typing.SupportsFloat | typing.SupportsIndex) -> None:
         """
                         Construct an Imperfect Tit for Tat strategy.
         
@@ -233,7 +255,7 @@ class ImperfectTFT(egttools.numerical.numerical_.behaviors.NormalForm.AbstractNF
                         error_probability : float
                             Probability of choosing the opposite action by mistake.
         """
-    def get_action(self, time_step: int, action_prev: int) -> int:
+    def get_action(self, time_step: typing.SupportsInt | typing.SupportsIndex, action_prev: typing.SupportsInt | typing.SupportsIndex) -> int:
         """
                         Return the action chosen by the strategy.
         
@@ -261,9 +283,12 @@ class Pavlov(egttools.numerical.numerical_.behaviors.NormalForm.AbstractNFGStrat
     """
     Win-stay, lose-shift strategy.
     """
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
     def __init__(self) -> None:
         ...
-    def get_action(self, time_step: int, action_prev: int) -> int:
+    def get_action(self, time_step: typing.SupportsInt | typing.SupportsIndex, action_prev: typing.SupportsInt | typing.SupportsIndex) -> int:
         """
                         Return the action chosen by the strategy.
         
@@ -291,9 +316,12 @@ class Random(egttools.numerical.numerical_.behaviors.NormalForm.AbstractNFGStrat
     """
     Strategy that cooperates with probability 0.5.
     """
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
     def __init__(self) -> None:
         ...
-    def get_action(self, time_step: int, action_prev: int) -> int:
+    def get_action(self, time_step: typing.SupportsInt | typing.SupportsIndex, action_prev: typing.SupportsInt | typing.SupportsIndex) -> int:
         """
                         Return the action chosen by the strategy.
         
@@ -321,9 +349,12 @@ class SuspiciousTFT(egttools.numerical.numerical_.behaviors.NormalForm.AbstractN
     """
     Suspicious Tit for Tat: defect in the first round, then copy the opponent's previous action.
     """
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
     def __init__(self) -> None:
         ...
-    def get_action(self, time_step: int, action_prev: int) -> int:
+    def get_action(self, time_step: typing.SupportsInt | typing.SupportsIndex, action_prev: typing.SupportsInt | typing.SupportsIndex) -> int:
         """
                         Return the action chosen by the strategy.
         
@@ -351,9 +382,12 @@ class TFT(egttools.numerical.numerical_.behaviors.NormalForm.AbstractNFGStrategy
     """
     Tit for Tat: cooperate in the first round, then copy the opponent's previous action.
     """
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
     def __init__(self) -> None:
         ...
-    def get_action(self, time_step: int, action_prev: int) -> int:
+    def get_action(self, time_step: typing.SupportsInt | typing.SupportsIndex, action_prev: typing.SupportsInt | typing.SupportsIndex) -> int:
         """
                         Return the action chosen by the strategy.
         
@@ -381,9 +415,12 @@ class TFTT(egttools.numerical.numerical_.behaviors.NormalForm.AbstractNFGStrateg
     """
     Tit for two tats: defect only after two consecutive defections.
     """
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
     def __init__(self) -> None:
         ...
-    def get_action(self, time_step: int, action_prev: int) -> int:
+    def get_action(self, time_step: typing.SupportsInt | typing.SupportsIndex, action_prev: typing.SupportsInt | typing.SupportsIndex) -> int:
         """
                         Return the action chosen by the strategy.
         
@@ -411,9 +448,12 @@ class TTFT(egttools.numerical.numerical_.behaviors.NormalForm.AbstractNFGStrateg
     """
     Two tits for tat: defect twice after a defection.
     """
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
     def __init__(self) -> None:
         ...
-    def get_action(self, time_step: int, action_prev: int) -> int:
+    def get_action(self, time_step: typing.SupportsInt | typing.SupportsIndex, action_prev: typing.SupportsInt | typing.SupportsIndex) -> int:
         """
                         Return the action chosen by the strategy.
         

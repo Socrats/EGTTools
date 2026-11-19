@@ -481,8 +481,6 @@ topology_callback : callable, optional
 }
 
 void init_structure(py::module_ &m) {
-    py::options options;
-    options.disable_function_signatures();
 
     py::class_<egttools::FinitePopulations::structure::AbstractStructure,
                 stubs::PyAbstractStructure>(
@@ -658,7 +656,6 @@ list[list[int]]
             );
 
 
-    options.enable_function_signatures();
 
     {
         auto cls = py::class_<NetworkMCEstimatorPC>(

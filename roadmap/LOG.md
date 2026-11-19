@@ -2,6 +2,7 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-19 · API-09 · Review (branch `api-09-stub-signatures`): real signatures in stubs and docstrings, numbered overloads in the docs, CI stub check; `TimingUncertainty` sampling usable from Python with `seed`.
 - 2026-11-19 · MEM-02 · Merged (`722c9a38`): 25/25 C++ tests under ASan+UBSan with leak detection on Linux/clang, canaries pass.
 - 2026-11-19 · PERF-08 · Added (later): evaluate fixed-point arithmetic for selected operations.
 - 2026-11-19 · MEM-02 · Review (branch `mem-02-sanitizer-ci`): sanitizer job added; first run failed on a macOS-only test target picked up by a grep, replaced by the CMake target `egttools_cpp_tests`.
