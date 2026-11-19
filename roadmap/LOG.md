@@ -2,6 +2,12 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-19 · PERF-02 · Dropped: superseded by PERF-05.
+- 2026-11-19 · PERF-04 · Moved to 0.3 and widened to a parallelisation design and test plan; PERF-05 (efficiency audit) and PERF-06 (parallel tests, TSan) added.
+- 2026-11-19 · CI-10 · Added: audit of the CMake build.
+- 2026-11-19 · TEST-11 · Added: shared test chains, split out of SOL-10; MC-09 now depends on TEST-06 and TEST-11 instead of MC-03.
+- 2026-11-19 · TEST-10 · Checked: with asserts enabled, all 23 C++ test programs pass on macOS; only 8 of them assert anything.
+
 - 2026-11-19 · REL-09 · Done: `v0.2.0` tagged on `924cf857` and released on GitHub, PyPI and conda. Same code as rc3 (tested from TestPyPI: 651 passed); only CI, packaging metadata and the roadmap changed.
 - 2026-11-19 · REL-09 · First `v0.2.0` tag (on the rc3 commit) built every artefact as 0.2.0rc3: actions/checkout turns the pushed tag into a lightweight tag, and `git describe` prefers the annotated rc tag on the same commit. Release and tag deleted; the workflows now restore annotated tags and check artefact versions.
 - 2026-11-18 · TEST-10 · Added: the C++ tests rely on `assert`, which Release builds remove.

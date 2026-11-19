@@ -18,6 +18,7 @@ them smoke tests. Coverage is not measured, and the C++ tests don't run in CI.
 | TEST-08 | Execute documentation notebooks as tests | todo | P2 | M | 0.4 | — | — |
 | TEST-09 | Migrate the C++ tests to Catch2 v3 (vcpkg): real assertions, one test per behaviour, CTest discovery | todo | P1 | L | 0.3 | REL-07 | — |
 | TEST-10 | Make the C++ tests check results in Release builds (they use `assert`, removed by `NDEBUG`); fix the unused-variable warnings | todo | P0 | S | 0.3 | — | — |
+| TEST-11 | Shared test chains with known stationary distributions (Python test helper module), used by SOL-10 and MC-09 | todo | P0 | S | 0.3 | — | — |
 
 ## Notes
 
@@ -30,6 +31,19 @@ them smoke tests. Coverage is not measured, and the C++ tests don't run in CI.
 - **TEST-10**: the Release build defines `NDEBUG`, so every `assert` in `tests/cpp`
   is compiled out and those programs pass without checking anything (the conda build
   shows it as "set but not used" warnings, e.g. `row_sum` and `has_diag` in
-  `test_pairwise_comparison_analytical.cpp`). Stopgap until TEST-09: a check macro that
-  always runs and returns a non-zero exit code, or `NDEBUG` undefined for the test
-  targets. Also remove the unused `payoff` in `CRDGame.cpp:120`.
+  `test_pairwise_comparison_analytical.cpp`). Stopgap until TEST-09: undefine `NDEBUG` in
+  CMake for the test programs and the `egttoolsNumerical` test library (MSVC too: the
+  tests are built in every wheel), so the library's own asserts (`Group`, `GarciaGroup`,
+  `Utils.hpp`, `LruCache.hpp`) also run; add a guard test that fails if `NDEBUG` is
+  defined. Checked 2026-11-19: with asserts enabled all 23 programs pass on macOS.
+  Also remove the unused `payoff` in `CRDGame.cpp:120`, and compare
+  `test_binomial_coefficient_with_time.cpp` against its `correct_solution1/2`.
+- **TEST-09**: only 8 of the 23 programs assert anything; the other 15 print output.
+  Every migrated test gets real checks. Start with the programs that check nothing and
+  with C++ code that has no Python test (`NetworkSync`, `NetworkEvolver`, the binomial
+  and hypergeometric helpers, the LRU caches).
+- **TEST-11**: start from the chains in `tests/test_stationary_distribution_utils.py`
+  (random irreducible chain, dense reference solver, closed-form birth-death chain) and
+  add a doubly stochastic chain (uniform distribution), the two-state chain, and the
+  neutral Moran chain with mutation. Split out of SOL-10 so phase 1 does not depend on
+  the solvers.

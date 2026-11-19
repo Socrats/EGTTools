@@ -33,3 +33,17 @@ Only standard methods are included (direct, ARPACK, GMRES/LGMRES/BiCGSTAB,
 power iteration and its accelerated variant, GPU power iteration, and the
 PETSc/SLEPc operator). The library does not choose a method automatically
 beyond a simple default.
+
+## 2026-11-19: v0.3.0 phase 1 order and dependency fixes
+Phase 1 runs TEST-10 → MEM-01/02 → TEST-06 → TEST-11 → CI-10 → TEST-09, so the sanitizer
+jobs land before the larger Catch2 migration. SOL-10's test chains became TEST-11, and MC-09
+depends on TEST-06 and TEST-11 instead of MC-03: both tasks were scheduled before their
+dependencies. TEST-09 must add real checks, starting with the 15 C++ programs that check nothing.
+
+## 2026-11-19: Build, efficiency and parallelisation audits in v0.3.0
+v0.3.0 includes an audit of the CMake build (CI-10), an efficiency audit centred on
+`PairwiseComparison` and `PairwiseComparisonNumerical` (PERF-05, replacing PERF-02), and a
+parallelisation design and test plan (PERF-04, moved from 0.4) implemented by PERF-06.
+The audits run before the MC redesign, so their findings shape the new code instead of
+optimising code that will be replaced. A fixed seed must give the same results regardless
+of the thread count, within the tolerance PERF-04 sets per method.
