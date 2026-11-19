@@ -15,6 +15,7 @@ reproducible.
 | PERF-05 | Efficiency audit of the library, focused on `PairwiseComparison` and `PairwiseComparisonNumerical`; file one task per fix | todo | P1 | L | 0.3 | TEST-06, TEST-11 | — |
 | PERF-06 | Implement the PERF-04 test plan: thread-count invariance tests and a ThreadSanitizer CI job | todo | P1 | M | 0.3 | PERF-04, MEM-01 | — |
 | PERF-07 | Combinatorics and special functions with tiered precision: fast precomputed tables with checks, higher precision only when needed or requested, documented error bounds, thread safety | todo | P1 | L | 0.3 | — | — |
+| PERF-08 | Evaluate fixed-point (scaled integer) arithmetic for selected operations: exact, order-independent sums and a known error per operation | todo | P2 | M | later | PERF-04, TEST-12 | — |
 
 ## Notes
 
@@ -74,6 +75,19 @@ reproducible.
   costs nothing measurable. Lesson from MEM-08: keep checked kernels small and move rare paths
   (gcd steps, error formatting, throws) out of line, or the compiler stops inlining them into hot
   loops (+15-20% on transition matrices, back to +1-4% out of line).
+- **PERF-08**: suggested 2026-11-19, for 0.3 or a later version. JAX and PyTorch offer integer
+  quantized types (values stored as integers with a scale, i.e. fixed point) mainly for speed on
+  accelerators, and deterministic modes for reproducible floating-point reductions. For EGTtools
+  the candidate benefits are: integer addition is associative, so parallel reductions give
+  bit-identical results for any thread count (PERF-04); rows of a transition matrix can sum to 1
+  exactly; the error per operation is fixed and known (the resolution step); integer arithmetic
+  vectorises well on CPUs and GPUs. Limits: the range is small, so quantities spanning many orders of
+  magnitude (fixation probabilities down to 1e-300, stationary distributions of large chains) stay
+  in log space or floating point; products need rescaling and overflow checks. Candidates to
+  evaluate: transition-probability accumulation, the Monte Carlo accumulators (already integer
+  counts), weighted averages of indicators. Deliverable: a short study with error bounds and
+  benchmarks on one kernel, and a decision in DECISIONS.md. Can move into 0.3 if PERF-04 or TEST-12
+  show that floating-point reductions are the problem.
 - **PERF-06**: run each parallel method with 1, 2 and N threads and a fixed seed;
   compare results exactly or within k·SE as PERF-04 specifies. TSan with OpenMP needs
   an OpenMP runtime built with TSan support (or the Archer tool) to avoid false

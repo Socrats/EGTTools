@@ -8,7 +8,7 @@ changes. Today nothing checks for them in CI.
 | ID | Task | Status | Pri | Size | MS | Deps | Ref |
 |----|------|--------|-----|------|----|------|-----|
 | MEM-01 | CMake option `EGTTOOLS_SANITIZE=address;undefined` | done | P0 | S | 0.3 | — | `07f312c8` |
-| MEM-02 | CI job: C++ tests under ASan + UBSan (Linux, clang) | todo | P0 | M | 0.3 | MEM-01, TEST-05, MEM-08 | — |
+| MEM-02 | CI job: C++ tests under ASan + UBSan (Linux, clang) | review | P0 | M | 0.3 | MEM-01, TEST-05, MEM-08 | branch `mem-02-sanitizer-ci` |
 | MEM-03 | CI job: Python test suite against an ASan build (`LD_PRELOAD` the runtime, leak check on exit) | todo | P1 | M | 0.3 | MEM-01 | — |
 | MEM-04 | Scheduled (nightly/weekly) valgrind memcheck run on long MC tests | doing | P2 | M | 0.3 | MEM-02 | `docker/memcheck/` (not yet built) |
 | MEM-05 | Audit pybind11 ownership: `return_value_policy::reference` and `keep_alive` uses | todo | P1 | M | 0.3 | — | — |
@@ -88,6 +88,10 @@ Found by the first sanitizer run (MEM-01, 2026-11-19): signed overflow in the st
   everywhere; 32-bit only where a GPU kernel needs it. Check the Python-visible dtypes (CHANGELOG
   if any change). Before the MC redesign, which rewrites much of this code.
 
+- **MEM-02**: job `sanitizers` in the Tests workflow (every branch push): clang + LLVM OpenMP on
+  Ubuntu 24.04, `RelWithDebInfo`, `EGTTOOLS_SANITIZE=address;undefined`, leak detection on; builds
+  only the C++ tests via the CMake target `egttools_cpp_tests` (every test registered on the
+  platform) and runs them with ctest. The canaries confirm the instrumentation.
 - **MEM-03**: CPython's own allocations produce false positives. Use
   `PYTHONMALLOC=malloc` and a suppressions file kept in the repo.
 - **MEM-05**: there are 17 explicit policy annotations in
