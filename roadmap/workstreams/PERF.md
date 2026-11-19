@@ -11,7 +11,7 @@ reproducible.
 | PERF-01 | Benchmark suite (asv) for MC, analytical transition matrices, solvers, network engine | todo | P1 | M | 0.4 | PERF-05 | — |
 | PERF-02 | Profile hot paths (fitness caches, payoff precomputation, binding overhead) and file tasks | dropped | P1 | M | 0.4 | PERF-01 | superseded by PERF-05 |
 | PERF-03 | Track benchmark history per release | todo | P2 | S | 0.4 | PERF-01 | — |
-| PERF-04 | Parallelisation design and test plan: thread safety, per-run RNG streams, reproducibility across thread counts, scheduling, false sharing, MSVC | todo | P1 | M | 0.3 | — | — |
+| PERF-04 | Parallelisation design and test plan: thread safety, per-run RNG streams, reproducibility across thread counts, scheduling, false sharing, MSVC | todo | P1 | M | 0.3 | API-08 | — |
 | PERF-05 | Efficiency audit of the library, focused on `PairwiseComparison` and `PairwiseComparisonNumerical`; file one task per fix | todo | P1 | L | 0.3 | TEST-06, TEST-11 | — |
 | PERF-06 | Implement the PERF-04 test plan: thread-count invariance tests and a ThreadSanitizer CI job | todo | P1 | M | 0.3 | PERF-04, MEM-01 | — |
 
@@ -25,8 +25,8 @@ reproducible.
     parallel loop (`PairwiseComparisonNumerical.hpp`, e.g. lines 951, 1166, 1590). Which
     run gets which seed depends on thread scheduling, so a fixed seed does not give
     reproducible results with more than one thread, and results change with the thread
-    count. Design: derive each run's seed from the base seed and the run index before
-    the loop, so results depend only on the seed.
+    count. Design: derive each run's stream from the base seed and the run index before
+    the loop, so results depend only on the seed. The stream scheme comes from API-08.
   - Most OpenMP regions are guarded by `!defined(_MSC_VER)`, so Windows runs serially.
     Decide whether to support MSVC's OpenMP (2.0 only: no custom reductions,
     `size_t` loop indices) or document Windows as serial.
