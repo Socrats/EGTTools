@@ -17,6 +17,7 @@ them smoke tests. Coverage is not measured, and the C++ tests don't run in CI.
 | TEST-07 | Coverage floor enforced in CI, raised each release | todo | P1 | S | 0.4 | TEST-02 | — |
 | TEST-08 | Execute documentation notebooks as tests | todo | P2 | M | 0.4 | — | — |
 | TEST-09 | Migrate the C++ tests to Catch2 v3 (vcpkg): real assertions, one test per behaviour, CTest discovery | todo | P1 | L | 0.3 | REL-07 | — |
+| TEST-10 | Make the C++ tests check results in Release builds (they use `assert`, removed by `NDEBUG`); fix the unused-variable warnings | todo | P0 | S | 0.3 | — | — |
 
 ## Notes
 
@@ -26,3 +27,9 @@ them smoke tests. Coverage is not measured, and the C++ tests don't run in CI.
   C++ coverage (gcov/llvm-cov) still to do. The build/test job is read-only; the badge is
   updated by a separate job with `contents: write`, only on pushes to master. Pull requests
   get the coverage table in the run summary, without PR comments.
+- **TEST-10**: the Release build defines `NDEBUG`, so every `assert` in `tests/cpp`
+  is compiled out and those programs pass without checking anything (the conda build
+  shows it as "set but not used" warnings, e.g. `row_sum` and `has_diag` in
+  `test_pairwise_comparison_analytical.cpp`). Stopgap until TEST-09: a check macro that
+  always runs and returns a non-zero exit code, or `NDEBUG` undefined for the test
+  targets. Also remove the unused `payoff` in `CRDGame.cpp:120`.
