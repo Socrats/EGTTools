@@ -15,7 +15,7 @@ abruptly.
 | API-06 | One transition-matrix orientation: `StochDynamics.transition_and_fixation_matrix` returns it transposed (column-stochastic), the C++ SML version row-stochastic | todo | P1 | S | 0.3 | — | — |
 | API-07 | Vector-quality 3D simplex plots: add a matplotlib (mplot3d) backend to `Simplex3D`, sharing its geometry code; keep plotly for interactive figures | todo | P2 | M | 0.4 | — | — |
 | API-08 | Assess the random-number and seeding design against NumPy and JAX; decide the target design and file the migration tasks | todo | P1 | M | 0.3 | — | — |
-| API-09 | Real signatures in the `.pyi` stubs: stop disabling pybind11 function signatures, regenerate the stubs, check them in CI | review | P1 | M | 0.3 | — | branch `api-09-stub-signatures` |
+| API-09 | Real signatures in the `.pyi` stubs: stop disabling pybind11 function signatures, regenerate the stubs, check them in CI | done | P1 | M | 0.3 | — | `8535760b` |
 | API-10 | Rename `PairwiseComparison` and `PairwiseComparisonNumerical` to names that say exact vs approximate (estimators), with deprecation aliases | todo | P1 | M | 0.4 | API-01 | — |
 | API-11 | Audit the pybind11 bindings' declared types: argument types and conversions, returned dtypes, Eigen `Ref` vs copies, overloads, defaults, argument names, GIL release | todo | P1 | L | 0.3 | MEM-10 | — |
 
