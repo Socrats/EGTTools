@@ -17,7 +17,7 @@ them smoke tests. Coverage is not measured, and the C++ tests don't run in CI.
 | TEST-07 | Coverage floor enforced in CI, raised each release | todo | P1 | S | 0.4 | TEST-02 | — |
 | TEST-08 | Execute documentation notebooks as tests | todo | P2 | M | 0.4 | — | — |
 | TEST-09 | Migrate the C++ tests to Catch2 v3 (vcpkg): real assertions, one test per behaviour, CTest discovery | todo | P1 | L | 0.3 | REL-07 | — |
-| TEST-10 | Make the C++ tests check results in Release builds (they use `assert`, removed by `NDEBUG`); fix the unused-variable warnings | todo | P0 | S | 0.3 | — | — |
+| TEST-10 | Make the C++ tests check results in Release builds (they use `assert`, removed by `NDEBUG`); fix the unused-variable warnings | review | P0 | S | 0.3 | — | branch `test-10-release-asserts` |
 | TEST-11 | Shared test chains with known stationary distributions (Python test helper module), used by SOL-10 and MC-09 | todo | P0 | S | 0.3 | — | — |
 
 ## Notes

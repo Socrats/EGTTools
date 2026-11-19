@@ -117,7 +117,7 @@ double egttools::FinitePopulations::CRDGame::calculate_fitness(const int &player
                                                                const Eigen::Ref<const VectorXui> &strategies) {
     // This function assumes that the strategy counts given in @param strategies does not include
     // the player with @param player_type strategy.
-    double fitness = 0.0, payoff;
+    double fitness = 0.0;
 
     // First detect if we are in an edge
     int strategy_1 = player_type;

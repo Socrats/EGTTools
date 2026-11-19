@@ -112,7 +112,8 @@ tasks are independent unless the `Deps` column says otherwise.
    - PERF-05: efficiency audit of `PairwiseComparison` and `PairwiseComparisonNumerical`
      (and the rest of the library); its findings feed phases 3 and 4.
 3. **Correctness fixes**: NET-02, NET-03, NET-05, NET-04; MC-07; API-06; PERF-06
-   (thread-count invariance tests and ThreadSanitizer job) with the seeding fix it requires.
+   (thread-count invariance tests and ThreadSanitizer job) with the seeding fix it requires;
+   PERF-07 (combinatorics with tiered precision, including the `ln_factorial` data race).
 4. **Monte Carlo redesign**: MC-01 → MC-02 → MC-03 → MC-04, then MC-05, MC-06, MC-10, MC-08.
 5. **Solvers**: SOL-01 and SOL-09 (interface and diagnostics) → SOL-02, SOL-03 + SOL-04, SOL-05,
    SOL-06 → SOL-07, SOL-08 → SOL-11.
@@ -146,6 +147,6 @@ Update this table when tasks change. Recount a milestone (here 0.2) from the rep
 | Milestone | Done / total |
 |-----------|-------------|
 | v0.2.0 | 22 / 22 |
-| v0.3.0 | 1 / 53 |
+| v0.3.0 | 1 / 54 |
 | v0.4.0 | 0 / 30 |
 | later  | 0 / 3 |

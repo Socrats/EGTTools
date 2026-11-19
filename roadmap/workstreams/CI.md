@@ -45,7 +45,8 @@ structural work.
   CI-02 (scikit-build-core) will need. Deliverable: a findings list in the notes and
   one task per fix, each marked as 0.3 (affects correctness or the safety nets) or
   folded into CI-02. Runs after TEST-10 and MEM-01, which change the test and sanitizer
-  CMake code.
+  CMake code. Also decide what to do with `cpp/src/egttools.cpp` (about 2,300 lines, not
+  referenced by any CMake file, so not compiled).
 - **CI-02**: removes the need to keep `setup.py` `package_data` and
   `[tool.setuptools.package-data]` in sync by hand, and the `if (NOT SKBUILD)`
   guards around `install()`.

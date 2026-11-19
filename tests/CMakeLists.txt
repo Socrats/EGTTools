@@ -25,12 +25,25 @@ find_package(Boost REQUIRED)
 find_package(OpenMP)
 
 # ------------------------------------------------------------------------------
+# Assertions stay enabled in the tests
+# ------------------------------------------------------------------------------
+# The C++ tests check results with assert(), which NDEBUG (set by Release and
+# RelWithDebInfo builds) compiles out. Undefine it for the test programs and the
+# test copy of the library, so the tests and the library's own preconditions are
+# checked in every build type. The option comes after the build-type flags on
+# the command line, so it takes precedence. testAssertionsEnabled fails if this
+# stops working.
+
+set(EGTTOOLS_TEST_KEEP_ASSERTS $<IF:$<CXX_COMPILER_ID:MSVC>,/UNDEBUG,-UNDEBUG>)
+
+# ------------------------------------------------------------------------------
 # Helper function to register a test binary
 # ------------------------------------------------------------------------------
 
 function(add_egttools_test target_name source_file)
     add_executable(${target_name} ${source_file})
     target_link_libraries(${target_name} PRIVATE egttoolsNumerical)
+    target_compile_options(${target_name} PRIVATE ${EGTTOOLS_TEST_KEEP_ASSERTS})
 
     if (APPLE)
         target_link_libraries(${target_name} PRIVATE "-framework Accelerate")
@@ -89,6 +102,8 @@ target_compile_definitions(egttoolsNumerical
         HAS_BOOST
 )
 
+target_compile_options(egttoolsNumerical PRIVATE ${EGTTOOLS_TEST_KEEP_ASSERTS})
+
 if (OpenMP_CXX_FOUND)
     target_link_libraries(egttoolsNumerical PUBLIC OpenMP::OpenMP_CXX)
 endif ()
@@ -101,6 +116,7 @@ endif ()
 # Register C++ test executables
 # ------------------------------------------------------------------------------
 
+add_egttools_test(testAssertionsEnabled cpp/test_assertions_enabled.cpp)
 add_egttools_test(testPMrun cpp/test_PairwiseMoran_run.cpp)
 add_egttools_test(testPMBstationary_distribution_sparse cpp/test_PairwiseMoran_stationary_distribution_sparse.cpp)
 add_egttools_test(testPMBstationary_distribution_dense cpp/test_PairwiseMoran_stationary_distribution_dense.cpp)

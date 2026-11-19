@@ -81,8 +81,8 @@ jobs:
         run: python setup.py build_ext --inplace
 
       - name: Run C++ tests
-        # The C++ tests are standalone programs; for now they check that nothing crashes.
-        # PythonTests is the pytest suite, run separately below.
+        # The C++ tests are standalone programs that check results with assert(); tests/CMakeLists.txt
+        # keeps assertions enabled in this Release build. PythonTests is the pytest suite, run below.
         run: ctest --test-dir "$(ls -d _skbuild/*/cmake-build)/tests" -E PythonTests --output-on-failure --timeout 600
 
       - name: Run Python tests (with coverage)
