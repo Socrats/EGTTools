@@ -2,6 +2,10 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-19 · TEST-13 · Added: clean up the test-suite warnings (two test-helper defects among them), then make warnings errors in CI.
+- 2026-11-19 · MEM-08 · Merged (`0fb0fcbe`): wheels green on all platforms incl. MSVC; its Linux Tests failure was the flaky timing test, fixed in `6d66fd5f`.
+- 2026-11-19 · MEM-01 · Merged (`07f312c8`): Tests and wheels green.
+- 2026-11-19 · TEST-10 · Follow-up merged (`6d66fd5f`).
 - 2026-11-19 · MEM-08 · Review (branch `mem-08-state-counts`): exact 64-bit state counts and checked integer binomials; exact fitness-cache keys (edge keys for fixation). 25/25 C++, 694 Python, 27/27 under ASan+UBSan; transition matrix within 1-4% of master, fixation/SML 28% faster.
 - 2026-11-19 · TEST-10 · Follow-up (branch `test-10-fix-flaky-timing`): `test_timing_uncertainty` failed in CI; unseeded with a ±2 SE tolerance (3.8% false failures measured). Now a fixed seed, 4 SE, and a power check.
 - 2026-11-19 · TEST-12 · Added: numerical-stability audit; `BirthDeath`/`DeathBirth` exponentiate fitness without subtracting the maximum.

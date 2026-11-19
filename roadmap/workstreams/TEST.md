@@ -20,6 +20,7 @@ them smoke tests. Coverage is not measured, and the C++ tests don't run in CI.
 | TEST-10 | Make the C++ tests check results in Release builds (they use `assert`, removed by `NDEBUG`); fix the unused-variable warnings | done | P0 | S | 0.3 | — | `1512fc95` |
 | TEST-11 | Shared test chains with known stationary distributions (Python test helper module), used by SOL-10 and MC-09 | todo | P0 | S | 0.3 | — | — |
 | TEST-12 | Numerical-stability audit of the library (overflow, cancellation, log-space computation); tests at extreme parameters; one task per fix | todo | P1 | L | 0.3 | TEST-06 | — |
+| TEST-13 | Clean up the warnings in the test suite, then make warnings errors in CI (explicit, commented ignores only) | todo | P1 | M | 0.3 | — | — |
 
 ## Notes
 
@@ -58,3 +59,15 @@ them smoke tests. Coverage is not measured, and the C++ tests don't run in CI.
   `np.exp`. Check also the hypergeometric log-space PDFs (PERF-07), the stationary-distribution
   helpers and the gradients. Tests use extreme β, payoffs and population sizes and compare with
   a high-precision reference. No fast-math flags are used; keep it that way (DECISIONS.md).
+- **TEST-13**: 54 warnings in a normal run (2026-11-19), grouped as:
+  - Test-helper defects in `test_pairwise_comparison_equations.py`: `fitness_two_player` computes
+    `n[m] - (l == m)` on `uint64` counts, which wraps for an absent strategy (value unused, but the
+    helper is wrong there); the `fermi` reference overflows in `exp` (use the stable form, TEST-12).
+  - Library warnings the tests trigger but do not assert: the small-μ warning of the MC
+    estimators, the checkpoint `n_chunks` warning. Use parameters that avoid them, or assert them
+    with `pytest.warns` where the warning is the point.
+  - Third-party: a `DeprecationWarning` from `pytz` (`datetime.utcfromtimestamp`); ignore it by
+    message in `pyproject.toml`, with a comment.
+  - About 160 more warnings appear only on the first run after rebuilding the extension; identify them.
+  End state: `filterwarnings = ["error", ...]` in `[tool.pytest.ini_options]`, so a new warning
+  fails CI, with each ignore listed and justified.
