@@ -31,3 +31,13 @@ _has_inplace_build = any(
 )
 if _has_inplace_build and _src not in sys.path:
     sys.path.insert(0, _src)
+
+
+import numpy as np  # noqa: E402
+import pytest  # noqa: E402
+
+
+@pytest.fixture
+def rng():
+    """Fixed-seed NumPy generator, so statistical tests are reproducible by default."""
+    return np.random.default_rng(20261119)
