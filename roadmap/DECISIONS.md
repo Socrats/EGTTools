@@ -63,3 +63,8 @@ Sizes, counts and indices use 64-bit types everywhere, defined once in `Types.h`
 CPUs 32-bit integers bring no benefit here and caused overflows (MEM-08). `long` is not used for
 them because it is 32-bit on Windows. 32-bit types are allowed only where a GPU kernel needs them.
 Public entry points validate strategy indices and state vectors (MEM-09). Tracked as MEM-10.
+
+## 2026-11-19: Numerical stability audit; no fast-math
+v0.3.0 audits numerical stability across the library (TEST-12) alongside the efficiency audit
+(PERF-05). Exponentials of fitness are computed in log space or with the maximum subtracted.
+The build does not use fast-math flags, because the overflow handling relies on IEEE infinities.

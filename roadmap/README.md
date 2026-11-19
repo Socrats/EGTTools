@@ -114,6 +114,7 @@ tasks are independent unless the `Deps` column says otherwise.
      uses API-08's stream scheme for per-run seeding.
    - PERF-05: efficiency audit of `PairwiseComparison` and `PairwiseComparisonNumerical`
      (and the rest of the library); its findings feed phases 3 and 4.
+   - TEST-12: numerical-stability audit of the library, alongside PERF-05.
 3. **Correctness fixes**: NET-02, NET-03, NET-05, NET-04; MC-07; API-06; PERF-06
    (thread-count invariance tests and ThreadSanitizer job) with the seeding fix it requires;
    PERF-07 (combinatorics with tiered precision, including the `ln_factorial` data race); MEM-10
@@ -151,6 +152,6 @@ Update this table when tasks change. Recount a milestone (here 0.2) from the rep
 | Milestone | Done / total |
 |-----------|-------------|
 | v0.2.0 | 22 / 22 |
-| v0.3.0 | 3 / 58 |
+| v0.3.0 | 3 / 59 |
 | v0.4.0 | 0 / 30 |
 | later  | 0 / 3 |

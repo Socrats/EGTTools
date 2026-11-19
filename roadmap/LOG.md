@@ -2,6 +2,8 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-19 · TEST-12 · Added: numerical-stability audit; `BirthDeath`/`DeathBirth` exponentiate fitness without subtracting the maximum.
+- 2026-11-19 · MEM-08 · Design agreed: exact gcd-reduced binomial with overflow check, optional state counts, `OverflowError` on use.
 - 2026-11-19 · MEM-08/09/10 · Added: state-count overflow (found by the first sanitizer run), missing input validation in `PairwiseComparison`, consistent 64-bit types.
 - 2026-11-19 · MEM-01 · Review (branch `mem-01-sanitize-option`): ASan/UBSan/TSan canaries pass on macOS; the first sanitizer run found a signed overflow in `PairwiseComparison` (MEM-08).
 - 2026-11-19 · CI-11 · Merged (`301a8b0d`): its own push triggered the Tests run on the branch (green).

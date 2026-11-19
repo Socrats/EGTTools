@@ -34,9 +34,23 @@ Found by the first sanitizer run (MEM-01, 2026-11-19): signed overflow in the st
   `starsBars(population_size_, nb_strategies_)` with two `int`s, so the count is computed in `int`.
   Wrong (negative) from 6 strategies at Z = 136, 8 at Z = 52, 10 at Z = 31, though the true count
   fits in `int`. `testFixations` (29 strategies, Z = 100, count ≈ 1e28) computes it in the
-  constructor although fixation probabilities never use it. Fix: compute every state count in
-  64-bit at the call sites where `int` is deduced; when it does not fit, store "too large" so
-  methods that need the full state space raise a clear error and edge/fixation methods still work.
+  constructor although fixation probabilities never use it. The `size_t` call sites
+  (`PairwiseComparisonNumerical`, `ImitationMultipleGames`, the transition operator,
+  `NetworkEvolver`, the PETSc operator) overflow silently above 2^64.
+  Design (agreed 2026-11-19):
+  - Primitive: an exact binomial with an overflow check, without Boost. Each step
+    res·(n−i)/(i+1) first divides out g = gcd(res, i+1); then (i+1)/g divides (n−i), and the
+    product equals C(n, i+1), so it overflows only if C(n, i+1) does not fit, and then neither
+    does the result (C(n, i) increases up to n/2). Throws `std::overflow_error`. PERF-07 reuses it.
+  - Classes store the count as `std::optional<int64_t>`; `nb_states()` and every method that
+    needs the full state space go through one accessor that throws `std::overflow_error`
+    (Python `OverflowError`) naming Z and S. Methods that do not need it (fixation, edges) work.
+  - `egttools.calculate_nb_states` raises `OverflowError` the same way.
+  - Tests first, shown to fail on master: the checked binomial against exact values, the largest
+    C(n, k) that fits in `int64` and the next one (throws), `SIZE_MAX` arguments; `nb_states` of
+    every class at the sizes that failed vs `math.comb`; Z = 100, S = 29: construction and
+    fixation work, `nb_states` and transition-matrix methods raise `OverflowError`;
+    `testFixations` passes under ASan + UBSan.
 - **MEM-09**: with 4 strategies and Z = 100, `calculate_fixation_probability(7, 0, β)` returns 1.0
   and `(-1, 0, β)` returns 1.7e-15; `calculate_gradient_of_selection` accepts states that do not sum
   to Z, a length-2 state (reads past the vector: ±2.2e7) and a length-5 state (extra entry ignored).

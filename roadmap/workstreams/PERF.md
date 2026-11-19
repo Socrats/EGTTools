@@ -38,7 +38,8 @@ reproducible.
     The plan states, per method, whether results must match exactly or statistically
     (TEST-06) across thread counts.
   New code from the MC redesign (MC-01..05) and the network work follows this plan.
-- **PERF-05**: before the MC redesign (phase 4), so its findings feed MC-01, MC-02 and
+- **PERF-05**: covers the whole library; `PairwiseComparison` and `PairwiseComparisonNumerical`
+  come first. Runs alongside TEST-12 (numerical stability), so speed-ups do not trade away accuracy. Before the MC redesign (phase 4), so its findings feed MC-01, MC-02 and
   MC-07 instead of optimising code that will be replaced. Method: a small benchmark
   script set under `benchmarks/` (PERF-01 later turns it into asv), profiling of
   transition-matrix construction, fitness computation and caching, SML fixation
