@@ -22,6 +22,11 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   precondition checks. A new test fails if assertions are compiled out.
 - `test_binomial_coefficient_with_time` compares against exact reference values instead of
   printing them.
+- New CMake option `EGTTOOLS_SANITIZE` (e.g. `-DEGTTOOLS_SANITIZE="address;undefined"`, or
+  `thread`) builds the library, the extension and the C++ tests with the compiler's sanitizers,
+  for development and CI only. Undefined behaviour aborts the program, so it fails the test that
+  triggers it. In such builds, `testSanitizerCanary` checks that each enabled sanitizer reports a
+  deliberate error.
 
 ## [0.2.0] - 2026-11-19
 

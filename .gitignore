@@ -92,6 +92,7 @@ CTestTestfile.cmake
 Makefile
 *.cmake
 !cmake/
+!cmake/Modules/*.cmake
 !CMakeLists.txt
 
 # =============================================================================

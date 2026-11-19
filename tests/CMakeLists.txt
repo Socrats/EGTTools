@@ -154,6 +154,34 @@ if (APPLE)
 endif ()
 
 # ------------------------------------------------------------------------------
+# Sanitizer canary (only in builds with EGTTOOLS_SANITIZE)
+# ------------------------------------------------------------------------------
+# One test per enabled sanitizer: the program commits that sanitizer's error on
+# purpose, and the test passes only if the sanitizer's report is in the output
+# (CTest ignores the exit code when PASS_REGULAR_EXPRESSION is set). A build that
+# is not instrumented prints nothing and fails.
+
+if (EGTTOOLS_SANITIZE)
+    add_executable(testSanitizerCanary cpp/test_sanitizer_canary.cpp)
+    find_package(Threads REQUIRED)
+    target_link_libraries(testSanitizerCanary PRIVATE Threads::Threads)
+
+    set(_canary_pattern_address "AddressSanitizer: heap-buffer-overflow")
+    set(_canary_pattern_undefined "runtime error: signed integer overflow")
+    set(_canary_pattern_thread "ThreadSanitizer: data race")
+    foreach (_sanitizer IN ITEMS address undefined thread)
+        if (_sanitizer IN_LIST EGTTOOLS_SANITIZE)
+            add_test(NAME testSanitizerCanary_${_sanitizer} COMMAND testSanitizerCanary ${_sanitizer})
+            # On macOS the sanitizers end the process with abort() by default, which CTest
+            # counts as a failure whatever the output; make them exit with an error code.
+            set_tests_properties(testSanitizerCanary_${_sanitizer} PROPERTIES
+                    PASS_REGULAR_EXPRESSION "${_canary_pattern_${_sanitizer}}"
+                    ENVIRONMENT "ASAN_OPTIONS=abort_on_error=0;UBSAN_OPTIONS=abort_on_error=0:halt_on_error=1;TSAN_OPTIONS=abort_on_error=0")
+        endif ()
+    endforeach ()
+endif ()
+
+# ------------------------------------------------------------------------------
 # Pytest integration via CTest
 # ------------------------------------------------------------------------------
 
