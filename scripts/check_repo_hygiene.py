@@ -17,7 +17,9 @@ secret scanning and push protection.
 
 Exit status 1 lists every finding; 0 means clean. Used by CI and by scripts/hooks/pre-push.
 Findings give the file, the line and the kind of match, never the matched text: the output can
-end up in public CI logs, which must not repeat what the check is meant to keep out.
+end up in public CI logs, which must not repeat what the check is meant to keep out. File names
+are checked too; a name that contains a home path is reported by its position instead (``file N``:
+the N-th line of ``git ls-files``, or the N-th file the script reads from a package).
 """
 from __future__ import annotations
 
@@ -54,6 +56,16 @@ def scan_bytes(data: bytes):
         yield "home path", data.count(b"\n", 0, match.start()) + 1
 
 
+def shown_name(name: str, index: int):
+    """Return (name to print, whether ``name`` contains a home path).
+
+    A name with a home path is replaced by its position, so that it is never printed.
+    """
+    if HOME_PATH.search(name.encode(errors="surrogateescape")):
+        return f"file {index} (name withheld)", True
+    return name, False
+
+
 def tracked_files(root: Path):
     out = subprocess.run(["git", "ls-files", "-z"], cwd=root, capture_output=True, check=True).stdout
     return [name for name in out.decode().split("\0") if name]
@@ -67,16 +79,22 @@ def tracked_but_ignored(root: Path):
 
 def check_repository(root: Path):
     findings = []
+    names = tracked_files(root)
+    position = {name: index for index, name in enumerate(names, 1)}
     for name in tracked_but_ignored(root):
-        findings.append((name, "tracked but matches an ignore rule"))
-    for name in tracked_files(root):
-        path = root / name
+        shown, _ = shown_name(name, position.get(name, 0))
+        findings.append((shown, "tracked but matches an ignore rule"))
+    for index, name in enumerate(names, 1):
+        shown, home_in_name = shown_name(name, index)
+        if home_in_name:
+            findings.append((shown, "home path in file name"))
         if FORBIDDEN_PATH.search(name):
-            findings.append((name, "tool or environment file"))
+            findings.append((shown, "tool or environment file"))
+        path = root / name
         if not path.is_file() or path.is_symlink() or path.stat().st_size > MAX_BYTES:
             continue
         for kind, lineno in scan_bytes(path.read_bytes()):
-            findings.append((f"{name}:{lineno}", kind))
+            findings.append((f"{shown}:{lineno}", kind))
     return findings
 
 
@@ -124,10 +142,16 @@ def _unzstd(data: bytes) -> bytes:
 
 def check_artifacts(paths):
     findings = []
-    for path in map(Path, paths):
-        for member, data in _members(path):
+    for package_index, path in enumerate(map(Path, paths), 1):
+        package, home_in_name = shown_name(path.name, package_index)
+        if home_in_name:
+            findings.append((package, "home path in package name"))
+        for index, (member, data) in enumerate(_members(path), 1):
+            shown, home_in_name = shown_name(member, index)
+            if home_in_name:
+                findings.append((f"{package}:{shown}", "home path in file name"))
             for kind, lineno in scan_bytes(data):
-                findings.append((f"{path.name}:{member}:{lineno}", kind))
+                findings.append((f"{package}:{shown}:{lineno}", kind))
     return findings
 
 
