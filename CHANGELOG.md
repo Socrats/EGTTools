@@ -7,17 +7,6 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Fixed
-
-- **Invalid arguments from Python are rejected instead of giving garbage or crashing.**
-  `PairwiseComparison.calculate_fixation_probability` (also with `high_precision=True`) and
-  `calculate_log_fixation_probability` accepted strategy indices outside `[0, nb_strategies)`
-  (returning, e.g., 1.0, or crashing the interpreter with a segmentation fault) and an invader equal
-  to the resident; `calculate_gradient_of_selection` and `calculate_gradient_of_selection_with_mutation`
-  accepted states of the wrong length or not summing to Z (reading past the end of the vector).
-  `PairwiseComparisonNumerical` accepted negative strategy indices, and states whose entries wrap
-  around in unsigned arithmetic to sum to Z. All now raise.
-
 ### Changed
 
 - **Function signatures in docstrings and type stubs.** The bindings no longer disable pybind11's
@@ -81,6 +70,8 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 - CI runs the C++ tests under AddressSanitizer (with leak detection) and
   UndefinedBehaviorSanitizer on Linux with clang. The CMake target `egttools_cpp_tests` builds
   every C++ test program registered on the platform.
+- CI and the pre-push hook run `scripts/check_repo_hygiene.py`, which checks that no tool or
+  environment files, absolute home paths or credentials are tracked; `--artifacts` checks built packages.
 - `scripts/memguard.py` runs a command and kills it if its memory (the whole process tree)
   exceeds a limit, for test runs that may allocate without bound.
 
