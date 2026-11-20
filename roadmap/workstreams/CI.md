@@ -19,7 +19,7 @@ structural work.
 | CI-09 | Move the Ubuntu jobs from `ubuntu-24.04` to `ubuntu-26.04` (GCC 15, CMake 4 preinstalled) and fix what breaks | todo | P1 | M | 0.3 | — | — |
 | CI-10 | Audit the CMake build (all `CMakeLists.txt`, `cmake/Modules`, presets) and file improvement tasks | done | P1 | M | 0.3 | TEST-10, MEM-01 | `7c6b71ef` |
 | CI-11 | Run the Tests workflow on pushes to every branch, so each task branch is tested when pushed | done | P1 | S | 0.3 | — | `301a8b0d` |
-| CI-12 | Set the vcpkg toolchain and macOS deployment-target defaults before `project()`, where they take effect | todo | P1 | S | 0.3 | CI-10 | — |
+| CI-12 | Set the vcpkg toolchain and macOS deployment-target defaults before `project()`, where they take effect | review | P1 | S | 0.3 | CI-10 | branch `ci-12-defaults-before-project` |
 | CI-13 | Fix or remove the broken `docs` and `pytest` CMake targets (they depend on a nonexistent target `numerical`) | todo | P2 | S | 0.3 | CI-10 | — |
 | CI-14 | One C++ core library (`egttools_core`) built once and used by the extension, the C++ tests and C++ users | todo | P1 | M | 0.3 | CI-10 | — |
 | CI-15 | Make Boost unconditional: remove the `HAS_BOOST` conditionals (Boost is already required) | todo | P2 | S | 0.3 | CI-14 | — |
@@ -58,7 +58,8 @@ structural work.
   changes the build (CMake, compiler flags, dependencies) before merging.
 - **CI-10 findings** (2026-11-20). Fixed in 0.3 (affect correctness or the test setup):
   1. `CMAKE_TOOLCHAIN_FILE` (vcpkg default) is set after `project()`, where it has no effect: a plain
-     `cmake -S .` configures without vcpkg the first time and with it on the next run, from the cache.
+     `cmake -S .` configures without vcpkg and fails to find Boost, on the first and every later run
+     (checked 2026-11-20); only callers that pass the toolchain (setup.py, CI) get vcpkg.
      The `SKIP_VCPKG` block after `project()` repeats the one before it and cannot act. → CI-12.
   2. The `CMAKE_OSX_DEPLOYMENT_TARGET` default (11.0) is also set after `project()`, too late for the
      first configure. → CI-12.
