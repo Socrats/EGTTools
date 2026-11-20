@@ -3,6 +3,18 @@
 Newest first. Each entry gives the date, the decision, the reasoning, and the
 affected task IDs.
 
+## 2026-11-20: The C++ core stays in this repository
+`egttools_core` (CI-14) is a library target in this repository, not a separate
+repository used as a submodule or package dependency. The core API is still changing
+(MC redesign, network models, 64-bit sizes, the PairwiseComparison renames), and most
+of those changes touch the C++ code and its bindings together; in two repositories each
+would need two branches, two CI runs and a version bump in between. There is no
+C++-only user yet, and a second repository would need its own CI, packaging and release
+checks. C++ users get the library through the CMake package export (CI-02). Revisit
+when there is a C++-only user or a second language binding, when the core API is stable
+(after 1.0), or when the core needs its own release schedule. A split then is mostly
+mechanical: the core never includes binding code. Affects CI-14, CI-02.
+
 ## 2026-11-17: Branch-and-merge workflow, no pull requests
 There is a single maintainer, so each task is developed on its own branch and
 merged into `master` with `--no-ff`. No PRs. Branch protection (PM-09) is

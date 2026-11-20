@@ -21,7 +21,7 @@ structural work.
 | CI-11 | Run the Tests workflow on pushes to every branch, so each task branch is tested when pushed | done | P1 | S | 0.3 | — | `301a8b0d` |
 | CI-12 | Set the vcpkg toolchain and macOS deployment-target defaults before `project()`, where they take effect | done | P1 | S | 0.3 | CI-10 | `25d3d0a0` |
 | CI-13 | Fix or remove the broken `docs` and `pytest` CMake targets (they depend on a nonexistent target `numerical`) | done | P2 | S | 0.3 | CI-10 | `492217bf` |
-| CI-14 | One C++ core library (`egttools_core`) built once and used by the extension, the C++ tests and C++ users | todo | P1 | M | 0.3 | CI-10 | — |
+| CI-14 | One C++ core library (`egttools_core`) built once and used by the extension, the C++ tests and C++ users | review | P1 | M | 0.3 | CI-10 | — |
 | CI-15 | Make Boost unconditional: remove the `HAS_BOOST` conditionals (Boost is already required) | todo | P2 | S | 0.3 | CI-14 | — |
 | CI-16 | Remove dead build code: `cpp/src/egttools.cpp` (not compiled), `FindEigen3.cmake` and `FindLpSolve.cmake` (unused) | done | P2 | S | 0.3 | CI-10 | `0a461c72` |
 | CI-17 | Review newer pybind11 releases and pin the `pybind11` submodule to a release tag | todo | P2 | S | 0.3 | — | — |
@@ -95,6 +95,13 @@ structural work.
 - **CI-14**: an OBJECT or STATIC library from `cpp/src/egttools/**`, with the include directories,
   compile definitions and dependencies (Boost, Eigen, OpenMP, BLAS/LAPACK) as usage requirements;
   `numerical_` and the C++ tests link it. Same object code for the extension and the tests.
+  Done as a STATIC library (`egttools_core`, alias `EGTTools::core`), built with pybind11's LTO
+  flags so the extension's code is unchanged (`__text` within 100 bytes, same exported symbols,
+  A/B timings equal). It is built with the normal flags, so in Release the 2 asserts in
+  `Group.cpp`/`GarciaGroup.cpp` no longer run in the C++ tests (header asserts still do);
+  TEST-09 replaces them with checks. Left out: the PETSc module still compiles its own copy of
+  `Utils.cpp` (`egttools_finite_pop_utils_obj`); link `egttools_core` instead when that module is
+  next built and tested.
 - **CI-02**: removes the need to keep `setup.py` `package_data` and
   `[tool.setuptools.package-data]` in sync by hand, and the `if (NOT SKBUILD)`
   guards around `install()`.
