@@ -87,6 +87,8 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   every C++ test program registered on the platform.
 - `scripts/memguard.py` runs a command and kills it if its memory (the whole process tree)
   exceeds a limit, for test runs that may allocate without bound.
+- `scripts/check_repo_hygiene.py` reports the file and line of each finding without the matched
+  text, and no longer searches for credentials; GitHub secret scanning and push protection cover them.
 
 ## [0.2.1] - 2026-11-20
 

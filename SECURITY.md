@@ -32,10 +32,12 @@ How this is enforced:
    specific to your own setup in your local `.git/info/exclude` instead, so the public repository
    does not list them.
 2. **Automatic check.** `scripts/check_repo_hygiene.py` fails when a tracked file matches an ignore
-   rule (including your local excludes), lives in a tool or environment directory, contains an
-   absolute home path, or contains a credential. It runs in CI on every push (job *Repository
-   hygiene*) and in the pre-push hook (`scripts/install_hooks.sh`). With `--artifacts` it checks
-   built wheels, sdists and conda packages.
+   rule (including your local excludes), lives in a tool or environment directory, or contains an
+   absolute home path. It reports the file and line of each finding, never the matched text. It
+   runs in CI on every push (job *Repository hygiene*) and in the pre-push hook
+   (`scripts/install_hooks.sh`). With `--artifacts` it checks built wheels, sdists and conda
+   packages. Credentials are detected by GitHub secret scanning, and push protection blocks pushes
+   that contain them.
 3. **Notebook outputs.** Clear or check outputs before committing a notebook: outputs saved from a
    local run can include local paths.
 4. **Builds outside the source tree.** Build in a separate directory, never in the source tree.

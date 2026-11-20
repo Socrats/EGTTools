@@ -13,6 +13,7 @@ packages (SECURITY.md, "Keeping personal and secret information out of the proje
 | SEC-04 | Enable GitHub secret scanning and push protection for the repository | done | P1 | S | 0.3 | — | repository settings, 2026-11-20 |
 | SEC-05 | Wheels and conda packages must not ship the source tree as data files (~700 files installed into the environment prefix) | done | P0 | M | 0.3 | — | `9c42e229` |
 | SEC-06 | Release 0.2.1 with the packaging fix (SEC-05) | done | P0 | S | 0.3 | SEC-01, SEC-05 | `v0.2.1` |
+| SEC-07 | Hygiene check reports file and line only, never the matched text; credentials left to GitHub secret scanning and push protection | review | P0 | S | 0.3 | SEC-02, SEC-04 | — |
 
 ## Notes
 
@@ -26,3 +27,6 @@ packages (SECURITY.md, "Keeping personal and secret information out of the proje
 - **SEC-06**: 0.2.1 was tagged on `release-0.2.x` (v0.2.0 plus the packaging fix, the hygiene check and
   the docs cleanup). Its wheels and sdist were checked by hand with `check_repo_hygiene.py --artifacts`
   before upload; SEC-03 automates that check.
+- **SEC-07**: findings are printed as `file:line: kind`, since CI logs are public. The credential
+  patterns were removed: secret scanning and push protection (SEC-04) cover credentials in the
+  repository. Built packages are checked for home paths only. Port to `release-0.2.x` as well.

@@ -96,7 +96,7 @@ Workstreams: `MC`, `NET`, `SOL`, `MEM`, and the 0.3 tasks in `TEST`.
 Work in this order: each phase builds on the tests or code of the previous one. Within a phase,
 tasks are independent unless the `Deps` column says otherwise.
 
-0. **Security first** (SEC-01..06, see workstreams/SEC.md): hygiene policy and checks, the packaging
+0. **Security first** (SEC-01..07, see workstreams/SEC.md): hygiene policy and checks, the packaging
    fix, and 0.2.1. Takes priority over everything else.
 1. **Safety nets first**, in this order:
    - TEST-10: C++ tests that check results in Release builds (stopgap before TEST-09).
@@ -156,6 +156,6 @@ Update this table when tasks change. Recount a milestone (here 0.2) from the rep
 | Milestone | Done / total |
 |-----------|-------------|
 | v0.2.0 | 22 / 22 |
-| v0.3.0 | 18 / 75 |
+| v0.3.0 | 18 / 76 |
 | v0.4.0 | 0 / 31 |
 | later  | 0 / 4 |
