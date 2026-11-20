@@ -7,6 +7,22 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-20
+
+Patch release of 0.2.0; same code and numerical results.
+
+### Fixed
+
+- **Packaging: wheels and conda packages contain only the `egttools` package.** Since 0.1.14.2 they
+  also installed about 700 files of the source tree (`docs/`, `cpp/`, `tests/`, `cmake/` and the
+  pybind11 sources) into the root of the Python environment (e.g. `<env>/docs/`, `<env>/pybind11/`).
+  To remove those leftovers, uninstall and reinstall egttools, or delete those folders by hand.
+
+### Testing
+
+- CI and the pre-push hook run `scripts/check_repo_hygiene.py`, which checks that no tool or
+  environment files, absolute home paths or credentials are tracked; `--artifacts` checks built packages.
+
 ## [0.2.0] - 2026-11-19
 
 First release since 0.1.14. Several fixes change numerical results; read
