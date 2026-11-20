@@ -68,3 +68,11 @@ Public entry points validate strategy indices and state vectors (MEM-09). Tracke
 v0.3.0 audits numerical stability across the library (TEST-12) alongside the efficiency audit
 (PERF-05). Exponentials of fitness are computed in log space or with the maximum subtracted.
 The build does not use fast-math flags, because the overflow handling relies on IEEE infinities.
+
+## 2026-11-19: Monte Carlo constants come from the literature
+The convergence protocol (pilot autocorrelation time, burn-in, batch means, dispersed starts,
+agreement between starts) may be published, but each constant must have a published justification:
+Sokal's window (c = 5), Janke's burn-in (20 τ_exp), Flegal and Jones' batch size (⌊√n⌋, overlapping
+batch means), Vehtari et al.'s R̂ < 1.01, Vats et al.'s minimum ESS. Run lengths are not derived
+from the spectral gap: computing it costs as much as solving the chain exactly, and that line of
+work is kept for a separate publication.

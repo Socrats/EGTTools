@@ -13,7 +13,7 @@ them smoke tests. Coverage is not measured, and the C++ tests don't run in CI.
 | TEST-03 | Regression tests against published results (e.g. Traulsen et al. 2006; Santos et al. 2008) | todo | P1 | L | 0.3 | — | — |
 | TEST-04 | Property-based tests (hypothesis): stochastic matrices, normalised distributions, symmetry | todo | P2 | M | 0.3 | — | — |
 | TEST-05 | Register all `tests/cpp` programs with CTest and fix any that fail | done | P0 | M | 0.3 | — | via REL-07 (CTest in Tests workflow) |
-| TEST-06 | Statistical-test helpers (compare MC estimate to exact within k·SE, fixed seeds) | todo | P1 | S | 0.3 | — | — |
+| TEST-06 | Statistical-test helpers (compare MC estimate to exact within k·SE, fixed seeds) | review | P1 | S | 0.3 | — | branch `test-06-stats-helpers` |
 | TEST-07 | Coverage floor enforced in CI, raised each release | todo | P1 | S | 0.4 | TEST-02 | — |
 | TEST-08 | Execute documentation notebooks as tests | todo | P2 | M | 0.4 | — | — |
 | TEST-09 | Migrate the C++ tests to Catch2 v3 (vcpkg): real assertions, one test per behaviour, CTest discovery | todo | P1 | L | 0.3 | REL-07 | — |
@@ -59,6 +59,13 @@ them smoke tests. Coverage is not measured, and the C++ tests don't run in CI.
   `np.exp`. Check also the hypergeometric log-space PDFs (PERF-07), the stationary-distribution
   helpers and the gradients. Tests use extreme β, payoffs and population sizes and compare with
   a high-precision reference. No fast-math flags are used; keep it that way (DECISIONS.md).
+- **TEST-06**: `tests/stats_helpers.py` (independent of egttools): iid and batch-means SEs, `assert_within_k_se`
+  (z-scores in the message), `assert_detects` (power check), Sokal's τ_int, run length from a pilot run;
+  fixed-seed `rng` fixture in `conftest.py`. Constants from the literature (cited in the module):
+  c = 5 and n > 50 τ (Sokal, via emcee), batch size ⌊√n⌋ with overlapping batch means (Flegal & Jones
+  2010), burn-in 20 τ (Janke 2008: 20 τ_exp). A-priori spectral bounds were dropped: they cost as much as
+  solving the chain exactly, and a gap-based run-length recipe is not standard (kept for the EMCUtils
+  paper). Self-tests on AR(1) processes with known τ_int and long-run variance.
 - **TEST-13**: 54 warnings in a normal run (2026-11-19), grouped as:
   - Test-helper defects in `test_pairwise_comparison_equations.py`: `fitness_two_player` computes
     `n[m] - (l == m)` on `uint64` counts, which wraps for an absent strategy (value unused, but the
@@ -68,6 +75,7 @@ them smoke tests. Coverage is not measured, and the C++ tests don't run in CI.
     with `pytest.warns` where the warning is the point.
   - Third-party: a `DeprecationWarning` from `pytz` (`datetime.utcfromtimestamp`); ignore it by
     message in `pyproject.toml`, with a comment.
-  - About 160 more warnings appear only on the first run after rebuilding the extension; identify them.
+  - The extra warnings on a first run (up to ~240) are `DeprecationWarning: ast.Str` from pytest 7.3.1's
+    assertion rewriting on Python 3.13, emitted only when a test file changed; upgrade pytest in egtenv.
   End state: `filterwarnings = ["error", ...]` in `[tool.pytest.ini_options]`, so a new warning
   fails CI, with each ignore listed and justified.
