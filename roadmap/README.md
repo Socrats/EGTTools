@@ -71,6 +71,7 @@ contributions still arrive as PRs (see `CONTRIBUTING.md`).
 | `CI`  | Build system & CI | [workstreams/CI.md](workstreams/CI.md) |
 | `PERF`| Performance & benchmarks | [workstreams/PERF.md](workstreams/PERF.md) |
 | `API` | API evolution | [workstreams/API.md](workstreams/API.md) |
+| `SEC` | Security and privacy | [workstreams/SEC.md](workstreams/SEC.md) |
 
 ## Milestones
 
@@ -95,6 +96,8 @@ Workstreams: `MC`, `NET`, `SOL`, `MEM`, and the 0.3 tasks in `TEST`.
 Work in this order: each phase builds on the tests or code of the previous one. Within a phase,
 tasks are independent unless the `Deps` column says otherwise.
 
+0. **Security first** (SEC-01..06, see workstreams/SEC.md): hygiene policy and checks, the packaging
+   fix, and 0.2.1. Takes priority over everything else.
 1. **Safety nets first**, in this order:
    - TEST-10: C++ tests that check results in Release builds (stopgap before TEST-09).
    - MEM-01, MEM-02: sanitizer build and CI job, so new C++ code is checked for memory errors from the start.
@@ -153,6 +156,6 @@ Update this table when tasks change. Recount a milestone (here 0.2) from the rep
 | Milestone | Done / total |
 |-----------|-------------|
 | v0.2.0 | 22 / 22 |
-| v0.3.0 | 11 / 68 |
+| v0.3.0 | 11 / 74 |
 | v0.4.0 | 0 / 31 |
 | later  | 0 / 4 |
