@@ -204,8 +204,7 @@ endif ()
 # Eigen3
 # - vcpkg installs Eigen3Config.cmake (config mode)
 # - conda-forge (eigen >=3.4.0 / Eigen 5.x) also provides Eigen3Config.cmake
-#   at share/eigen3/cmake/ — use CONFIG mode for both cases so our legacy
-#   FindEigen3.cmake (which reads Macros.h, now gone in Eigen 5) is bypassed.
+#   at share/eigen3/cmake/ — CONFIG mode for both.
 find_package(Eigen3 CONFIG REQUIRED)
 
 # Eigen3Config.cmake only creates the Eigen3::Eigen target; extract the include
