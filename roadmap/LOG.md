@@ -2,6 +2,7 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-20 · CI-10 · Review (branch `ci-10-cmake-audit`): 14 findings; CI-12..16 added for 0.3, the rest folded into CI-02. TEST-09 now depends on CI-14.
 - 2026-11-20 · TEST-11 · Merged (`f9966559`): Tests and sanitizer job green.
 - 2026-11-20 · TEST-11 · Review (branch `test-11-shared-chains`): shared chains with exact stationary distributions; egttools' neutral transition matrix matches the spec.
 - 2026-11-19 · TEST-06 · Merged (`ccec953c`): Tests and sanitizer job green.
