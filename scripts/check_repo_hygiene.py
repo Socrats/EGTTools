@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Check that the repository and built packages contain no personal or secret information.
+"""Check that the repository and built packages contain no personal information.
 
     python scripts/check_repo_hygiene.py                  # tracked files of the repository
     python scripts/check_repo_hygiene.py --artifacts dist/*.whl dist/*.tar.gz pkgs/*.conda
@@ -9,13 +9,17 @@ Tracked files must not:
   repository on purpose must not be committed anyway);
 - live in tool or environment directories (virtual environments, IDE settings, caches, OS metadata);
 - contain absolute home-directory paths (e.g. ``/Users/<name>/``, ``/home/<name>/``,
-  ``C:\\Users\\<name>\\``), which identify a contributor's machine;
-- contain credentials (tokens, private keys, cloud keys).
+  ``C:\\Users\\<name>\\``), which identify a contributor's machine.
 
-Built packages (wheels, sdists, conda packages, directories) are checked for home paths and
-credentials. Paths of CI runners and documentation placeholders are allowed.
+Built packages (wheels, sdists, conda packages, directories) are checked for home paths. Paths of
+CI runners and documentation placeholders are allowed. Credentials are left to the repository's
+secret scanning and push protection.
 
 Exit status 1 lists every finding; 0 means clean. Used by CI and by scripts/hooks/pre-push.
+Findings give the file, the line and the kind of match, never the matched text: the output can
+end up in public CI logs, which must not repeat what the check is meant to keep out. File names
+are checked too; a name that contains a home path is reported by its position instead (``file N``:
+the N-th line of ``git ls-files``, or the N-th file the script reads from a package).
 """
 from __future__ import annotations
 
@@ -40,26 +44,26 @@ HOME_PATH = re.compile(
     rb"(?:/Users|/home)/(?!" + _ALLOWED_NAMES.encode() + rb"/)[A-Za-z0-9._-]+/"
     rb"|[A-Za-z]:\\{1,2}Users\\{1,2}(?!(?:runneradmin|Public|Default|USERNAME|<[^>\\]*>)\\)[A-Za-z0-9._-]+\\")
 
-SECRETS = {
-    "GitHub token": re.compile(rb"\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{36}\b|\bgithub_pat_[A-Za-z0-9_]{60,}\b"),
-    "PyPI token": re.compile(rb"\bpypi-AgE[A-Za-z0-9_-]{50,}"),
-    "Anaconda token": re.compile(rb"\bANACONDA_API_TOKEN\s*[:=]\s*['\"]?[A-Za-z0-9-]{20,}"),
-    "AWS access key": re.compile(rb"\bAKIA[0-9A-Z]{16}\b"),
-    "private key": re.compile(rb"-----BEGIN (?:RSA |OPENSSH |EC |DSA |PGP )?PRIVATE KEY( BLOCK)?-----"),
-    "Slack token": re.compile(rb"\bxox[abprs]-[A-Za-z0-9-]{10,}"),
-}
-
 MAX_BYTES = 20 * 1024 * 1024  # skip content checks for very large blobs
 
 
 def scan_bytes(data: bytes):
-    """Yield (kind, excerpt) for every home path or credential in ``data``."""
+    """Yield (kind, line number) for every home path in ``data``.
+
+    Only the position is returned, never the matched text, so that it cannot be printed.
+    """
     for match in HOME_PATH.finditer(data):
-        yield "home path", match.group().decode(errors="replace")
-    for kind, pattern in SECRETS.items():
-        for match in pattern.finditer(data):
-            excerpt = match.group()[:12].decode(errors="replace") + "…"
-            yield kind, excerpt
+        yield "home path", data.count(b"\n", 0, match.start()) + 1
+
+
+def shown_name(name: str, index: int):
+    """Return (name to print, whether ``name`` contains a home path).
+
+    A name with a home path is replaced by its position, so that it is never printed.
+    """
+    if HOME_PATH.search(name.encode(errors="surrogateescape")):
+        return f"file {index} (name withheld)", True
+    return name, False
 
 
 def tracked_files(root: Path):
@@ -75,16 +79,22 @@ def tracked_but_ignored(root: Path):
 
 def check_repository(root: Path):
     findings = []
+    names = tracked_files(root)
+    position = {name: index for index, name in enumerate(names, 1)}
     for name in tracked_but_ignored(root):
-        findings.append((name, "tracked but matches an ignore rule", ""))
-    for name in tracked_files(root):
-        path = root / name
+        shown, _ = shown_name(name, position.get(name, 0))
+        findings.append((shown, "tracked but matches an ignore rule"))
+    for index, name in enumerate(names, 1):
+        shown, home_in_name = shown_name(name, index)
+        if home_in_name:
+            findings.append((shown, "home path in file name"))
         if FORBIDDEN_PATH.search(name):
-            findings.append((name, "tool or environment file", ""))
+            findings.append((shown, "tool or environment file"))
+        path = root / name
         if not path.is_file() or path.is_symlink() or path.stat().st_size > MAX_BYTES:
             continue
-        for kind, excerpt in scan_bytes(path.read_bytes()):
-            findings.append((name, kind, excerpt))
+        for kind, lineno in scan_bytes(path.read_bytes()):
+            findings.append((f"{shown}:{lineno}", kind))
     return findings
 
 
@@ -132,10 +142,16 @@ def _unzstd(data: bytes) -> bytes:
 
 def check_artifacts(paths):
     findings = []
-    for path in map(Path, paths):
-        for member, data in _members(path):
-            for kind, excerpt in scan_bytes(data):
-                findings.append((f"{path.name}:{member}", kind, excerpt))
+    for package_index, path in enumerate(map(Path, paths), 1):
+        package, home_in_name = shown_name(path.name, package_index)
+        if home_in_name:
+            findings.append((package, "home path in package name"))
+        for index, (member, data) in enumerate(_members(path), 1):
+            shown, home_in_name = shown_name(member, index)
+            if home_in_name:
+                findings.append((f"{package}:{shown}", "home path in file name"))
+            for kind, lineno in scan_bytes(data):
+                findings.append((f"{package}:{shown}:{lineno}", kind))
     return findings
 
 
@@ -149,10 +165,10 @@ def main():
         root = Path(subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True,
                                    text=True, check=True).stdout.strip())
         findings = check_repository(root)
-    for where, kind, excerpt in findings:
-        print(f"{where}: {kind}" + (f" ({excerpt})" if excerpt else ""))
+    for where, kind in findings:
+        print(f"{where}: {kind}")
     if findings:
-        print(f"\n{len(findings)} finding(s). Personal paths and credentials must not be committed or "
+        print(f"\n{len(findings)} finding(s). Personal paths and tool files must not be committed or "
               f"published; see SECURITY.md.", file=sys.stderr)
         return 1
     print("repository hygiene: clean" if not args.artifacts else "artifacts: clean")

@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   hygiene:
-    # No personal paths, credentials, or tool/environment files in the repository (SECURITY.md).
+    # No personal paths or tool/environment files in the repository (SECURITY.md).
     name: Repository hygiene
     runs-on: ubuntu-24.04
     timeout-minutes: 5
