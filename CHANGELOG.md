@@ -20,6 +20,10 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Build:** a plain `cmake -S . -B build` now uses the bundled vcpkg toolchain and the default macOS
+  deployment target (11.0) as intended. Both defaults were set after `project()`, where CMake ignores
+  them, so such a configure failed to find Boost. The `MACOSX_DEPLOYMENT_TARGET` environment variable
+  still takes precedence. Builds through `setup.py` and CI were not affected (they pass the toolchain).
 - **Function signatures in docstrings and type stubs.** The bindings no longer disable pybind11's
   function signatures, so every docstring starts with the real signature and the `.pyi` stubs list
   real parameters and types (with one `@overload` per variant) instead of `*args, **kwargs`. The stubs

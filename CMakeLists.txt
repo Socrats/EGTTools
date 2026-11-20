@@ -17,14 +17,41 @@
 
 cmake_minimum_required(VERSION 3.20...4.2)
 
-# SKIP_VCPKG guard — must come before project() because CMAKE_TOOLCHAIN_FILE
-# is loaded by CMakeDetermineSystem.cmake *during* project(), before any code
-# below project() can run. A stale cmake cache from a prior vcpkg build injects
-# the vcpkg toolchain even when -DSKIP_VCPKG=ON is passed on the command line.
-# Unsetting the cache variable here prevents project() from loading it.
-if (SKIP_VCPKG AND DEFINED CMAKE_TOOLCHAIN_FILE AND CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
-    message(STATUS "[EGTtools] SKIP_VCPKG=ON: clearing stale vcpkg CMAKE_TOOLCHAIN_FILE before project()")
-    unset(CMAKE_TOOLCHAIN_FILE CACHE)
+# ------------------------------------------------------------------------------
+# Defaults that must be set before project()
+# ------------------------------------------------------------------------------
+# project() loads CMAKE_TOOLCHAIN_FILE and reads CMAKE_OSX_DEPLOYMENT_TARGET, so defaults for
+# them set after project() have no effect, on the first configure or later ones.
+
+option(SKIP_VCPKG "Skip vcpkg toolchain setup" OFF)
+
+# vcpkg toolchain: use the bundled vcpkg submodule unless the caller passed a toolchain or
+# SKIP_VCPKG=ON. With SKIP_VCPKG=ON, a vcpkg toolchain left in the cache by an earlier build is
+# removed, so it is not loaded by project().
+set(_EGTTOOLS_VCPKG_TOOLCHAIN "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake")
+if (SKIP_VCPKG)
+    if (DEFINED CMAKE_TOOLCHAIN_FILE AND CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
+        message(STATUS "[EGTtools] SKIP_VCPKG=ON: removing the cached vcpkg CMAKE_TOOLCHAIN_FILE")
+        unset(CMAKE_TOOLCHAIN_FILE CACHE)
+    elseif (DEFINED CMAKE_TOOLCHAIN_FILE)
+        message(FATAL_ERROR "SKIP_VCPKG=ON but a non-vcpkg CMAKE_TOOLCHAIN_FILE is defined: ${CMAKE_TOOLCHAIN_FILE}")
+    endif ()
+elseif (NOT DEFINED CMAKE_TOOLCHAIN_FILE AND EXISTS "${_EGTTOOLS_VCPKG_TOOLCHAIN}")
+    set(CMAKE_TOOLCHAIN_FILE "${_EGTTOOLS_VCPKG_TOOLCHAIN}" CACHE FILEPATH "Toolchain file (vcpkg by default)")
+    message(STATUS "[EGTtools] Using the vcpkg toolchain: ${CMAKE_TOOLCHAIN_FILE}")
+elseif (DEFINED CMAKE_TOOLCHAIN_FILE)
+    message(STATUS "[EGTtools] Toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
+else ()
+    message(STATUS "[EGTtools] No toolchain file and no vcpkg submodule: using system packages")
+endif ()
+
+# macOS deployment target: 11.0 unless given on the command line or by the MACOSX_DEPLOYMENT_TARGET
+# environment variable (which project() would otherwise use). APPLE is not defined before project(),
+# so the host system is checked.
+if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin" AND NOT DEFINED CMAKE_OSX_DEPLOYMENT_TARGET
+        AND NOT DEFINED ENV{MACOSX_DEPLOYMENT_TARGET})
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS deployment target")
+    message(STATUS "[EGTtools] CMAKE_OSX_DEPLOYMENT_TARGET not set: using 11.0")
 endif ()
 
 # ------------------------------------------------------------------------------
@@ -81,7 +108,6 @@ project(egttools VERSION ${_EGTTOOLS_VERSION_NUMERIC} LANGUAGES CXX)
 
 option(USE_OPENMP "Enable OpenMP multithreading" ON)
 option(BUILD_NUMERICAL_TESTS "Build C++ tests in tests/" ON)
-option(SKIP_VCPKG "Skip vcpkg toolchain setup" OFF)
 option(EGTTOOLS_ENABLE_ARPACK "Build native ARPACK eigensolver (requires arpack-ng)" OFF)
 option(EGTTOOLS_ENABLE_PETSC "Build MPI-distributed PETSc/SLEPc eigensolver (numerical_mpi_ module)" OFF)
 
@@ -91,36 +117,6 @@ option(EGTTOOLS_SUPPRESS_THIRD_PARTY_CMAKE_WARNINGS "Suppress third-party CMake 
 if (EGTTOOLS_SUPPRESS_THIRD_PARTY_CMAKE_WARNINGS)
     set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS 1 CACHE INTERNAL "" FORCE)
     set(CMAKE_WARN_DEPRECATED OFF CACHE INTERNAL "" FORCE)
-endif ()
-
-# ------------------------------------------------------------------------------
-# Toolchain setup: SKIP_VCPKG vs vcpkg
-# ------------------------------------------------------------------------------
-
-if (NOT SKIP_VCPKG AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-    set(CMAKE_TOOLCHAIN_FILE
-            "${CMAKE_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
-            CACHE STRING "Toolchain file for vcpkg"
-    )
-    message(STATUS "Using vcpkg toolchain: ${CMAKE_TOOLCHAIN_FILE}")
-elseif (DEFINED CMAKE_TOOLCHAIN_FILE)
-    message(STATUS "Toolchain file already set: ${CMAKE_TOOLCHAIN_FILE}")
-else ()
-    message(STATUS "Using SKIP_VCPKG/system configuration — not setting vcpkg toolchain")
-endif ()
-
-if (SKIP_VCPKG AND DEFINED CMAKE_TOOLCHAIN_FILE)
-    if (CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
-        # Stale cmake cache or setup.py injected the vcpkg toolchain before
-        # SKIP_VCPKG was honoured.  Clear it so the build proceeds without vcpkg.
-        message(STATUS "SKIP_VCPKG=ON: clearing cached vcpkg CMAKE_TOOLCHAIN_FILE")
-        unset(CMAKE_TOOLCHAIN_FILE CACHE)
-    else ()
-        message(FATAL_ERROR
-                "SKIP_VCPKG=ON but a non-vcpkg CMAKE_TOOLCHAIN_FILE is already defined: "
-                "${CMAKE_TOOLCHAIN_FILE}"
-        )
-    endif ()
 endif ()
 
 # ------------------------------------------------------------------------------
@@ -167,23 +163,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# ------------------------------------------------------------------------------
-# macOS deployment target enforcement
-# ------------------------------------------------------------------------------
-
 if (APPLE)
-    if (NOT DEFINED CMAKE_OSX_DEPLOYMENT_TARGET OR CMAKE_OSX_DEPLOYMENT_TARGET STREQUAL "")
-        set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS deployment target" FORCE)
-        message(WARNING
-                "[EGTTools] CMAKE_OSX_DEPLOYMENT_TARGET was not set. Defaulting to 11.0."
-        )
-    else ()
-        message(STATUS "[EGTTools] CMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}")
-    endif ()
-
-    message(STATUS "-- Building for architecture: ${CMAKE_OSX_ARCHITECTURES}")
-    message(STATUS "Checking which MACOSX_DEPLOYMENT_TARGET to use - ${CMAKE_OSX_DEPLOYMENT_TARGET}")
-    set(MACOSX_DEPLOYMENT_TARGET "${CMAKE_OSX_DEPLOYMENT_TARGET}")
+    message(STATUS "[EGTtools] macOS deployment target: ${CMAKE_OSX_DEPLOYMENT_TARGET}, architectures: ${CMAKE_OSX_ARCHITECTURES}")
 endif ()
 
 # ------------------------------------------------------------------------------
