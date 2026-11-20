@@ -123,7 +123,8 @@ egttools = [
     "lib/*.dylib",
     "lib/*.so",
     "numerical_/*.pyi",
-    "numerical_/**/*.pyi",
+    "numerical_/*/*.pyi",
+    "numerical_/*/*/*.pyi",
     "egttools_build_info.txt",
 ]
 
