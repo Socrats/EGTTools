@@ -188,11 +188,14 @@ setup(
     cmake_args=cmake_args,
     cmake_install_dir="src/egttools/numerical",
     cmake_with_sdist=False,
-    include_package_data=True,  # required to honor MANIFEST.in
+    # MANIFEST.in describes the sdist only. With include_package_data=True, scikit-build also put every
+    # file it grafts outside the packages (docs/, cpp/, tests/, cmake/, pybind11/) into the wheel as data,
+    # installed into the root of the user's environment. The wheel contents are listed in package_data.
+    include_package_data=False,
     package_data={
         "egttools": ["*.pyi", "py.typed"],
         "egttools.numerical": ["*.so", "*.dylib", "*.pyd", "*.pyi", "lib/*.dylib", "lib/*.so",
-                               "numerical_/*.pyi", "numerical_/**/*.pyi",
+                               "numerical_/*.pyi", "numerical_/*/*.pyi", "numerical_/*/*/*.pyi",
                                "egttools_build_info.txt"],
     },
 )
