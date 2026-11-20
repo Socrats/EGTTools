@@ -76,3 +76,7 @@ Sokal's window (c = 5), Janke's burn-in (20 τ_exp), Flegal and Jones' batch siz
 batch means), Vehtari et al.'s R̂ < 1.01, Vats et al.'s minimum ESS. Run lengths are not derived
 from the spectral gap: computing it costs as much as solving the chain exactly, and that line of
 work is kept for a separate publication.
+
+## 2026-11-20: No personal or secret information in the project
+Local paths, credentials, and personal tool or environment files are never tracked or published.
+An automatic check enforces it in CI and in the pre-push hook (SECURITY.md).
