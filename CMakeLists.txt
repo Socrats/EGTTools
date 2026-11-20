@@ -17,6 +17,14 @@
 
 cmake_minimum_required(VERSION 3.20...4.2)
 
+# In-source builds would write CMake's cache and generated files into the source tree.
+if (CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+    message(FATAL_ERROR
+            "In-source builds are not supported. Use a separate build directory, e.g.\n"
+            "  cmake -S . -B build\n"
+            "and remove the CMakeCache.txt and CMakeFiles/ just created in the source directory.")
+endif ()
+
 # ------------------------------------------------------------------------------
 # Defaults that must be set before project()
 # ------------------------------------------------------------------------------
@@ -402,7 +410,6 @@ endif ()
 # ------------------------------------------------------------------------------
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/cpp/src)
-add_subdirectory(${PROJECT_SOURCE_DIR}/docs)
 
 if (BUILD_NUMERICAL_TESTS)
     add_subdirectory(tests)

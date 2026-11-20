@@ -98,8 +98,8 @@ jobs:
 
       - name: Run C++ tests
         # The C++ tests are standalone programs that check results with assert(); tests/CMakeLists.txt
-        # keeps assertions enabled in this Release build. PythonTests is the pytest suite, run below.
-        run: ctest --test-dir "$(ls -d _skbuild/*/cmake-build)/tests" -E PythonTests --output-on-failure --timeout 600
+        # keeps assertions enabled in this Release build.
+        run: ctest --test-dir "$(ls -d _skbuild/*/cmake-build)/tests" --output-on-failure --timeout 600
 
       - name: Run Python tests (with coverage)
         # Coverage settings are in [tool.coverage] in pyproject.toml.
@@ -202,7 +202,7 @@ jobs:
         run: cmake --build build-sanitize --parallel --target egttools_cpp_tests
 
       - name: Run the C++ tests
-        run: ctest --test-dir build-sanitize/tests -E PythonTests --output-on-failure --timeout 900
+        run: ctest --test-dir build-sanitize/tests --output-on-failure --timeout 900
 
   coverage-badge:
     # Updates the README coverage badge and the HTML report in the
