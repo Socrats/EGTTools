@@ -2,6 +2,7 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-20 · SEC-07 · Merged (`4b47bdbe`): Tests green; hygiene job log shows only "clean". File names with a home path are withheld too.
 - 2026-11-20 · SEC-07 · Review (branch `sec-07-no-matched-text`): hygiene check reports locations only; credential patterns removed.
 - 2026-11-20 · CI-17 · Added: review newer pybind11 releases and pin the submodule to a release tag.
 - 2026-11-20 · SEC-06 · 0.2.1 released (tag `v0.2.1` on `release-0.2.x`): GitHub, PyPI, conda.
