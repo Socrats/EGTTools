@@ -17,7 +17,7 @@ structural work.
 | CI-07 | Concurrency groups and path filters so docs-only changes skip wheel builds | todo | P2 | S | 0.4 | — | — |
 | CI-08 | Reproducible environments: evaluate uv (uv.lock for dev/test/docs tools, `uv build` front end) and conda-lock (CI build/test and development conda environments) | todo | P2 | M | 0.4 | CI-02 | — |
 | CI-09 | Move the Ubuntu jobs from `ubuntu-24.04` to `ubuntu-26.04` (GCC 15, CMake 4 preinstalled) and fix what breaks | todo | P1 | M | 0.3 | — | — |
-| CI-10 | Audit the CMake build (all `CMakeLists.txt`, `cmake/Modules`, presets) and file improvement tasks | review | P1 | M | 0.3 | TEST-10, MEM-01 | branch `ci-10-cmake-audit` |
+| CI-10 | Audit the CMake build (all `CMakeLists.txt`, `cmake/Modules`, presets) and file improvement tasks | done | P1 | M | 0.3 | TEST-10, MEM-01 | `7c6b71ef` |
 | CI-11 | Run the Tests workflow on pushes to every branch, so each task branch is tested when pushed | done | P1 | S | 0.3 | — | `301a8b0d` |
 | CI-12 | Set the vcpkg toolchain and macOS deployment-target defaults before `project()`, where they take effect | todo | P1 | S | 0.3 | CI-10 | — |
 | CI-13 | Fix or remove the broken `docs` and `pytest` CMake targets (they depend on a nonexistent target `numerical`) | todo | P2 | S | 0.3 | CI-10 | — |
