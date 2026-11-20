@@ -19,6 +19,20 @@ permissions:
   contents: read
 
 jobs:
+  hygiene:
+    # No personal paths, credentials, or tool/environment files in the repository (SECURITY.md).
+    name: Repository hygiene
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Check tracked files
+        run: python3 scripts/check_repo_hygiene.py
+
   linux:
     name: Build and test (Linux, Python 3.12)
     runs-on: ubuntu-24.04

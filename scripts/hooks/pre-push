@@ -5,10 +5,16 @@
 
 echo "[pre-push hook] Checking vcpkg integrity before push..."
 
-if [ ! -f "vcpkg/scripts/vcpkgTools.xml" ]; then
+if [ ! -f "vcpkg/scripts/buildsystems/vcpkg.cmake" ]; then
   echo "[pre-push hook] ERROR: vcpkg is missing or incomplete!"
   echo "Please run ./scripts/fix_vcpkg.sh before pushing."
   exit 1
 fi
 
 echo "[pre-push hook] vcpkg OK. Proceeding with push."
+
+echo "[pre-push hook] Checking that no personal paths, credentials or tool files are tracked..."
+if ! python3 scripts/check_repo_hygiene.py; then
+  echo "[pre-push hook] ERROR: repository hygiene check failed (see SECURITY.md). Push aborted."
+  exit 1
+fi
