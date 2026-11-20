@@ -10,6 +10,7 @@ import numpy as np
 import pytest
 from scipy import sparse
 
+from chains import birth_death_chain, random_row_stochastic, reference_stationary
 from egttools.utils import (
     calculate_stationary_distribution,
     calculate_stationary_distribution_non_hermitian,
@@ -17,43 +18,6 @@ from egttools.utils import (
 
 SOLVERS = [calculate_stationary_distribution, calculate_stationary_distribution_non_hermitian]
 SPARSE_TYPES = [sparse.csr_matrix, sparse.csc_matrix, sparse.csr_array, sparse.csc_array, sparse.coo_array]
-
-
-def random_row_stochastic(n, rng, density=1.0):
-    """Irreducible row-stochastic matrix (a random cycle guarantees irreducibility)."""
-    p = rng.random((n, n)) * (rng.random((n, n)) < density)
-    perm = rng.permutation(n)
-    p[perm, np.roll(perm, 1)] += 0.5
-    p += 0.01 * np.eye(n)  # avoid rows with a single entry equal to 1
-    return p / p.sum(axis=1, keepdims=True)
-
-
-def reference_stationary(p):
-    """Solve pi P = pi, sum(pi) = 1 directly (dense)."""
-    n = p.shape[0]
-    a = p.T - np.eye(n)
-    a[-1] = 1.
-    b = np.zeros(n)
-    b[-1] = 1.
-    return np.linalg.solve(a, b)
-
-
-def birth_death_chain(n, rng):
-    """Row-stochastic birth-death chain and its closed-form stationary distribution.
-
-    The up/down ratio oscillates quickly, so pi stays within a small range and the chain
-    has no large probability barriers. Random or slowly varying ratios make pi span many
-    orders of magnitude and the problem so ill-conditioned that a vector with residual
-    ~1e-17 can still differ from the closed form by percents.
-    """
-    i = np.arange(n - 1)
-    up = rng.uniform(0.1, 0.25, size=n - 1)         # i -> i + 1
-    down = up * np.exp(-0.5 * np.sin(0.5 * i))      # i + 1 -> i, at most 0.25 * e**0.5 < 0.42
-    p = sparse.diags([down, np.zeros(n), up], offsets=[-1, 0, 1], format="lil")
-    p.setdiag(1. - np.asarray(p.sum(axis=1)).ravel())
-    # Detailed balance: pi_{i+1} / pi_i = up_i / down_i
-    pi = np.concatenate([[1.], np.cumprod(up / down)])
-    return p.tocsr(), pi / pi.sum()
 
 
 @pytest.mark.parametrize("solver", SOLVERS)
