@@ -26,8 +26,16 @@ configure_file(
 )
 
 # ------------------------------------------------------------------------------
+# C++ library (egttools_core)
+# ------------------------------------------------------------------------------
+
+add_subdirectory(egttools)
+
+# ------------------------------------------------------------------------------
 # Python extension module using pybind11
 # ------------------------------------------------------------------------------
+# Only the bindings; the library code comes from egttools_core, together with its
+# dependencies (Boost, Eigen, OpenMP, BLAS/LAPACK, ARPACK) and configuration macros.
 
 pybind11_add_module(numerical_
         egttools_pybind11_distributed.cpp
@@ -41,15 +49,7 @@ pybind11_add_module(numerical_
         pybind11_files/evolvers.cpp
 )
 
-# ------------------------------------------------------------------------------
-# Add main C++ sources
-# ------------------------------------------------------------------------------
-
-add_subdirectory(egttools)
-
-# ------------------------------------------------------------------------------
-# Includes and warnings
-# ------------------------------------------------------------------------------
+target_link_libraries(numerical_ PRIVATE egttools_core)
 
 target_include_directories(numerical_ PRIVATE . "${CMAKE_CURRENT_BINARY_DIR}")
 
@@ -60,10 +60,6 @@ if (UNIX)
             -Wno-unknown-pragmas
     )
 endif ()
-
-# ------------------------------------------------------------------------------
-# Target properties (standard, LTO, visibility)
-# ------------------------------------------------------------------------------
 
 set_target_properties(numerical_ PROPERTIES
         CXX_STANDARD 17
@@ -76,54 +72,6 @@ set_target_properties(numerical_ PROPERTIES
         C_VISIBILITY_PRESET hidden
         CXX_VISIBILITY_PRESET hidden
 )
-
-# ------------------------------------------------------------------------------
-# Boost
-# ------------------------------------------------------------------------------
-
-get_target_property(Boost_INCLUDE_DIRS Boost::multiprecision INTERFACE_INCLUDE_DIRECTORIES)
-message(STATUS "Boost Include Directories: ${Boost_INCLUDE_DIRS}")
-target_include_directories(numerical_ PRIVATE ${Boost_INCLUDE_DIRS})
-
-if (APPLE)
-    target_link_libraries(numerical_ PRIVATE Boost::multiprecision "-framework Accelerate")
-else ()
-    target_link_libraries(numerical_ PRIVATE Boost::multiprecision)
-endif ()
-
-target_compile_definitions(numerical_ PRIVATE -DHAS_BOOST)
-
-# ------------------------------------------------------------------------------
-# OpenMP
-# ------------------------------------------------------------------------------
-
-if (OpenMP_CXX_FOUND)
-    message(STATUS "[OpenMP] Linking to target: numerical_")
-    target_link_libraries(numerical_ PRIVATE OpenMP::OpenMP_CXX)
-    if (NOT APPLE)
-        #        SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-        #        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -fopenmp")
-        target_compile_options(numerical_ PRIVATE ${OpenMP_CXX_FLAGS})
-    endif ()
-else ()
-    message(WARNING "[OpenMP] Not found or disabled for target: numerical_")
-endif ()
-
-# ------------------------------------------------------------------------------
-# BLAS / LAPACK
-# ------------------------------------------------------------------------------
-
-egttools_enable_blas_lapack(numerical_)
-
-# ------------------------------------------------------------------------------
-# ARPACK (optional)
-# ------------------------------------------------------------------------------
-
-if (DEFINED EGTTOOLS_ARPACK_TARGET)
-    target_link_libraries(numerical_ PRIVATE ${EGTTOOLS_ARPACK_TARGET})
-    target_compile_definitions(numerical_ PRIVATE HAS_ARPACK=1)
-    message(STATUS "[EGTtools] numerical_: linking ${EGTTOOLS_ARPACK_TARGET} (HAS_ARPACK=1)")
-endif ()
 
 # ------------------------------------------------------------------------------
 # PETSc / SLEPc / MPI — optional numerical_mpi_ module

@@ -15,6 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
 
-target_sources(numerical_ PRIVATE
+target_sources(egttools_core PRIVATE
         ReplicatorDynamics.cpp
         )
