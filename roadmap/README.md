@@ -106,7 +106,7 @@ tasks are independent unless the `Deps` column says otherwise.
    - TEST-06: helpers for statistical tests (MC estimate vs exact value within k·SE, fixed seeds).
    - TEST-11: shared test chains with known stationary distributions, used by SOL-10 and MC-09.
    - CI-10: audit of the CMake build; fixes that affect correctness or the safety nets stay in 0.3:
-     CI-12, CI-13, CI-14 (one C++ core library, needed by TEST-09), CI-15, CI-16.
+     CI-12, CI-13, CI-14 (one C++ core library, needed by TEST-09), CI-15, CI-16, CI-17.
    - TEST-09: Catch2 for the C++ tests, starting with the programs that check nothing.
 2. **Specify, then verify existing behaviour.** For each process, write its theory page
    (DOC-12) before changing code, following `docs/theory/pairwise_comparison.md`:
@@ -156,6 +156,6 @@ Update this table when tasks change. Recount a milestone (here 0.2) from the rep
 | Milestone | Done / total |
 |-----------|-------------|
 | v0.2.0 | 22 / 22 |
-| v0.3.0 | 18 / 74 |
+| v0.3.0 | 18 / 75 |
 | v0.4.0 | 0 / 31 |
 | later  | 0 / 4 |

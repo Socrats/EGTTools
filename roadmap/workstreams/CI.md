@@ -24,6 +24,7 @@ structural work.
 | CI-14 | One C++ core library (`egttools_core`) built once and used by the extension, the C++ tests and C++ users | todo | P1 | M | 0.3 | CI-10 | — |
 | CI-15 | Make Boost unconditional: remove the `HAS_BOOST` conditionals (Boost is already required) | todo | P2 | S | 0.3 | CI-14 | — |
 | CI-16 | Remove dead build code: `cpp/src/egttools.cpp` (not compiled), `FindEigen3.cmake` and `FindLpSolve.cmake` (unused) | done | P2 | S | 0.3 | CI-10 | `0a461c72` |
+| CI-17 | Review newer pybind11 releases and pin the `pybind11` submodule to a release tag | todo | P2 | S | 0.3 | — | — |
 
 ## Notes
 
@@ -97,3 +98,11 @@ structural work.
 - **CI-02**: removes the need to keep `setup.py` `package_data` and
   `[tool.setuptools.package-data]` in sync by hand, and the `if (NOT SKBUILD)`
   guards around `install()`.
+- **CI-17**: pybind11 is a git submodule, so its version is pinned by the submodule commit. That
+  commit is currently untagged (`v3.0.2-29-g28891363`, upstream master of 2026-04-11); upstream has
+  since released v3.0.3, v3.0.4 and v3.1.0. Read their changelogs (fixes, Python 3.14 and
+  free-threading support, behaviour changes that affect the bindings: type casters, Eigen, GIL,
+  `return_value_policy`, function signatures). Then move the submodule to the chosen release tag,
+  rebuild, regenerate the stubs (the CI stub check fails if the generated signatures change), and run
+  the full test suite plus the sanitizer job and the wheels workflow. Record the policy in
+  DECISIONS.md: track release tags only, and review new releases before each EGTtools release.
