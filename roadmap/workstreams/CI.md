@@ -19,11 +19,11 @@ structural work.
 | CI-09 | Move the Ubuntu jobs from `ubuntu-24.04` to `ubuntu-26.04` (GCC 15, CMake 4 preinstalled) and fix what breaks | todo | P1 | M | 0.3 | — | — |
 | CI-10 | Audit the CMake build (all `CMakeLists.txt`, `cmake/Modules`, presets) and file improvement tasks | done | P1 | M | 0.3 | TEST-10, MEM-01 | `7c6b71ef` |
 | CI-11 | Run the Tests workflow on pushes to every branch, so each task branch is tested when pushed | done | P1 | S | 0.3 | — | `301a8b0d` |
-| CI-12 | Set the vcpkg toolchain and macOS deployment-target defaults before `project()`, where they take effect | review | P1 | S | 0.3 | CI-10 | branch `ci-12-defaults-before-project` |
+| CI-12 | Set the vcpkg toolchain and macOS deployment-target defaults before `project()`, where they take effect | done | P1 | S | 0.3 | CI-10 | `25d3d0a0` |
 | CI-13 | Fix or remove the broken `docs` and `pytest` CMake targets (they depend on a nonexistent target `numerical`) | todo | P2 | S | 0.3 | CI-10 | — |
 | CI-14 | One C++ core library (`egttools_core`) built once and used by the extension, the C++ tests and C++ users | todo | P1 | M | 0.3 | CI-10 | — |
 | CI-15 | Make Boost unconditional: remove the `HAS_BOOST` conditionals (Boost is already required) | todo | P2 | S | 0.3 | CI-14 | — |
-| CI-16 | Remove dead build code: `cpp/src/egttools.cpp` (not compiled), `FindEigen3.cmake` and `FindLpSolve.cmake` (unused) | review | P2 | S | 0.3 | CI-10 | branch `ci-16-remove-dead-build-code` |
+| CI-16 | Remove dead build code: `cpp/src/egttools.cpp` (not compiled), `FindEigen3.cmake` and `FindLpSolve.cmake` (unused) | done | P2 | S | 0.3 | CI-10 | `0a461c72` |
 
 ## Notes
 

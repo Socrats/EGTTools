@@ -2,6 +2,10 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-20 · CI-16 · Merged (`0a461c72`).
+- 2026-11-20 · CI-12 · Merged (`25d3d0a0`): Tests and wheels green.
+- 2026-11-20 · SEC-04 · Secret scanning and push protection enabled.
+- 2026-11-20 · SEC-01/02 · Merged (`9054584c`): Tests, sanitizer and hygiene jobs green.
 - 2026-11-20 · SEC-01/02 · Review: hygiene policy, check in CI and pre-push; SEC workstream added.
 - 2026-11-20 · CI-12 · Review (branch `ci-12-defaults-before-project`): toolchain and deployment-target defaults moved before project(); plain cmake configure works.
 - 2026-11-20 · CI-16 · Review (branch `ci-16-remove-dead-build-code`): removed `cpp/src/egttools.cpp`/`.h` (not compiled) and the unused `FindEigen3`/`FindLpSolve` modules.
