@@ -90,6 +90,7 @@ cmake_install.cmake
 install_manifest.txt
 CTestTestfile.cmake
 Makefile
+!docs/Makefile
 *.cmake
 !cmake/
 !cmake/Modules/*.cmake
