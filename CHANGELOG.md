@@ -24,6 +24,10 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   deployment target (11.0) as intended. Both defaults were set after `project()`, where CMake ignores
   them, so such a configure failed to find Boost. The `MACOSX_DEPLOYMENT_TARGET` environment variable
   still takes precedence. Builds through `setup.py` and CI were not affected (they pass the toolchain).
+- **Build:** removed the CMake targets `docs`, `docs_linkcheck`, `pytest` and `tests` and the CTest
+  entry `PythonTests`. They depended on a target that does not exist and could not run. Build the
+  docs with `sphinx-build` (or `make` in `docs/`) and run the Python tests with `pytest`. CMake now
+  rejects in-source builds; use a separate build directory (`cmake -S . -B build`).
 - **Function signatures in docstrings and type stubs.** The bindings no longer disable pybind11's
   function signatures, so every docstring starts with the real signature and the `.pyi` stubs list
   real parameters and types (with one `@overload` per variant) instead of `*args, **kwargs`. The stubs

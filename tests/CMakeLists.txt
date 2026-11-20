@@ -193,25 +193,4 @@ endif ()
 get_property(_egttools_cpp_test_targets GLOBAL PROPERTY EGTTOOLS_CPP_TEST_TARGETS)
 add_custom_target(egttools_cpp_tests DEPENDS ${_egttools_cpp_test_targets})
 
-# ------------------------------------------------------------------------------
-# Pytest integration via CTest
-# ------------------------------------------------------------------------------
-
-add_custom_target(pytest
-        COMMAND ${CMAKE_COMMAND} -E env
-        PYTHONPATH=$<TARGET_FILE_DIR:numerical_>
-        ${Python_EXECUTABLE} -m pytest -v
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        DEPENDS numerical
-)
-
-add_test(NAME PythonTests
-        COMMAND ${CMAKE_COMMAND} -E env
-        PYTHONPATH=$<TARGET_FILE_DIR:numerical_>
-        ${Python_EXECUTABLE} -m pytest -v
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-)
-
-set_tests_properties(PythonTests PROPERTIES LABELS "python")
-
-add_custom_target(tests DEPENDS pytest)
+# The Python tests are run with pytest directly (see CONTRIBUTING.md), not through CMake/CTest.
