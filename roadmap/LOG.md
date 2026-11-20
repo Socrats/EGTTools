@@ -2,6 +2,8 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-20 · SEC-06 · 0.2.1 released (tag `v0.2.1` on `release-0.2.x`): GitHub, PyPI, conda.
+- 2026-11-20 · SEC-05 · Merged (`9c42e229`): Tests, Wheels and Conda Build green; wheels have no data files.
 - 2026-11-20 · CI-16 · Merged (`0a461c72`).
 - 2026-11-20 · CI-12 · Merged (`25d3d0a0`): Tests and wheels green.
 - 2026-11-20 · SEC-04 · Secret scanning and push protection enabled.
