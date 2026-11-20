@@ -2,6 +2,7 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-20 · CI-13 · Merged (`492217bf`): Tests (incl. sanitizer job) and Wheels green.
 - 2026-11-20 · CI-13 · Review (branch `ci-13-cmake-targets`): `docs`, `pytest`, `tests` targets and `PythonTests` removed; in-source builds rejected. Local: configure, 25 C++ tests, 779 Python tests pass.
 - 2026-11-20 · SEC-07 · Merged (`4b47bdbe`): Tests green; hygiene job log shows only "clean". File names with a home path are withheld too.
 - 2026-11-20 · SEC-07 · Review (branch `sec-07-no-matched-text`): hygiene check reports locations only; credential patterns removed.
