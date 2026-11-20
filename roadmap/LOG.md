@@ -2,6 +2,7 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-20 · TEST-11 · Review (branch `test-11-shared-chains`): shared chains with exact stationary distributions; egttools' neutral transition matrix matches the spec.
 - 2026-11-19 · TEST-06 · Merged (`ccec953c`): Tests and sanitizer job green.
 - 2026-11-19 · TEST-06 · Review (branch `test-06-stats-helpers`): statistical test helpers with literature-based constants; MC-04/05 constants decided (DECISIONS.md).
 - 2026-11-19 · API-09 · Merged (`8535760b`): Tests green; the CI stub check matched the committed (macOS-generated) stubs on Linux.
