@@ -156,6 +156,6 @@ Update this table when tasks change. Recount a milestone (here 0.2) from the rep
 | Milestone | Done / total |
 |-----------|-------------|
 | v0.2.0 | 22 / 22 |
-| v0.3.0 | 22 / 76 |
+| v0.3.0 | 23 / 76 |
 | v0.4.0 | 0 / 33 |
 | later  | 0 / 4 |
