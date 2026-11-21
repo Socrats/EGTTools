@@ -18,6 +18,7 @@ abruptly.
 | API-09 | Real signatures in the `.pyi` stubs: stop disabling pybind11 function signatures, regenerate the stubs, check them in CI | done | P1 | M | 0.3 | — | `8535760b` |
 | API-10 | Rename `PairwiseComparison` and `PairwiseComparisonNumerical` to names that say exact vs approximate (estimators), with deprecation aliases | todo | P1 | M | 0.4 | API-01 | — |
 | API-11 | Audit the pybind11 bindings' declared types: argument types and conversions, returned dtypes, Eigen `Ref` vs copies, overloads, defaults, argument names, GIL release | todo | P1 | L | 0.3 | MEM-10 | — |
+| API-12 | Replace the unprefixed macros in `Distributions.h` (`int_type_`, `uint_type_`, `float_type_`, `binomial_coeff_`, `CONVERT_TO_`) with type aliases and functions in `egttools::` | todo | P3 | S | 0.4 | CI-15 | — |
 
 ## Notes
 
@@ -80,3 +81,6 @@ abruptly.
   (silent copies of large matrices), overload order and ambiguity, Python defaults matching the C++
   ones, `py::arg` names matching the docstrings, and `py::call_guard<py::gil_scoped_release>` on long
   computations that do not call back into Python (PERF-04). One test per finding.
+- **API-12**: `Distributions.h` is a public header, so its macros leak into every file that
+  includes it, including C++ users' code; 15 uses in `cpp/`. Found during CI-15, which made
+  them unconditional (they used to switch between Boost and plain types).
