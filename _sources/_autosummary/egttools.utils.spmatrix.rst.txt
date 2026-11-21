@@ -1,0 +1,42 @@
+egttools.utils.spmatrix
+=======================
+
+.. currentmodule:: egttools.utils
+
+.. autoclass:: spmatrix
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~spmatrix.asfptype
+      ~spmatrix.getH
+      ~spmatrix.get_shape
+      ~spmatrix.getcol
+      ~spmatrix.getformat
+      ~spmatrix.getmaxprint
+      ~spmatrix.getnnz
+      ~spmatrix.getrow
+      ~spmatrix.set_shape
+      ~spmatrix.todense
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~spmatrix.shape
+   
+   

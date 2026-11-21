@@ -1,0 +1,6 @@
+egttools.plotting.helpers.sample\_simplex
+=========================================
+
+.. currentmodule:: egttools.plotting.helpers
+
+.. autofunction:: sample_simplex

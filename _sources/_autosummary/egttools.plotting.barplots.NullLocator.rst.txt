@@ -1,0 +1,40 @@
+egttools.plotting.barplots.NullLocator
+======================================
+
+.. currentmodule:: egttools.plotting.barplots
+
+.. autoclass:: NullLocator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~NullLocator.create_dummy_axis
+      ~NullLocator.nonsingular
+      ~NullLocator.raise_if_exceeds
+      ~NullLocator.set_axis
+      ~NullLocator.set_params
+      ~NullLocator.tick_values
+      ~NullLocator.view_limits
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NullLocator.MAXTICKS
+      ~NullLocator.axis
+   
+   

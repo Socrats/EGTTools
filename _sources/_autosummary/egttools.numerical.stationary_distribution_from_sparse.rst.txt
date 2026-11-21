@@ -1,0 +1,6 @@
+egttools.numerical.stationary\_distribution\_from\_sparse
+=========================================================
+
+.. currentmodule:: egttools.numerical
+
+.. autofunction:: stationary_distribution_from_sparse

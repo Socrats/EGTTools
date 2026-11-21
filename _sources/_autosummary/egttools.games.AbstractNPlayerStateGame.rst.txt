@@ -1,0 +1,38 @@
+egttools.games.AbstractNPlayerStateGame
+=======================================
+
+.. currentmodule:: egttools.games
+
+.. autoclass:: AbstractNPlayerStateGame
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~AbstractNPlayerStateGame.calculate_fitness
+      ~AbstractNPlayerStateGame.calculate_payoffs
+      ~AbstractNPlayerStateGame.get_payoffs_for_player
+      ~AbstractNPlayerStateGame.group_size
+      ~AbstractNPlayerStateGame.nb_group_configurations
+      ~AbstractNPlayerStateGame.nb_strategies
+      ~AbstractNPlayerStateGame.payoff
+      ~AbstractNPlayerStateGame.payoffs
+      ~AbstractNPlayerStateGame.play
+      ~AbstractNPlayerStateGame.save_payoffs
+      ~AbstractNPlayerStateGame.type
+      ~AbstractNPlayerStateGame.update_payoff
+   
+   
+
+   
+   
+   

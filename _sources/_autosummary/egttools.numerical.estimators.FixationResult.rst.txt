@@ -1,0 +1,37 @@
+egttools.numerical.estimators.FixationResult
+============================================
+
+.. currentmodule:: egttools.numerical.estimators
+
+.. autoclass:: FixationResult
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~FixationResult.ci95
+      ~FixationResult.invader
+      ~FixationResult.resident
+      ~FixationResult.estimate
+      ~FixationResult.stderr
+      ~FixationResult.nb_runs
+   
+   

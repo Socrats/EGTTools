@@ -1,0 +1,6 @@
+egttools.utils.calculate\_stationary\_distribution\_non\_hermitian
+==================================================================
+
+.. currentmodule:: egttools.utils
+
+.. autofunction:: calculate_stationary_distribution_non_hermitian

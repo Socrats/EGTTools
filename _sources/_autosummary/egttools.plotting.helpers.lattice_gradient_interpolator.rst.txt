@@ -1,0 +1,6 @@
+egttools.plotting.helpers.lattice\_gradient\_interpolator
+=========================================================
+
+.. currentmodule:: egttools.plotting.helpers
+
+.. autofunction:: lattice_gradient_interpolator

@@ -1,0 +1,42 @@
+egttools.behaviors.NormalForm
+=============================
+
+.. automodule:: egttools.behaviors.NormalForm
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AbstractNFGStrategy
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. autosummary::
+      :toctree:
+      :template: custom-module-template.rst
+      :recursive:
+   
+      TwoActions
+   
+   

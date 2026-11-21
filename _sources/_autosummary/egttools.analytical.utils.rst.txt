@@ -1,0 +1,55 @@
+egttools.analytical.utils
+=========================
+
+.. automodule:: egttools.analytical.utils
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      calculate_gradients
+      check_if_point_in_unit_simplex
+      check_if_there_is_random_drift
+      check_replicator_stability_pairwise_games
+      eigvals
+      find_roots
+      find_roots_and_stability
+      get_pairwise_gradient_from_replicator
+      get_pairwise_gradient_from_replicator_n_player
+      replicator_equation
+      replicator_equation_n_player
+      root
+      sample_unit_simplex
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      StochDynamics
+   
+   
+
+   
+   
+   
+
+   
+   
+   

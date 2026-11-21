@@ -1,0 +1,49 @@
+egttools.numerical.results
+==========================
+
+.. automodule:: egttools.numerical.results
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      dataclass
+      field
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AGoSResult
+      AbsorptionProbabilityResult
+      AbsorptionTimeResult
+      FixationResult
+      StationaryDistributionResult
+      StrategyDistributionResult
+   
+   
+
+   
+   
+   
+
+   
+   
+   

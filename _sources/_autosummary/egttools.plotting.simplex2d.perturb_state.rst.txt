@@ -1,0 +1,6 @@
+egttools.plotting.simplex2d.perturb\_state
+==========================================
+
+.. currentmodule:: egttools.plotting.simplex2d
+
+.. autofunction:: perturb_state

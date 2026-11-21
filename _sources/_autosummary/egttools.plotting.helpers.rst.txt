@@ -1,0 +1,48 @@
+egttools.plotting.helpers
+=========================
+
+.. automodule:: egttools.plotting.helpers
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      add_arrow
+      barycentric_to_xy_coordinates
+      calculate_nb_states
+      calculate_stability
+      calculate_stationary_points
+      check_if_point_in_unit_simplex
+      find_roots_in_discrete_barycentric_coordinates
+      find_roots_of_lattice_gradient
+      find_where_point_is_in_simplex
+      lattice_gradient_interpolator
+      perturb_state
+      perturb_state_discrete
+      root
+      sample_simplex
+      simplex_iterator
+      xy_to_barycentric_coordinates
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   

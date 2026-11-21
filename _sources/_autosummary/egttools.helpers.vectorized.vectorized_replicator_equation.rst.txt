@@ -1,0 +1,6 @@
+egttools.helpers.vectorized.vectorized\_replicator\_equation
+============================================================
+
+.. currentmodule:: egttools.helpers.vectorized
+
+.. autofunction:: vectorized_replicator_equation

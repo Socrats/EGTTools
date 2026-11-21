@@ -1,0 +1,6 @@
+egttools.games.abstract\_games.sample\_simplex
+==============================================
+
+.. currentmodule:: egttools.games.abstract_games
+
+.. autofunction:: sample_simplex

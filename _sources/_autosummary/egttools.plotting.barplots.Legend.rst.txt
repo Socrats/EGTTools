@@ -1,0 +1,123 @@
+egttools.plotting.barplots.Legend
+=================================
+
+.. currentmodule:: egttools.plotting.barplots
+
+.. autoclass:: Legend
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Legend.add_callback
+      ~Legend.contains
+      ~Legend.convert_xunits
+      ~Legend.convert_yunits
+      ~Legend.draw
+      ~Legend.draw_frame
+      ~Legend.findobj
+      ~Legend.format_cursor_data
+      ~Legend.get_agg_filter
+      ~Legend.get_alignment
+      ~Legend.get_alpha
+      ~Legend.get_animated
+      ~Legend.get_bbox_to_anchor
+      ~Legend.get_children
+      ~Legend.get_clip_box
+      ~Legend.get_clip_on
+      ~Legend.get_clip_path
+      ~Legend.get_cursor_data
+      ~Legend.get_default_handler_map
+      ~Legend.get_draggable
+      ~Legend.get_figure
+      ~Legend.get_frame
+      ~Legend.get_frame_on
+      ~Legend.get_gid
+      ~Legend.get_in_layout
+      ~Legend.get_label
+      ~Legend.get_legend_handler
+      ~Legend.get_legend_handler_map
+      ~Legend.get_lines
+      ~Legend.get_mouseover
+      ~Legend.get_patches
+      ~Legend.get_path_effects
+      ~Legend.get_picker
+      ~Legend.get_rasterized
+      ~Legend.get_sketch_params
+      ~Legend.get_snap
+      ~Legend.get_texts
+      ~Legend.get_tightbbox
+      ~Legend.get_title
+      ~Legend.get_transform
+      ~Legend.get_transformed_clip_path_and_affine
+      ~Legend.get_url
+      ~Legend.get_visible
+      ~Legend.get_window_extent
+      ~Legend.get_zorder
+      ~Legend.have_units
+      ~Legend.is_transform_set
+      ~Legend.pchanged
+      ~Legend.pick
+      ~Legend.pickable
+      ~Legend.properties
+      ~Legend.remove
+      ~Legend.remove_callback
+      ~Legend.set
+      ~Legend.set_agg_filter
+      ~Legend.set_alignment
+      ~Legend.set_alpha
+      ~Legend.set_animated
+      ~Legend.set_bbox_to_anchor
+      ~Legend.set_clip_box
+      ~Legend.set_clip_on
+      ~Legend.set_clip_path
+      ~Legend.set_default_handler_map
+      ~Legend.set_draggable
+      ~Legend.set_figure
+      ~Legend.set_frame_on
+      ~Legend.set_gid
+      ~Legend.set_in_layout
+      ~Legend.set_label
+      ~Legend.set_loc
+      ~Legend.set_mouseover
+      ~Legend.set_ncols
+      ~Legend.set_path_effects
+      ~Legend.set_picker
+      ~Legend.set_rasterized
+      ~Legend.set_sketch_params
+      ~Legend.set_snap
+      ~Legend.set_title
+      ~Legend.set_transform
+      ~Legend.set_url
+      ~Legend.set_visible
+      ~Legend.set_zorder
+      ~Legend.update
+      ~Legend.update_default_handler_map
+      ~Legend.update_from
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Legend.axes
+      ~Legend.codes
+      ~Legend.figure
+      ~Legend.mouseover
+      ~Legend.stale
+      ~Legend.sticky_edges
+      ~Legend.zorder
+   
+   

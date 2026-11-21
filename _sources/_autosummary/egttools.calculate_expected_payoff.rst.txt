@@ -1,0 +1,6 @@
+egttools.calculate\_expected\_payoff
+====================================
+
+.. currentmodule:: egttools
+
+.. autofunction:: calculate_expected_payoff

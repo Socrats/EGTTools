@@ -1,0 +1,6 @@
+egttools.plotting.simplified.calculate\_nb\_states
+==================================================
+
+.. currentmodule:: egttools.plotting.simplified
+
+.. autofunction:: calculate_nb_states

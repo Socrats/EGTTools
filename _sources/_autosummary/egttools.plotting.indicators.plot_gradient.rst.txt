@@ -1,0 +1,6 @@
+egttools.plotting.indicators.plot\_gradient
+===========================================
+
+.. currentmodule:: egttools.plotting.indicators
+
+.. autofunction:: plot_gradient

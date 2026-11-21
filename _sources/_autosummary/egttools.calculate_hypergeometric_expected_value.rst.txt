@@ -1,0 +1,6 @@
+egttools.calculate\_hypergeometric\_expected\_value
+===================================================
+
+.. currentmodule:: egttools
+
+.. autofunction:: calculate_hypergeometric_expected_value

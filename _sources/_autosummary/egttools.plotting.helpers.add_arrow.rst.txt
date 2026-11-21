@@ -1,0 +1,6 @@
+egttools.plotting.helpers.add\_arrow
+====================================
+
+.. currentmodule:: egttools.plotting.helpers
+
+.. autofunction:: add_arrow

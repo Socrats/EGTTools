@@ -1,0 +1,6 @@
+egttools.is\_arpack\_enabled
+============================
+
+.. currentmodule:: egttools
+
+.. autofunction:: is_arpack_enabled

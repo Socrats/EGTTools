@@ -1,0 +1,6 @@
+egttools.analytical.utils.root
+==============================
+
+.. currentmodule:: egttools.analytical.utils
+
+.. autofunction:: root

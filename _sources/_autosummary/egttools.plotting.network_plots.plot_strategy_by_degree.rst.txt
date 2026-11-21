@@ -1,0 +1,6 @@
+egttools.plotting.network\_plots.plot\_strategy\_by\_degree
+===========================================================
+
+.. currentmodule:: egttools.plotting.network_plots
+
+.. autofunction:: plot_strategy_by_degree

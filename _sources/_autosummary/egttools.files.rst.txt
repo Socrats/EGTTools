@@ -1,0 +1,6 @@
+egttools.files
+==============
+
+.. currentmodule:: egttools
+
+.. autofunction:: files

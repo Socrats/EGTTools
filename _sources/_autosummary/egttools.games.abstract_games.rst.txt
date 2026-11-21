@@ -1,0 +1,48 @@
+egttools.games.abstract\_games
+==============================
+
+.. automodule:: egttools.games.abstract_games
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      abstractmethod
+      calculate_state
+      sample_simplex
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AbstractGame
+      AbstractNPlayerGame
+      AbstractNPlayerGameExpectedPayoff
+      AbstractTwoPLayerGame
+   
+   
+
+   
+   
+   
+
+   
+   
+   

@@ -1,0 +1,182 @@
+egttools.plotting.simplex2d.LineCollection
+==========================================
+
+.. currentmodule:: egttools.plotting.simplex2d
+
+.. autoclass:: LineCollection
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~LineCollection.add_callback
+      ~LineCollection.autoscale
+      ~LineCollection.autoscale_None
+      ~LineCollection.changed
+      ~LineCollection.contains
+      ~LineCollection.convert_xunits
+      ~LineCollection.convert_yunits
+      ~LineCollection.draw
+      ~LineCollection.findobj
+      ~LineCollection.format_cursor_data
+      ~LineCollection.get_aa
+      ~LineCollection.get_agg_filter
+      ~LineCollection.get_alpha
+      ~LineCollection.get_animated
+      ~LineCollection.get_antialiased
+      ~LineCollection.get_antialiaseds
+      ~LineCollection.get_array
+      ~LineCollection.get_capstyle
+      ~LineCollection.get_children
+      ~LineCollection.get_clim
+      ~LineCollection.get_clip_box
+      ~LineCollection.get_clip_on
+      ~LineCollection.get_clip_path
+      ~LineCollection.get_cmap
+      ~LineCollection.get_color
+      ~LineCollection.get_colors
+      ~LineCollection.get_cursor_data
+      ~LineCollection.get_dashes
+      ~LineCollection.get_datalim
+      ~LineCollection.get_ec
+      ~LineCollection.get_edgecolor
+      ~LineCollection.get_edgecolors
+      ~LineCollection.get_facecolor
+      ~LineCollection.get_facecolors
+      ~LineCollection.get_fc
+      ~LineCollection.get_figure
+      ~LineCollection.get_fill
+      ~LineCollection.get_gapcolor
+      ~LineCollection.get_gid
+      ~LineCollection.get_hatch
+      ~LineCollection.get_hatch_linewidth
+      ~LineCollection.get_hatchcolor
+      ~LineCollection.get_in_layout
+      ~LineCollection.get_joinstyle
+      ~LineCollection.get_label
+      ~LineCollection.get_linestyle
+      ~LineCollection.get_linestyles
+      ~LineCollection.get_linewidth
+      ~LineCollection.get_linewidths
+      ~LineCollection.get_ls
+      ~LineCollection.get_lw
+      ~LineCollection.get_mouseover
+      ~LineCollection.get_offset_transform
+      ~LineCollection.get_offsets
+      ~LineCollection.get_path_effects
+      ~LineCollection.get_paths
+      ~LineCollection.get_picker
+      ~LineCollection.get_pickradius
+      ~LineCollection.get_rasterized
+      ~LineCollection.get_segments
+      ~LineCollection.get_sketch_params
+      ~LineCollection.get_snap
+      ~LineCollection.get_tightbbox
+      ~LineCollection.get_transOffset
+      ~LineCollection.get_transform
+      ~LineCollection.get_transformed_clip_path_and_affine
+      ~LineCollection.get_transforms
+      ~LineCollection.get_url
+      ~LineCollection.get_urls
+      ~LineCollection.get_visible
+      ~LineCollection.get_window_extent
+      ~LineCollection.get_zorder
+      ~LineCollection.have_units
+      ~LineCollection.is_transform_set
+      ~LineCollection.pchanged
+      ~LineCollection.pick
+      ~LineCollection.pickable
+      ~LineCollection.properties
+      ~LineCollection.remove
+      ~LineCollection.remove_callback
+      ~LineCollection.set
+      ~LineCollection.set_aa
+      ~LineCollection.set_agg_filter
+      ~LineCollection.set_alpha
+      ~LineCollection.set_animated
+      ~LineCollection.set_antialiased
+      ~LineCollection.set_antialiaseds
+      ~LineCollection.set_array
+      ~LineCollection.set_capstyle
+      ~LineCollection.set_clim
+      ~LineCollection.set_clip_box
+      ~LineCollection.set_clip_on
+      ~LineCollection.set_clip_path
+      ~LineCollection.set_cmap
+      ~LineCollection.set_color
+      ~LineCollection.set_colors
+      ~LineCollection.set_dashes
+      ~LineCollection.set_ec
+      ~LineCollection.set_edgecolor
+      ~LineCollection.set_edgecolors
+      ~LineCollection.set_facecolor
+      ~LineCollection.set_facecolors
+      ~LineCollection.set_fc
+      ~LineCollection.set_figure
+      ~LineCollection.set_gapcolor
+      ~LineCollection.set_gid
+      ~LineCollection.set_hatch
+      ~LineCollection.set_hatch_linewidth
+      ~LineCollection.set_hatchcolor
+      ~LineCollection.set_in_layout
+      ~LineCollection.set_joinstyle
+      ~LineCollection.set_label
+      ~LineCollection.set_linestyle
+      ~LineCollection.set_linestyles
+      ~LineCollection.set_linewidth
+      ~LineCollection.set_linewidths
+      ~LineCollection.set_ls
+      ~LineCollection.set_lw
+      ~LineCollection.set_mouseover
+      ~LineCollection.set_norm
+      ~LineCollection.set_offset_transform
+      ~LineCollection.set_offsets
+      ~LineCollection.set_path_effects
+      ~LineCollection.set_paths
+      ~LineCollection.set_picker
+      ~LineCollection.set_pickradius
+      ~LineCollection.set_rasterized
+      ~LineCollection.set_segments
+      ~LineCollection.set_sketch_params
+      ~LineCollection.set_snap
+      ~LineCollection.set_transOffset
+      ~LineCollection.set_transform
+      ~LineCollection.set_url
+      ~LineCollection.set_urls
+      ~LineCollection.set_verts
+      ~LineCollection.set_visible
+      ~LineCollection.set_zorder
+      ~LineCollection.to_rgba
+      ~LineCollection.update
+      ~LineCollection.update_from
+      ~LineCollection.update_scalarmappable
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~LineCollection.axes
+      ~LineCollection.cmap
+      ~LineCollection.colorbar
+      ~LineCollection.colorizer
+      ~LineCollection.figure
+      ~LineCollection.mouseover
+      ~LineCollection.norm
+      ~LineCollection.stale
+      ~LineCollection.sticky_edges
+      ~LineCollection.zorder
+   
+   

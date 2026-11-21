@@ -1,0 +1,29 @@
+egttools.behaviors.NormalForm.AbstractNFGStrategy
+=================================================
+
+.. currentmodule:: egttools.behaviors.NormalForm
+
+.. autoclass:: AbstractNFGStrategy
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~AbstractNFGStrategy.get_action
+      ~AbstractNFGStrategy.is_stochastic
+      ~AbstractNFGStrategy.type
+   
+   
+
+   
+   
+   

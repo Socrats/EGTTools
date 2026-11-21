@@ -1,0 +1,6 @@
+egttools.numerical.numerical\_.calculate\_expected\_indicator
+=============================================================
+
+.. currentmodule:: egttools.numerical.numerical_
+
+.. autofunction:: calculate_expected_indicator

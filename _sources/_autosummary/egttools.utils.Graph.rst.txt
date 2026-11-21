@@ -1,0 +1,67 @@
+egttools.utils.Graph
+====================
+
+.. currentmodule:: egttools.utils
+
+.. autoclass:: Graph
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Graph.add_edge
+      ~Graph.add_edges_from
+      ~Graph.add_node
+      ~Graph.add_nodes_from
+      ~Graph.add_weighted_edges_from
+      ~Graph.adjacency
+      ~Graph.clear
+      ~Graph.clear_edges
+      ~Graph.copy
+      ~Graph.edge_subgraph
+      ~Graph.get_edge_data
+      ~Graph.has_edge
+      ~Graph.has_node
+      ~Graph.is_directed
+      ~Graph.is_multigraph
+      ~Graph.nbunch_iter
+      ~Graph.neighbors
+      ~Graph.number_of_edges
+      ~Graph.number_of_nodes
+      ~Graph.order
+      ~Graph.remove_edge
+      ~Graph.remove_edges_from
+      ~Graph.remove_node
+      ~Graph.remove_nodes_from
+      ~Graph.size
+      ~Graph.subgraph
+      ~Graph.to_directed
+      ~Graph.to_directed_class
+      ~Graph.to_undirected
+      ~Graph.to_undirected_class
+      ~Graph.update
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Graph.adj
+      ~Graph.degree
+      ~Graph.edges
+      ~Graph.name
+      ~Graph.nodes
+   
+   
