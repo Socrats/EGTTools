@@ -122,7 +122,7 @@ With conda dependencies (``SKIP_VCPKG=ON``)
 
     # Create and activate an environment with all build and runtime deps
     conda create -n egtenv python=3.11 numpy scipy matplotlib networkx \
-        seaborn plotly eigen boost-cpp libblas liblapack pybind11 \
+        seaborn plotly eigen boost-cpp libblas liblapack \
         scikit-build cmake ninja
     conda activate egtenv
 

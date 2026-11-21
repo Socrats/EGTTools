@@ -58,7 +58,6 @@ requirements:
     - scikit-build >=0.13.1
     - setuptools >=77
     - wheel
-    - pybind11 >=2.10
     - numpy >=1.26.3
     - eigen >=3.4.0
     - boost-cpp >=1.82.0

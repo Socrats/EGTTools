@@ -21,7 +21,6 @@ dependencies:
   - boost-cpp
   - libblas
   - liblapack
-  - pybind11
   - scikit-build>=0.13.1
   - setuptools-scm>=7
   # tests

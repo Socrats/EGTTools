@@ -32,6 +32,15 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   a required dependency) is always used. Every build defined the macro, so nothing changes for
   Python users; C++ code that included the headers without defining it used to get a different,
   double-precision API. `is_boost_enabled()` and `USES_BOOST` remain and are always `True`.
+- **Build:** pybind11 updated to v3.1.0 (from a development snapshot after v3.0.2). It includes the
+  fixes of v3.0.3 and v3.0.4 (among them a heap-buffer overflow and crashes at interpreter
+  shutdown) and a data-race fix in GIL-safe initialisation. The type stubs now give indicator
+  callbacks their correct type, `Callable[[list[int]], SupportsFloat]`.
+- **Build:** pybind11 comes only from the bundled git submodule, which is also in the sdist. A
+  source checkout without it now fails at configure time with instructions, instead of building
+  against whatever pybind11 is installed. pybind11 was removed from the conda recipe's host
+  requirements, the `docs` extra, `docs/requirements.txt` and `environment.yml`, which did not use
+  it.
 - **Function signatures in docstrings and type stubs.** The bindings no longer disable pybind11's
   function signatures, so every docstring starts with the real signature and the `.pyi` stubs list
   real parameters and types (with one `@overload` per variant) instead of `*args, **kwargs`. The stubs

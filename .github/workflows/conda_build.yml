@@ -37,8 +37,8 @@ jobs:
     steps:
       # -----------------------------------------------------------------------
       # Checkout — full history needed for setuptools-scm version detection;
-      # submodules needed for pybind11 (not required for conda build which uses
-      # system pybind11, but present for correctness).
+      # submodules needed for pybind11: the recipe builds from this checkout and
+      # CMake uses only the pybind11 submodule.
       # -----------------------------------------------------------------------
       - uses: actions/checkout@v7
         with:

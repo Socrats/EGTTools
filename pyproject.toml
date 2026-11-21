@@ -72,7 +72,6 @@ docs = [
     "matplotlib>=3.7.1",
     "pandas>=2.0.1",
     "networkx>=3.1",
-    "pybind11>=2.10",
     "sphinx>=7.2",
     "sphinx-rtd-theme>=2.0.0",
     "furo>=2024.1.29",
