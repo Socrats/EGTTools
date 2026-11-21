@@ -3,6 +3,13 @@
 Newest first. Each entry gives the date, the decision, the reasoning, and the
 affected task IDs.
 
+## 2026-11-21: pybind11 comes only from the submodule, pinned to release tags
+The `pybind11` submodule is the single source of pybind11: the build fails if it is missing,
+and no installed pybind11 is used, so every build (wheels, sdist, conda) uses the version the
+bindings were tested with. The submodule tracks release tags only (v3.1.0 now). Before each
+EGTtools release, review newer pybind11 releases (changelog, effect on the bindings and
+stubs) and update the tag if they bring fixes we need. Affects CI-17.
+
 ## 2026-11-20: The C++ core stays in this repository
 `egttools_core` (CI-14) is a library target in this repository, not a separate
 repository used as a submodule or package dependency. The core API is still changing
