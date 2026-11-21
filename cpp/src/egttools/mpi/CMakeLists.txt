@@ -11,10 +11,7 @@ add_library(egttools_finite_pop_utils_obj OBJECT
 target_include_directories(egttools_finite_pop_utils_obj PRIVATE
     "${PROJECT_SOURCE_DIR}/cpp/include"
 )
-# Distributions.h conditionally includes Boost which brings in <cfloat>.
-# Without HAS_BOOST, LDBL_MAX is undefined.  Mirror what numerical_ does.
 target_link_libraries(egttools_finite_pop_utils_obj PRIVATE Boost::multiprecision)
-target_compile_definitions(egttools_finite_pop_utils_obj PRIVATE HAS_BOOST)
 set_target_properties(egttools_finite_pop_utils_obj PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED TRUE

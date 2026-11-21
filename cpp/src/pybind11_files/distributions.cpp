@@ -281,7 +281,6 @@ void init_distributions(py::module_ &mDistributions) {
         py::arg("k")
     );
 
-#if (HAS_BOOST)
     mDistributions.def(
         "comb",
         [](const size_t n, const size_t k) {
@@ -313,34 +312,4 @@ void init_distributions(py::module_ &mDistributions) {
         py::arg("n"),
         py::arg("k")
     );
-#else
-    mDistributions.def(
-        "comb",
-        &egttools::binomialCoeff<size_t, size_t>,
-        R"pbdoc(
-            Calculate the binomial coefficient C(n, k).
-
-            This implementation is exact only while intermediate results fit in `uint64_t`.
-
-            Parameters
-            ----------
-            n : int
-                Size of the full set.
-            k : int
-                Size of the subset.
-
-            Returns
-            -------
-            int
-                Binomial coefficient C(n, k).
-
-            See Also
-            --------
-            egttools.distributions.multivariate_hypergeometric_pdf
-            egttools.distributions.binom
-        )pbdoc",
-        py::arg("n"),
-        py::arg("k")
-    );
-#endif
 }

@@ -287,8 +287,7 @@ class PairwiseComparison:
         beta : float
             Intensity of selection :math:`\\beta`.
         high_precision : bool, optional
-            When *True* and the library was compiled with Boost multiprecision support,
-            the internal streaming log-sum-exp is evaluated in 50-digit decimal
+            When *True*, the internal streaming log-sum-exp is evaluated in 50-digit decimal
             arithmetic, extending the representable range of :math:`\\exp(\\log\\phi)`.
             The return value is still a ``float``; values below ``DBL_MIN`` (~2.2e-308)
             are rounded to zero regardless.  Use

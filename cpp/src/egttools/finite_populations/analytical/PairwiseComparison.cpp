@@ -558,7 +558,6 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_lo
 // ---------------------------------------------------------------------------
 // Public (Boost): fixation probability using 50-digit decimal arithmetic
 // ---------------------------------------------------------------------------
-#if (HAS_BOOST)
 double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fixation_probability_boost(
     int index_invading_strategy, int index_resident_strategy, double beta) {
     validate_invader_resident(index_invading_strategy, index_resident_strategy, nb_strategies_);
@@ -600,7 +599,6 @@ double egttools::FinitePopulations::analytical::PairwiseComparison::calculate_fi
     const Scalar rho     = Scalar(1) / (Scalar(1) + exp(log_phi));
     return rho.convert_to<double>();
 }
-#endif
 
 // ---------------------------------------------------------------------------
 // Public: SML transition matrix + log-fixation matrix
