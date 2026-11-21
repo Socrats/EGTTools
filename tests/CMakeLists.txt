@@ -18,21 +18,14 @@
 enable_testing()
 
 # ------------------------------------------------------------------------------
-# External dependencies
-# ------------------------------------------------------------------------------
-
-find_package(Boost REQUIRED)
-find_package(OpenMP)
-
-# ------------------------------------------------------------------------------
 # Assertions stay enabled in the tests
 # ------------------------------------------------------------------------------
 # The C++ tests check results with assert(), which NDEBUG (set by Release and
-# RelWithDebInfo builds) compiles out. Undefine it for the test programs and the
-# test copy of the library, so the tests and the library's own preconditions are
-# checked in every build type. The option comes after the build-type flags on
-# the command line, so it takes precedence. testAssertionsEnabled fails if this
-# stops working.
+# RelWithDebInfo builds) compiles out. Undefine it for the test programs, so the
+# tests, and the asserts in the library headers they include, are checked in every
+# build type. egttools_core itself is the library the Python extension uses, built
+# with the normal flags. The option comes after the build-type flags on the command
+# line, so it takes precedence. testAssertionsEnabled fails if this stops working.
 
 set(EGTTOOLS_TEST_KEEP_ASSERTS $<IF:$<CXX_COMPILER_ID:MSVC>,/UNDEBUG,-UNDEBUG>)
 
@@ -42,76 +35,12 @@ set(EGTTOOLS_TEST_KEEP_ASSERTS $<IF:$<CXX_COMPILER_ID:MSVC>,/UNDEBUG,-UNDEBUG>)
 
 function(add_egttools_test target_name source_file)
     add_executable(${target_name} ${source_file})
-    target_link_libraries(${target_name} PRIVATE egttoolsNumerical)
+    target_link_libraries(${target_name} PRIVATE egttools_core)
     target_compile_options(${target_name} PRIVATE ${EGTTOOLS_TEST_KEEP_ASSERTS})
-
-    if (APPLE)
-        target_link_libraries(${target_name} PRIVATE "-framework Accelerate")
-    endif ()
 
     add_test(NAME ${target_name} COMMAND ${target_name})
     set_property(GLOBAL APPEND PROPERTY EGTTOOLS_CPP_TEST_TARGETS ${target_name})
 endfunction()
-
-# ------------------------------------------------------------------------------
-# Build internal numerical test library
-# ------------------------------------------------------------------------------
-
-add_library(egttoolsNumerical STATIC
-        ../cpp/src/egttools/SeedGenerator.cpp
-        ../cpp/src/egttools/Distributions.cpp
-        ../cpp/src/egttools/Data.cpp
-        ../cpp/src/egttools/utils/CalculateExpectedIndicators.cpp
-        ../cpp/src/egttools/finite_populations/Utils.cpp
-        ../cpp/src/egttools/finite_populations/analytical/PairwiseComparison.cpp
-        ../cpp/src/egttools/finite_populations/games/Matrix2PlayerGameHolder.cpp
-        ../cpp/src/egttools/finite_populations/games/MatrixNPlayerGameHolder.cpp
-        ../cpp/src/egttools/finite_populations/games/NormalFormGame.cpp
-        ../cpp/src/egttools/finite_populations/games/CRDGame.cpp
-        ../cpp/src/egttools/finite_populations/games/CRDGameTU.cpp
-        ../cpp/src/egttools/finite_populations/games/OneShotCRD.cpp
-        ../cpp/src/egttools/finite_populations/games/NormalFormNetworkGame.cpp
-        ../cpp/src/egttools/finite_populations/games/OneShotCRDNetworkGame.cpp
-        ../cpp/src/egttools/finite_populations/behaviors/NFGStrategies.cpp
-        ../cpp/src/egttools/finite_populations/behaviors/CRDStrategies.cpp
-        ../cpp/src/egttools/finite_populations/evolvers/GeneralPopulationEvolver.cpp
-        ../cpp/src/egttools/finite_populations/evolvers/NetworkEvolver.cpp
-        ../cpp/src/egttools/finite_populations/structure/Group.cpp
-        ../cpp/src/egttools/finite_populations/structure/GarciaGroup.cpp
-        ../cpp/src/egttools/finite_populations/evolvers/MLS.cpp
-)
-
-set_target_properties(egttoolsNumerical PROPERTIES
-        CXX_STANDARD 17
-        CXX_STANDARD_REQUIRED TRUE
-        CXX_EXTENSIONS FALSE
-)
-
-target_include_directories(egttoolsNumerical
-        PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/../cpp/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/../cpp/src
-)
-
-target_link_libraries(egttoolsNumerical
-        PUBLIC
-        Boost::headers
-)
-
-target_compile_definitions(egttoolsNumerical
-        PUBLIC
-        HAS_BOOST
-)
-
-target_compile_options(egttoolsNumerical PRIVATE ${EGTTOOLS_TEST_KEEP_ASSERTS})
-
-if (OpenMP_CXX_FOUND)
-    target_link_libraries(egttoolsNumerical PUBLIC OpenMP::OpenMP_CXX)
-endif ()
-
-if (APPLE)
-    target_link_libraries(egttoolsNumerical PUBLIC "-framework Accelerate")
-endif ()
 
 # ------------------------------------------------------------------------------
 # Register C++ test executables

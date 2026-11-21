@@ -43,7 +43,11 @@ them smoke tests. Coverage is not measured, and the C++ tests don't run in CI.
 - **TEST-09**: only 8 of the 23 programs assert anything; the other 15 print output.
   Every migrated test gets real checks. Start with the programs that check nothing and
   with C++ code that has no Python test (`NetworkSync`, `NetworkEvolver`, the binomial
-  and hypergeometric helpers, the LRU caches).
+  and hypergeometric helpers, the LRU caches). Since CI-14 the tests link `egttools_core`, built
+  with `NDEBUG` in Release, so the `_group_size <= _max_group_size` asserts in `Group.cpp` and
+  `GarciaGroup.cpp` do not run in the tests; add tests that check that invariant. The 5 sources
+  the old test library lacked (`PairwiseComparisonTransitionOperator`, `ReplicatorDynamics`,
+  `NPlayerStagHunt`, `AbstractNPlayerGame`, `AbstractNPlayerStateGame`) can now be tested in C++.
 - **TEST-11**: start from the chains in `tests/test_stationary_distribution_utils.py`
   (random irreducible chain, dense reference solver, closed-form birth-death chain) and
   add a doubly stochastic chain (uniform distribution), the two-state chain, and the

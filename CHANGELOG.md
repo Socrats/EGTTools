@@ -74,8 +74,12 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 ### Testing
 
 - The C++ tests now check their results in Release builds: `NDEBUG` is undefined for the test
-  programs and the test copy of the library, so `assert()` runs, including the library's own
-  precondition checks. A new test fails if assertions are compiled out.
+  programs, so `assert()` runs, including the precondition checks in the library headers. A new
+  test fails if assertions are compiled out.
+- The C++ tests now link the same library as the Python extension (`egttools_core`, built once)
+  instead of a separate copy that was missing 5 source files and compiled with different settings
+  (no BLAS/LAPACK, no ARPACK, different optimisation). C++ projects inside the build can link
+  `EGTTools::core`.
 - `test_binomial_coefficient_with_time` compares against exact reference values instead of
   printing them.
 - `test_timing_uncertainty` uses a fixed seed and a tolerance of 4 standard errors, and checks that
