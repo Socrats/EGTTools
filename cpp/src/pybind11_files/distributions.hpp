@@ -15,8 +15,6 @@
 
 #include "egttools_common.hpp"
 
-#if (HAS_BOOST)
 #include "boost_cpp_int_cast_to_pybind11.hpp"
-#endif
 
 #endif//EGTTOOLS_PYBIND11FILES_DISTRIBUTIONS_HPP

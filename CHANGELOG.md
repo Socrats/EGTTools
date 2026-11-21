@@ -28,6 +28,10 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   entry `PythonTests`. They depended on a target that does not exist and could not run. Build the
   docs with `sphinx-build` (or `make` in `docs/`) and run the Python tests with `pytest`. CMake now
   rejects in-source builds; use a separate build directory (`cmake -S . -B build`).
+- **Build:** the C++ headers no longer depend on the `HAS_BOOST` macro; Boost.Multiprecision (already
+  a required dependency) is always used. Every build defined the macro, so nothing changes for
+  Python users; C++ code that included the headers without defining it used to get a different,
+  double-precision API. `is_boost_enabled()` and `USES_BOOST` remain and are always `True`.
 - **Function signatures in docstrings and type stubs.** The bindings no longer disable pybind11's
   function signatures, so every docstring starts with the real signature and the `.pyi` stubs list
   real parameters and types (with one `@overload` per variant) instead of `*args, **kwargs`. The stubs

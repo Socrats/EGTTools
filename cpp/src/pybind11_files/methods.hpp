@@ -23,10 +23,8 @@
 #include "egttools_common.hpp"
 #include <pybind11/functional.h>
 
-#if (HAS_BOOST)
 #include <boost/multiprecision/cpp_int.hpp>
 
 #include "boost_cpp_int_cast_to_pybind11.hpp"
-#endif
 
 #endif//EGTTOOLS_PYBIND11FILES_METHODS_HPP

@@ -26,6 +26,7 @@
 #include <egttools/Types.h>
 
 #include <algorithm>
+#include <cfloat>
 #include <cstdint>
 #include <egttools/math.hpp>
 #include <limits>
@@ -44,7 +45,6 @@
 #define EGTTOOLS_NOINLINE_COLD
 #endif
 
-#if (HAS_BOOST)
 #include <boost/multiprecision/cpp_dec_float.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 
@@ -53,13 +53,6 @@
 #define float_type_ boost::multiprecision::cpp_dec_float_100
 #define binomial_coeff_ binomial_precision
 #define CONVERT_TO_(object, type) object.convert_to<type>()
-#else
-#define int_type_ int64_t
-#define uint_type_ size_t
-#define float_type_ double
-#define binomial_coeff_ egttools::binomialCoeff<double, size_t>
-#define CONVERT_TO_(object, type) static_cast<type>(object)
-#endif
 
 namespace egttools {
     /**
@@ -694,9 +687,7 @@ namespace egttools {
         }
     }
 
-#if (HAS_BOOST)
     uint_type_ binomial_precision(size_t n, size_t k);
-#endif
 
     /**
      * @brief Calculates the probability density function of a multivariate hypergeometric distribution.
@@ -802,12 +793,10 @@ namespace egttools {
         return egttools::binomialCoeff<O, T>(stars + bins - 1, stars);
     }
 
-#if (HAS_BOOST)
     template<>
     inline uint_type_ starsBars<size_t, uint_type_>(size_t stars, size_t bins) {
         return egttools::binomial_precision(stars + bins - 1, stars);
     }
-#endif
 } // namespace egttools
 
 #endif//EGTTOOLS_DISTRIBUTIONS_H

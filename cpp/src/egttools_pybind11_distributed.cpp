@@ -63,11 +63,7 @@ PYBIND11_MODULE(numerical_, m) {
     m.def("is_petsc_enabled", &egttools::is_petsc_enabled,
       "Check if EGTtools was compiled with PETSc/SLEPc MPI eigensolver support.");
 
-#if (HAS_BOOST)
     m.attr("USES_BOOST") = true;
-#else
-    m.attr("USES_BOOST") = false;
-#endif
 
     m.doc() =
             "The `numerical` module contains optimized functions and classes to simulate "

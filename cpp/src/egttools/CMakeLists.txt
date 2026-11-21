@@ -66,7 +66,6 @@ if (LTO_SUPPORTED AND TARGET pybind11::lto)
 endif ()
 
 target_link_libraries(egttools_core PUBLIC Boost::multiprecision Eigen3::Eigen)
-target_compile_definitions(egttools_core PUBLIC HAS_BOOST)
 
 if (OpenMP_CXX_FOUND)
     target_link_libraries(egttools_core PUBLIC OpenMP::OpenMP_CXX)

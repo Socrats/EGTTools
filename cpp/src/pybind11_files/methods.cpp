@@ -229,7 +229,6 @@ array([0.70, 0.30])
             py::return_value_policy::move
         );
 
-#if (HAS_BOOST)
         m.def(
             "calculate_nb_states",
             [](const size_t group_size, const size_t nb_strategies) {
@@ -269,44 +268,6 @@ Examples
             py::arg("group_size"),
             py::arg("nb_strategies")
         );
-#else
-        m.def(
-            "calculate_nb_states",
-            &egttools::starsBars<size_t>,
-            R"pbdoc(
-Calculate the number of possible states in a discrete simplex.
-
-This is the number of integer compositions of `group_size` individuals into
-`nb_strategies` categories.
-
-Parameters
-----------
-group_size : int
-    Total number of individuals.
-nb_strategies : int
-    Number of available strategies.
-
-Returns
--------
-int
-    Number of possible discrete states.
-
-See Also
---------
-egttools.sample_simplex
-egttools.calculate_state
-
-Examples
---------
->>> calculate_nb_states(4, 3)
-15
->>> calculate_nb_states(10, 2)
-11
-)pbdoc",
-            py::arg("group_size"),
-            py::arg("nb_strategies")
-        );
-#endif
 
         m.def(
             "calculate_strategies_distribution",
@@ -1486,18 +1447,8 @@ ValueError
                     "calculate_fixation_probability",
                     [](FinitePopulations::analytical::PairwiseComparison &self,
                        int inv, int res, double beta, bool high_precision) -> double {
-#if (HAS_BOOST)
                         if (high_precision)
                             return self.calculate_fixation_probability_boost(inv, res, beta);
-#else
-                        if (high_precision) {
-                            auto warnings = py::module_::import("warnings");
-                            warnings.attr("warn")(
-                                "high_precision=True requires Boost multiprecision, which is not "
-                                "available in this build; falling back to double precision.",
-                                py::module_::import("builtins").attr("UserWarning"));
-                        }
-#endif
                         return self.calculate_fixation_probability(inv, res, beta);
                     },
                     py::arg("invading_strategy_index"),
@@ -1520,8 +1471,7 @@ resident_strategy_index : int
 beta : float
     Intensity of selection :math:`\beta`.
 high_precision : bool, optional
-    When *True* and the library was compiled with Boost multiprecision support,
-    the internal streaming log-sum-exp is evaluated in 50-digit decimal
+    When *True*, the internal streaming log-sum-exp is evaluated in 50-digit decimal
     arithmetic, extending the representable range of :math:`\exp(\log\phi)`.
     The return value is still a ``float``; values below ``DBL_MIN`` (~2.2e-308)
     are rounded to zero regardless.  Use

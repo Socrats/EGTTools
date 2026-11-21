@@ -28,19 +28,15 @@
 #include <egttools/finite_populations/games/AbstractGame.hpp>
 #include <tuple>
 
-#if (HAS_BOOST)
 #include <boost/multiprecision/cpp_dec_float.hpp>
-#endif
 
 #if defined(_OPENMP)
 #include <egttools/OpenMPExtensions.hpp>
 #endif
 
 namespace egttools::FinitePopulations::analytical {
-#if (HAS_BOOST)
     using cpp_dec_float_50  = boost::multiprecision::number<boost::multiprecision::cpp_dec_float<50>>;
     using cpp_dec_float_100 = boost::multiprecision::cpp_dec_float_100;
-#endif
     /**
      * @brief Key of the fitness cache: the fitness of one strategy in one population state.
      *
@@ -339,7 +335,6 @@ namespace egttools::FinitePopulations::analytical {
         double calculate_log_fixation_probability(int index_invading_strategy, int index_resident_strategy,
                                                   double beta);
 
-#if (HAS_BOOST)
         /**
          * @brief Fixation probability computed in Boost 50-digit decimal arithmetic.
          *
@@ -358,7 +353,6 @@ namespace egttools::FinitePopulations::analytical {
          */
         double calculate_fixation_probability_boost(int index_invading_strategy, int index_resident_strategy,
                                                     double beta);
-#endif
 
         /**
          * @brief SML transition matrix and log-fixation-probability matrix.
