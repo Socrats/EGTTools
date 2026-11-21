@@ -1249,7 +1249,7 @@ def calculate_expected_group_success(pop_size: typing.SupportsInt | typing.Suppo
     ...     threshold=3, contributing_strategies=[0, 2]
     ... )
     """
-def calculate_expected_indicator(pop_size: typing.SupportsInt | typing.SupportsIndex, group_size: typing.SupportsInt | typing.SupportsIndex, nb_strategies: typing.SupportsInt | typing.SupportsIndex, stationary_distribution: scipy.sparse.csr_matrix, indicator: collections.abc.Callable[[collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex]], float]) -> float:
+def calculate_expected_indicator(pop_size: typing.SupportsInt | typing.SupportsIndex, group_size: typing.SupportsInt | typing.SupportsIndex, nb_strategies: typing.SupportsInt | typing.SupportsIndex, stationary_distribution: scipy.sparse.csr_matrix, indicator: collections.abc.Callable[[list[int]], typing.SupportsFloat | typing.SupportsIndex]) -> float:
     """
     Calculate E[f] = sum_s sd(s) * sum_g P(g|s) * f(g) for an arbitrary indicator f.
     
@@ -1283,7 +1283,7 @@ def calculate_expected_indicator(pop_size: typing.SupportsInt | typing.SupportsI
     ...     lambda g: float(g[0] >= 3)
     ... )
     """
-def calculate_expected_indicators(pop_size: typing.SupportsInt | typing.SupportsIndex, group_size: typing.SupportsInt | typing.SupportsIndex, nb_strategies: typing.SupportsInt | typing.SupportsIndex, stationary_distribution: scipy.sparse.csr_matrix, indicators: collections.abc.Sequence[collections.abc.Callable[[collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex]], float]]) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"]:
+def calculate_expected_indicators(pop_size: typing.SupportsInt | typing.SupportsIndex, group_size: typing.SupportsInt | typing.SupportsIndex, nb_strategies: typing.SupportsInt | typing.SupportsIndex, stationary_distribution: scipy.sparse.csr_matrix, indicators: collections.abc.Sequence[collections.abc.Callable[[list[int]], typing.SupportsFloat | typing.SupportsIndex]]) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"]:
     """
     Calculate E[f_k] for multiple indicator functions in a single pass.
     
@@ -1395,7 +1395,7 @@ def calculate_expected_payoff(pop_size: typing.SupportsInt | typing.SupportsInde
     float
         Expected payoff scalar.
     """
-def calculate_expected_state_indicator(pop_size: typing.SupportsInt | typing.SupportsIndex, nb_strategies: typing.SupportsInt | typing.SupportsIndex, stationary_distribution: scipy.sparse.csr_matrix, indicator: collections.abc.Callable[[collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex]], float]) -> float:
+def calculate_expected_state_indicator(pop_size: typing.SupportsInt | typing.SupportsIndex, nb_strategies: typing.SupportsInt | typing.SupportsIndex, stationary_distribution: scipy.sparse.csr_matrix, indicator: collections.abc.Callable[[list[int]], typing.SupportsFloat | typing.SupportsIndex]) -> float:
     """
     Calculate E[f] = sum_s sd(s) * f(s) for a single state-level indicator.
     
@@ -1425,7 +1425,7 @@ def calculate_expected_state_indicator(pop_size: typing.SupportsInt | typing.Sup
     egttools.calculate_expected_state_indicators_precomputed
     egttools.calculate_expected_indicator
     """
-def calculate_expected_state_indicators(pop_size: typing.SupportsInt | typing.SupportsIndex, nb_strategies: typing.SupportsInt | typing.SupportsIndex, stationary_distribution: scipy.sparse.csr_matrix, indicators: collections.abc.Sequence[collections.abc.Callable[[collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex]], float]]) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"]:
+def calculate_expected_state_indicators(pop_size: typing.SupportsInt | typing.SupportsIndex, nb_strategies: typing.SupportsInt | typing.SupportsIndex, stationary_distribution: scipy.sparse.csr_matrix, indicators: collections.abc.Sequence[collections.abc.Callable[[list[int]], typing.SupportsFloat | typing.SupportsIndex]]) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"]:
     """
     Calculate E[f_k] = sum_s sd(s) * f_k(s) for multiple state-level indicators in one pass.
     
@@ -1723,7 +1723,7 @@ def is_petsc_enabled() -> bool:
     """
     Check if EGTtools was compiled with PETSc/SLEPc MPI eigensolver support.
     """
-def precompute_group_to_state_indicator_matrix(pop_size: typing.SupportsInt | typing.SupportsIndex, group_size: typing.SupportsInt | typing.SupportsIndex, nb_strategies: typing.SupportsInt | typing.SupportsIndex, indicators: collections.abc.Sequence[collections.abc.Callable[[collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex]], float]]) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
+def precompute_group_to_state_indicator_matrix(pop_size: typing.SupportsInt | typing.SupportsIndex, group_size: typing.SupportsInt | typing.SupportsIndex, nb_strategies: typing.SupportsInt | typing.SupportsIndex, indicators: collections.abc.Sequence[collections.abc.Callable[[list[int]], typing.SupportsFloat | typing.SupportsIndex]]) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, n]"]:
     """
     Build a state-level indicator matrix from group-level callables.
     

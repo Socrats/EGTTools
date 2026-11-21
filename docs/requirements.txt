@@ -11,7 +11,6 @@ furo>=2024.1.29
 myst-parser>=2.0.0
 nbsphinx>=0.9.3
 sphinx-autodoc-typehints>=1.25.2
-pybind11>=2.10
 sphinxcontrib-bibtex>=2.6.1
 beautifulsoup4>=4.12.2
 pandoc
