@@ -3,6 +3,14 @@
 Newest first. Each entry gives the date, the decision, the reasoning, and the
 affected task IDs.
 
+## 2026-11-21: C++ tests are opt-in; known bugs are expected failures
+The C++ tests (Catch2 v3) are built only with `BUILD_NUMERICAL_TESTS=ON`; wheel and conda builds
+never ran them. With vcpkg, Catch2 comes from the manifest feature `tests`, which the option
+enables. A test for a known bug checks the correct behaviour and is tagged `[!shouldfail]`, naming
+its roadmap task, so the suite stays green and the test starts failing when the bug is fixed (the
+fix removes the tag). A documented approximation is tested against its stated error, not
+reported as a bug. Affects TEST-09, MEM-12, MEM-13, API-13.
+
 ## 2026-11-21: pybind11 comes only from the submodule, pinned to release tags
 The `pybind11` submodule is the single source of pybind11: the build fails if it is missing,
 and no installed pybind11 is used, so every build (wheels, sdist, conda) uses the version the

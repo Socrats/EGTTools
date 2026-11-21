@@ -122,7 +122,8 @@ tasks are independent unless the `Deps` column says otherwise.
 3. **Correctness fixes**: NET-02, NET-03, NET-05, NET-04; MC-07; API-06; PERF-06
    (thread-count invariance tests and ThreadSanitizer job) with the seeding fix it requires;
    PERF-07 (combinatorics with tiered precision, including the `ln_factorial` data race); MEM-10
-   (consistent 64-bit types), before the MC redesign rewrites much of the same code.
+   (consistent 64-bit types), before the MC redesign rewrites much of the same code; the bugs
+   TEST-09 found: MEM-12 (sampling), API-13 (stag hunt payoffs), MEM-13 (`Group`).
 4. **Monte Carlo redesign**: MC-01 → MC-02 → MC-03 → MC-04, then MC-05, MC-06, MC-10, MC-08.
 5. **Solvers**: SOL-01 and SOL-09 (interface and diagnostics) → SOL-02, SOL-03 + SOL-04, SOL-05,
    SOL-06 → SOL-07, SOL-08 → SOL-11.
@@ -156,6 +157,6 @@ Update this table when tasks change. Recount a milestone (here 0.2) from the rep
 | Milestone | Done / total |
 |-----------|-------------|
 | v0.2.0 | 22 / 22 |
-| v0.3.0 | 23 / 76 |
+| v0.3.0 | 23 / 79 |
 | v0.4.0 | 0 / 33 |
 | later  | 0 / 4 |

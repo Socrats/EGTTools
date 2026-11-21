@@ -19,8 +19,15 @@ abruptly.
 | API-10 | Rename `PairwiseComparison` and `PairwiseComparisonNumerical` to names that say exact vs approximate (estimators), with deprecation aliases | todo | P1 | M | 0.4 | API-01 | — |
 | API-11 | Audit the pybind11 bindings' declared types: argument types and conversions, returned dtypes, Eigen `Ref` vs copies, overloads, defaults, argument names, GIL release | todo | P1 | L | 0.3 | MEM-10 | — |
 | API-12 | Replace the unprefixed macros in `Distributions.h` (`int_type_`, `uint_type_`, `float_type_`, `binomial_coeff_`, `CONVERT_TO_`) with type aliases and functions in `egttools::` | todo | P3 | S | 0.4 | CI-15 | — |
+| API-13 | `NPlayerStagHunt` (C++ and Python): defectors in mixed groups get k F / N instead of k F c / N; fix the payoffs and the docstring (copied from `OneShotCRD`) | todo | P1 | S | 0.3 | TEST-09 | — |
 
 ## Notes
+
+- **API-13**: Pacheco, Santos, Souza & Skyrms 2009 (Proc. R. Soc. B 276, 315): Pi_D(k) =
+  k F c / N theta(k - M), Pi_C(k) = Pi_D(k) - c. `NPlayerStagHunt::play` (and the Python class in
+  `egttools/games/nonlinear_games.py`) gives defectors k F / N in mixed groups, while the
+  all-cooperator group gets c (F - 1); they agree only for c = 1. CHANGELOG under "Changes to
+  numerical results". Remove the `[!shouldfail]` tag in `tests/cpp/test_games.cpp`.
 
 - **API-08**: current design (2026-11-19): a process-global `SeedGenerator` singleton
   (`egttools.Random`), seeded once and drawn from at 44 call sites in 17 C++ files; each
