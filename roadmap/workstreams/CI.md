@@ -22,7 +22,7 @@ structural work.
 | CI-12 | Set the vcpkg toolchain and macOS deployment-target defaults before `project()`, where they take effect | done | P1 | S | 0.3 | CI-10 | `25d3d0a0` |
 | CI-13 | Fix or remove the broken `docs` and `pytest` CMake targets (they depend on a nonexistent target `numerical`) | done | P2 | S | 0.3 | CI-10 | `492217bf` |
 | CI-14 | One C++ core library (`egttools_core`) built once and used by the extension, the C++ tests and C++ users | done | P1 | M | 0.3 | CI-10 | `b7e6cb0c` |
-| CI-15 | Make Boost unconditional: remove the `HAS_BOOST` conditionals (Boost is already required) | review | P2 | S | 0.3 | CI-14 | — |
+| CI-15 | Make Boost unconditional: remove the `HAS_BOOST` conditionals (Boost is already required) | done | P2 | S | 0.3 | CI-14 | `2da3f147` |
 | CI-16 | Remove dead build code: `cpp/src/egttools.cpp` (not compiled), `FindEigen3.cmake` and `FindLpSolve.cmake` (unused) | done | P2 | S | 0.3 | CI-10 | `0a461c72` |
 | CI-17 | Review newer pybind11 releases and pin the `pybind11` submodule to a release tag | todo | P2 | S | 0.3 | — | — |
 

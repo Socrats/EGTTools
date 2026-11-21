@@ -2,6 +2,7 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-21 · CI-15 · Merged (`2da3f147`): Tests (incl. sanitizer job) and Wheels green.
 - 2026-11-21 · CI-15 · Review (branch `ci-15-boost-unconditional`): `HAS_BOOST` conditionals and their non-Boost branches removed. Local: 25 C++ and 779 Python tests pass; same exported symbols and `__text`; one docstring changed in the stubs.
 - 2026-11-21 · API-12 · Added: replace the unprefixed macros in `Distributions.h`. README v0.4.0 count corrected to 33 (it had not counted one earlier addition).
 - 2026-11-21 · CI-14 · Merged (`b7e6cb0c`): Tests (incl. sanitizer job) and Wheels green.
