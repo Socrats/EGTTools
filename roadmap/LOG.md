@@ -2,6 +2,7 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-21 · CI-14 · Merged (`b7e6cb0c`): Tests (incl. sanitizer job) and Wheels green.
 - 2026-11-20 · CI-14 · Review (branch `ci-14-egttools-core`): STATIC `egttools_core` linked by `numerical_` and the C++ tests. Local: 25 C++ and 779 Python tests pass, stubs unchanged, same exported symbols, A/B timings equal.
 - 2026-11-20 · CI-14 · Decision: the C++ core stays in this repository (DECISIONS.md).
 - 2026-11-20 · CI-13 · Merged (`492217bf`): Tests (incl. sanitizer job) and Wheels green.
