@@ -32,6 +32,13 @@ endif ()
 # them set after project() have no effect, on the first configure or later ones.
 
 option(SKIP_VCPKG "Skip vcpkg toolchain setup" OFF)
+option(BUILD_NUMERICAL_TESTS "Build the C++ tests in tests/ (needs Catch2 v3)" OFF)
+
+# The C++ tests need Catch2, from the vcpkg manifest feature "tests". The vcpkg toolchain reads
+# VCPKG_MANIFEST_FEATURES in project(). Without vcpkg, Catch2 must be installed (e.g. conda-forge).
+if (BUILD_NUMERICAL_TESTS AND NOT SKIP_VCPKG AND NOT "tests" IN_LIST VCPKG_MANIFEST_FEATURES)
+    list(APPEND VCPKG_MANIFEST_FEATURES "tests")
+endif ()
 
 # vcpkg toolchain: use the bundled vcpkg submodule unless the caller passed a toolchain or
 # SKIP_VCPKG=ON. With SKIP_VCPKG=ON, a vcpkg toolchain left in the cache by an earlier build is
@@ -115,7 +122,6 @@ project(egttools VERSION ${_EGTTOOLS_VERSION_NUMERIC} LANGUAGES CXX)
 # ------------------------------------------------------------------------------
 
 option(USE_OPENMP "Enable OpenMP multithreading" ON)
-option(BUILD_NUMERICAL_TESTS "Build C++ tests in tests/" ON)
 option(EGTTOOLS_ENABLE_ARPACK "Build native ARPACK eigensolver (requires arpack-ng)" OFF)
 option(EGTTOOLS_ENABLE_PETSC "Build MPI-distributed PETSc/SLEPc eigensolver (numerical_mpi_ module)" OFF)
 
