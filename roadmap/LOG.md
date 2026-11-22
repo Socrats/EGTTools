@@ -2,6 +2,7 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-22 · TEST-09 · Merged (`60e23e06`): Tests (incl. sanitizer job), Wheels and Conda Build green. Phase 1 complete.
 - 2026-11-21 · TEST-09 · Review (branch `test-09-catch2`): one Catch2 program, 73 test cases against independent references; tests off by default, Catch2 from the vcpkg feature `tests`. Local: 73 C++ (4 expected failures for known bugs) and 779 Python tests pass.
 - 2026-11-21 · MEM-12, MEM-13, API-13 · Added: bugs found by TEST-09 (sampling, `Group`, stag hunt payoffs).
 - 2026-11-21 · CI-17 · Merged (`be815773`): Tests (incl. sanitizer job), Wheels and Conda Build green.
