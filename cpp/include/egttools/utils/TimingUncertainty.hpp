@@ -90,7 +90,7 @@ namespace egttools::utils {
     TimingUncertainty<R, G>::set_probability(double p) {
         if (p <= 0.0 || p > 1.0) throw std::invalid_argument("Probability must be in (0,1)");
         p_ = p;
-        dist_.param(G::param_type(p_));
+        dist_.param(typename G::param_type(p_));
     }
 
     template<typename R, typename G>

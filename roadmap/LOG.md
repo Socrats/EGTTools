@@ -2,6 +2,8 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-21 · TEST-09 · Review (branch `test-09-catch2`): one Catch2 program, 73 test cases against independent references; tests off by default, Catch2 from the vcpkg feature `tests`. Local: 73 C++ (4 expected failures for known bugs) and 779 Python tests pass.
+- 2026-11-21 · MEM-12, MEM-13, API-13 · Added: bugs found by TEST-09 (sampling, `Group`, stag hunt payoffs).
 - 2026-11-21 · CI-17 · Merged (`be815773`): Tests (incl. sanitizer job), Wheels and Conda Build green.
 - 2026-11-21 · CI-17 · Review (branch `ci-17-pybind11-v3.1.0`): submodule on tag v3.1.0; missing submodule fails the configure; pybind11 dropped from recipe/requirements. Local: 25 C++ and 779 Python tests pass, same exported symbols; stubs: 5 callback annotations corrected.
 - 2026-11-21 · CI-15 · Merged (`2da3f147`): Tests (incl. sanitizer job) and Wheels green.

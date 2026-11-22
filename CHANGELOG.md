@@ -17,6 +17,8 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   accepted states of the wrong length or not summing to Z (reading past the end of the vector).
   `PairwiseComparisonNumerical` accepted negative strategy indices, and states whose entries wrap
   around in unsigned arithmetic to sum to Z. All now raise.
+- `egttools::utils::TimingUncertainty::set_probability` (C++ API) did not compile when used (a
+  missing `typename`). The Python binding does not use it.
 
 ### Changed
 
@@ -93,8 +95,6 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   instead of a separate copy that was missing 5 source files and compiled with different settings
   (no BLAS/LAPACK, no ARPACK, different optimisation). C++ projects inside the build can link
   `EGTTools::core`.
-- `test_binomial_coefficient_with_time` compares against exact reference values instead of
-  printing them.
 - `test_timing_uncertainty` uses a fixed seed and a tolerance of 4 standard errors, and checks that
   a wrong parameter is rejected; its former tolerance (about 2 standard errors, unseeded) failed in
   about 4% of runs once assertions were enabled.
@@ -106,6 +106,17 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 - CI runs the C++ tests under AddressSanitizer (with leak detection) and
   UndefinedBehaviorSanitizer on Linux with clang. The CMake target `egttools_cpp_tests` builds
   every C++ test program registered on the platform.
+- **The C++ tests use Catch2 v3.** The 23 test programs, 15 of which only printed results, are now
+  one program, `egttools_tests`, with 73 test cases, each a separate CTest test. Every test case
+  checks its results against an independent reference: the definitions in
+  `docs/theory/pairwise_comparison.md`, closed-form results (fixation probabilities, stationary
+  distributions of birth-death chains), payoffs worked out by hand, or exact values. New tests
+  cover the transition operator, replicator dynamics, the N-player stag hunt, the game holders and
+  the network structures. Tests for known bugs are tagged `[!shouldfail]` until the bugs are fixed.
+- **Build:** the C++ tests are no longer built by default (`BUILD_NUMERICAL_TESTS` is now `OFF`), so
+  wheel and conda builds no longer compile them. Configure with `-DBUILD_NUMERICAL_TESTS=ON` to
+  build them; with vcpkg, Catch2 comes from the new manifest feature `tests`, installed
+  automatically. Without vcpkg, the configure fails if Catch2 v3 is not found.
 - `scripts/memguard.py` runs a command and kills it if its memory (the whole process tree)
   exceeds a limit, for test runs that may allocate without bound.
 - `scripts/check_repo_hygiene.py` reports the file and line of each finding without the matched

@@ -18,6 +18,8 @@ changes. Today nothing checks for them in CI.
 | MEM-09 | Validate strategy indices and state vectors at the user-facing entry points of `PairwiseComparison` and `PairwiseComparisonNumerical` | done | P0 | M | 0.3 | — | `897e6f2b` |
 | MEM-10 | Consistent 64-bit types: audit `Types.h` and every size, count and index type (no `int`/`long` for sizes; `long` is 32-bit on Windows) | todo | P1 | L | 0.3 | MEM-08 | — |
 | MEM-11 | Input-validation audit of the other user-facing classes (games, network structures, `StochDynamics`, MLS, utilities), following the MEM-09 rule | todo | P1 | M | 0.3 | MEM-09 | — |
+| MEM-12 | Fix `sample_without_replacement` (fewer than k values when Floyd's algorithm collides) and the non-uniform `sample_simplex_direct_method` / `sample_simplex_directly` | todo | P1 | S | 0.3 | TEST-09 | — |
+| MEM-13 | `Group` / `GarciaGroup`: fix the inverted check in `set_strategy_count`, keep `group_size` in sync, and throw (not only assert) when a group exceeds its maximum size | todo | P2 | S | 0.3 | TEST-09 | — |
 
 Found and fixed so far: out-of-bounds row write in `run_with_mutation` with a transient (REL-10).
 Found by the first sanitizer run (MEM-01, 2026-11-19): signed overflow in the state count of
@@ -79,6 +81,19 @@ Found by the first sanitizer run (MEM-01, 2026-11-19): signed overflow in the st
   `tests/test_input_validation.py` (62 tests); on master an out-of-range index crashed the interpreter.
 - **MEM-11**: list every user-facing method that takes strategy indices, states or counts, and
   apply the MEM-09 rule (validate in the method, or in the Python binding for inner-loop kernels).
+  Found in TEST-09: `OneShotCRD::payoff` and `CRDGame::payoff` check `strategy > nb_strategies_`
+  (should be `>=`), so the index `nb_strategies` reads past the payoff table.
+- **MEM-12**: `Sampling.h` `sample_without_replacement`: on a collision Floyd's algorithm inserts
+  the upper bound `r`, the code inserts `v` again, so the set ends with fewer than k values and
+  `ordered_sample_without_replacement` leaves zeros in the output. `sample_simplex_direct_method`
+  (Python: `sample_simplex_directly`) is documented as uniform but draws distinct cut points from
+  [0, Z), so only the first strategy can be 0 (a bias of order S / Z; for Z = 2, S = 3 it always
+  returns (0, 1, 1)). The exact method (Smith & Tromble: cut points from {1, ..., Z + S - 1},
+  minus 1) costs the same, so fix it rather than document the bias. Remove the two
+  `[!shouldfail]` tags in `tests/cpp/test_sampling.cpp`.
+- **MEM-13**: `Group::set_strategy_count` throws when `sum <= max_group_size` (inverted) and does
+  not update `_group_size`. The constructors and copy constructor only `assert` the maximum size,
+  which Release builds compile out. Remove the `[!shouldfail]` tag in `tests/cpp/test_mls.cpp`.
 - **MEM-10**: `Types.h` is mostly 64-bit already (`VectorXui` = `size_t`, `VectorXi` = `int64_t`),
   but `Table2D`, `SparseTable2D`, `SparseMatrix2DXi` and the sparse index type use `long`, which is
   32-bit on Windows (76 more uses of `long` elsewhere); `VectorXi` and `VectorXli` are identical.

@@ -47,8 +47,22 @@ Notes:
 ```bash
 python -m pytest tests -m "not slow"   # fast suite, run by CI on pull requests and on master
 python -m pytest tests -m slow         # long-running tests
-ctest --test-dir _skbuild/<platform>/cmake-build/tests   # C++ test programs
 ```
+
+The C++ tests ([Catch2](https://github.com/catchorg/Catch2) v3, in `tests/cpp/`) are built only
+when requested; with vcpkg, Catch2 is installed automatically:
+
+```bash
+EGTTOOLS_EXTRA_CMAKE_ARGS="-DBUILD_NUMERICAL_TESTS=ON" python setup.py build_ext --inplace
+ctest --test-dir _skbuild/<platform>/cmake-build/tests --output-on-failure
+```
+
+Each `TEST_CASE` is a separate CTest test. To run the program directly, with Catch2's options
+(test names, tags such as `[pairwise_comparison]`, `--durations yes`):
+`_skbuild/<platform>/cmake-build/tests/egttools_tests "[games]"`.
+A test for a known bug checks the correct behaviour and is tagged `[!shouldfail]`, with a comment
+naming its roadmap task; remove the tag in the commit that fixes the bug. C++ tests compare with
+independent references in the same way as the Python tests (see `tests/cpp/reference.hpp`).
 
 ## Writing correct numerical code
 

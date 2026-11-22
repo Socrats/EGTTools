@@ -79,7 +79,8 @@ jobs:
 
       - name: Install dependencies with vcpkg
         if: steps.cache-vcpkg.outputs.cache-hit != 'true'
-        run: ./vcpkg/vcpkg install --x-binarycaching
+        # --x-feature=tests adds Catch2 for the C++ tests (BUILD_NUMERICAL_TESTS=ON).
+        run: ./vcpkg/vcpkg install --x-binarycaching --x-feature=tests
 
       - name: Install Python build and test dependencies
         run: |
@@ -97,8 +98,8 @@ jobs:
         run: python setup.py build_ext --inplace
 
       - name: Run C++ tests
-        # The C++ tests are standalone programs that check results with assert(); tests/CMakeLists.txt
-        # keeps assertions enabled in this Release build.
+        # One Catch2 program; each test case is a CTest test. tests/CMakeLists.txt keeps the library's
+        # assert()s enabled in this Release build.
         run: ctest --test-dir "$(ls -d _skbuild/*/cmake-build)/tests" --output-on-failure --timeout 600
 
       - name: Run Python tests (with coverage)
@@ -182,7 +183,8 @@ jobs:
 
       - name: Install dependencies with vcpkg
         if: steps.cache-vcpkg.outputs.cache-hit != 'true'
-        run: ./vcpkg/vcpkg install --x-binarycaching
+        # --x-feature=tests adds Catch2 for the C++ tests (BUILD_NUMERICAL_TESTS=ON).
+        run: ./vcpkg/vcpkg install --x-binarycaching --x-feature=tests
 
       - name: Install build tools
         # cmake < 4 because the pinned vcpkg submodule still uses cmake_minimum_required < 3.5.

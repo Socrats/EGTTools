@@ -33,6 +33,8 @@ reproducible.
     Decide whether to support MSVC's OpenMP (2.0 only: no custom reductions,
     `size_t` loop indices) or document Windows as serial.
   - Shared `ThreadSafeLRUCache` with string keys (lock contention; overlaps PERF-05).
+  - `CRDGameTU::calculate_payoffs` runs an OpenMP loop whose iterations all draw from the
+    member `generator_` (`CRDGameTU.cpp`, `play`): a data race (found in TEST-09).
   - No way to set the thread count from Python; `tests/test_openmp.py` has a single test
     that does not compare thread counts.
   - Floating-point reductions depend on the summation order; integer counts do not.

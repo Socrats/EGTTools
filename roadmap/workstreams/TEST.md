@@ -16,7 +16,7 @@ them smoke tests. Coverage is not measured, and the C++ tests don't run in CI.
 | TEST-06 | Statistical-test helpers (compare MC estimate to exact within k·SE, fixed seeds) | done | P1 | S | 0.3 | — | `ccec953c` |
 | TEST-07 | Coverage floor enforced in CI, raised each release | todo | P1 | S | 0.4 | TEST-02 | — |
 | TEST-08 | Execute documentation notebooks as tests | todo | P2 | M | 0.4 | — | — |
-| TEST-09 | Migrate the C++ tests to Catch2 v3 (vcpkg): real assertions, one test per behaviour, CTest discovery | todo | P1 | L | 0.3 | REL-07, CI-14 | — |
+| TEST-09 | Migrate the C++ tests to Catch2 v3 (vcpkg): real assertions, one test per behaviour, CTest discovery | review | P1 | L | 0.3 | REL-07, CI-14 | — |
 | TEST-10 | Make the C++ tests check results in Release builds (they use `assert`, removed by `NDEBUG`); fix the unused-variable warnings | done | P0 | S | 0.3 | — | `1512fc95` |
 | TEST-11 | Shared test chains with known stationary distributions (Python test helper module), used by SOL-10 and MC-09 | done | P0 | S | 0.3 | — | `f9966559` |
 | TEST-12 | Numerical-stability audit of the library (overflow, cancellation, log-space computation); tests at extreme parameters; one task per fix | todo | P1 | L | 0.3 | TEST-06 | — |
@@ -48,6 +48,14 @@ them smoke tests. Coverage is not measured, and the C++ tests don't run in CI.
   `GarciaGroup.cpp` do not run in the tests; add tests that check that invariant. The 5 sources
   the old test library lacked (`PairwiseComparisonTransitionOperator`, `ReplicatorDynamics`,
   `NPlayerStagHunt`, `AbstractNPlayerGame`, `AbstractNPlayerStateGame`) can now be tested in C++.
+  Done 2026-11-21: one Catch2 program, `egttools_tests` (73 test cases, discovered by CTest at test
+  time), sources merged by area in `tests/cpp/`; references in `tests/cpp/reference.hpp`
+  (Definitions 2.1-5.1 of the theory page, the birth-death fixation and stationary closed forms).
+  `test_calculate_stationary_distribution_sparse` (it tested solvers defined in the test; SOL-10
+  covers the library's) and `test_eigen_sparse_matrix` (Eigen only) were dropped. The abstract
+  N-player games are tested from Python (`tests/test_abstract_nplayer_state_game.py`). Known
+  bugs are `[!shouldfail]` tests: MEM-12 (2), MEM-13, API-13. Tests are off by default now; Catch2
+  comes from the vcpkg feature `tests`.
 - **TEST-11**: start from the chains in `tests/test_stationary_distribution_utils.py`
   (random irreducible chain, dense reference solver, closed-form birth-death chain) and
   add a doubly stochastic chain (uniform distribution), the two-state chain, and the
