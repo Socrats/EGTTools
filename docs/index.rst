@@ -22,7 +22,7 @@ of researchers.
    Home page <self>
    Installation <installation>
    Tutorials <tutorials>
-   Theory <theory/pairwise_comparison>
+   Theory <theory/index>
    Examples <examples>
    API reference <_autosummary/egttools>
 
