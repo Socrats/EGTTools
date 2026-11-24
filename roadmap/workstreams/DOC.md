@@ -19,7 +19,7 @@ narrative documentation. GitHub: #84.
 | DOC-09 | Regenerate and check `.pyi` stubs in CI | todo | P1 | M | 0.4 | — | — |
 | DOC-10 | Changelog page in docs, sourced from `CHANGELOG.md` | todo | P2 | S | 0.4 | — | — |
 | DOC-11 | Developer guide: build from source, architecture overview, adding C++ bindings | todo | P1 | M | 0.4 | — | — |
-| DOC-12 | Theory pages for the other processes (fixation, small-mutation limit, Moran BD/DB, networks), each with spec tests | todo | P1 | L | 0.3 | REL-10 | — |
+| DOC-12 | Theory pages for the other processes (fixation, small-mutation limit, Moran BD/DB, networks), each with spec tests | doing | P1 | L | 0.3 | REL-10 | — |
 | DOC-13 | Fix the ~1,850 Sphinx warnings (mostly unresolved docstring type references) and fail docs CI on new warnings | todo | P1 | M | 0.4 | — | — |
 | DOC-14 | Execute example notebooks in CI (two used a removed API); fix the local Jupyter kernelspec | todo | P1 | S | 0.3 | — | — |
 | DOC-15 | Improve the README and update the examples it shows to the current API (run them in CI) | todo | P1 | M | 0.4 | — | — |
@@ -29,3 +29,10 @@ narrative documentation. GitHub: #84.
 - **DOC-15**: the README examples should use the current API (e.g. the new `draw_invasion_diagram`
   via `invasion_graph`, `run_with_mutation`, the plotting `style`/`cmap` options) and be checked
   automatically, e.g. by extracting the code blocks into a test, so they cannot drift again.
+- **DOC-12**: agreed 2026-11-24: short specification pages (numbered definitions, references,
+  Implementations table, spec tests), not tutorials. Order: `fixation.md` and
+  `small_mutation_limit.md` now; `moran.md` and `networks.md` together with NET-01, which needs
+  that specification. Where the code differs from the literature, the page states the published
+  definition, the table marks the function "differs" with its task, and the spec test is
+  `xfail(strict=True)`. Done: `fixation.md` (`tests/test_fixation_equations.py`, references in
+  `tests/theory_reference.py`); the estimator docstrings said "generations" for elementary updates.
