@@ -13,7 +13,7 @@ import pytest
 import egttools as egt
 from egttools.analytical import PairwiseComparison, StochDynamics
 from egttools.numerical import PairwiseComparisonNumerical
-from stats_helpers import assert_detects, assert_within_k_se
+from stats_helpers import DEFAULT_K, assert_detects, assert_within_k_se
 from theory_reference import (absorbing_chain, edge_state, fitness_n_player, fitness_two_player,
                               fixation_probability, log_fixation_probability)
 
@@ -131,6 +131,13 @@ BETA_MC = 1.3
 WRONG_BETA = 0.6
 
 
+def assert_power_margin(exact, wrong_exact, se, label):
+    """The wrong value must be at least 2k standard errors from the exact one, so that an estimate
+    within k SE of the exact value is outside k SE of the wrong one whatever the seed."""
+    separation = np.max(np.abs(np.asarray(wrong_exact) - np.asarray(exact)) / np.asarray(se))
+    assert separation >= 2 * DEFAULT_K, f"{label}: wrong value only {separation:.1f} SE away"
+
+
 @pytest.fixture
 def numerical_two_player():
     egt.Random.init_with_seed(3610063510)
@@ -144,9 +151,11 @@ def test_estimate_fixation_probability_matches_definition_2_2(numerical_two_play
     for a, b in [(0, 1), (2, 0)]:
         exact = fixation_probability(fit, Z, 3, a, b, BETA_MC)
         se = np.sqrt(exact * (1 - exact) / runs)
+        wrong = fixation_probability(fit, Z, 3, a, b, WRONG_BETA)
+        assert_power_margin(exact, wrong, se, f"rho({a} -> {b})")
         estimate = evolver.estimate_fixation_probability(a, b, runs, 10 ** 7, BETA_MC)
         assert_within_k_se(estimate, exact, se, label=f"rho({a} -> {b})")
-        assert_detects(estimate, fixation_probability(fit, Z, 3, a, b, WRONG_BETA), se)
+        assert_detects(estimate, wrong, se)
 
 
 def test_estimate_fixation_probability_discards_runs_that_are_not_absorbed(numerical_two_player):
@@ -161,10 +170,12 @@ def test_estimate_absorption_probabilities_matches_definition_3_3(numerical_two_
     start = np.array([3, 3, 3])
     exact = _absorbing_row(fit, start, BETA_MC)[0]
     se = np.sqrt(exact * (1 - exact) / runs)
+    wrong = _absorbing_row(fit, start, WRONG_BETA)[0]
+    assert_power_margin(exact, wrong, se, "B(3, 3, 3)")
     estimate = evolver.estimate_absorption_probabilities(BETA_MC, start, runs)
     assert estimate.sum() == pytest.approx(1.0)
     assert_within_k_se(estimate, exact, se, label="B(3, 3, 3)")
-    assert_detects(estimate, _absorbing_row(fit, start, WRONG_BETA)[0], se)
+    assert_detects(estimate, wrong, se)
 
 
 def test_estimate_mean_absorption_time_matches_definition_3_3(numerical_two_player):
@@ -173,9 +184,13 @@ def test_estimate_mean_absorption_time_matches_definition_3_3(numerical_two_play
     start = np.array([3, 3, 3])
     _, mean_time, variance = _absorbing_row(fit, start, BETA_MC)
     se = np.sqrt(variance / runs)
+    # The mean time changes slowly with beta here (beta = 0.6 is only 4 SE away with 5000 runs), so
+    # the wrong value is the neutral process, beta = 0 (15.5 SE away).
+    wrong = _absorbing_row(fit, start, 0.0)[1]
+    assert_power_margin(mean_time, wrong, se, "t(3, 3, 3)")
     result = evolver.estimate_mean_absorption_time(BETA_MC, start, runs)
     assert_within_k_se(result["mean"], mean_time, se, label="t(3, 3, 3)")
-    assert_detects(result["mean"], _absorbing_row(fit, start, WRONG_BETA)[1], se)
+    assert_detects(result["mean"], wrong, se)
     # The reported standard error estimates the exact one.
     assert result["stderr"] == pytest.approx(se, rel=0.15)
 
