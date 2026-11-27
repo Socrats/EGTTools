@@ -35,4 +35,10 @@ narrative documentation. GitHub: #84.
   that specification. Where the code differs from the literature, the page states the published
   definition, the table marks the function "differs" with its task, and the spec test is
   `xfail(strict=True)`. Done: `fixation.md` (`tests/test_fixation_equations.py`, references in
-  `tests/theory_reference.py`); the estimator docstrings said "generations" for elementary updates.
+  `tests/theory_reference.py`); the estimator docstrings said "generations" for elementary updates. `small_mutation_limit.md`
+  (`tests/test_sml_equations.py`): all implementations match. The log-space SML matrix matters in
+  coordination games under strong selection: every rho is below the rounding unit of the diagonal,
+  so the plain T has T_ii = 1 exactly and its stationary distribution is wrong (tested). Reference
+  stationary distribution in 60-digit `decimal` from log rho, building T - I directly.
+  `utils.calculate_stationary_distribution` (eig) is ~5e-10 accurate at beta = 5000. User rule:
+  numerical mechanics stay in tests/roadmap; pages name the technique only.
