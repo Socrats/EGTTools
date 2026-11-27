@@ -7,8 +7,8 @@
 | src/egttools/\_\_init\_\_.py                                    |       60 |       26 |     57% |8-9, 28-29, 36-51, 56-63, 67-68 |
 | src/egttools/\_min\_dependencies.py                             |       16 |       16 |      0% |      6-60 |
 | src/egttools/analytical/\_\_init\_\_.py                         |        6 |        2 |     67% |       7-8 |
-| src/egttools/analytical/sed\_analytical.py                      |      245 |       21 |     91% |62-63, 94-107, 228-229, 606, 650, 730, 758, 838 |
-| src/egttools/analytical/utils.py                                |      117 |       26 |     78% |62, 107, 171, 191, 237-277, 304 |
+| src/egttools/analytical/sed\_analytical.py                      |      247 |       21 |     91% |65-66, 97-110, 238-239, 616, 660, 740, 768, 848 |
+| src/egttools/analytical/utils.py                                |      120 |       26 |     78% |63, 108, 172, 195, 241-281, 308 |
 | src/egttools/behaviors/CPR/abstract\_cpr\_strategy.py           |       23 |        7 |     70% |7, 13, 17, 21, 25, 29, 32 |
 | src/egttools/behaviors/CPR/cpr\_strategies.py                   |      139 |       22 |     84% |26-27, 30, 35, 38, 41, 44, 47, 50, 76, 79, 102, 105, 116, 128, 131, 162, 165, 191, 194, 220, 223 |
 | src/egttools/behaviors/CRD/\_\_init\_\_.py                      |        8 |        2 |     75% |       6-7 |
@@ -47,7 +47,7 @@
 | src/egttools/plotting/simplex3d.py                              |      346 |       23 |     93% |42-43, 57, 139, 193, 257, 579, 591, 597, 603, 607, 649, 751, 765, 771, 778, 782, 824, 841, 941, 952, 1190, 1202 |
 | src/egttools/plotting/simplified.py                             |      188 |       24 |     87% |57, 91-92, 98, 106, 112, 119, 127, 145, 151, 173, 191, 271, 274, 416, 419, 421, 427, 433, 486, 489, 491, 497, 500 |
 | src/egttools/utils.py                                           |      126 |       25 |     80% |65-66, 68-69, 77, 83, 141, 147, 214, 383-384, 423-429, 450-454, 458-462 |
-| **TOTAL**                                                       | **3324** | **1142** | **66%** |           |
+| **TOTAL**                                                       | **3329** | **1142** | **66%** |           |
 
 2 empty files skipped.
 
