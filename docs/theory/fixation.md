@@ -127,8 +127,6 @@ exponentially with $Z$ under strong selection in coexistence games (Antal & Sche
 | `egttools.analytical.PairwiseComparison.calculate_fixation_probability` | 2.2, 2.3 | verified |
 | `egttools.analytical.PairwiseComparison.calculate_fixation_probability(..., high_precision=True)` | 2.2, 2.3 | verified |
 | `egttools.analytical.PairwiseComparison.calculate_log_fixation_probability` | 2.3 | verified |
-| `egttools.analytical.StochDynamics.fixation_probability` | 2.2, 2.3 | verified |
-| `egttools.analytical.StochDynamics.log_fixation_probability` | 2.3 | verified |
 | `egttools.numerical.PairwiseComparisonNumerical.estimate_fixation_probability` | 4.1 | verified |
 | `egttools.numerical.PairwiseComparisonNumerical.estimate_absorption_probabilities` | 4.2 | verified |
 | `egttools.numerical.PairwiseComparisonNumerical.estimate_mean_absorption_time` | 4.3 | verified |

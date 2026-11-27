@@ -130,8 +130,6 @@ individuals of one strategy.
 | `egttools.analytical.PairwiseComparison.calculate_transition_matrix` | 4.1 | verified |
 | `egttools.analytical.PairwiseComparison.calculate_gradient_of_selection` | 5.1, $\mu = 0$ | verified |
 | `egttools.analytical.PairwiseComparison.calculate_gradient_of_selection_with_mutation` | 5.1 | verified |
-| `egttools.analytical.StochDynamics.full_gradient_selection` | 5.1 | verified |
-| `egttools.analytical.StochDynamics.full_gradient_selection_without_mutation` | 5.1, $\mu = 0$ | verified |
 | `egttools.numerical.PairwiseComparisonNumerical.run_with_mutation` | 3.2 | verified |
 | `egttools.numerical.PairwiseComparisonNumerical.estimate_stationary_distribution{,_sparse}` | 3.2 | verified |
 | `egttools.numerical.PairwiseComparisonNumerical.estimate_strategy_distribution` | 3.2 | verified |

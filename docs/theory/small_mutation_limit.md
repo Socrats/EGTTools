@@ -74,16 +74,9 @@ Node sizes or labels show $\pi$ (Definition 3.1).
 |----------|------------|--------|
 | `egttools.analytical.PairwiseComparison.calculate_transition_and_fixation_matrix_sml` | 2.1, 2.2 | verified |
 | `egttools.analytical.PairwiseComparison.calculate_transition_and_log_fixation_matrix_sml` | 2.3 | verified |
-| `egttools.analytical.StochDynamics.transition_and_fixation_matrix` | 2.1, 2.2 | verified; returns $T^\top$ (API-06) |
-| `egttools.analytical.StochDynamics.transition_and_log_fixation_matrix` | 2.3 | verified; returns $(T^{(c)})^\top$ (API-06) |
-| `egttools.analytical.StochDynamics.calculate_stationary_distribution` (with `mu = 0`) | 3.1 | verified |
 | `egttools.utils.calculate_stationary_distribution` (input $T^\top$) | 3.1 | verified |
 | `egttools.utils.calculate_stationary_distribution_non_hermitian` (input $T^\top$) | 3.1 | verified |
 | `egttools.plotting.invasion_graph` | 4.1 | verified (`tests/test_invasion_diagram.py`) |
-
-`StochDynamics` returns the transposed (column-stochastic) matrices, while `PairwiseComparison`
-returns row-stochastic ones; API-06 makes them consistent. With `mu > 0`,
-`StochDynamics.calculate_stationary_distribution` solves the full chain of PC 4.1 instead.
 
 "Verified" means agreement with a direct transcription for two-player and three-player games
 with three and four strategies and $\beta$ from 0 to strong selection; Theorem 1.1 is checked on

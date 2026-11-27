@@ -65,8 +65,7 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   docstring said, and `estimate_fixation_probability` discards runs that are not absorbed within
   `nb_generations` updates. No results change.
 - **Documentation:** a theory page for the *small-mutation limit*: the reduced chain on the
-  homogeneous states (and its log-space form), its stationary distribution, and the invasion graph,
-  with the orientation each function returns (`StochDynamics` returns the transposed matrices).
+  homogeneous states (and its log-space form), its stationary distribution, and the invasion graph.
 
 ### Changes to numerical results
 
