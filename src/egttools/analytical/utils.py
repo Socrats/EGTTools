@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with EGTtools.  If not, see <http://www.gnu.org/licenses/>
+import warnings
 from typing import Tuple, List, Callable
 
 import numpy
@@ -169,7 +170,10 @@ def check_if_there_is_random_drift(
     else:
         if beta is None:
             raise Exception("the beta parameter must be specified!")
-        evolver = StochDynamics(payoff_matrix.shape[0], payoff_matrix, population_size, group_size)
+        # Internal use of the deprecated class: the caller did not choose it, so no warning.
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message="StochDynamics is deprecated", category=DeprecationWarning)
+            evolver = StochDynamics(payoff_matrix.shape[0], payoff_matrix, population_size, group_size)
 
         def gradient_function(i, j, x):
             return evolver.gradient_selection(np.floor(x * population_size).astype(np.int64),

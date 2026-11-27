@@ -141,3 +141,21 @@ def test_prob_increase_decrease_with_mutation(test_analytical_fitness_calculatio
 
     assert np.isclose(prob_increase, 0)
     assert np.isclose(prob_decrease, mu)
+
+
+def test_stoch_dynamics_is_deprecated():
+    """Constructing StochDynamics warns, and the warning points at the caller's line."""
+    import warnings
+
+    import pytest
+
+    with pytest.warns(DeprecationWarning, match="use egttools.analytical.PairwiseComparison") as record:
+        StochDynamics(2, np.array([[1.0, 0.0], [0.0, 1.0]]), 10)
+    assert record[0].filename == __file__
+
+    # Library code that still uses it internally does not warn on the caller's behalf.
+    from egttools.analytical.utils import check_if_there_is_random_drift
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        check_if_there_is_random_drift(np.array([[1.0, 0.0], [0.0, 1.0]]), group_size=2, population_size=10,
+                                       beta=1.0, nb_points=5)

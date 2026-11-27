@@ -31,6 +31,9 @@ from typing import Tuple, Optional
 from warnings import warn
 from .. import sample_simplex, calculate_nb_states, calculate_state
 
+STOCH_DYNAMICS_DEPRECATION = ("StochDynamics is deprecated and will be removed in a future release; use "
+                              "egttools.analytical.PairwiseComparison, which computes the same quantities.")
+
 
 def replicator_equation(
         x: npt.NDArray[np.float64],
@@ -110,6 +113,12 @@ def replicator_equation_n_player(
 class StochDynamics:
     """A class containing methods to calculate the stochastic evolutionary dynamics of a population.
 
+    .. deprecated:: 0.3.0
+        ``StochDynamics`` will be removed in a future release. Use
+        :class:`egttools.analytical.PairwiseComparison`, implemented in C++, which computes the same
+        quantities (fixation probabilities, small-mutation-limit and full transition matrices,
+        gradients of selection) and is documented on the theory pages.
+
     Defines a class that contains methods to compute the stationary distribution for
     the limit of small mutation (only the monomorphic states) and the full transition matrix.
 
@@ -186,6 +195,7 @@ class StochDynamics:
     """
 
     def __init__(self, nb_strategies: int, payoffs: np.ndarray, pop_size: int, group_size=2, mu=0) -> None:
+        warn(STOCH_DYNAMICS_DEPRECATION, DeprecationWarning, stacklevel=2)
         self.nb_strategies = nb_strategies
         self.payoffs = payoffs
         self.pop_size = pop_size
