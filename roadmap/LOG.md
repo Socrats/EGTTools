@@ -2,6 +2,7 @@
 
 Newest first. One line per change: `YYYY-MM-DD · ID · what happened`.
 
+- 2026-11-27 · DOC-12 · Part 1 merged (`017cd6f4`): theory pages for fixation and the small-mutation limit, with spec tests; Moran and network pages follow with NET-01.
 - 2026-11-24 · SOL-12, SOL-13, SOL-14 · Added: exact absorption probabilities and times, fixation and sojourn times, and mean first-passage times (0.4). README v0.4.0 count recounted: 35 (it said 33 with 32 tasks).
 - 2026-11-22 · TEST-09 · Merged (`60e23e06`): Tests (incl. sanitizer job), Wheels and Conda Build green. Phase 1 complete.
 - 2026-11-21 · TEST-09 · Review (branch `test-09-catch2`): one Catch2 program, 73 test cases against independent references; tests off by default, Catch2 from the vcpkg feature `tests`. Local: 73 C++ (4 expected failures for known bugs) and 779 Python tests pass.
