@@ -64,6 +64,9 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   updates (one imitation step; a generation is `pop_size` updates), not generations as the
   docstring said, and `estimate_fixation_probability` discards runs that are not absorbed within
   `nb_generations` updates. No results change.
+- **Documentation:** a theory page for the *small-mutation limit*: the reduced chain on the
+  homogeneous states (and its log-space form), its stationary distribution, and the invasion graph,
+  with the orientation each function returns (`StochDynamics` returns the transposed matrices).
 
 ### Changes to numerical results
 
@@ -121,6 +124,9 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   enough for the probability to underflow, and the three estimators against exact absorbing-chain
   results within four standard errors. The transcriptions shared by the spec tests are in
   `tests/theory_reference.py`.
+- Spec tests for the small-mutation-limit page (`tests/test_sml_equations.py`), including the
+  log-space matrices under strong selection (against a high-precision solution) and the convergence
+  of the full chain to the small-mutation limit as the mutation probability goes to 0.
 - **The C++ tests use Catch2 v3.** The 23 test programs, 15 of which only printed results, are now
   one program, `egttools_tests`, with 73 test cases, each a separate CTest test. Every test case
   checks its results against an independent reference: the definitions in

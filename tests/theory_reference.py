@@ -100,12 +100,8 @@ def log_fixation_probability(fit, z, k, a, b, beta):
     return -np.logaddexp(0.0, np.logaddexp.reduce(partial_sums))
 
 
-def absorbing_chain(fit, z, k, beta):
-    """F 3.3: absorption probabilities B, mean absorption time t and Var[tau] for every transient state.
-
-    The transition matrix is assembled from PC 4.1 (mu = 0) state by state. Returns the transient
-    states (as rows) and B (one column per strategy), t and Var[tau] in the same order.
-    """
+def full_transition_matrix(fit, z, k, beta, mu):
+    """PC 4.1 assembled state by state (row-stochastic, rows = from), with the states of all_states."""
     states = all_states(z, k)
     index = {tuple(n): i for i, n in enumerate(states)}
     p = np.zeros((len(states), len(states)))
@@ -114,8 +110,19 @@ def absorbing_chain(fit, z, k, beta):
         for j, l in itertools.permutations(range(k), 2):
             if n[j] == 0:
                 continue
-            p[i, index[tuple(n - np.eye(k, dtype=int)[j] + np.eye(k, dtype=int)[l])]] += transition(n, j, l, f, beta, 0.0)
+            p[i, index[tuple(n - np.eye(k, dtype=int)[j] + np.eye(k, dtype=int)[l])]] += transition(n, j, l, f, beta, mu)
         p[i, i] = 1.0 - p[i].sum()
+    return states, p
+
+
+def absorbing_chain(fit, z, k, beta):
+    """F 3.3: absorption probabilities B, mean absorption time t and Var[tau] for every transient state.
+
+    Returns the transient states (as rows) and B (one column per strategy), t and Var[tau] in the
+    same order.
+    """
+    states, p = full_transition_matrix(fit, z, k, beta, 0.0)
+    index = {tuple(n): i for i, n in enumerate(states)}
     homogeneous = [index[tuple(z * np.eye(k, dtype=int)[l])] for l in range(k)]
     transient = [i for i in range(len(states)) if i not in homogeneous]
     q = p[np.ix_(transient, transient)]
@@ -124,3 +131,60 @@ def absorbing_chain(fit, z, k, beta):
     t = fundamental @ np.ones(len(transient))
     variance = (2 * fundamental - np.eye(len(transient))) @ t - t * t
     return states[transient], fundamental @ r, t, variance
+
+
+# ---------------------------------------------------------------------------
+# docs/theory/small_mutation_limit.md (cited as S 2.1, S 2.2, ...)
+# ---------------------------------------------------------------------------
+
+def sml_fixation_matrix(fit, z, k, beta):
+    """S 2.1: entry [i, j] is rho_{j -> i}, the fixation of one j-mutant among i-residents (F 2.2)."""
+    rho = np.zeros((k, k))
+    for i, j in itertools.permutations(range(k), 2):
+        rho[i, j] = fixation_probability(fit, z, k, j, i, beta)
+    return rho
+
+
+def sml_log_fixation_matrix(fit, z, k, beta):
+    """S 2.3: entry [i, j] is log rho_{j -> i}, from F 2.2 in log form; 0 on the diagonal."""
+    log_rho = np.zeros((k, k))
+    for i, j in itertools.permutations(range(k), 2):
+        log_rho[i, j] = log_fixation_probability(fit, z, k, j, i, beta)
+    return log_rho
+
+
+def sml_transition_matrix(rho):
+    """S 2.2: T_ij = rho_ij / (k - 1) for i != j, rows summing to 1 (row-stochastic, rows = from)."""
+    k = rho.shape[0]
+    t = rho / (k - 1)
+    np.fill_diagonal(t, 0.0)
+    np.fill_diagonal(t, 1.0 - t.sum(axis=1))
+    return t
+
+
+def stationary_distribution_decimal(log_rho, precision=60):
+    """S 3.1 solved exactly enough for any selection strength: pi T = pi with T from S 2.2, in
+    decimal arithmetic with `precision` digits, from log rho (so no entry under- or overflows).
+    Returns the distribution as floats (entries below the double range become 0)."""
+    from decimal import Decimal, localcontext
+
+    k = log_rho.shape[0]
+    with localcontext() as context:
+        context.prec = precision
+        context.Emin, context.Emax = -10 ** 9, 10 ** 9
+        # T - I directly: off-diagonal T_ij = rho_ij / (k - 1), diagonal minus the row sum, so no
+        # 1 - (tiny) is ever formed. (T^T - I) pi = 0 with the last equation replaced by sum(pi) = 1.
+        t = [[Decimal(float(log_rho[i, j])).exp() / (k - 1) if i != j else Decimal(0) for j in range(k)]
+             for i in range(k)]
+        for i in range(k):
+            t[i][i] = -sum(t[i])
+        a = [[t[j][i] for j in range(k)] + [Decimal(0)] for i in range(k)]
+        a[-1] = [Decimal(1)] * k + [Decimal(1)]
+        for col in range(k):
+            pivot = max(range(col, k), key=lambda r: abs(a[r][col]))
+            a[col], a[pivot] = a[pivot], a[col]
+            for r in range(k):
+                if r != col and a[r][col] != 0:
+                    factor = a[r][col] / a[col][col]
+                    a[r] = [x - factor * y for x, y in zip(a[r], a[col])]
+        return np.array([float(a[i][k] / a[i][i]) for i in range(k)])

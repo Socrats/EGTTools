@@ -65,27 +65,10 @@ $$
 
 Under neutral selection ($\beta = 0$ or $\Delta f \equiv 0$), $\rho_{a \to b} = 1/Z$.
 
-**Definition 2.3 (Computation in log space).** $\rho_{a \to b}$ underflows for strong
-selection against the invader, and the terms $e^{L_m}$ overflow for strong selection in its
-favour. EGTtools therefore computes
-
-$$
-\Lambda = \log \sum_{m=1}^{Z-1} e^{L_m}
-$$
-
-with a streaming log-sum-exp (each term is scaled by the running maximum of the $L_m$), and
-returns
-
-$$
-\rho_{a \to b} = \frac{1}{1 + e^{\Lambda}}, \qquad
-\log \rho_{a \to b} = -\log\big(1 + e^{\Lambda}\big) ,
-$$
-
-the latter evaluated as $-\Lambda - \log(1 + e^{-\Lambda})$ for $\Lambda \ge 0$ and as
-$-\log(1 + e^{\Lambda})$ otherwise, so it is finite for any $\Lambda$. The sums are not
-truncated: fitness landscapes that are not monotone in $i$ (e.g. coordination games) need
-every term. The high-precision variant evaluates the same expression in 50-digit decimal
-arithmetic.
+**Definition 2.3 (Computation in log space).** EGTtools computes
+$\Lambda = \log \sum_{m=1}^{Z-1} e^{L_m}$ with log-sum-exp and returns
+$\rho_{a \to b} = 1 / (1 + e^{\Lambda})$ and $\log \rho_{a \to b} = -\log(1 + e^{\Lambda})$.
+The high-precision variant evaluates the same expression in 50-digit decimal arithmetic.
 
 ## 3. Absorption with several strategies
 
@@ -134,9 +117,8 @@ $Z \mathbf e_l$.
 a limit; the estimate of $t(\mathbf n)$ is the mean of $\tau(\mathbf n)$ over the runs, with
 its standard error (sample standard deviation over $\sqrt{\text{runs}}$).
 
-Runs of Definitions 4.2 and 4.3 have no step limit. Under strong selection in coexistence
-games the mean absorption time grows exponentially with $Z$ (Antal & Scheuring 2006), so a
-single run can take very long.
+Runs of Definitions 4.2 and 4.3 have no step limit, and the absorption time can grow
+exponentially with $Z$ under strong selection in coexistence games (Antal & Scheuring 2006).
 
 ## Implementations
 
@@ -151,12 +133,9 @@ single run can take very long.
 | `egttools.numerical.PairwiseComparisonNumerical.estimate_absorption_probabilities` | 4.2 | verified |
 | `egttools.numerical.PairwiseComparisonNumerical.estimate_mean_absorption_time` | 4.3 | verified |
 
-"Verified" means, for the exact functions, agreement with a direct transcription of the
-definition to floating-point precision for two-player and three-player games, every pair of
-strategies, and $\beta$ from 0 to strong selection, including values where $\rho$
-underflows; for the estimators, agreement with Propositions 2.2 and 3.3 within four standard errors
-(the default of `tests/stats_helpers.py`), with fixed seeds, and rejection of the exact value
-for a different $\beta$ by the same check.
+"Verified" means agreement with a direct transcription for two-player and three-player games,
+every pair of strategies and $\beta$ from 0 to strong selection; the estimators agree with
+Propositions 2.2 and 3.3 within four standard errors, with fixed seeds.
 
 The fixation probabilities on networks (`egttools.numerical.structure`) follow a different
 process and are specified on the networks page.

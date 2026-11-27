@@ -9,4 +9,5 @@ the definitions.
 
 pairwise_comparison
 fixation
+small_mutation_limit
 ```
