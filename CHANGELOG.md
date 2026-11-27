@@ -55,6 +55,18 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
   resident, malformed states) raise `ValueError`. `PairwiseComparisonNumerical.estimate_fixation_probability`
   used to raise `ValueError` for an out-of-range index.
 
+- **Documentation:** a new theory page, *Fixation and absorption*, specifies the fixation
+  probability of a single invader (closed form and its log-space computation), absorption
+  probabilities and absorption times with several strategies, and the Monte Carlo estimators of
+  these quantities, and lists the functions that implement each definition. The docstrings of
+  `estimate_fixation_probability`, `estimate_absorption_probabilities` and
+  `estimate_mean_absorption_time` now say what they compute: times are counted in elementary
+  updates (one imitation step; a generation is `pop_size` updates), not generations as the
+  docstring said, and `estimate_fixation_probability` discards runs that are not absorbed within
+  `nb_generations` updates. No results change.
+- **Documentation:** a theory page for the *small-mutation limit*: the reduced chain on the
+  homogeneous states (and its log-space form), its stationary distribution, and the invasion graph.
+
 ### Changes to numerical results
 
 - **`egttools::binomial_precision` (C++ API).** The intermediate product overflowed 128 bits from
@@ -106,6 +118,14 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 - CI runs the C++ tests under AddressSanitizer (with leak detection) and
   UndefinedBehaviorSanitizer on Linux with clang. The CMake target `egttools_cpp_tests` builds
   every C++ test program registered on the platform.
+- Spec tests for the fixation page (`tests/test_fixation_equations.py`) check every fixation
+  function against a direct transcription of its definition, including under selection strong
+  enough for the probability to underflow, and the three estimators against exact absorbing-chain
+  results within four standard errors. The transcriptions shared by the spec tests are in
+  `tests/theory_reference.py`.
+- Spec tests for the small-mutation-limit page (`tests/test_sml_equations.py`), including the
+  log-space matrices under strong selection (against a high-precision solution) and the convergence
+  of the full chain to the small-mutation limit as the mutation probability goes to 0.
 - **The C++ tests use Catch2 v3.** The 23 test programs, 15 of which only printed results, are now
   one program, `egttools_tests`, with 73 test cases, each a separate CTest test. Every test case
   checks its results against an independent reference: the definitions in

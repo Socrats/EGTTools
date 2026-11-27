@@ -1741,6 +1741,30 @@ numpy.ndarray
                     R"pbdoc(
 Estimate the fixation probability of an invading strategy in a resident population.
 
+Each run starts from one invader and ``pop_size - 1`` residents and simulates the process
+without mutation for at most ``nb_generations`` elementary updates (one imitation step each;
+a generation is ``pop_size`` updates). Runs that are not absorbed within that limit are
+discarded; the estimate is the fraction of the remaining runs in which the invader fixed, or 0
+if every run was discarded. See Definition 4.1 of the fixation theory page.
+
+Parameters
+----------
+index_invading_strategy : int
+    Index of the invading strategy.
+index_resident_strategy : int
+    Index of the resident strategy.
+nb_runs : int
+    Number of independent runs.
+nb_generations : int
+    Maximum number of elementary updates per run.
+beta : float
+    Intensity of selection.
+
+Returns
+-------
+float
+    Estimated fixation probability.
+
 Raises
 ------
 IndexError
@@ -1770,8 +1794,10 @@ ValueError
                     R"pbdoc(
 Estimate the mean absorption time (fixation time) from a given initial state.
 
-Runs independent trajectories of the mutation-free Moran process from ``init_state``
-and counts generations until any strategy reaches ``pop_size``.
+Runs independent trajectories of the pairwise comparison process without mutation from
+``init_state`` and counts the elementary updates (one imitation step each; a generation is
+``pop_size`` updates) until any strategy reaches ``pop_size``. Runs have no step limit. See
+Definition 4.3 of the fixation theory page.
 
 Parameters
 ----------
@@ -1803,8 +1829,9 @@ dict with keys ``"mean"`` (float), ``"stderr"`` (float), ``"nb_runs"`` (int).
                     R"pbdoc(
 Estimate the absorption probability for each strategy from a given initial state.
 
-Runs independent trajectories of the mutation-free Moran process from ``init_state``
-and records which strategy fixed in each run. Generalises
+Runs independent trajectories of the pairwise comparison process without mutation from
+``init_state`` until absorption (no step limit) and records which strategy fixed in each run.
+See Definition 4.2 of the fixation theory page. Generalises
 ``estimate_fixation_probability`` to k > 2 strategies.
 
 Parameters
