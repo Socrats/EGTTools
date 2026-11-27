@@ -20,8 +20,17 @@ abruptly.
 | API-11 | Audit the pybind11 bindings' declared types: argument types and conversions, returned dtypes, Eigen `Ref` vs copies, overloads, defaults, argument names, GIL release | todo | P1 | L | 0.3 | MEM-10 | — |
 | API-12 | Replace the unprefixed macros in `Distributions.h` (`int_type_`, `uint_type_`, `float_type_`, `binomial_coeff_`, `CONVERT_TO_`) with type aliases and functions in `egttools::` | todo | P3 | S | 0.4 | CI-15 | — |
 | API-13 | `NPlayerStagHunt` (C++ and Python): defectors in mixed groups get k F / N instead of k F c / N; fix the payoffs and the docstring (copied from `OneShotCRD`) | todo | P1 | S | 0.3 | TEST-09 | — |
+| API-14 | Deprecate `StochDynamics` (Python, legacy): `DeprecationWarning` on construction, docs point to `PairwiseComparison` | done | P2 | S | 0.3 | — | — |
 
 ## Notes
+
+- **API-14**: decided 2026-11-27: `StochDynamics` is kept only for backward compatibility and is
+  no longer listed on the theory pages. The warning uses `stacklevel=2`, so it names the caller's
+  line; `analytical.utils.check_if_there_is_random_drift` still builds one internally (with
+  `population_size`) and suppresses the warning. Its spec tests stay; pytest ignores the warning
+  except in `test_stoch_dynamics_is_deprecated`. The example notebooks still use it (DOC-14 should
+  move them to `PairwiseComparison`). Removal (later): port the drift helper, drop the class, and
+  API-06 then only needs a CHANGELOG note.
 
 - **API-13**: Pacheco, Santos, Souza & Skyrms 2009 (Proc. R. Soc. B 276, 315): Pi_D(k) =
   k F c / N theta(k - M), Pi_C(k) = Pi_D(k) - c. `NPlayerStagHunt::play` (and the Python class in

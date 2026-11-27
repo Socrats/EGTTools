@@ -173,3 +173,6 @@ markers = [
     "slow: marks tests as slow (run with -m slow)",
 ]
 doctest_optionflags = ["NORMALIZE_WHITESPACE", "ELLIPSIS"]
+# The legacy StochDynamics is still tested for backward compatibility; its deprecation warning is
+# checked once in tests/test_stoch_dynamics.py.
+filterwarnings = ["ignore:StochDynamics is deprecated:DeprecationWarning"]

@@ -7,6 +7,15 @@ to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Deprecated
+
+- `egttools.analytical.StochDynamics` is deprecated and will be removed in a future release; it
+  now emits a `DeprecationWarning` when constructed. Use `egttools.analytical.PairwiseComparison`
+  (implemented in C++), which computes the same quantities: fixation probabilities,
+  small-mutation-limit and full transition matrices, and gradients of selection. Nothing else
+  changes. Note that `StochDynamics` returns column-stochastic (transposed) transition matrices,
+  while `PairwiseComparison` returns row-stochastic ones.
+
 ### Fixed
 
 - **Invalid arguments from Python are rejected instead of giving garbage or crashing.**

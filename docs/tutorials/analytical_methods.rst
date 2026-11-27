@@ -140,10 +140,9 @@ Analytical Models in EGTtools
 All these analytical results are implemented in:
 
 - `egttools.analytical.PairwiseComparison`
-- `egttools.analytical.StochDynamics` *(legacy, slower)*
+- `egttools.analytical.StochDynamics` *(deprecated since 0.3.0; will be removed)*
 
-We recommend using `PairwiseComparison`, which is optimized in C++.
-(`StochDynamics` may be deprecated in future releases.)
+Use `PairwiseComparison`, which is implemented in C++.
 
 **Methods in `PairwiseComparison`:**
 
