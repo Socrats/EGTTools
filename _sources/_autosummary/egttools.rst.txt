@@ -1,0 +1,70 @@
+﻿egttools
+========
+
+.. automodule:: egttools
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      calculate_expected_group_success
+      calculate_expected_indicator
+      calculate_expected_indicators
+      calculate_expected_indicators_precomputed
+      calculate_expected_payoff
+      calculate_expected_state_indicator
+      calculate_expected_state_indicators
+      calculate_expected_state_indicators_precomputed
+      calculate_hypergeometric_expected_value
+      calculate_hypergeometric_fitness
+      calculate_nb_states
+      calculate_state
+      calculate_strategies_distribution
+      files
+      is_arpack_enabled
+      is_blas_lapack_enabled
+      is_boost_enabled
+      is_openmp_enabled
+      is_petsc_enabled
+      precompute_group_to_state_indicator_matrix
+      sample_simplex
+      sample_unit_simplex
+      show_build_info
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. autosummary::
+      :toctree:
+      :template: custom-module-template.rst
+      :recursive:
+   
+      analytical
+      behaviors
+      datastructures
+      distributions
+      games
+      helpers
+      numerical
+      plotting
+      utils
+   
+   

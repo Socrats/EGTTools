@@ -1,0 +1,6 @@
+egttools.numerical.numerical\_.sample\_unit\_simplex
+====================================================
+
+.. currentmodule:: egttools.numerical.numerical_
+
+.. autofunction:: sample_unit_simplex

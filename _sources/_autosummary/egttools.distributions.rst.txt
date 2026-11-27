@@ -1,0 +1,46 @@
+egttools.distributions
+======================
+
+.. automodule:: egttools.distributions
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      binom
+      comb
+      multinomial_pmf
+      multivariate_hypergeometric_pdf
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      TimingUncertainty
+   
+   
+
+   
+   
+   
+
+   
+   
+   

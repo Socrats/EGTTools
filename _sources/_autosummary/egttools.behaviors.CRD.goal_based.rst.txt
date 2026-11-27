@@ -1,0 +1,36 @@
+egttools.behaviors.CRD.goal\_based
+==================================
+
+.. automodule:: egttools.behaviors.CRD.goal_based
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AbstractCRDStrategy
+      GoalBasedCRDStrategy
+   
+   
+
+   
+   
+   
+
+   
+   
+   

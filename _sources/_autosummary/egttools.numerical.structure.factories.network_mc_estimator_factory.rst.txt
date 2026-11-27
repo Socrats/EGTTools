@@ -1,0 +1,6 @@
+egttools.numerical.structure.factories.network\_mc\_estimator\_factory
+======================================================================
+
+.. currentmodule:: egttools.numerical.structure.factories
+
+.. autofunction:: network_mc_estimator_factory

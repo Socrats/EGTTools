@@ -1,0 +1,6 @@
+egttools.plotting.simplex2d.xy\_to\_barycentric\_coordinates
+============================================================
+
+.. currentmodule:: egttools.plotting.simplex2d
+
+.. autofunction:: xy_to_barycentric_coordinates

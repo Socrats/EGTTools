@@ -1,0 +1,6 @@
+egttools.utils.sp\_identity
+===========================
+
+.. currentmodule:: egttools.utils
+
+.. autofunction:: sp_identity

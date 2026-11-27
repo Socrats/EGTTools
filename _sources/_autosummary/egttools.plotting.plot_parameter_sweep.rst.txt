@@ -1,0 +1,6 @@
+egttools.plotting.plot\_parameter\_sweep
+========================================
+
+.. currentmodule:: egttools.plotting
+
+.. autofunction:: plot_parameter_sweep

@@ -1,0 +1,44 @@
+egttools.numerical.structure.NetworkMCEstimatorDB
+=================================================
+
+.. currentmodule:: egttools.numerical.structure
+
+.. autoclass:: NetworkMCEstimatorDB
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~NetworkMCEstimatorDB.beta
+      ~NetworkMCEstimatorDB.calculate_gradient_of_selection
+      ~NetworkMCEstimatorDB.estimate_agos
+      ~NetworkMCEstimatorDB.estimate_agos_time_dependent
+      ~NetworkMCEstimatorDB.estimate_fixation_probability
+      ~NetworkMCEstimatorDB.estimate_strategy_distribution
+      ~NetworkMCEstimatorDB.initialize
+      ~NetworkMCEstimatorDB.mean_population_state
+      ~NetworkMCEstimatorDB.mu
+      ~NetworkMCEstimatorDB.nb_strategies
+      ~NetworkMCEstimatorDB.population_size
+      ~NetworkMCEstimatorDB.population_strategies
+      ~NetworkMCEstimatorDB.run
+      ~NetworkMCEstimatorDB.run_snapshots
+      ~NetworkMCEstimatorDB.set_beta
+      ~NetworkMCEstimatorDB.set_mu
+      ~NetworkMCEstimatorDB.step
+      ~NetworkMCEstimatorDB.topology
+   
+   
+
+   
+   
+   

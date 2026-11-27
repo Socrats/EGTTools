@@ -1,0 +1,6 @@
+egttools.utils.transform\_graph\_to\_dict\_of\_lists
+====================================================
+
+.. currentmodule:: egttools.utils
+
+.. autofunction:: transform_graph_to_dict_of_lists

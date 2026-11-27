@@ -1,0 +1,35 @@
+egttools.numerical.estimators.AbsorptionTimeResult
+==================================================
+
+.. currentmodule:: egttools.numerical.estimators
+
+.. autoclass:: AbsorptionTimeResult
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AbsorptionTimeResult.ci95
+      ~AbsorptionTimeResult.mean
+      ~AbsorptionTimeResult.stderr
+      ~AbsorptionTimeResult.nb_runs
+   
+   

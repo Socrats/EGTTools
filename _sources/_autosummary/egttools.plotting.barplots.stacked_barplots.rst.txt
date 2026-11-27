@@ -1,0 +1,6 @@
+egttools.plotting.barplots.stacked\_barplots
+============================================
+
+.. currentmodule:: egttools.plotting.barplots
+
+.. autofunction:: stacked_barplots

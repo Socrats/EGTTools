@@ -1,0 +1,6 @@
+egttools.plotting.indicators.invasion\_graph
+============================================
+
+.. currentmodule:: egttools.plotting.indicators
+
+.. autofunction:: invasion_graph

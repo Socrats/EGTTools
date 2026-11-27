@@ -1,0 +1,6 @@
+egttools.is\_openmp\_enabled
+============================
+
+.. currentmodule:: egttools
+
+.. autofunction:: is_openmp_enabled

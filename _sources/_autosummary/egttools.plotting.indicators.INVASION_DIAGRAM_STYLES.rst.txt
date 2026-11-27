@@ -1,0 +1,6 @@
+egttools.plotting.indicators.INVASION\_DIAGRAM\_STYLES
+======================================================
+
+.. currentmodule:: egttools.plotting.indicators
+
+.. autodata:: INVASION_DIAGRAM_STYLES

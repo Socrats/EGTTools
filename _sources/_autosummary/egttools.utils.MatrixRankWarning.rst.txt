@@ -1,0 +1,6 @@
+egttools.utils.MatrixRankWarning
+================================
+
+.. currentmodule:: egttools.utils
+
+.. autoexception:: MatrixRankWarning

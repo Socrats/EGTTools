@@ -1,0 +1,44 @@
+egttools.plotting.simplex3d
+===========================
+
+.. automodule:: egttools.plotting.simplex3d
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      barycentric_to_cartesian
+      gradient_to_cartesian
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      Simplex3D
+   
+   
+
+   
+   
+   
+
+   
+   
+   

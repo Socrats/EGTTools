@@ -1,0 +1,6 @@
+egttools.games.nonlinear\_games.calculate\_state
+================================================
+
+.. currentmodule:: egttools.games.nonlinear_games
+
+.. autofunction:: calculate_state

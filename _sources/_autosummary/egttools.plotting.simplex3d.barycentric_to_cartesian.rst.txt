@@ -1,0 +1,6 @@
+egttools.plotting.simplex3d.barycentric\_to\_cartesian
+======================================================
+
+.. currentmodule:: egttools.plotting.simplex3d
+
+.. autofunction:: barycentric_to_cartesian

@@ -1,0 +1,36 @@
+egttools.behaviors.CRD.moving\_average
+======================================
+
+.. automodule:: egttools.behaviors.CRD.moving_average
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AbstractCRDStrategy
+      MovingAverageCRDStrategy
+   
+   
+
+   
+   
+   
+
+   
+   
+   

@@ -1,0 +1,6 @@
+egttools.numerical.linear\_operator.eigs
+========================================
+
+.. currentmodule:: egttools.numerical.linear_operator
+
+.. autofunction:: eigs

@@ -1,0 +1,6 @@
+egttools.behaviors.CPR.cpr\_strategies.fair\_extraction
+=======================================================
+
+.. currentmodule:: egttools.behaviors.CPR.cpr_strategies
+
+.. autofunction:: fair_extraction

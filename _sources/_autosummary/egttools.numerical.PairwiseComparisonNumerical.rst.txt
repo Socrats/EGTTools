@@ -1,0 +1,52 @@
+egttools.numerical.PairwiseComparisonNumerical
+==============================================
+
+.. currentmodule:: egttools.numerical
+
+.. autoclass:: PairwiseComparisonNumerical
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~PairwiseComparisonNumerical.change_game
+      ~PairwiseComparisonNumerical.estimate_absorption_probabilities
+      ~PairwiseComparisonNumerical.estimate_fixation_probability
+      ~PairwiseComparisonNumerical.estimate_mean_absorption_time
+      ~PairwiseComparisonNumerical.estimate_stationary_distribution
+      ~PairwiseComparisonNumerical.estimate_stationary_distribution_sparse
+      ~PairwiseComparisonNumerical.estimate_stationary_indicators
+      ~PairwiseComparisonNumerical.estimate_stationary_indicators_precomputed
+      ~PairwiseComparisonNumerical.estimate_strategy_distribution
+      ~PairwiseComparisonNumerical.evolve
+      ~PairwiseComparisonNumerical.run
+      ~PairwiseComparisonNumerical.run_with_mutation
+      ~PairwiseComparisonNumerical.run_without_mutation
+      ~PairwiseComparisonNumerical.set_mutation_matrix
+      ~PairwiseComparisonNumerical.set_mutation_weights
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~PairwiseComparisonNumerical.cache_size
+      ~PairwiseComparisonNumerical.mutation_matrix
+      ~PairwiseComparisonNumerical.nb_states
+      ~PairwiseComparisonNumerical.nb_strategies
+      ~PairwiseComparisonNumerical.payoffs
+      ~PairwiseComparisonNumerical.pop_size
+   
+   

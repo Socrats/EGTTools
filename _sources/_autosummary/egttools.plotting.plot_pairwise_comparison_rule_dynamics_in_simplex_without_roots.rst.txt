@@ -1,0 +1,6 @@
+egttools.plotting.plot\_pairwise\_comparison\_rule\_dynamics\_in\_simplex\_without\_roots
+=========================================================================================
+
+.. currentmodule:: egttools.plotting
+
+.. autofunction:: plot_pairwise_comparison_rule_dynamics_in_simplex_without_roots

@@ -1,0 +1,44 @@
+egttools.numerical.structure.factories.NetworkMCEstimatorPC
+===========================================================
+
+.. currentmodule:: egttools.numerical.structure.factories
+
+.. autoclass:: NetworkMCEstimatorPC
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~NetworkMCEstimatorPC.beta
+      ~NetworkMCEstimatorPC.calculate_gradient_of_selection
+      ~NetworkMCEstimatorPC.estimate_agos
+      ~NetworkMCEstimatorPC.estimate_agos_time_dependent
+      ~NetworkMCEstimatorPC.estimate_fixation_probability
+      ~NetworkMCEstimatorPC.estimate_strategy_distribution
+      ~NetworkMCEstimatorPC.initialize
+      ~NetworkMCEstimatorPC.mean_population_state
+      ~NetworkMCEstimatorPC.mu
+      ~NetworkMCEstimatorPC.nb_strategies
+      ~NetworkMCEstimatorPC.population_size
+      ~NetworkMCEstimatorPC.population_strategies
+      ~NetworkMCEstimatorPC.run
+      ~NetworkMCEstimatorPC.run_snapshots
+      ~NetworkMCEstimatorPC.set_beta
+      ~NetworkMCEstimatorPC.set_mu
+      ~NetworkMCEstimatorPC.step
+      ~NetworkMCEstimatorPC.topology
+   
+   
+
+   
+   
+   

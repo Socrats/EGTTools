@@ -1,0 +1,6 @@
+egttools.plotting.helpers.find\_roots\_of\_lattice\_gradient
+============================================================
+
+.. currentmodule:: egttools.plotting.helpers
+
+.. autofunction:: find_roots_of_lattice_gradient

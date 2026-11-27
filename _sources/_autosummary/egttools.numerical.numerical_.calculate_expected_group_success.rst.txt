@@ -1,0 +1,6 @@
+egttools.numerical.numerical\_.calculate\_expected\_group\_success
+==================================================================
+
+.. currentmodule:: egttools.numerical.numerical_
+
+.. autofunction:: calculate_expected_group_success

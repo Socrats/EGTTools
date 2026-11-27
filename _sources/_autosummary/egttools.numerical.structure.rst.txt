@@ -1,0 +1,58 @@
+egttools.numerical.structure
+============================
+
+.. automodule:: egttools.numerical.structure
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      run_network_sweep
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      AbstractStructure
+      NetworkCoEvolutionaryPC
+      NetworkCoEvolutionaryPCHomophilic
+      NetworkEstimator
+      NetworkMCEstimatorBD
+      NetworkMCEstimatorDB
+      NetworkMCEstimatorLP
+      NetworkMCEstimatorPC
+      NetworkMCEstimatorTDPC
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. autosummary::
+      :toctree:
+      :template: custom-module-template.rst
+      :recursive:
+   
+      factories
+   
+   

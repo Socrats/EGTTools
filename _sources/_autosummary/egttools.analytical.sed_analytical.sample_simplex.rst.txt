@@ -1,0 +1,6 @@
+egttools.analytical.sed\_analytical.sample\_simplex
+===================================================
+
+.. currentmodule:: egttools.analytical.sed_analytical
+
+.. autofunction:: sample_simplex

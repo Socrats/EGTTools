@@ -1,0 +1,44 @@
+egttools.numerical.indicators
+=============================
+
+.. automodule:: egttools.numerical.indicators
+   :imported-members:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      dataclass
+      field
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :recursive:
+      :nosignatures:
+   
+      StationaryIndicatorResult
+   
+   
+
+   
+   
+   
+
+   
+   
+   

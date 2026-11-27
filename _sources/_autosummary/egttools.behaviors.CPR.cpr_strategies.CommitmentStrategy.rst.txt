@@ -1,0 +1,32 @@
+egttools.behaviors.CPR.cpr\_strategies.CommitmentStrategy
+=========================================================
+
+.. currentmodule:: egttools.behaviors.CPR.cpr_strategies
+
+.. autoclass:: CommitmentStrategy
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members:
+   :exclude-members: __weakref__, __doc__, __module__, __dict__, __members__, __getstate__, __setstate__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~CommitmentStrategy.get_extraction
+      ~CommitmentStrategy.get_payoff
+      ~CommitmentStrategy.is_commitment_validated
+      ~CommitmentStrategy.proposes_commitment
+      ~CommitmentStrategy.type
+      ~CommitmentStrategy.would_like_to_commit
+   
+   
+
+   
+   
+   
