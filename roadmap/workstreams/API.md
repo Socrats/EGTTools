@@ -20,7 +20,7 @@ abruptly.
 | API-11 | Audit the pybind11 bindings' declared types: argument types and conversions, returned dtypes, Eigen `Ref` vs copies, overloads, defaults, argument names, GIL release | todo | P1 | L | 0.3 | MEM-10 | — |
 | API-12 | Replace the unprefixed macros in `Distributions.h` (`int_type_`, `uint_type_`, `float_type_`, `binomial_coeff_`, `CONVERT_TO_`) with type aliases and functions in `egttools::` | todo | P3 | S | 0.4 | CI-15 | — |
 | API-13 | `NPlayerStagHunt` (C++ and Python): defectors in mixed groups get k F / N instead of k F c / N; fix the payoffs and the docstring (copied from `OneShotCRD`) | todo | P1 | S | 0.3 | TEST-09 | — |
-| API-14 | Deprecate `StochDynamics` (Python, legacy): `DeprecationWarning` on construction, docs point to `PairwiseComparison` | done | P2 | S | 0.3 | — | — |
+| API-14 | Deprecate `StochDynamics` (Python, legacy): `DeprecationWarning` on construction, docs point to `PairwiseComparison` | done | P2 | S | 0.3 | — | `8b3f5dec` |
 
 ## Notes
 
